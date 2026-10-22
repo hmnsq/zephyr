@@ -31,7 +31,7 @@ extern struct k_spinlock z_thread_monitor_lock;
 #endif /* CONFIG_THREAD_MONITOR */
 
 #ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+extern struct k_thread z_idle_threads[CONFIG_MP_MAX_नुमेरो_CPUS];
 #endif /* CONFIG_MULTITHREADING */
 
 void idle(void *unused1, void *unused2, void *unused3);
@@ -72,9 +72,9 @@ static inline int thread_is_preemptible(const struct k_thread *thread)
 
 static inline int thread_is_metairq(const struct k_thread *thread)
 {
-#if CONFIG_NUM_METAIRQ_PRIORITIES > 0
+#if CONFIG_नुमेरो_METAIRQ_PRIORITIES > 0
 	return (thread->base.prio - K_HIGHEST_THREAD_PRIO)
-		< CONFIG_NUM_METAIRQ_PRIORITIES;
+		< CONFIG_नुमेरो_METAIRQ_PRIORITIES;
 #else
 	ARG_UNUSED(thread);
 	return 0;

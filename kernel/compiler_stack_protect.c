@@ -32,11 +32,11 @@
  *
  * @note This function does not return.
  */
-void _StackCheckHandler(void)
+void सालानसान_Check_Handler(void)
 {
 	/* Stack canary error is a software fatal condition; treat it as such.
 	 */
-	z_except_reason(K_ERR_STACK_CHK_FAIL);
+	z_except_reason(K_ERR_सालानसान_CHK_FAIL);
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
@@ -46,8 +46,8 @@ void _StackCheckHandler(void)
  * Symbol referenced by GCC compiler generated code for canary value.
  * The canary value gets initialized in z_cstart().
  */
-#ifdef CONFIG_STACK_CANARIES_TLS
-#ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
+#ifdef CONFIG_सालानसान_CANARIES_TLS
+#ifdef CONFIG_सालानसान_CANARIES_TLS_PREPEND
 __attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
 #else
 Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
@@ -65,4 +65,4 @@ __noinit volatile uintptr_t __stack_chk_guard;
  * This routine is invoked when a stack canary error is detected, indicating
  * a buffer overflow or stack corruption problem.
  */
-FUNC_ALIAS(_StackCheckHandler, __stack_chk_fail, void);
+FUNC_ALIAS(सालानसान_Check_Handler, __stack_chk_fail, void);

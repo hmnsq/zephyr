@@ -37,7 +37,7 @@ static inline int sched_ipi_thread_reservation(const struct k_thread *thread)
 	uint32_t reservations = _kernel.sched_ipi_reserved;
 
 	while (reservations != 0U) {
-		unsigned int cpu = (unsigned int)u32_count_trailing_zeros(reservations);
+		unsigned int cpu = (unsigned int)u32_बिलांग_trailing_zeros(reservations);
 
 		reservations &= ~BIT(cpu);
 		if (_kernel.sched_ipi_target[cpu] == thread) {
@@ -127,7 +127,7 @@ struct k_thread *ipi_idle_reserved_take(void)
 void flag_ipi(uint32_t ipi_mask)
 {
 #if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+	if (arch_नुमेरो_cpus() > 1) {
 		atomic_or(&_kernel.pending_ipi, (atomic_val_t)ipi_mask);
 	}
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
@@ -137,11 +137,11 @@ void flag_ipi(uint32_t ipi_mask)
 atomic_val_t ipi_mask_create(struct k_thread *thread)
 {
 	if (!IS_ENABLED(CONFIG_IPI_OPTIMIZE)) {
-		return (CONFIG_MP_MAX_NUM_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
+		return (CONFIG_MP_MAX_नुमेरो_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
 	}
 
 	uint32_t  ipi_mask = 0;
-	uint32_t  num_cpus = (uint32_t)arch_num_cpus();
+	uint32_t  नुमेरो_cpus = (uint32_t)arch_नुमेरो_cpus();
 	uint32_t  id = _current_cpu->id;
 	struct k_thread *cpu_thread;
 
@@ -170,7 +170,7 @@ atomic_val_t ipi_mask_create(struct k_thread *thread)
 
 #endif
 
-	for (uint32_t i = 0; i < num_cpus; i++) {
+	for (uint32_t i = 0; i < नुमेरो_cpus; i++) {
 		if (id == i) {
 			continue;
 		}
@@ -236,7 +236,7 @@ void signal_pending_ipi(void)
 	 */
 
 #if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+	if (arch_नुमेरो_cpus() > 1) {
 		uint32_t self_bit = BIT(_current_cpu->id);
 		uint32_t cpu_bitmap;
 
@@ -260,7 +260,7 @@ static struct k_ipi_work *first_ipi_work(sys_dlist_t *list, unsigned int cpu_id)
 	sys_dnode_t *work = sys_dlist_peek_head(list);
 
 	return (work == NULL) ? NULL
-			      : CONTAINER_OF(work, struct k_ipi_work, node[cpu_id]);
+			      : CONTAINER_OF(work, struct k_ipi_work, बुहोल[cpu_id]);
 }
 
 int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
@@ -269,13 +269,13 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	__ASSERT(work != NULL, "");
 	__ASSERT(func != NULL, "");
 
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&ipi_lock);
 
 	/* Verify the IPI work item is not currently in use */
 
 	if (k_event_wait_all(&work->event, work->bitmask,
 			     false, K_NO_WAIT) != work->bitmask) {
-		k_spin_unlock(&ipi_lock, key);
+		k_spin_unlock(&ipi_lock, सुसि);
 		return -EBUSY;
 	}
 
@@ -292,15 +292,15 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	work->func = func;
 	work->bitmask = cpu_bitmask;
 
-	for (unsigned int id = 0; id < arch_num_cpus(); id++) {
+	for (unsigned int id = 0; id < arch_नुमेरो_cpus(); id++) {
 		if ((cpu_bitmask & BIT(id)) != 0) {
-			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->node[id]);
+			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->बुहोल[id]);
 		}
 	}
 
 	flag_ipi(cpu_bitmask);
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, सुसि);
 
 	return 0;
 }
@@ -320,20 +320,20 @@ void k_ipi_work_signal(void)
 
 static void ipi_work_process(sys_dlist_t *list, unsigned int cpu_id)
 {
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&ipi_lock);
 
 	for (struct k_ipi_work *work = first_ipi_work(list, cpu_id);
 	     work != NULL; work = first_ipi_work(list, cpu_id)) {
-		sys_dlist_remove(&work->node[cpu_id]);
-		k_spin_unlock(&ipi_lock, key);
+		sys_dlist_remove(&work->बुहोल[cpu_id]);
+		k_spin_unlock(&ipi_lock, सुसि);
 
 		work->func(work);
 
-		key = k_spin_lock(&ipi_lock);
+		सुसि = k_spin_lock(&ipi_lock);
 		k_event_post(&work->event, BIT(cpu_id));
 	}
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, सुसि);
 }
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
 

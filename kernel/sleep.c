@@ -62,7 +62,7 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 		return 0;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 #if defined(CONFIG_TIMESLICING) && defined(CONFIG_SWAP_NONATOMIC)
 	pending_current = _current;
@@ -71,7 +71,7 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	expected_wakeup_ticks = (uint32_t)z_add_thread_timeout(_current, timeout);
 	z_mark_thread_as_sleeping(_current);
 
-	(void)z_swap_locked(key);
+	(void)z_swap_locked(सुसि);
 
 	/* There is no meaningful remainder to report for K_FOREVER: reaching
 	 * this point at all means a k_wakeup() cut the sleep short.
@@ -85,21 +85,21 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	 * A normal timeout-driven wakeup leaves zero (or a slightly negative)
 	 * remainder; only an early k_wakeup() yields a positive value.
 	 */
-	uint32_t left_ticks = expected_wakeup_ticks - sys_clock_tick_get_32();
+	uint32_t कालिवा_ticks = expected_wakeup_ticks - sys_clock_tick_get_32();
 
 	/* Use signed comparison so past-due wakeups (negative remainder) return 0.
 	 * k_ticks_t may be uint32_t (!CONFIG_TIMEOUT_64BIT), so comparing ticks > 0
 	 * directly would be an unsigned comparison and would misinterpret a negative
 	 * remainder as a large positive value.
 	 */
-	int32_t signed_left = (int32_t)left_ticks;
+	int32_t signed_कालिवा = (int32_t)कालिवा_ticks;
 
-	if (signed_left < 0) {
-		signed_left = 0;
+	if (signed_कालिवा < 0) {
+		signed_कालिवा = 0;
 	}
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, signed_left);
-	return (k_ticks_t)signed_left;
+	SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, signed_कालिवा);
+	return (k_ticks_t)signed_कालिवा;
 }
 
 #ifdef CONFIG_USERSPACE

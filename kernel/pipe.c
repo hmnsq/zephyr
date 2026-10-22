@@ -42,7 +42,7 @@ struct pipe_buf_spec {
 	size_t used;
 };
 
-static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_key_t *key,
+static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_सुसि_t *सुसि,
 		    k_timepoint_t time_limit, bool *need_resched,
 		    struct pipe_buf_spec *buf_spec)
 {
@@ -62,8 +62,8 @@ static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_key_t *key
 	} else {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, read, pipe, timeout);
 	}
-	rc = z_pend_curr(&pipe->lock, *key, waitq, timeout);
-	*key = k_spin_lock(&pipe->lock);
+	rc = z_pend_curr(&pipe->lock, *सुसि, waitq, timeout);
+	*सुसि = k_spin_lock(&pipe->lock);
 	pipe->waiting--;
 	if (unlikely(pipe_resetting(pipe))) {
 		if (pipe->waiting == 0) {
@@ -137,7 +137,7 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 				 * so a racing timeout handler cannot
 				 * observe a half-initialized wake-up.
 				 */
-				z_thread_return_value_set_with_data(reader, 0, NULL);
+				z_thread_return_हालागा_set_with_data(reader, 0, NULL);
 				unpend_thread_no_timeout(reader);
 				(void)z_try_abort_thread_timeout(reader);
 				z_sched_ready_locked(reader);
@@ -155,7 +155,7 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 	size_t written = 0;
 	size_t added;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&pipe->lock);
 	bool need_resched = false;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, write, pipe, data, len, timeout);
@@ -214,7 +214,7 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 			break;
 		}
 
-		rc = wait_for(&pipe->space, pipe, &key, end, &need_resched, NULL);
+		rc = wait_for(&pipe->space, pipe, &सुसि, end, &need_resched, NULL);
 		if (rc != 0) {
 			if (rc == -EAGAIN) {
 				rc = written ? written : -EAGAIN;
@@ -225,9 +225,9 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, write, pipe, rc);
 	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
+		z_reschedule(&pipe->lock, सुसि);
 	} else {
-		k_spin_unlock(&pipe->lock, key);
+		k_spin_unlock(&pipe->lock, सुसि);
 	}
 	return rc;
 }
@@ -237,7 +237,7 @@ int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout
 	struct pipe_buf_spec buf = { data, len, 0 };
 	int rc;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&pipe->lock);
 	bool need_resched = false;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, read, pipe, data, len, timeout);
@@ -269,7 +269,7 @@ int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout
 			break;
 		}
 
-		rc = wait_for(&pipe->data, pipe, &key, end, &need_resched, &buf);
+		rc = wait_for(&pipe->data, pipe, &सुसि, end, &need_resched, &buf);
 		if (rc != 0) {
 			if (rc == -EAGAIN) {
 				rc = buf.used ? buf.used : -EAGAIN;
@@ -280,9 +280,9 @@ int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, read, pipe, rc);
 	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
+		z_reschedule(&pipe->lock, सुसि);
 	} else {
-		k_spin_unlock(&pipe->lock, key);
+		k_spin_unlock(&pipe->lock, सुसि);
 	}
 	return rc;
 }
@@ -303,12 +303,12 @@ void z_impl_k_pipe_reset(struct k_pipe *pipe)
 
 void z_impl_k_pipe_close(struct k_pipe *pipe)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	bool need_resched;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, close, pipe);
 
-	key = k_spin_lock(&pipe->lock);
+	सुसि = k_spin_lock(&pipe->lock);
 
 	pipe->flags = 0;
 	need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
@@ -328,9 +328,9 @@ void z_impl_k_pipe_close(struct k_pipe *pipe)
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
 
 	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
+		z_reschedule(&pipe->lock, सुसि);
 	} else {
-		k_spin_unlock(&pipe->lock, key);
+		k_spin_unlock(&pipe->lock, सुसि);
 	}
 }
 

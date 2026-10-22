@@ -29,11 +29,11 @@ struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
 
 extern unsigned long
 k_mem_paging_eviction_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_नुमेरो_BINS];
 
 extern unsigned long
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_नुमेरो_BINS];
 
 #else
 #define NS_TO_CYC(ns)		(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000U * ns)
@@ -42,7 +42,7 @@ k_mem_paging_backing_store_histogram_bounds[
  * This provides the upper bounds of the bins in eviction timing histogram.
  */
 __weak unsigned long
-k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
+k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_नुमेरो_BINS] = {
 	NS_TO_CYC(1),
 	NS_TO_CYC(5),
 	NS_TO_CYC(10),
@@ -61,7 +61,7 @@ k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM
  */
 __weak unsigned long
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_नुमेरो_BINS] = {
 	NS_TO_CYC(10),
 	NS_TO_CYC(100),
 	NS_TO_CYC(125),
@@ -76,14 +76,14 @@ k_mem_paging_backing_store_histogram_bounds[
 #endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 #endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-unsigned long k_mem_num_pagefaults_get(void)
+unsigned long k_mem_नुमेरो_pagefaults_get(void)
 {
 	unsigned long ret;
-	unsigned int key;
+	unsigned int सुसि;
 
-	key = irq_lock();
+	सुसि = irq_lock();
 	ret = paging_stats.pagefaults.cnt;
-	irq_unlock(key);
+	irq_unlock(सुसि);
 
 	return ret;
 }
@@ -174,7 +174,7 @@ void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
 	int idx;
 
 	for (idx = 0;
-	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS;
+	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_नुमेरो_BINS;
 	     idx++) {
 		if (cycles <= hist->bounds[idx]) {
 			hist->counts[idx]++;

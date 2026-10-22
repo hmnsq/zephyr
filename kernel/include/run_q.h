@@ -21,7 +21,7 @@ static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
 
 	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	unsigned int cpu = (unsigned int)u32_बिलांग_trailing_zeros(cpu_mask);
 
 	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",

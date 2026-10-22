@@ -55,13 +55,13 @@ void z_unpend_thread_no_timeout(struct k_thread *thread);
  */
 void z_unpend_thread(struct k_thread *thread);
 struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+int z_pend_curr(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
 void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
-void z_reschedule_locked(k_spinlock_key_t key);
-void z_reschedule_irqlock(uint32_t key);
+void z_reschedule(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि);
+void z_reschedule_locked(k_spinlock_सुसि_t सुसि);
+void z_reschedule_irqlock(uint32_t सुसि);
 int z_unpend_all(_wait_q_t *wait_q);
 bool z_thread_prio_set(struct k_thread *thread, int prio);
 void *z_get_next_switch_handle(void *interrupted);
@@ -109,7 +109,7 @@ void move_current_to_end_of_prio_q(void);
  * @param key     Scheduler spinlock key held by the caller.
  * @param terminate true to abort (kill) the thread, false to suspend it.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate);
+void z_thread_halt(struct k_thread *thread, k_spinlock_सुसि_t सुसि, bool terminate);
 
 /**
  * @brief Ready a thread while the scheduler spinlock is already held.
@@ -298,7 +298,7 @@ static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_unpend_first_thread_locked(wait_q);
 		if (thread != NULL) {
-			z_thread_return_value_set_with_data(thread,
+			z_thread_return_हालागा_set_with_data(thread,
 							    swap_retval,
 							    swap_data);
 			z_sched_ready_locked(thread);

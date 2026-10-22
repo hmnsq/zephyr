@@ -55,7 +55,7 @@ int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
 {
 	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
+	if ((kernel_mutex == NULL) || (kernel_mutex->lock_बिलांग == 0)) {
 		return -EINVAL;
 	}
 

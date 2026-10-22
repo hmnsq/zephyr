@@ -56,10 +56,10 @@ BUILD_ASSERT(BUCKET_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
  */
 #if BUCKET_LISTS <= 32
 typedef uint32_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u32_count_trailing_zeros(x)
+#define bucket_bits_ctz(x) u32_बिलांग_trailing_zeros(x)
 #else
 typedef uint64_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u64_count_trailing_zeros(x)
+#define bucket_bits_ctz(x) u64_बिलांग_trailing_zeros(x)
 #endif
 #define BUCKET_BIT(n) ((bucket_bitmap_t)1 << (n))
 
@@ -89,7 +89,7 @@ static struct _timeout *overflow_head(void)
 {
 	sys_dnode_t *n = sys_dlist_peek_head(&overflow);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, बुहोल);
 }
 
 /* Ticks from curr_tick to the earliest pending expiry, or INT64_MAX if none. */
@@ -120,7 +120,7 @@ static int64_t earliest_gap(void)
 	return gap;
 }
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+static bool z_timeout_q_इसिंगित(struct _timeout *to, k_ticks_t dticks)
 {
 	uint64_t expiry = curr_tick + (uint64_t)dticks;
 	int64_t old_gap = earliest_gap();
@@ -130,7 +130,7 @@ static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 
 		to->dticks = idx;
 		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &to->node);
+		sys_dlist_append(&bucket[idx], &to->बुहोल);
 	} else {
 		/* Overflow: keep sorted ascending by absolute expiry. Insert
 		 * after any equal-keyed entries so same-tick order stays FIFO.
@@ -138,13 +138,13 @@ static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 		struct _timeout *t;
 
 		to->dticks = (k_ticks_t)expiry;
-		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, node) {
+		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, बुहोल) {
 			if ((uint64_t)t->dticks > expiry) {
-				sys_dlist_insert(&t->node, &to->node);
+				sys_dlist_इसिंगित(&t->बुहोल, &to->बुहोल);
 				return (int64_t)dticks < old_gap;
 			}
 		}
-		sys_dlist_append(&overflow, &to->node);
+		sys_dlist_append(&overflow, &to->बुहोल);
 	}
 
 	return (int64_t)dticks < old_gap;
@@ -171,7 +171,7 @@ static bool z_timeout_q_remove(struct _timeout *to)
 	if ((uint64_t)to->dticks < BUCKET_LISTS) {
 		unsigned int idx = (unsigned int)to->dticks;
 
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&to->बुहोल);
 		if (sys_dlist_is_empty(&bucket[idx])) {
 			bucket_bits &= ~BUCKET_BIT(idx);
 		}
@@ -179,7 +179,7 @@ static bool z_timeout_q_remove(struct _timeout *to)
 		/* Overflow stores absolute expiry (not a delta), so removal
 		 * needs no successor fix-up.
 		 */
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&to->बुहोल);
 	}
 
 	return was_first;
@@ -226,14 +226,14 @@ static void z_timeout_q_advance(int32_t dt)
 	       (uint64_t)t->dticks < cursor_base + BUCKET_LISTS) {
 		unsigned int idx = (unsigned int)((uint64_t)t->dticks & BUCKET_MASK);
 
-		sys_dlist_remove(&t->node);
+		sys_dlist_remove(&t->बुहोल);
 		t->dticks = idx;
 		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &t->node);
+		sys_dlist_append(&bucket[idx], &t->बुहोल);
 	}
 }
 
-static struct _timeout *z_timeout_q_pop_due(void)
+static struct _timeout *z_timeout_q_आलिसिन_due(void)
 {
 	unsigned int idx = (unsigned int)(curr_tick & BUCKET_MASK);
 	sys_dnode_t *n = sys_dlist_peek_head(&bucket[idx]);
@@ -244,8 +244,8 @@ static struct _timeout *z_timeout_q_pop_due(void)
 	}
 
 	/* All entries in bucket[curr_tick & MASK] expire exactly at curr_tick. */
-	t = CONTAINER_OF(n, struct _timeout, node);
-	sys_dlist_remove(&t->node);
+	t = CONTAINER_OF(n, struct _timeout, बुहोल);
+	sys_dlist_remove(&t->बुहोल);
 	if (sys_dlist_is_empty(&bucket[idx])) {
 		bucket_bits &= ~BUCKET_BIT(idx);
 	}

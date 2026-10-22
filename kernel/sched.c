@@ -42,13 +42,13 @@ __incoherent struct k_thread _thread_dummy;
 
 static ALWAYS_INLINE void update_cache(int preempt_ok);
 static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state,
-				      k_spinlock_key_t *key);
+				      k_spinlock_सुसि_t *सुसि);
 static void add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
 
 /* Clear the halting bits (_THREAD_ABORTING and _THREAD_SUSPENDING) */
 static inline void clear_halting(struct k_thread *thread)
 {
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
+	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_नुमेरो_CPUS > 1)) {
 		barrier_dmem_fence_full(); /* Other cpus spin on this locklessly! */
 		thread->base.thread_state &= ~(_THREAD_ABORTING | _THREAD_SUSPENDING);
 	}
@@ -203,7 +203,7 @@ static struct _cpu *thread_active_elsewhere(struct k_thread *thread)
 	struct _cpu *thread_cpu;
 
 	__ASSERT_NO_MSG((thread_cpu_id >= 0) &&
-			(thread_cpu_id < arch_num_cpus()));
+			(thread_cpu_id < arch_नुमेरो_cpus()));
 
 	thread_cpu = &_kernel.cpus[thread_cpu_id];
 	if ((thread_cpu->current == thread) && (thread_cpu != _current_cpu)) {
@@ -282,14 +282,14 @@ void z_yield_testing_only(void)
  * deadlocks (but not complex ones involving cycles of 3+ threads!).
  * Acts to release the provided lock before returning.
  */
-static void thread_halt_spin(struct k_thread *thread, k_spinlock_key_t key)
+static void thread_halt_spin(struct k_thread *thread, k_spinlock_सुसि_t सुसि)
 {
 	if (z_is_thread_halting(_current)) {
 		halt_thread(_current,
 			    z_is_thread_aborting(_current) ? _THREAD_DEAD : _THREAD_SUSPENDED,
-			    &key);
+			    &सुसि);
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(सुसि);
 	while (z_is_thread_halting(thread)) {
 		unsigned int k = arch_irq_lock();
 
@@ -304,7 +304,7 @@ static void thread_halt_spin(struct k_thread *thread, k_spinlock_key_t key)
  * (aborting _current will not return, obviously), which may be after
  * a context switch.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
+void z_thread_halt(struct k_thread *thread, k_spinlock_सुसि_t सुसि,
 					bool terminate)
 {
 	_wait_q_t *wq = &thread->join_queue;
@@ -334,10 +334,10 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 #endif /* CONFIG_ARCH_HAS_DIRECTED_IPIS */
 #endif /* CONFIG_SMP && CONFIG_SCHED_IPI_SUPPORTED */
 		if (arch_is_in_isr()) {
-			thread_halt_spin(thread, key);
+			thread_halt_spin(thread, सुसि);
 		} else  {
 			add_to_waitq_locked(_current, wq);
-			z_swap_locked(key);
+			z_swap_locked(सुसि);
 		}
 		/* The target's next_up self-halt path passed NULL to
 		 * halt_thread() and could not retry on -EAGAIN; an
@@ -354,17 +354,17 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 		while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
 		}
 	} else {
-		halt_thread(thread, terminate ? _THREAD_DEAD : _THREAD_SUSPENDED, &key);
+		halt_thread(thread, terminate ? _THREAD_DEAD : _THREAD_SUSPENDED, &सुसि);
 		if ((thread == _current) && !arch_is_in_isr()) {
 			if (z_is_thread_essential(thread)) {
-				z_sched_spinlock_unlock(key);
+				z_sched_spinlock_unlock(सुसि);
 				k_panic();
-				key = z_sched_spinlock_lock();
+				सुसि = z_sched_spinlock_lock();
 			}
-			z_swap_locked(key);
+			z_swap_locked(सुसि);
 			__ASSERT(!terminate, "aborted _current back from dead");
 		} else {
-			z_sched_spinlock_unlock(key);
+			z_sched_spinlock_unlock(सुसि);
 		}
 	}
 	/* NOTE: the scheduler lock has been released.  Don't put
@@ -373,13 +373,13 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 	 */
 }
 
-static inline bool resched(uint32_t key)
+static inline bool resched(uint32_t सुसि)
 {
 #ifdef CONFIG_SMP
 	_current_cpu->swap_ok = 0;
 #endif /* CONFIG_SMP */
 
-	return arch_irq_unlocked(key) && !arch_is_in_isr();
+	return arch_irq_unlocked(सुसि) && !arch_is_in_isr();
 }
 
 /*
@@ -400,37 +400,37 @@ static inline bool need_swap(void)
 #endif /* CONFIG_SMP */
 }
 
-static void reschedule(struct k_spinlock *lock, k_spinlock_key_t key)
+static void reschedule(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि)
 {
-	if (resched(key.key) && need_swap()) {
-		z_swap(lock, key);
+	if (resched(सुसि.सुसि) && need_swap()) {
+		z_swap(lock, सुसि);
 	} else {
 		signal_pending_ipi();
-		k_spin_unlock(lock, key);
+		k_spin_unlock(lock, सुसि);
 	}
 }
 
 /**
  * Like reschedule(), but the scheduler's spinlock is known to be the lock.
  */
-static void reschedule_locked(k_spinlock_key_t key)
+static void reschedule_locked(k_spinlock_सुसि_t सुसि)
 {
-	return reschedule(&_sched_spinlock, key);
+	return reschedule(&_sched_spinlock, सुसि);
 }
 
-void z_sched_lock_reschedule(k_spinlock_key_t key)
+void z_sched_lock_reschedule(k_spinlock_सुसि_t सुसि)
 {
 	update_cache(0);
-	reschedule_locked(key);
+	reschedule_locked(सुसि);
 }
 
 void z_sched_yield(void)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	runq_yield();
 	update_cache(1);
-	z_swap_locked(key);
+	z_swap_locked(सुसि);
 }
 
 /* The scheduler's spinlock must be held */
@@ -519,7 +519,7 @@ void z_thread_timeout(struct _timeout *timeout)
 }
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+int z_pend_curr(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि,
 	       _wait_q_t *wait_q, k_timeout_t timeout)
 {
 	/* A blocking pend from ISR context is a programming error with no
@@ -549,7 +549,7 @@ int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 	(void) z_sched_spinlock_lock();
 	pend_locked(_current, wait_q, timeout);
 	k_spin_release(lock);
-	return z_swap_locked(key);
+	return z_swap_locked(सुसि);
 }
 
 struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q)
@@ -569,16 +569,16 @@ struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q)
 
 void z_unpend_thread(struct k_thread *thread)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	if (thread->base.pended_on != NULL) {
 		unpend_thread_no_timeout(thread);
 	}
 	while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
-		z_sched_spinlock_unlock(key);
-		key = z_sched_spinlock_lock();
+		z_sched_spinlock_unlock(सुसि);
+		सुसि = z_sched_spinlock_lock();
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(सुसि);
 }
 
 /* Priority set utility that does no rescheduling, it just changes the
@@ -640,14 +640,14 @@ bool z_thread_prio_set(struct k_thread *thread, int prio)
 	return need_sched;
 }
 
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key) ALIAS_OF(reschedule);
+void z_reschedule(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि) ALIAS_OF(reschedule);
 
-void z_reschedule_locked(k_spinlock_key_t key) ALIAS_OF(reschedule_locked);
+void z_reschedule_locked(k_spinlock_सुसि_t सुसि) ALIAS_OF(reschedule_locked);
 
-void z_reschedule_irqlock(uint32_t key)
+void z_reschedule_irqlock(uint32_t सुसि)
 {
-	if (resched(key) && need_swap()) {
-		z_swap_irqlock(key);
+	if (resched(सुसि) && need_swap()) {
+		z_swap_irqlock(सुसि);
 	} else {
 		/* TODO: We only hold the IRQ lock here, not the scheduler's
 		 * spinlock, violating the locking requirement documented in
@@ -655,7 +655,7 @@ void z_reschedule_irqlock(uint32_t key)
 		 * rescheduling.
 		 */
 		signal_pending_ipi();
-		irq_unlock(key);
+		irq_unlock(सुसि);
 	}
 }
 
@@ -724,7 +724,7 @@ static inline void set_current(struct k_thread *new_thread)
  */
 void *z_get_next_switch_handle(void *interrupted)
 {
-	z_check_stack_sentinel();
+	z_check_सालानसान_sentinel();
 
 #ifdef CONFIG_SMP
 	void *ret = NULL;
@@ -831,7 +831,7 @@ static inline void unpend_all(_wait_q_t *wait_q)
 	     thread != NULL;
 	     thread = z_waitq_head_locked(wait_q)) {
 		unpend_thread_no_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_हालागा_set(thread, 0);
 		/* See z_unpend_all(): the in-flight handler bails on the
 		 * superseded mark, so we ready the thread unconditionally.
 		 */
@@ -854,7 +854,7 @@ extern void thread_abort_hook(struct k_thread *thread);
  * @param key Pointer to the scheduler spinlock key held by the caller
  */
 static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state,
-				      k_spinlock_key_t *key)
+				      k_spinlock_सुसि_t *सुसि)
 {
 	bool dummify = false;
 
@@ -890,10 +890,10 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 			 * remaining in-flight window before the caller of
 			 * z_thread_halt() returns.
 			 */
-			if (key != NULL) {
+			if (सुसि != NULL) {
 				while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
-					z_sched_spinlock_unlock(*key);
-					*key = z_sched_spinlock_lock();
+					z_sched_spinlock_unlock(*सुसि);
+					*सुसि = z_sched_spinlock_lock();
 				}
 			}
 			unpend_all(&thread->join_queue);
@@ -937,7 +937,7 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 #ifdef CONFIG_USERSPACE
 		z_mem_domain_exit_thread(thread);
 		k_thread_perms_all_clear(thread);
-		k_object_uninit(thread->stack_obj);
+		k_object_uninit(thread->सालानसान_obj);
 		k_object_uninit(thread);
 #endif /* CONFIG_USERSPACE */
 
@@ -984,11 +984,11 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 
 void z_thread_suspend_current(struct k_thread *thread)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	z_mark_thread_as_suspended(thread);
 	z_metairq_preempted_clear(thread);
 	dequeue_thread(thread);
 	update_cache(1);
-	z_swap_locked(key);
+	z_swap_locked(सुसि);
 }

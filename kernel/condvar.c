@@ -43,15 +43,15 @@ int z_vrfy_k_condvar_init(struct k_condvar *condvar)
 
 int z_impl_k_condvar_signal(struct k_condvar *condvar)
 {
-	k_spinlock_key_t key = k_spin_lock(&condvar_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&condvar_lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, signal, condvar);
 
 	if (z_sched_wake(&condvar->wait_q, 0, NULL)) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_condvar, signal, condvar, K_FOREVER);
-		z_reschedule(&condvar_lock, key);
+		z_reschedule(&condvar_lock, सुसि);
 	} else {
-		k_spin_unlock(&condvar_lock, key);
+		k_spin_unlock(&condvar_lock, सुसि);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, signal, condvar, 0);
@@ -70,10 +70,10 @@ int z_vrfy_k_condvar_signal(struct k_condvar *condvar)
 
 int z_impl_k_condvar_broadcast(struct k_condvar *condvar)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int woken = 0;
 
-	key = k_spin_lock(&condvar_lock);
+	सुसि = k_spin_lock(&condvar_lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, broadcast, condvar);
 
@@ -86,9 +86,9 @@ int z_impl_k_condvar_broadcast(struct k_condvar *condvar)
 
 
 	if (woken == 0) {
-		k_spin_unlock(&condvar_lock, key);
+		k_spin_unlock(&condvar_lock, सुसि);
 	} else {
-		z_reschedule(&condvar_lock, key);
+		z_reschedule(&condvar_lock, सुसि);
 	}
 
 	return woken;
@@ -105,7 +105,7 @@ int z_vrfy_k_condvar_broadcast(struct k_condvar *condvar)
 int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 			  k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret = -EAGAIN;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
@@ -120,10 +120,10 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 		return ret;
 	}
 
-	key = k_spin_lock(&condvar_lock);
+	सुसि = k_spin_lock(&condvar_lock);
 	k_mutex_unlock(mutex);
 
-	ret = z_pend_curr(&condvar_lock, key, &condvar->wait_q, timeout);
+	ret = z_pend_curr(&condvar_lock, सुसि, &condvar->wait_q, timeout);
 
 	/* Always re-acquire the mutex before returning, even on timeout.
 	 * This matches POSIX semantics: the mutex must be locked by the

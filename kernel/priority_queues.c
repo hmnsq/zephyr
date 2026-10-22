@@ -24,7 +24,7 @@ bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b)
 	} else if (cmp < 0) {
 		return false;
 	} else {
-		return thread_a->base.order_key < thread_b->base.order_key
+		return thread_a->base.order_सुसि < thread_b->base.order_सुसि
 			? 1 : 0;
 	}
 }

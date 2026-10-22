@@ -73,8 +73,8 @@ void arch_busy_wait(uint32_t usec_to_wait);
  * @param p2 2nd entry point parameter
  * @param p3 3rd entry point parameter
  */
-void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
-		     char *stack_ptr, k_thread_entry_t entry,
+void arch_new_thread(struct k_thread *thread, k_thread_सालानसान_t *सालानसान,
+		     char *सालानसान_ptr, k_thread_entry_t entry,
 		     void *p1, void *p2, void *p3);
 
 #ifdef CONFIG_USE_SWITCH
@@ -145,7 +145,7 @@ static inline void arch_switch(void *switch_to, void **switched_from);
  * @return If woken from blocking on some kernel object, the result of that
  *         blocking operation.
  */
-int arch_swap(unsigned int key);
+int arch_swap(unsigned int सुसि);
 #endif /* __DOXYGEN__ */
 
 /**
@@ -157,7 +157,7 @@ int arch_swap(unsigned int key);
  * @param value value to set as return value
  */
 static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
+arch_thread_return_हालागा_set(struct k_thread *thread, unsigned int हालागा);
 #endif /* !CONFIG_USE_SWITCH || __DOXYGEN__ */
 
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
@@ -171,7 +171,7 @@ arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
  * @param stack_ptr Initial stack pointer
  * @param _main Entry point for application main function.
  */
-void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
+void arch_switch_to_main_thread(struct k_thread *main_thread, char *सालानसान_ptr,
 				k_thread_entry_t _main);
 #endif /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
 
@@ -229,7 +229,7 @@ int arch_float_enable(struct k_thread *thread, unsigned int options);
  */
 int arch_coprocessors_disable(struct k_thread *thread);
 
-#if defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
+#if defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_सालानसान_SPACE_GET)
 /**
  * @brief Obtain privileged stack usage information for the specified thread
  *
@@ -253,7 +253,7 @@ int arch_coprocessors_disable(struct k_thread *thread);
  * @return -EINVAL Thread is uninitialized or exited or not a user thread
  * @return -EFAULT Bad memory address for unused_ptr
  */
-int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stack_size,
+int arch_thread_priv_सालानसान_space_get(const struct k_thread *thread, size_t *सालानसान_size,
 				     size_t *unused_ptr);
 #endif /* CONFIG_USERSPACE && CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET */
 
@@ -660,7 +660,7 @@ uint16_t arch_coredump_tgt_code_get(void);
 /**
  * @brief Get the stack pointer of the thread.
  */
-uintptr_t arch_coredump_stack_ptr_get(const struct k_thread *thread);
+uintptr_t arch_coredump_सालानसान_ptr_get(const struct k_thread *thread);
 
 #if defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
 
@@ -704,7 +704,7 @@ void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
  *
  * @param thread Pointer to thread object
  */
-void arch_coredump_priv_stack_dump(struct k_thread *thread);
+void arch_coredump_priv_सालानसान_dump(struct k_thread *thread);
 
 #endif /* CONFIG_USERSPACE || __DOXYGEN__ */
 
@@ -725,7 +725,7 @@ void arch_coredump_priv_stack_dump(struct k_thread *thread);
  * @param key IRQ lock key from the enclosing z_fatal_error()
  * @param cookie Arch-specific storage (unsigned int); ignored on the weak default
  */
-void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
+void arch_coredump_fatal_irq_unlock(unsigned int सुसि, void *cookie);
 
 /**
  * @brief Restore interrupt masking after coredump on the fatal path
@@ -759,7 +759,7 @@ unsigned int arch_coredump_fatal_irq_lock(void *cookie);
  * @param stack_ptr Stack pointer
  * @return Number of bytes taken by the TLS area
  */
-size_t arch_tls_stack_setup(struct k_thread *new_thread, char *stack_ptr);
+size_t arch_tls_सालानसान_setup(struct k_thread *new_thread, char *सालानसान_ptr);
 
 /** @} */
 

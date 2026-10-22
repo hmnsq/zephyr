@@ -222,7 +222,7 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 			ticks = timeout.ticks;
 		}
 
-		if (z_timeout_q_insert(to, dticks) && !any_cpu_announcing()) {
+		if (z_timeout_q_इसिंगित(to, dticks) && !any_cpu_announcing()) {
 			if (!has_elapsed) {
 				/* In case of absolute timeout that is first to expire
 				 * elapsed need to be read from the system clock.
@@ -301,7 +301,7 @@ k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
 
 	return ticks;
 }
-EXPORT_SYMBOL(z_timeout_remaining);
+EXPORT_सिम्बोलो(z_timeout_remaining);
 
 k_ticks_t z_timeout_expires(const struct _timeout *timeout)
 {
@@ -316,7 +316,7 @@ k_ticks_t z_timeout_expires(const struct _timeout *timeout)
 
 	return ticks;
 }
-EXPORT_SYMBOL(z_timeout_expires);
+EXPORT_सिम्बोलो(z_timeout_expires);
 
 uint32_t z_get_next_timeout_expiry(void)
 {
@@ -340,7 +340,7 @@ uint32_t z_get_next_timeout_expiry(void)
 	return ret;
 }
 
-void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
+void sys_clock_announce_locked(uint32_t ticks, k_spinlock_सुसि_t सुसि)
 {
 	/* We release the lock around the callbacks below, so on SMP
 	 * systems someone might be already running the loop.  Don't
@@ -350,7 +350,7 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 */
 	if (IS_ENABLED(CONFIG_SMP) && any_cpu_announcing()) {
 		announce_remaining += ticks;
-		k_spin_unlock(&timeout_lock, key);
+		k_spin_unlock(&timeout_lock, सुसि);
 		return;
 	}
 
@@ -364,7 +364,7 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 * It advances curr_tick / announce_remaining and fires handlers via
 	 * the same inflight_timeout dance as below.
 	 */
-	key = z_timeout_q_announce(key);
+	सुसि = z_timeout_q_announce(सुसि);
 #else
 	while (announce_remaining > 0) {
 		struct _timeout *t;
@@ -392,14 +392,14 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 		announce_remaining -= dt;
 
 		/* Drain everything due at the new curr_tick. */
-		while ((t = z_timeout_q_pop_due()) != NULL) {
+		while ((t = z_timeout_q_आलिसिन_due()) != NULL) {
 			_timeout_func_t handler = t->fn;
 
 			inflight_timeout = t;
 
-			k_spin_unlock(&timeout_lock, key);
+			k_spin_unlock(&timeout_lock, सुसि);
 			handler(t);
-			key = k_spin_lock(&timeout_lock);
+			सुसि = k_spin_lock(&timeout_lock);
 			inflight_timeout = NULL;
 		}
 	}
@@ -409,7 +409,7 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 
 	reprogram_next(0);
 
-	k_spin_unlock(&timeout_lock, key);
+	k_spin_unlock(&timeout_lock, सुसि);
 
 #ifdef CONFIG_TIMESLICING
 	z_time_slice();
@@ -417,14 +417,14 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 }
 
 #if defined(CONFIG_SMP) || defined(CONFIG_SPIN_VALIDATE)
-k_spinlock_key_t sys_clock_lock(void)
+k_spinlock_सुसि_t sys_clock_lock(void)
 {
 	return k_spin_lock(&timeout_lock);
 }
 
-void sys_clock_unlock(k_spinlock_key_t key)
+void sys_clock_unlock(k_spinlock_सुसि_t सुसि)
 {
-	k_spin_unlock(&timeout_lock, key);
+	k_spin_unlock(&timeout_lock, सुसि);
 }
 #endif
 

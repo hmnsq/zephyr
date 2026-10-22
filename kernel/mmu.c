@@ -53,7 +53,7 @@ struct k_spinlock z_mm_lock;
  */
 
 /* Database of all RAM page frames */
-struct k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
+struct k_mem_page_frame k_mem_page_frames[K_MEM_नुमेरो_PAGE_FRAMES];
 
 #ifdef CONFIG_ASSERT
 /* Indicator that k_mem_page_frames has been initialized, many of these APIs do
@@ -115,7 +115,7 @@ void k_mem_page_frames_dump(void)
 	printk("Physical memory from 0x%lx to 0x%lx\n",
 	       K_MEM_PHYS_RAM_START, K_MEM_PHYS_RAM_END);
 
-	for (int i = 0; i < K_MEM_NUM_PAGE_FRAMES; i++) {
+	for (int i = 0; i < K_MEM_नुमेरो_PAGE_FRAMES; i++) {
 		struct k_mem_page_frame *pf = &k_mem_page_frames[i];
 
 		page_frame_dump(pf);
@@ -214,7 +214,7 @@ static inline size_t virt_to_bitmap_offset(void *vaddr, size_t size)
 
 static void virt_region_init(void)
 {
-	size_t offset, num_bits;
+	size_t offset, नुमेरो_bits;
 
 	/* There are regions where we should never map via
 	 * k_mem_map() and k_mem_map_phys_bare(). Mark them as
@@ -223,25 +223,25 @@ static void virt_region_init(void)
 
 	if (K_MEM_VM_RESERVED > 0) {
 		/* Mark reserved region at end of virtual address space */
-		num_bits = K_MEM_VM_RESERVED / CONFIG_MMU_PAGE_SIZE;
+		नुमेरो_bits = K_MEM_VM_RESERVED / CONFIG_MMU_PAGE_SIZE;
 		(void)sys_bitarray_set_region(&virt_region_bitmap,
-					      num_bits, 0);
+					      नुमेरो_bits, 0);
 	}
 
 	/* Mark all bits up to Z_FREE_VM_START as allocated */
-	num_bits = POINTER_TO_UINT(K_MEM_VM_FREE_START)
+	नुमेरो_bits = POINTER_TO_UINT(K_MEM_VM_FREE_START)
 		   - POINTER_TO_UINT(K_MEM_VIRT_RAM_START);
-	offset = virt_to_bitmap_offset(K_MEM_VIRT_RAM_START, num_bits);
-	num_bits /= CONFIG_MMU_PAGE_SIZE;
+	offset = virt_to_bitmap_offset(K_MEM_VIRT_RAM_START, नुमेरो_bits);
+	नुमेरो_bits /= CONFIG_MMU_PAGE_SIZE;
 	(void)sys_bitarray_set_region(&virt_region_bitmap,
-				      num_bits, offset);
+				      नुमेरो_bits, offset);
 
 	virt_region_inited = true;
 }
 
 static void virt_region_free(void *vaddr, size_t size)
 {
-	size_t offset, num_bits;
+	size_t offset, नुमेरो_bits;
 	uint8_t *vaddr_u8 = (uint8_t *)vaddr;
 
 	if (unlikely(!virt_region_inited)) {
@@ -263,8 +263,8 @@ static void virt_region_free(void *vaddr, size_t size)
 	}
 
 	offset = virt_to_bitmap_offset(vaddr, size);
-	num_bits = size / CONFIG_MMU_PAGE_SIZE;
-	(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
+	नुमेरो_bits = size / CONFIG_MMU_PAGE_SIZE;
+	(void)sys_bitarray_free(&virt_region_bitmap, नुमेरो_bits, offset);
 #else /* !CONFIG_KERNEL_DIRECT_MAP */
 	/* With K_MEM_DIRECT_MAP, the region can be outside of the virtual
 	 * memory space, wholly within it, or overlap partially.
@@ -281,8 +281,8 @@ static void virt_region_free(void *vaddr, size_t size)
 		size_t adjusted_sz = adjusted_end - adjusted_start;
 
 		offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
-		num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
+		नुमेरो_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
+		(void)sys_bitarray_free(&virt_region_bitmap, नुमेरो_bits, offset);
 	}
 #endif /* !CONFIG_KERNEL_DIRECT_MAP */
 }
@@ -292,7 +292,7 @@ static void *virt_region_alloc(size_t size, size_t align)
 	uintptr_t dest_addr;
 	size_t alloc_size;
 	size_t offset;
-	size_t num_bits;
+	size_t नुमेरो_bits;
 	int ret;
 
 	if (unlikely(!virt_region_inited)) {
@@ -300,9 +300,9 @@ static void *virt_region_alloc(size_t size, size_t align)
 	}
 
 	/* Possibly request more pages to ensure we can get an aligned virtual address */
-	num_bits = (size + align - CONFIG_MMU_PAGE_SIZE) / CONFIG_MMU_PAGE_SIZE;
-	alloc_size = num_bits * CONFIG_MMU_PAGE_SIZE;
-	ret = sys_bitarray_alloc(&virt_region_bitmap, num_bits, &offset);
+	नुमेरो_bits = (size + align - CONFIG_MMU_PAGE_SIZE) / CONFIG_MMU_PAGE_SIZE;
+	alloc_size = नुमेरो_bits * CONFIG_MMU_PAGE_SIZE;
+	ret = sys_bitarray_alloc(&virt_region_bitmap, नुमेरो_bits, &offset);
 	if (ret != 0) {
 		LOG_ERR("insufficient virtual address space (requested %zu)",
 			size);
@@ -362,7 +362,7 @@ static void *virt_region_alloc(size_t size, size_t align)
 
 	/* Need to make sure this does not step into kernel memory */
 	if (dest_addr < POINTER_TO_UINT(Z_VIRT_REGION_START_ADDR)) {
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
+		(void)sys_bitarray_free(&virt_region_bitmap, नुमेरो_bits, offset);
 		return NULL;
 	}
 
@@ -393,22 +393,22 @@ static sys_sflist_t free_page_frame_list;
 /* Number of unused and available free page frames.
  * This information may go stale immediately.
  */
-static size_t z_free_page_count;
+static size_t z_free_page_बिलांग;
 
-#define PF_ASSERT(pf, expr, fmt, ...) \
-	__ASSERT(expr, "page frame 0x%lx: " fmt, k_mem_page_frame_to_phys(pf), \
+#define PF_ASSERT(pf, पाहायाग, fmt, ...) \
+	__ASSERT(पाहायाग, "page frame 0x%lx: " fmt, k_mem_page_frame_to_phys(pf), \
 		 ##__VA_ARGS__)
 
 /* Get an unused page frame. don't care which one, or NULL if there are none */
 static struct k_mem_page_frame *free_page_frame_list_get(void)
 {
-	sys_sfnode_t *node;
+	sys_sfnode_t *बुहोल;
 	struct k_mem_page_frame *pf = NULL;
 
-	node = sys_sflist_get(&free_page_frame_list);
-	if (node != NULL) {
-		z_free_page_count--;
-		pf = CONTAINER_OF(node, struct k_mem_page_frame, node);
+	बुहोल = sys_sflist_get(&free_page_frame_list);
+	if (बुहोल != NULL) {
+		z_free_page_बिलांग--;
+		pf = CONTAINER_OF(बुहोल, struct k_mem_page_frame, बुहोल);
 		PF_ASSERT(pf, k_mem_page_frame_is_free(pf),
 			 "on free list but not free");
 		pf->va_and_flags = 0;
@@ -423,9 +423,9 @@ static void free_page_frame_list_put(struct k_mem_page_frame *pf)
 	PF_ASSERT(pf, k_mem_page_frame_is_available(pf),
 		 "unavailable page put on free list");
 
-	sys_sfnode_init(&pf->node, K_MEM_PAGE_FRAME_FREE);
-	sys_sflist_append(&free_page_frame_list, &pf->node);
-	z_free_page_count++;
+	sys_sfnode_init(&pf->बुहोल, K_MEM_PAGE_FRAME_FREE);
+	sys_sflist_append(&free_page_frame_list, &pf->बुहोल);
+	z_free_page_बिलांग++;
 }
 
 static void free_page_frame_list_init(void)
@@ -769,7 +769,7 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 	uint8_t *region;
 	size_t total_size;
 	int ret;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	uint8_t *pos;
 	bool uninit = (flags & K_MEM_MAP_UNINIT) != 0U;
 
@@ -800,7 +800,7 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 		return NULL;
 	}
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 
 	region = virt_region_alloc(total_size, CONFIG_MMU_PAGE_SIZE);
 	if (region == NULL) {
@@ -927,7 +927,7 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 	}
 
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 
 	if (dst != NULL && !uninit) {
 		/* If we later implement mappings to a copy-on-write
@@ -948,7 +948,7 @@ fail:
 void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
 {
 	uint8_t *pos;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	size_t total_size;
 	int ret;
 
@@ -961,7 +961,7 @@ void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
 	pos = (uint8_t *)addr - CONFIG_MMU_PAGE_SIZE;
 	k_mem_assert_virtual_region(pos, size + (CONFIG_MMU_PAGE_SIZE * 2));
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 
 	/* Check if both guard pages are unmapped.
 	 * Bail if not, as this is probably a region not mapped
@@ -1020,18 +1020,18 @@ void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
 	virt_region_free(pos, total_size);
 
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 }
 
 int k_mem_update_flags(void *addr, size_t size, uint32_t flags)
 {
 	uintptr_t phys;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret;
 
 	k_mem_assert_virtual_region(addr, size);
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 
 	/*
 	 * We can achieve desired result without explicit architecture support
@@ -1055,28 +1055,28 @@ int k_mem_update_flags(void *addr, size_t size, uint32_t flags)
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
 
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 	return ret;
 }
 
 size_t k_mem_free_get(void)
 {
 	size_t ret;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
 	__ASSERT(page_frames_initialized, "%s called too early", __func__);
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 #ifdef CONFIG_DEMAND_PAGING
-	if (z_free_page_count > CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE) {
-		ret = z_free_page_count - CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE;
+	if (z_free_page_बिलांग > CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE) {
+		ret = z_free_page_बिलांग - CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE;
 	} else {
 		ret = 0;
 	}
 #else
-	ret = z_free_page_count;
+	ret = z_free_page_बिलांग;
 #endif /* CONFIG_DEMAND_PAGING */
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 
 	return ret * (size_t)CONFIG_MMU_PAGE_SIZE;
 }
@@ -1106,9 +1106,9 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 {
 	uintptr_t aligned_phys, addr_offset;
 	size_t aligned_size, align_boundary;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	uint8_t *dest_addr;
-	size_t num_bits;
+	size_t नुमेरो_bits;
 	size_t offset;
 	int ret;
 
@@ -1125,7 +1125,7 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 
 	align_boundary = arch_virt_region_align(aligned_phys, aligned_size);
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 
 	if (IS_ENABLED(CONFIG_KERNEL_DIRECT_MAP) &&
 	    (flags & K_MEM_DIRECT_MAP)) {
@@ -1149,10 +1149,10 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 						    K_MEM_VIRT_RAM_END);
 			size_t adjusted_sz = adjusted_end - adjusted_start;
 
-			num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
+			नुमेरो_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
 			offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
 			if (sys_bitarray_test_and_set_region(
-			    &virt_region_bitmap, num_bits, offset, true)) {
+			    &virt_region_bitmap, नुमेरो_bits, offset, true)) {
 				goto fail;
 			}
 		}
@@ -1178,7 +1178,7 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 	if (ret != 0) {
 		goto fail;
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 
 	*virt_ptr = dest_addr + addr_offset;
 	return;
@@ -1199,7 +1199,7 @@ void k_mem_unmap_phys_bare(uint8_t *virt, size_t size)
 {
 	uintptr_t aligned_virt, addr_offset;
 	size_t aligned_size;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret;
 
 	addr_offset = k_mem_region_align(&aligned_virt, &aligned_size,
@@ -1210,7 +1210,7 @@ void k_mem_unmap_phys_bare(uint8_t *virt, size_t size)
 		 "wraparound for virtual address 0x%lx (size %zu)",
 		 aligned_virt, aligned_size);
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 
 	LOG_DBG("arch_mem_unmap(0x%lx, %zu) offset %lu",
 		aligned_virt, aligned_size, addr_offset);
@@ -1227,7 +1227,7 @@ void k_mem_unmap_phys_bare(uint8_t *virt, size_t size)
 	virt_region_free(UINT_TO_POINTER(aligned_virt), aligned_size);
 
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 }
 
 /*
@@ -1328,7 +1328,7 @@ void z_mem_manage_init(void)
 	uintptr_t phys;
 	uint8_t *addr;
 	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key = k_spin_lock(&z_mm_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_mm_lock);
 
 	free_page_frame_list_init();
 
@@ -1368,7 +1368,7 @@ void z_mem_manage_init(void)
 			free_page_frame_list_put(pf);
 		}
 	}
-	LOG_DBG("free page frames: %zu", z_free_page_count);
+	LOG_DBG("free page frames: %zu", z_free_page_बिलांग);
 
 #ifdef CONFIG_DEMAND_PAGING
 #ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
@@ -1395,7 +1395,7 @@ void z_mem_manage_init(void)
 	page_frames_initialized = true;
 #endif /* CONFIG_ASSERT */
 
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 }
 
 void z_mem_manage_boot_finish(void)
@@ -1597,7 +1597,7 @@ static int do_mem_evict(void *addr)
 	bool dirty;
 	struct k_mem_page_frame *pf;
 	uintptr_t location;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	uintptr_t flags, phys;
 	int ret;
 
@@ -1611,7 +1611,7 @@ static int do_mem_evict(void *addr)
 	k_sched_lock();
 #endif
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 	flags = arch_page_info_get(addr, &phys, false);
 	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
 		 "address %p isn't mapped", addr);
@@ -1630,17 +1630,17 @@ static int do_mem_evict(void *addr)
 	}
 
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	if (dirty) {
 		do_backing_store_page_out(location);
 	}
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	page_frame_free_locked(pf);
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
 #ifdef CONFIG_SMP
 	k_mutex_unlock(&z_mm_paging_lock);
@@ -1672,7 +1672,7 @@ int k_mem_page_out(void *addr, size_t size)
 
 int k_mem_page_frame_evict(uintptr_t phys)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	struct k_mem_page_frame *pf;
 	bool dirty;
 	uintptr_t flags;
@@ -1696,7 +1696,7 @@ int k_mem_page_frame_evict(uintptr_t phys)
 	k_sched_lock();
 #endif
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 	pf = k_mem_phys_to_page_frame(phys);
 	if (!k_mem_page_frame_is_mapped(pf)) {
 		/* Nothing to do, free page */
@@ -1713,17 +1713,17 @@ int k_mem_page_frame_evict(uintptr_t phys)
 	}
 
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	if (dirty) {
 		do_backing_store_page_out(location);
 	}
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	page_frame_free_locked(pf);
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
 #ifdef CONFIG_SMP
 	k_mutex_unlock(&z_mm_paging_lock);
@@ -1735,10 +1735,10 @@ out:
 }
 
 static inline void paging_stats_faults_inc(struct k_thread *faulting_thread,
-					   int key)
+					   int सुसि)
 {
 #ifdef CONFIG_DEMAND_PAGING_STATS
-	bool is_irq_unlocked = arch_irq_unlocked(key);
+	bool is_irq_unlocked = arch_irq_unlocked(सुसि);
 
 	paging_stats.pagefaults.cnt++;
 
@@ -1830,7 +1830,7 @@ static inline struct k_mem_page_frame *do_eviction_select(bool *dirty)
 static bool do_page_fault(void *addr, bool pin)
 {
 	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	uintptr_t page_in_location, page_out_location;
 	enum arch_page_location status;
 	bool result;
@@ -1890,7 +1890,7 @@ static bool do_page_fault(void *addr, bool pin)
 #endif
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 	faulting_thread = _current;
 
 	status = arch_page_location_get(addr, &page_in_location);
@@ -1925,7 +1925,7 @@ static bool do_page_fault(void *addr, bool pin)
 	__ASSERT(status == ARCH_PAGE_LOCATION_PAGED_OUT,
 		 "unexpected status value %d", status);
 
-	paging_stats_faults_inc(faulting_thread, key.key);
+	paging_stats_faults_inc(faulting_thread, सुसि.सुसि);
 
 	pf = free_page_frame_list_get();
 	if (pf == NULL) {
@@ -1954,7 +1954,7 @@ static bool do_page_fault(void *addr, bool pin)
 	}
 
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 	/* Interrupts are now unlocked if they were not locked when we entered
 	 * this function, and we may service ISRs. The scheduler is still
 	 * locked.
@@ -1966,7 +1966,7 @@ static bool do_page_fault(void *addr, bool pin)
 	do_backing_store_page_in(page_in_location);
 
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_BUSY);
 #endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_MAPPED);
@@ -1981,7 +1981,7 @@ static bool do_page_fault(void *addr, bool pin)
 		k_mem_paging_eviction_add(pf);
 	}
 out:
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 #ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
 #ifdef CONFIG_SMP
 	k_mutex_unlock(&z_mm_paging_lock);
@@ -2048,10 +2048,10 @@ bool k_mem_page_fault(void *addr)
 static void do_mem_unpin(void *addr)
 {
 	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	uintptr_t flags, phys;
 
-	key = k_spin_lock(&z_mm_lock);
+	सुसि = k_spin_lock(&z_mm_lock);
 	flags = arch_page_info_get(addr, &phys, false);
 	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
 		 "invalid data page at %p", addr);
@@ -2065,7 +2065,7 @@ static void do_mem_unpin(void *addr)
 			}
 		}
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_lock, सुसि);
 }
 
 void k_mem_unpin(void *addr, size_t size)

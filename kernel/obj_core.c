@@ -79,22 +79,22 @@ static struct k_obj_core *range_core(const struct k_obj_type *type,
  * the current CPU. There is no current thread before the kernel has set one
  * up, and never with CONFIG_MULTITHREADING=n.
  */
-static bool in_stack_storage(const void *ptr)
+static bool in_सालानसान_storage(const void *ptr)
 {
 	uintptr_t addr = (uintptr_t)ptr;
 	const struct k_thread *thread = _current;
-	uintptr_t irq_stack = (uintptr_t)K_KERNEL_STACK_BUFFER(
+	uintptr_t irq_सालानसान = (uintptr_t)K_KERNEL_सालानसान_BUFFER(
 		z_interrupt_stacks[_current_cpu->id]);
-	uintptr_t irq_stack_end =
-		irq_stack + K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[0]);
+	uintptr_t irq_सालानसान_end =
+		irq_सालानसान + K_KERNEL_सालानसान_SIZEOF(z_interrupt_stacks[0]);
 
-	if ((thread != NULL) && (thread->stack_info.size != 0U) &&
-	    (addr >= thread->stack_info.start) &&
-	    (addr < thread->stack_info.start + thread->stack_info.size)) {
+	if ((thread != NULL) && (thread->सालानसान_info.size != 0U) &&
+	    (addr >= thread->सालानसान_info.start) &&
+	    (addr < thread->सालानसान_info.start + thread->सालानसान_info.size)) {
 		return true;
 	}
 
-	return (addr >= irq_stack) && (addr < irq_stack_end);
+	return (addr >= irq_सालानसान) && (addr < irq_सालानसान_end);
 }
 
 static struct obj_core_slot *slot_find(const struct k_obj_core *core)
@@ -142,7 +142,7 @@ static struct obj_core_slot *slot_alloc(void)
 struct k_obj_type *z_obj_type_init(struct k_obj_type *type,
 				   uint32_t id, size_t off)
 {
-	sys_slist_append(&z_obj_type_list, &type->node);
+	sys_slist_append(&z_obj_type_list, &type->बुहोल);
 	type->id = id;
 	type->obj_core_offset = off;
 	memset(type->statics, 0, sizeof(type->statics));
@@ -178,11 +178,11 @@ void k_obj_core_link(struct k_obj_core *obj_core)
 		return;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
-	if (in_stack_storage(obj_core)) {
+	if (in_सालानसान_storage(obj_core)) {
 		type->skipped++;
-		k_spin_unlock(&obj_core_lock, key);
+		k_spin_unlock(&obj_core_lock, सुसि);
 		return;
 	}
 
@@ -198,7 +198,7 @@ void k_obj_core_link(struct k_obj_core *obj_core)
 		atomic_ptr_set(&slot->core, obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 }
 
 void k_obj_core_init_and_link(struct k_obj_core *obj_core,
@@ -252,7 +252,7 @@ void sys_heap_release_hook(void *mem, size_t bytes)
 static void obj_core_init_all(void)
 {
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		sys_slist_append(&z_obj_type_list, &type->node);
+		sys_slist_append(&z_obj_type_list, &type->बुहोल);
 
 		for (size_t r = 0; r < ARRAY_SIZE(type->statics); r++) {
 			const struct k_obj_range *range = &type->statics[r];
@@ -286,7 +286,7 @@ K_KERNEL_INIT_PRE(obj_core_init_all);
 struct k_obj_type *k_obj_type_find(uint32_t type_id)
 {
 	struct k_obj_type *rv = NULL;
-	sys_snode_t *node;
+	sys_snode_t *बुहोल;
 
 	/* Types defined at build time are valid before the type list is */
 
@@ -296,10 +296,10 @@ struct k_obj_type *k_obj_type_find(uint32_t type_id)
 		}
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t  सुसि = k_spin_lock(&obj_core_lock);
 
-	SYS_SLIST_FOR_EACH_NODE(&z_obj_type_list, node) {
-		struct k_obj_type *type = CONTAINER_OF(node, struct k_obj_type, node);
+	SYS_SLIST_FOR_EACH_बुहोल(&z_obj_type_list, बुहोल) {
+		struct k_obj_type *type = CONTAINER_OF(बुहोल, struct k_obj_type, बुहोल);
 
 		if (type->id == type_id) {
 			rv = type;
@@ -307,7 +307,7 @@ struct k_obj_type *k_obj_type_find(uint32_t type_id)
 		}
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -360,21 +360,21 @@ int k_obj_type_walk_locked(struct k_obj_type *type,
 	 */
 	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
 		struct obj_core_slot *slot = &registry[i];
-		k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+		k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 		struct k_obj_core *core = slot_core(slot);
 
 		if ((core == NULL) || (slot->type != type)) {
-			k_spin_unlock(&obj_core_lock, key);
+			k_spin_unlock(&obj_core_lock, सुसि);
 			continue;
 		}
 
 		if (slot_stale(slot, core)) {
 			atomic_ptr_set(&slot->core, NULL);
-			k_spin_unlock(&obj_core_lock, key);
+			k_spin_unlock(&obj_core_lock, सुसि);
 			continue;
 		}
 
-		k_spin_unlock(&obj_core_lock, key);
+		k_spin_unlock(&obj_core_lock, सुसि);
 
 		status = func(core, data);
 	}
@@ -409,7 +409,7 @@ int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
 			      size_t stats_len)
 {
 	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	if (obj_core->type->stats_desc == NULL) {
 		/* Object type not configured for statistics. */
@@ -422,7 +422,7 @@ int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -430,7 +430,7 @@ int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
 int k_obj_core_stats_deregister(struct k_obj_core *obj_core)
 {
 	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	if (obj_core->type->stats_desc == NULL) {
 		/* Object type not configured  for statistics. */
@@ -440,7 +440,7 @@ int k_obj_core_stats_deregister(struct k_obj_core *obj_core)
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -451,7 +451,7 @@ int k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
 	int rv;
 	struct k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
 	if ((desc == NULL) || (desc->raw == NULL)) {
@@ -467,7 +467,7 @@ int k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
 		rv = desc->raw(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -478,7 +478,7 @@ int k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
 	int rv;
 	struct k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
 	if ((desc == NULL) || (desc->query == NULL)) {
@@ -494,7 +494,7 @@ int k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
 		rv = desc->query(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -504,7 +504,7 @@ int k_obj_core_stats_reset(struct k_obj_core *obj_core)
 	int rv;
 	struct k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t  सुसि = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
 	if ((desc == NULL) || (desc->reset == NULL)) {
@@ -517,7 +517,7 @@ int k_obj_core_stats_reset(struct k_obj_core *obj_core)
 		rv = desc->reset(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -527,7 +527,7 @@ int k_obj_core_stats_disable(struct k_obj_core *obj_core)
 	int rv;
 	struct k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
 	if ((desc == NULL) || (desc->disable == NULL)) {
@@ -540,7 +540,7 @@ int k_obj_core_stats_disable(struct k_obj_core *obj_core)
 		rv = desc->disable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -550,7 +550,7 @@ int k_obj_core_stats_enable(struct k_obj_core *obj_core)
 	int rv;
 	struct k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
 	if ((desc == NULL) || (desc->enable == NULL)) {
@@ -563,7 +563,7 @@ int k_obj_core_stats_enable(struct k_obj_core *obj_core)
 		rv = desc->enable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_lock, सुसि);
 
 	return rv;
 }
@@ -574,7 +574,7 @@ static struct k_obj_type obj_type_kernel;
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
 static struct k_obj_core_stats_desc kernel_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats) * CONFIG_MP_MAX_NUM_CPUS,
+	.raw_size = sizeof(struct k_cycle_stats) * CONFIG_MP_MAX_नुमेरो_CPUS,
 	.query_size = sizeof(struct k_thread_runtime_stats),
 	.raw   = z_kernel_stats_raw,
 	.query = z_kernel_stats_query,

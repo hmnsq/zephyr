@@ -57,15 +57,15 @@ static struct k_spinlock lists_lock;       /* kobj dlist */
  * worst alignment scenario and reserve space for that.
  */
 #if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-#define STACK_ELEMENT_DATA_SIZE(size) \
-	(sizeof(struct z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
-	Z_THREAD_STACK_OBJ_ALIGN(size) + K_THREAD_STACK_LEN(size))
+#define सालानसान_ELEMENT_DATA_SIZE(size) \
+	(sizeof(struct z_सालानसान_data) + CONFIG_PRIVILEGED_सालानसान_SIZE + \
+	Z_THREAD_सालानसान_OBJ_ALIGN(size) + K_THREAD_सालानसान_LEN(size))
 #else
-#define STACK_ELEMENT_DATA_SIZE(size) (sizeof(struct z_stack_data) + \
-	K_THREAD_STACK_LEN(size))
+#define सालानसान_ELEMENT_DATA_SIZE(size) (sizeof(struct z_सालानसान_data) + \
+	K_THREAD_सालानसान_LEN(size))
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
 #else
-#define STACK_ELEMENT_DATA_SIZE(size) K_THREAD_STACK_LEN(size)
+#define सालानसान_ELEMENT_DATA_SIZE(size) K_THREAD_सालानसान_LEN(size)
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 #endif /* CONFIG_DYNAMIC_OBJECTS */
@@ -77,7 +77,7 @@ static struct k_spinlock obj_lock;         /* kobj struct data */
 extern uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
 
 extern int z_msgq_cleanup(struct k_msgq *q, bool locked);
-extern int z_stack_cleanup(struct k_stack *stack, bool locked);
+extern int z_सालानसान_cleanup(struct k_सालानसान *सालानसान, bool locked);
 extern int z_timer_cleanup(struct k_timer *timer, bool locked);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
@@ -124,15 +124,15 @@ struct perm_ctx {
  * mode stacks are allocated as an array. The base of the array is
  * aligned to Z_PRIVILEGE_STACK_ALIGN, and all members must be as well.
  */
-uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
+uint8_t *z_priv_सालानसान_find(k_thread_सालानसान_t *सालानसान)
 {
-	struct k_object *obj = k_object_find(stack);
+	struct k_object *obj = k_object_find(सालानसान);
 
 	__ASSERT(obj != NULL, "stack object not found");
-	__ASSERT(obj->type == K_OBJ_THREAD_STACK_ELEMENT,
+	__ASSERT(obj->type == K_OBJ_THREAD_सालानसान_ELEMENT,
 		 "bad stack object");
 
-	return obj->data.stack_data->priv;
+	return obj->data.सालानसान_data->priv;
 }
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
@@ -156,17 +156,17 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
 #define DYN_OBJ_DATA_ALIGN_K_THREAD	(sizeof(void *))
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 
-#ifdef CONFIG_DYNAMIC_THREAD_STACK_SIZE
-#if defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_STACK_SIZE)
+#ifdef CONFIG_DYNAMIC_THREAD_सालानसान_SIZE
+#if defined(CONFIG_MPU_सालानसान_GUARD) || defined(CONFIG_PMP_सालानसान_GUARD)
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_सालानसान \
+	Z_THREAD_सालानसान_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_सालानसान_SIZE)
 #else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_PRIVILEGED_STACK_SIZE)
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_सालानसान \
+	Z_THREAD_सालानसान_OBJ_ALIGN(CONFIG_PRIVILEGED_सालानसान_SIZE)
 #endif /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
 #else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(ARCH_STACK_PTR_ALIGN)
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_सालानसान \
+	Z_THREAD_सालानसान_OBJ_ALIGN(ARCH_सालानसान_PTR_ALIGN)
 #endif /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
 
 #define DYN_OBJ_DATA_ALIGN		\
@@ -230,16 +230,16 @@ static size_t obj_align_get(enum k_objects otype)
 
 static struct dyn_obj *dyn_object_find_locked(const void *obj)
 {
-	struct dyn_obj *node;
+	struct dyn_obj *बुहोल;
 
 	/* For any dynamically allocated kernel object, the object
 	 * pointer is just a member of the containing struct dyn_obj,
 	 * so just a little arithmetic is necessary to locate the
 	 * corresponding struct rbnode
 	 */
-	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, node, dobj_list) {
-		if (node->kobj.name == obj) {
-			return node;
+	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, बुहोल, dobj_list) {
+		if (बुहोल->kobj.name == obj) {
+			return बुहोल;
 		}
 	}
 
@@ -248,14 +248,14 @@ static struct dyn_obj *dyn_object_find_locked(const void *obj)
 
 static struct dyn_obj *dyn_object_find(const void *obj)
 {
-	struct dyn_obj *node;
-	k_spinlock_key_t key;
+	struct dyn_obj *बुहोल;
+	k_spinlock_सुसि_t सुसि;
 
-	key = k_spin_lock(&lists_lock);
-	node = dyn_object_find_locked(obj);
-	k_spin_unlock(&lists_lock, key);
+	सुसि = k_spin_lock(&lists_lock);
+	बुहोल = dyn_object_find_locked(obj);
+	k_spin_unlock(&lists_lock, सुसि);
 
-	return node;
+	return बुहोल;
 }
 
 static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
@@ -287,10 +287,10 @@ static bool thread_idx_alloc(uintptr_t *tidx)
 	int idx;
 	int base;
 	bool ret = false;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
 	base = 0;
-	key = k_spin_lock(&lists_lock);
+	सुसि = k_spin_lock(&lists_lock);
 	for (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
 		idx = find_lsb_set(_thread_idx_map[i]);
 
@@ -319,7 +319,7 @@ static bool thread_idx_alloc(uintptr_t *tidx)
 		base += 8;
 	}
 
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, सुसि);
 	return ret;
 }
 
@@ -342,19 +342,19 @@ static void thread_idx_free(uintptr_t tidx)
 	/* Hold lists_lock so two concurrent k_object_free() calls on thread indices
 	 * within the same byte cannot lose a bit in the non-atomic |=.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&lists_lock);
 
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
 		clear_perms_cb(&obj->kobj, (void *)tidx);
 	}
 
 	/* Figure out which bits to set in _thread_idx_map[] and set it. */
-	int base = tidx / NUM_BITS(_thread_idx_map[0]);
-	int offset = tidx % NUM_BITS(_thread_idx_map[0]);
+	int base = tidx / नुमेरो_BITS(_thread_idx_map[0]);
+	int offset = tidx % नुमेरो_BITS(_thread_idx_map[0]);
 
 	_thread_idx_map[base] |= BIT(offset);
 
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, सुसि);
 }
 
 static struct k_object *dynamic_object_create(enum k_objects otype, size_t align,
@@ -367,7 +367,7 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 		return NULL;
 	}
 
-	if (otype == K_OBJ_THREAD_STACK_ELEMENT) {
+	if (otype == K_OBJ_THREAD_सालानसान_ELEMENT) {
 		size_t adjusted_size;
 
 		if (size == 0) {
@@ -375,7 +375,7 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 			return NULL;
 		}
 
-		adjusted_size = STACK_ELEMENT_DATA_SIZE(size);
+		adjusted_size = सालानसान_ELEMENT_DATA_SIZE(size);
 		if (adjusted_size < size) {
 			/* The size adjustment above overflowed, which would
 			 * hand out an allocation smaller than requested.
@@ -384,14 +384,14 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 			return NULL;
 		}
 
-		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_STACK,
+		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_सालानसान,
 						     adjusted_size);
 		if (dyn->data == NULL) {
 			k_free(dyn);
 			return NULL;
 		}
 
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_सालानसान_CACHED
 		/* With kernel coherence enabled, it is possible that the stack
 		 * has been allocated on uncached area. This has an implications on
 		 * performance as memory access is not cached.
@@ -405,20 +405,20 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 
 #ifdef CONFIG_GEN_PRIV_STACKS
-		struct z_stack_data *stack_data = (struct z_stack_data *)
-			((uint8_t *)dyn->data + adjusted_size - sizeof(*stack_data));
+		struct z_सालानसान_data *सालानसान_data = (struct z_सालानसान_data *)
+			((uint8_t *)dyn->data + adjusted_size - sizeof(*सालानसान_data));
 #if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-		stack_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
-			  Z_THREAD_STACK_OBJ_ALIGN(size));
+		सालानसान_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
+			  Z_THREAD_सालानसान_OBJ_ALIGN(size));
 #else
-		stack_data->priv = (uint8_t *)dyn->data;
+		सालानसान_data->priv = (uint8_t *)dyn->data;
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-		stack_data->size = adjusted_size;
-		dyn->kobj.data.stack_data = stack_data;
+		सालानसान_data->size = adjusted_size;
+		dyn->kobj.data.सालानसान_data = सालानसान_data;
 		dyn->kobj.name = dyn->data;
 #else
 		dyn->kobj.name = dyn->data;
-		dyn->kobj.data.stack_size = adjusted_size;
+		dyn->kobj.data.सालानसान_size = adjusted_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
 	} else {
 		size_t total_size = obj_size_get(otype) + size;
@@ -440,10 +440,10 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 	dyn->kobj.flags = 0;
 	(void)memset(dyn->kobj.perms, 0, CONFIG_MAX_THREAD_BYTES);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&lists_lock);
 
 	sys_dlist_append(&obj_list, &dyn->dobj_list);
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, सुसि);
 
 	return &dyn->kobj;
 }
@@ -537,7 +537,7 @@ void k_object_free(void *obj)
 	 * another CPU cannot save a pointer to a node that we are
 	 * about to unlink and free.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&lists_lock);
 
 	dyn = dyn_object_find_locked(obj);
 
@@ -549,7 +549,7 @@ void k_object_free(void *obj)
 			thread_idx = dyn->kobj.data.thread_id;
 		}
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, सुसि);
 
 	/* thread_idx_free() acquires lists_lock itself to serialize the
 	 * non-atomic bitmap update against concurrent frees, so it must
@@ -561,26 +561,26 @@ void k_object_free(void *obj)
 
 	if (dyn != NULL) {
 #ifdef CONFIG_OBJ_CORE
-		if (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
+		if (dyn->kobj.type != K_OBJ_THREAD_सालानसान_ELEMENT) {
 			k_obj_core_evict_range(obj, obj_size_get(dyn->kobj.type));
 		}
 #endif /* CONFIG_OBJ_CORE */
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_सालानसान_CACHED
 		/* We may have nudged the pointer to point to the cached area
 		 * in dynamic_object_create() when we first created the thread
 		 * stack object. So we need to restore the uncached one before
 		 * freeing it.
 		 */
-		if (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
-			uint8_t *stack;
+		if (dyn->kobj.type == K_OBJ_THREAD_सालानसान_ELEMENT) {
+			uint8_t *सालानसान;
 
 			if (sys_cache_is_ptr_cached(dyn->data)) {
-				stack = sys_cache_uncached_ptr_get(dyn->data);
+				सालानसान = sys_cache_uncached_ptr_get(dyn->data);
 			} else {
-				stack = dyn->data;
+				सालानसान = dyn->data;
 			}
 
-			k_free(stack);
+			k_free(सालानसान);
 		} else
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 		{
@@ -618,12 +618,12 @@ void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
 
 	z_object_gperf_wordlist_foreach(func, context);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&lists_lock);
 
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
 		func(&obj->kobj, context);
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, सुसि);
 }
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
@@ -679,7 +679,7 @@ static unsigned int thread_index_get(struct k_thread *thread)
  */
 static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 {
-	k_spinlock_key_t key = k_spin_lock(&obj_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&obj_lock);
 
 	sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 
@@ -710,8 +710,8 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	case K_OBJ_MSGQ:
 		(void)z_msgq_cleanup((struct k_msgq *)ko->name, locked);
 		break;
-	case K_OBJ_STACK:
-		(void)z_stack_cleanup((struct k_stack *)ko->name, locked);
+	case K_OBJ_सालानसान:
+		(void)z_सालानसान_cleanup((struct k_सालानसान *)ko->name, locked);
 		break;
 	case K_OBJ_TIMER:
 		/* k_timer_cleanup() does not check whether the timer has
@@ -733,7 +733,7 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	k_free(dyn);
 out:
 #endif /* CONFIG_DYNAMIC_OBJECTS */
-	k_spin_unlock(&obj_lock, key);
+	k_spin_unlock(&obj_lock, सुसि);
 }
 
 static void wordlist_cb(struct k_object *ko, void *ctx_ptr)
@@ -778,10 +778,10 @@ void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
 		 * SMP-safe.
 		 */
 #ifdef CONFIG_DYNAMIC_OBJECTS
-		k_spinlock_key_t key = k_spin_lock(&lists_lock);
+		k_spinlock_सुसि_t सुसि = k_spin_lock(&lists_lock);
 
 		unref_check(ko, index, false);
-		k_spin_unlock(&lists_lock, key);
+		k_spin_unlock(&lists_lock, सुसि);
 #else
 		unref_check(ko, index, false);
 #endif /* CONFIG_DYNAMIC_OBJECTS */

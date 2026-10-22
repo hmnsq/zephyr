@@ -16,7 +16,7 @@
 void z_sched_init(void)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
+	for (int i = 0; i < CONFIG_MP_MAX_नुमेरो_CPUS; i++) {
 		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
 	}
 #else
@@ -42,21 +42,21 @@ void k_sched_unlock(void)
 {
 	SYS_PORT_TRACING_FUNC(k_thread, sched_unlock);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	__ASSERT(_current->base.sched_locked != 0U, "");
 	__ASSERT(!arch_is_in_isr(), "");
 	++_current->base.sched_locked;
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(सुसि);
 }
 
 void z_impl_k_reschedule(void)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
-	key = z_sched_spinlock_lock();
+	सुसि = z_sched_spinlock_lock();
 
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(सुसि);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -127,10 +127,10 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
+int z_sched_wait(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि,
 		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	int ret = z_pend_curr(lock, सुसि, wait_q, timeout);
 
 	if (data != NULL) {
 		*data = _current->base.swap_data;

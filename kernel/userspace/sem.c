@@ -12,46 +12,46 @@
 
 static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_हालागा, new_हालागा;
 
 	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
+		old_हालागा = atomic_get(val);
+		if (old_हालागा < minimum) {
 			break;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_हालागा = old_हालागा - 1;
+	} while (atomic_cas(val, old_हालागा, new_हालागा) == 0);
 
-	return old_value;
+	return old_हालागा;
 }
 
 static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_हालागा, new_हालागा;
 
 	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
+		old_हालागा = atomic_get(val);
+		if (old_हालागा >= maximum) {
 			break;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_हालागा = ((old_हालागा < minimum) ? minimum : old_हालागा) + 1;
+	} while (atomic_cas(val, old_हालागा, new_हालागा) == 0U);
 
-	return old_value;
+	return old_हालागा;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
+int sys_sem_init(struct sys_sem *sem, unsigned int initial_बिलांग,
 		 unsigned int limit)
 {
 	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
+	    (initial_बिलांग > limit) || (limit > INT_MAX)) {
 		return -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
+	(void)atomic_set(&sem->futex.val, initial_बिलांग);
 	sem->limit = limit;
 
 	return 0;
@@ -60,17 +60,17 @@ int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
 int sys_sem_give(struct sys_sem *sem)
 {
 	int ret = 0;
-	atomic_t old_value;
+	atomic_t old_हालागा;
 
-	old_value = bounded_inc(&sem->futex.val,
+	old_हालागा = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	if (old_हालागा < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
 		if (ret > 0) {
 			return 0;
 		}
-	} else if (old_value >= sem->limit) {
+	} else if (old_हालागा >= sem->limit) {
 		return -EAGAIN;
 	} else {
 		;
@@ -81,12 +81,12 @@ int sys_sem_give(struct sys_sem *sem)
 int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
 {
 	int ret = 0;
-	atomic_t old_value;
+	atomic_t old_हालागा;
 
 	do {
-		old_value = bounded_dec(&sem->futex.val,
+		old_हालागा = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
+		if (old_हालागा > 0) {
 			return 0;
 		}
 
@@ -97,9 +97,9 @@ int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
 	return ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned int sys_sem_बिलांग_get(struct sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	int हालागा = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	return (हालागा > SYS_SEM_MINIMUM) ? हालागा : SYS_SEM_MINIMUM;
 }

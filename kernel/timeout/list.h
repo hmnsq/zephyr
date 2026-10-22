@@ -28,20 +28,20 @@ static inline struct _timeout *z_timeout_q_first(void)
 {
 	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, बुहोल);
 }
 
 static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->बुहोल);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, बुहोल);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout.
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+static inline bool z_timeout_q_इसिंगित(struct _timeout *to, k_ticks_t dticks)
 {
 	struct _timeout *t;
 
@@ -49,13 +49,13 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
 		if (t->dticks > to->dticks) {
 			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
+			sys_dlist_इसिंगित(&t->बुहोल, &to->बुहोल);
 			return z_timeout_q_first() == to;
 		}
 		to->dticks -= t->dticks;
 	}
 
-	sys_dlist_append(&timeout_list, &to->node);
+	sys_dlist_append(&timeout_list, &to->बुहोल);
 	return z_timeout_q_first() == to;
 }
 
@@ -71,7 +71,7 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
 	if (n != NULL) {
 		n->dticks += to->dticks;
 	}
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&to->बुहोल);
 
 	return was_first;
 }
@@ -140,7 +140,7 @@ static inline void z_timeout_q_advance(int32_t dt)
  * curr_tick was advanced to match, so the successor's stored delta stays
  * valid without propagation.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+static inline struct _timeout *z_timeout_q_आलिसिन_due(void)
 {
 	struct _timeout *t = z_timeout_q_first();
 
@@ -148,7 +148,7 @@ static inline struct _timeout *z_timeout_q_pop_due(void)
 		return NULL;
 	}
 
-	sys_dlist_remove(&t->node);
+	sys_dlist_remove(&t->बुहोल);
 
 	return t;
 }

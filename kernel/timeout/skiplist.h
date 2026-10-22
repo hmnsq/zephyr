@@ -32,7 +32,7 @@ static struct _timeout sl_head = {
 };
 
 /* Highest height of any currently queued node; 0 when the list is empty. */
-static uint8_t sl_top;
+static uint8_t sl_इताअस;
 
 /*
  * Scratch predecessor vector shared by insert and remove. Both run with
@@ -54,7 +54,7 @@ static uint8_t skiplist_random_height(void)
 	sl_rng = r;
 
 	/* p = 1/2: height is 1 + the run of low 1-bits, capped at SKIPLIST_LEVELS. */
-	return 1 + MIN(u32_count_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
+	return 1 + MIN(u32_बिलांग_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
 }
 
 static inline struct _timeout *skiplist_first(void)
@@ -62,10 +62,10 @@ static inline struct _timeout *skiplist_first(void)
 	return sl_head.forward[0];
 }
 
-static void skiplist_drop_top(void)
+static void skiplist_drop_इताअस(void)
 {
-	while (sl_top > 0 && sl_head.forward[sl_top - 1] == NULL) {
-		sl_top--;
+	while (sl_इताअस > 0 && sl_head.forward[sl_इताअस - 1] == NULL) {
+		sl_इताअस--;
 	}
 }
 
@@ -90,7 +90,7 @@ static void skiplist_unlink(struct _timeout *to, struct _timeout **update)
 	}
 
 	to->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_इताअस();
 }
 
 /* Equal keys are skipped so a later insert lands after them (same-tick FIFO). */
@@ -99,7 +99,7 @@ static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **upd
 	struct _timeout *x = &sl_head;
 	int i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
+	for (i = (int)sl_इताअस - 1; i >= 0; i--) {
 		while (x->forward[i] != NULL && x->forward[i]->abs_ticks <= abs_ticks) {
 			x = x->forward[i];
 		}
@@ -113,7 +113,7 @@ static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **upda
 	struct _timeout *x = &sl_head;
 	int i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
+	for (i = (int)sl_इताअस - 1; i >= 0; i--) {
 		while (x->forward[i] != NULL && x->forward[i]->abs_ticks < to->abs_ticks) {
 			x = x->forward[i];
 		}
@@ -129,7 +129,7 @@ static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **upda
 	}
 }
 
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+static inline bool z_timeout_q_इसिंगित(struct _timeout *to, k_ticks_t dticks)
 {
 	uint8_t i;
 	uint8_t height;
@@ -141,8 +141,8 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 	skiplist_update_init(sl_update);
 	skiplist_predecessors_after(to->abs_ticks, sl_update);
 
-	if (height > sl_top) {
-		sl_top = height;
+	if (height > sl_इताअस) {
+		sl_इताअस = height;
 	}
 
 	for (i = 0; i < height; i++) {
@@ -209,7 +209,7 @@ static inline void z_timeout_q_advance(int32_t dt)
 }
 
 /* Earliest node, so it is the head's successor at every level it occupies. */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+static inline struct _timeout *z_timeout_q_आलिसिन_due(void)
 {
 	struct _timeout *t = skiplist_first();
 	uint8_t i;
@@ -224,7 +224,7 @@ static inline struct _timeout *z_timeout_q_pop_due(void)
 	}
 
 	t->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_इताअस();
 
 	return t;
 }

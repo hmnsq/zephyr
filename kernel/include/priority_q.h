@@ -59,10 +59,10 @@
 
 #if defined(CONFIG_64BIT)
 #define NBITS          64
-#define TRAILING_ZEROS u64_count_trailing_zeros
+#define TRAILING_ZEROS u64_बिलांग_trailing_zeros
 #else
 #define NBITS          32
-#define TRAILING_ZEROS u32_count_trailing_zeros
+#define TRAILING_ZEROS u32_बिलांग_trailing_zeros
 #endif /* CONFIG_64BIT */
 
 static ALWAYS_INLINE void z_priq_simple_init(sys_dlist_t *pq)
@@ -117,7 +117,7 @@ static ALWAYS_INLINE void z_priq_simple_add(sys_dlist_t *pq, struct k_thread *th
 
 	SYS_DLIST_FOR_EACH_CONTAINER(pq, t, base.qnode_dlist) {
 		if (z_sched_prio_cmp(thread, t) > 0) {
-			sys_dlist_insert(&t->base.qnode_dlist, &thread->base.qnode_dlist);
+			sys_dlist_इसिंगित(&t->base.qnode_dlist, &thread->base.qnode_dlist);
 			return;
 		}
 	}
@@ -152,7 +152,7 @@ static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
 	while (n != NULL) {
 		t = CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
 		if (z_sched_prio_cmp(_current, t) > 0) {
-			sys_dlist_insert(&t->base.qnode_dlist,
+			sys_dlist_इसिंगित(&t->base.qnode_dlist,
 					 &_current->base.qnode_dlist);
 			return;
 		}
@@ -198,7 +198,7 @@ static ALWAYS_INLINE void z_priq_rb_init(struct _priq_rb *pq)
 	bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b);
 
 	*pq = (struct _priq_rb) {
-		.tree = {
+		.पुनो = {
 			.lessthan_fn = z_priq_rb_lessthan,
 		}
 	};
@@ -208,8 +208,8 @@ static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *th
 {
 	struct k_thread *t;
 
-	thread->base.order_key = pq->next_order_key;
-	++pq->next_order_key;
+	thread->base.order_सुसि = pq->next_order_सुसि;
+	++pq->next_order_सुसि;
 
 	/* Renumber at wraparound.  This is tiny code, and in practice
 	 * will almost never be hit on real systems.  BUT on very
@@ -217,22 +217,22 @@ static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *th
 	 * AND that contains very large numbers of threads, it can be
 	 * a latency glitch to loop over all the threads like this.
 	 */
-	if (!pq->next_order_key) {
-		RB_FOR_EACH_CONTAINER(&pq->tree, t, base.qnode_rb) {
-			t->base.order_key = pq->next_order_key;
-			++pq->next_order_key;
+	if (!pq->next_order_सुसि) {
+		RB_FOR_EACH_CONTAINER(&pq->पुनो, t, base.qnode_rb) {
+			t->base.order_सुसि = pq->next_order_सुसि;
+			++pq->next_order_सुसि;
 		}
 	}
 
-	rb_insert(&pq->tree, &thread->base.qnode_rb);
+	rb_इसिंगित(&pq->पुनो, &thread->base.qnode_rb);
 }
 
 static ALWAYS_INLINE void z_priq_rb_remove(struct _priq_rb *pq, struct k_thread *thread)
 {
-	rb_remove(&pq->tree, &thread->base.qnode_rb);
+	rb_remove(&pq->पुनो, &thread->base.qnode_rb);
 
-	if (!pq->tree.root) {
-		pq->next_order_key = 0;
+	if (!pq->पुनो.उगात) {
+		pq->next_order_सुसि = 0;
 	}
 }
 
@@ -247,7 +247,7 @@ static ALWAYS_INLINE void z_priq_rb_yield(struct _priq_rb *pq)
 static ALWAYS_INLINE struct k_thread *z_priq_rb_best(struct _priq_rb *pq)
 {
 	struct k_thread *thread = NULL;
-	struct rbnode *n = rb_get_min(&pq->tree);
+	struct rbnode *n = rb_get_min(&pq->पुनो);
 
 	if (n != NULL) {
 		thread = CONTAINER_OF(n, struct k_thread, base.qnode_rb);
@@ -261,7 +261,7 @@ static ALWAYS_INLINE struct k_thread *z_priq_rb_mask_best(struct _priq_rb *pq)
 	unsigned long current_cpu_bit = BIT(_current_cpu->id);
 	struct k_thread *thread;
 
-	RB_FOR_EACH_CONTAINER(&pq->tree, thread, base.qnode_rb) {
+	RB_FOR_EACH_CONTAINER(&pq->पुनो, thread, base.qnode_rb) {
 		if ((thread->base.cpu_mask & current_cpu_bit) != 0) {
 			return thread;
 		}
@@ -299,7 +299,7 @@ static ALWAYS_INLINE unsigned int z_priq_mq_best_queue_index(struct _priq_mq *pq
 		i++;
 	} while (i < PRIQ_BITMAP_SIZE);
 
-	return K_NUM_THREAD_PRIO - 1;
+	return K_नुमेरो_THREAD_PRIO - 1;
 }
 
 static ALWAYS_INLINE void z_priq_mq_init(struct _priq_mq *q)
@@ -309,7 +309,7 @@ static ALWAYS_INLINE void z_priq_mq_init(struct _priq_mq *q)
 	}
 
 #ifndef CONFIG_SMP
-	q->cached_queue_index = K_NUM_THREAD_PRIO - 1;
+	q->cached_queue_index = K_नुमेरो_THREAD_PRIO - 1;
 #endif
 }
 

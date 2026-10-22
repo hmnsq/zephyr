@@ -14,7 +14,7 @@ struct k_spinlock z_thread_monitor_lock;
  */
 void z_thread_monitor_exit(struct k_thread *thread)
 {
-	k_spinlock_key_t key = k_spin_lock(&z_thread_monitor_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_thread_monitor_lock);
 
 	if (thread == _kernel.threads) {
 		_kernel.threads = _kernel.threads->next_thread;
@@ -31,7 +31,7 @@ void z_thread_monitor_exit(struct k_thread *thread)
 		}
 	}
 
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, सुसि);
 }
 
 /*
@@ -41,15 +41,15 @@ static void thread_foreach_helper(k_thread_user_cb_t user_cb, void *user_data,
 		bool unlocked, bool filter_by_cpu, unsigned int cpu)
 {
 	struct k_thread *thread;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
 	__ASSERT(user_cb != NULL, "user_cb can not be NULL");
 
 	if (filter_by_cpu) {
-		__ASSERT(cpu < CONFIG_MP_MAX_NUM_CPUS, "cpu filter out of bounds");
+		__ASSERT(cpu < CONFIG_MP_MAX_नुमेरो_CPUS, "cpu filter out of bounds");
 	}
 
-	key = k_spin_lock(&z_thread_monitor_lock);
+	सुसि = k_spin_lock(&z_thread_monitor_lock);
 
 	for (thread = _kernel.threads; thread; thread = thread->next_thread) {
 		/* cpu is only defined when SMP=y*/
@@ -63,15 +63,15 @@ static void thread_foreach_helper(k_thread_user_cb_t user_cb, void *user_data,
 		}
 
 		if (unlocked) {
-			k_spin_unlock(&z_thread_monitor_lock, key);
+			k_spin_unlock(&z_thread_monitor_lock, सुसि);
 			user_cb(thread, user_data);
-			key = k_spin_lock(&z_thread_monitor_lock);
+			सुसि = k_spin_lock(&z_thread_monitor_lock);
 		} else {
 			user_cb(thread, user_data);
 		}
 	}
 
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, सुसि);
 }
 
 /*

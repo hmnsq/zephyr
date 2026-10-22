@@ -122,7 +122,7 @@
  * anonymous mappings. We don't currently maintain an ontology of these in the
  * core kernel.
  */
-#define K_MEM_NUM_PAGE_FRAMES	(K_MEM_PHYS_RAM_SIZE / (size_t)CONFIG_MMU_PAGE_SIZE)
+#define K_MEM_नुमेरो_PAGE_FRAMES	(K_MEM_PHYS_RAM_SIZE / (size_t)CONFIG_MMU_PAGE_SIZE)
 
 /*
  * k_mem_page_frame flags bits
@@ -177,7 +177,7 @@ struct k_mem_page_frame {
 		 * If unmapped and available, free pages list membership
 		 * with the K_MEM_PAGE_FRAME_FREE flag.
 		 */
-		sys_sfnode_t node;
+		sys_sfnode_t बुहोल;
 	};
 
 	/* Backing store and eviction algorithms may both need to
@@ -259,7 +259,7 @@ static inline void k_mem_assert_phys_aligned(uintptr_t phys)
 	(void)phys;
 }
 
-extern struct k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
+extern struct k_mem_page_frame k_mem_page_frames[K_MEM_नुमेरो_PAGE_FRAMES];
 
 static inline uintptr_t k_mem_page_frame_to_phys(struct k_mem_page_frame *pf)
 {
@@ -357,7 +357,7 @@ void k_mem_page_frames_dump(void);
  *
  * @return Number of successful page faults
  */
-unsigned long k_mem_num_pagefaults_get(void);
+unsigned long k_mem_नुमेरो_pagefaults_get(void);
 
 /**
  * Free a page frame physical address by evicting its contents

@@ -71,7 +71,7 @@ static const char *reason_to_str(unsigned int reason)
 		return "CPU exception";
 	case K_ERR_SPURIOUS_IRQ:
 		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
+	case K_ERR_सालानसान_CHK_FAIL:
 		return "Stack overflow";
 	case K_ERR_KERNEL_OOPS:
 		return "Kernel oops";
@@ -95,7 +95,7 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
+	unsigned int सुसि = arch_irq_lock();
 	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
 			_current : NULL;
 
@@ -136,9 +136,9 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 #ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
 	unsigned int coredump_irq_cookie;
 
-	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
+	arch_coredump_fatal_irq_unlock(सुसि, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
-	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
+	सुसि = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
 #else
 	coredump(reason, esf, thread);
 #endif
@@ -164,8 +164,8 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 		/* FIXME: #17656 */
 #if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
 		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#if defined(CONFIG_सालानसान_SENTINEL)
+			if (reason != K_ERR_सालानसान_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
@@ -177,13 +177,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 #if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
 		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
-				arch_irq_unlock(key);
+#if defined(CONFIG_सालानसान_SENTINEL)
+			if (reason != K_ERR_सालानसान_CHK_FAIL) {
+				arch_irq_unlock(सुसि);
 				return;
 			}
 #else
-			arch_irq_unlock(key);
+			arch_irq_unlock(सुसि);
 			return;
 #endif /* CONFIG_STACK_SENTINEL */
 		} else {
@@ -191,14 +191,14 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 			 * a spurious ISR handler triggered.
 			 */
 			if (reason == K_ERR_SPURIOUS_IRQ) {
-				arch_irq_unlock(key);
+				arch_irq_unlock(सुसि);
 				return;
 			}
 		}
 #endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(सुसि);
 
 	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);

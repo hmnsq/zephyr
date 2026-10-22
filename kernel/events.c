@@ -124,7 +124,7 @@ static void event_post_walk_op(int status, void *data)
 	while (thread != NULL) {
 		next = thread->next_wake_link;
 
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_हालागा_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 
 		thread = next;
@@ -165,7 +165,7 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 * to call here because this walk_op callback
 		 * is invoked with the scheduler spinlock held.
 		 */
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_हालागा_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 #else /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = event_data->head;
@@ -179,11 +179,11 @@ static int event_walk_op(struct k_thread *thread, void *data)
 static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 				  uint32_t events_mask)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_सुसि_t  सुसि;
 	struct event_walk_data data;
 	uint32_t previous_events;
 
-	key = k_spin_lock(&event->lock);
+	सुसि = k_spin_lock(&event->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
 					events_mask);
@@ -213,7 +213,7 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	/* stash any events not consumed */
 	event->events = data.events & ~data.clear_events;
 
-	z_reschedule(&event->lock, key);
+	z_reschedule(&event->lock, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
 				       events_mask);
@@ -295,14 +295,14 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 		return 0;
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&event->lock);
+	k_spinlock_सुसि_t  सुसि = k_spin_lock(&event->lock);
 
 	if (options & K_EVENT_OPTION_RESET) {
 		event->events = 0;
 	}
 
 	if (events == 0) {
-		k_spin_unlock(&event->lock, key);
+		k_spin_unlock(&event->lock, सुसि);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
 		return 0;
 	}
@@ -318,12 +318,12 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 			event->events &= ~rv;
 		}
 
-		k_spin_unlock(&event->lock, key);
+		k_spin_unlock(&event->lock, सुसि);
 		goto out;
 	}
 
 	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&event->lock, key);
+		k_spin_unlock(&event->lock, सुसि);
 		goto out;
 	}
 
@@ -338,7 +338,7 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
 					   options, timeout);
 
-	if (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
+	if (z_pend_curr(&event->lock, सुसि, &event->wait_q, timeout) == 0) {
 		/* Retrieve the set of events that woke the thread */
 		rv = thread->events;
 	}

@@ -63,19 +63,19 @@ static inline struct k_spinlock *sem_spinlock_get(struct k_sem *sem)
 K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_SEM */
 
-int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
+int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_बिलांग,
 		      unsigned int limit)
 {
 	/*
 	 * Limit cannot be zero and count cannot be greater than limit
 	 */
-	CHECKIF(limit == 0U || initial_count > limit) {
+	CHECKIF(limit == 0U || initial_बिलांग > limit) {
 		SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
 
 		return -EINVAL;
 	}
 
-	sem->count = initial_count;
+	sem->बिलांग = initial_बिलांग;
 	sem->limit = limit;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
@@ -94,11 +94,11 @@ int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_count,
+int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_बिलांग,
 		      unsigned int limit)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sem, K_OBJ_SEM));
-	return z_impl_k_sem_init(sem, initial_count, limit);
+	return z_impl_k_sem_init(sem, initial_बिलांग, limit);
 }
 #include <zephyr/syscalls/k_sem_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -116,7 +116,7 @@ static inline bool sem_handle_poll_events(struct k_sem *sem)
 void z_impl_k_sem_give(struct k_sem *sem)
 {
 	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(lock);
 	bool resched;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
@@ -124,14 +124,14 @@ void z_impl_k_sem_give(struct k_sem *sem)
 	if (z_sched_wake(&sem->wait_q, 0, NULL)) {
 		resched = true;
 	} else {
-		sem->count += (sem->count != sem->limit) ? 1U : 0U;
+		sem->बिलांग += (sem->बिलांग != sem->limit) ? 1U : 0U;
 		resched = sem_handle_poll_events(sem);
 	}
 
 	if (unlikely(resched)) {
-		z_reschedule(lock, key);
+		z_reschedule(lock, सुसि);
 	} else {
-		k_spin_unlock(lock, key);
+		k_spin_unlock(lock, सुसि);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
@@ -154,26 +154,26 @@ int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
 	__ASSERT(((arch_is_in_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
 
-	if (likely(sem->count > 0U)) {
-		sem->count--;
-		k_spin_unlock(lock, key);
+	if (likely(sem->बिलांग > 0U)) {
+		sem->बिलांग--;
+		k_spin_unlock(lock, सुसि);
 		ret = 0;
 		goto out;
 	}
 
 	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(lock, key);
+		k_spin_unlock(lock, सुसि);
 		ret = -EBUSY;
 		goto out;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
 
-	ret = z_pend_curr(lock, key, &sem->wait_q, timeout);
+	ret = z_pend_curr(lock, सुसि, &sem->wait_q, timeout);
 
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
@@ -184,20 +184,20 @@ out:
 void z_impl_k_sem_reset(struct k_sem *sem)
 {
 	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(lock);
 	bool resched = false;
 
 	while (z_sched_wake(&sem->wait_q, -EAGAIN, NULL)) {
 		resched = true;
 	}
-	sem->count = 0;
+	sem->बिलांग = 0;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, reset, sem);
 
 	if (resched) {
-		z_reschedule(lock, key);
+		z_reschedule(lock, सुसि);
 	} else {
-		k_spin_unlock(lock, key);
+		k_spin_unlock(lock, सुसि);
 	}
 }
 
@@ -216,10 +216,10 @@ static inline void z_vrfy_k_sem_reset(struct k_sem *sem)
 }
 #include <zephyr/syscalls/k_sem_reset_mrsh.c>
 
-static inline unsigned int z_vrfy_k_sem_count_get(struct k_sem *sem)
+static inline unsigned int z_vrfy_k_sem_बिलांग_get(struct k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_count_get(sem);
+	return z_impl_k_sem_बिलांग_get(sem);
 }
 #include <zephyr/syscalls/k_sem_count_get_mrsh.c>
 

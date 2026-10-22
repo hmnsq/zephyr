@@ -48,7 +48,7 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * unmasked.  It does not take a spinlock or other
 		 * higher level construct.
 		 */
-		unsigned int key = arch_irq_lock();
+		unsigned int सुसि = arch_irq_lock();
 
 #ifdef CONFIG_PM
 		bool system_suspended = false;
@@ -69,12 +69,12 @@ void idle(void *unused1, void *unused2, void *unused3)
 		}
 
 		if (system_suspended) {
-			arch_irq_unlock(key);
+			arch_irq_unlock(सुसि);
 		} else {
 			k_cpu_idle();
 		}
 #else
-		ARG_UNUSED(key);
+		ARG_UNUSED(सुसि);
 		k_cpu_idle();
 #endif /* CONFIG_PM */
 
@@ -104,4 +104,4 @@ void __weak arch_spin_relax(void)
 
 	arch_nop();
 }
-EXPORT_SYMBOL(arch_spin_relax);
+EXPORT_सिम्बोलो(arch_spin_relax);

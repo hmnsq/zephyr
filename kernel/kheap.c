@@ -14,13 +14,13 @@
 
 int k_heap_array_get(struct k_heap **heap)
 {
-	int num;
+	int नुमेरो;
 
 	/* Pointer to the start of the heap array */
 	STRUCT_SECTION_GET(k_heap, 0, heap);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_बिलांग(k_heap, &नुमेरो);
+	return नुमेरो;
 }
 
 void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
@@ -57,7 +57,7 @@ static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes
 	k_timepoint_t end = sys_timepoint_calc(timeout);
 	void *ret = NULL;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&heap->lock);
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
@@ -82,11 +82,11 @@ static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(void) z_pend_curr(&heap->lock, सुसि, &heap->wait_q, timeout);
+		सुसि = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, सुसि);
 	return ret;
 }
 
@@ -128,14 +128,14 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	return ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+void *k_heap_calloc(struct k_heap *heap, size_t नुमेरो, size_t size, k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
 
 	void *ret = NULL;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
+	if (!size_mul_overflow(नुमेरो, size, &bounds)) {
 		ret = k_heap_alloc(heap, bounds, timeout);
 	}
 	if (ret != NULL) {
@@ -152,7 +152,7 @@ void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t t
 	k_timepoint_t end = sys_timepoint_calc(timeout);
 	void *ret = NULL;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&heap->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
 
@@ -167,11 +167,11 @@ void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t t
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(void) z_pend_curr(&heap->lock, सुसि, &heap->wait_q, timeout);
+		सुसि = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
 
@@ -180,14 +180,14 @@ void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t t
 
 void k_heap_free(struct k_heap *heap, void *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&heap->lock);
 
 	sys_heap_free(&heap->heap, mem);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
 	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
+		z_reschedule(&heap->lock, सुसि);
 	} else {
-		k_spin_unlock(&heap->lock, key);
+		k_spin_unlock(&heap->lock, सुसि);
 	}
 }

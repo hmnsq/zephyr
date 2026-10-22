@@ -10,7 +10,7 @@
 
 # ifdef CONFIG_SMP
 /* The mask width scales with CONFIG_MP_MAX_NUM_CPUS, up to 32 bits */
-BUILD_ASSERT(CONFIG_MP_MAX_NUM_CPUS <= 32, "Too many CPUs for mask word");
+BUILD_ASSERT(CONFIG_MP_MAX_नुमेरो_CPUS <= 32, "Too many CPUs for mask word");
 # endif /* CONFIG_SMP */
 
 

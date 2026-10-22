@@ -61,7 +61,7 @@ static bool check_add_partition(struct k_mem_domain *domain,
 	/* Check that this partition doesn't overlap any existing ones already
 	 * in the domain
 	 */
-	for (i = 0; i < domain->num_partitions; i++) {
+	for (i = 0; i < domain->नुमेरो_partitions; i++) {
 		struct k_mem_partition *dpart = &domain->partitions[i];
 
 		if (dpart->size == 0U) {
@@ -83,10 +83,10 @@ static bool check_add_partition(struct k_mem_domain *domain,
 	return true;
 }
 
-int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
+int k_mem_domain_init(struct k_mem_domain *domain, uint8_t नुमेरो_parts,
 		      struct k_mem_partition *parts[])
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret = 0;
 
 	CHECKIF(domain == NULL) {
@@ -94,22 +94,22 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 		goto out;
 	}
 
-	CHECKIF(!(num_parts == 0U || parts != NULL)) {
+	CHECKIF(!(नुमेरो_parts == 0U || parts != NULL)) {
 		LOG_ERR("parts array is NULL and num_parts is nonzero");
 		ret = -EINVAL;
 		goto out;
 	}
 
-	CHECKIF(!(num_parts <= max_partitions)) {
+	CHECKIF(!(नुमेरो_parts <= max_partitions)) {
 		LOG_ERR("num_parts of %d exceeds maximum allowable partitions (%d)",
-			num_parts, max_partitions);
+			नुमेरो_parts, max_partitions);
 		ret = -EINVAL;
 		goto out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	सुसि = k_spin_lock(&z_mem_domain_lock);
 
-	domain->num_partitions = 0U;
+	domain->नुमेरो_partitions = 0U;
 	(void)memset(domain->partitions, 0, sizeof(domain->partitions));
 
 #ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
@@ -126,10 +126,10 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 		goto unlock_out;
 	}
 #endif /* CONFIG_ARCH_MEM_DOMAIN_DATA */
-	if (num_parts != 0U) {
+	if (नुमेरो_parts != 0U) {
 		uint32_t i;
 
-		for (i = 0U; i < num_parts; i++) {
+		for (i = 0U; i < नुमेरो_parts; i++) {
 			CHECKIF(!check_add_partition(domain, parts[i])) {
 				LOG_ERR("invalid partition index %d (%p)",
 					i, parts[i]);
@@ -138,7 +138,7 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 			}
 
 			domain->partitions[i] = *parts[i];
-			domain->num_partitions++;
+			domain->नुमेरो_partitions++;
 #ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 			int ret2 = arch_mem_domain_partition_add(domain, i);
 
@@ -151,7 +151,7 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 	}
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 
 out:
 	return ret;
@@ -160,7 +160,7 @@ out:
 int k_mem_domain_deinit(struct k_mem_domain *domain)
 {
 #if defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret = 0;
 
 	CHECKIF(domain == NULL) {
@@ -174,7 +174,7 @@ int k_mem_domain_deinit(struct k_mem_domain *domain)
 		goto out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	सुसि = k_spin_lock(&z_mem_domain_lock);
 
 	/* Must make sure there are no threads associated with this memory
 	 * domain anymore. Or else these threads will run with an invalid
@@ -194,7 +194,7 @@ int k_mem_domain_deinit(struct k_mem_domain *domain)
 	}
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 
 out:
 	return ret;
@@ -208,7 +208,7 @@ int k_mem_domain_add_partition(struct k_mem_domain *domain,
 			       struct k_mem_partition *part)
 {
 	int p_idx;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret = 0;
 
 	CHECKIF(domain == NULL) {
@@ -222,7 +222,7 @@ int k_mem_domain_add_partition(struct k_mem_domain *domain,
 		goto out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	सुसि = k_spin_lock(&z_mem_domain_lock);
 
 	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
 		/* A zero-sized partition denotes it's a free partition */
@@ -244,14 +244,14 @@ int k_mem_domain_add_partition(struct k_mem_domain *domain,
 	domain->partitions[p_idx].size = part->size;
 	domain->partitions[p_idx].attr = part->attr;
 
-	domain->num_partitions++;
+	domain->नुमेरो_partitions++;
 
 #ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_partition_add(domain, p_idx);
 #endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 
 out:
 	return ret;
@@ -261,7 +261,7 @@ int k_mem_domain_remove_partition(struct k_mem_domain *domain,
 				  struct k_mem_partition *part)
 {
 	int p_idx;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int ret = 0;
 
 	CHECKIF((domain == NULL) || (part == NULL)) {
@@ -269,7 +269,7 @@ int k_mem_domain_remove_partition(struct k_mem_domain *domain,
 		goto out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	सुसि = k_spin_lock(&z_mem_domain_lock);
 
 	/* find a partition that matches the given start and size */
 	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
@@ -295,10 +295,10 @@ int k_mem_domain_remove_partition(struct k_mem_domain *domain,
 	/* A zero-sized partition denotes it's a free partition */
 	domain->partitions[p_idx].size = 0U;
 
-	domain->num_partitions--;
+	domain->नुमेरो_partitions--;
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 
 out:
 	return ret;
@@ -316,7 +316,7 @@ static int add_thread_locked(struct k_mem_domain *domain,
 
 #ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_append(&domain->thread_mem_domain_list,
-			 &thread->mem_domain_info.thread_mem_domain_node);
+			 &thread->mem_domain_info.thread_mem_domain_बुहोल);
 #endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
 	thread->mem_domain_info.mem_domain = domain;
@@ -337,7 +337,7 @@ static int remove_thread_locked(struct k_thread *thread)
 		thread, thread->mem_domain_info.mem_domain);
 
 #ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
-	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_node);
+	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_बुहोल);
 #endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
 #ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
@@ -351,14 +351,14 @@ static int remove_thread_locked(struct k_thread *thread)
 void z_mem_domain_init_thread(struct k_thread *thread)
 {
 	int ret;
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_mem_domain_lock);
 
 	/* New threads inherit memory domain configuration from parent */
 	ret = add_thread_locked(_current->mem_domain_info.mem_domain, thread);
 	__ASSERT_NO_MSG(ret == 0);
 	ARG_UNUSED(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 }
 
 /* Called when thread aborts during teardown tasks. The scheduler's spinlock is held */
@@ -366,21 +366,21 @@ void z_mem_domain_exit_thread(struct k_thread *thread)
 {
 	int ret;
 
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_mem_domain_lock);
 
 	ret = remove_thread_locked(thread);
 	__ASSERT_NO_MSG(ret == 0);
 	ARG_UNUSED(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 }
 
 int k_mem_domain_add_thread(struct k_mem_domain *domain, k_tid_t thread)
 {
 	int ret = 0;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	सुसि = k_spin_lock(&z_mem_domain_lock);
 	if (thread->mem_domain_info.mem_domain != domain) {
 		ret = remove_thread_locked(thread);
 
@@ -388,7 +388,7 @@ int k_mem_domain_add_thread(struct k_mem_domain *domain, k_tid_t thread)
 			ret = add_thread_locked(domain, thread);
 		}
 	}
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, सुसि);
 
 	return ret;
 }

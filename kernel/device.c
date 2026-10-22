@@ -159,7 +159,7 @@ const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
 			continue;
 		}
 
-		for (size_t i = 0; i < nl->num_nodelabels; i++) {
+		for (size_t i = 0; i < nl->नुमेरो_nodelabels; i++) {
 			const char *dev_nodelabel = nl->nodelabels[i];
 
 			if (strcmp(nodelabel, dev_nodelabel) == 0) {
@@ -191,7 +191,7 @@ size_t z_device_get_all_static(struct device const **devices)
 	size_t cnt;
 
 	STRUCT_SECTION_GET(device, 0, devices);
-	STRUCT_SECTION_COUNT(device, &cnt);
+	STRUCT_SECTION_बिलांग(device, &cnt);
 
 	return cnt;
 }
@@ -249,12 +249,12 @@ static inline int z_vrfy_device_deinit(const struct device *dev)
 #ifdef CONFIG_DEVICE_DEPS
 
 static int device_visitor(const device_handle_t *handles,
-			   size_t handle_count,
+			   size_t handle_बिलांग,
 			   device_visitor_callback_t visitor_cb,
 			   void *context)
 {
 	/* Iterate over fixed devices */
-	for (size_t i = 0; i < handle_count; ++i) {
+	for (size_t i = 0; i < handle_बिलांग; ++i) {
 		device_handle_t dh = handles[i];
 		const struct device *rdev = device_from_handle(dh);
 		int rc = visitor_cb(rdev, context);
@@ -264,27 +264,27 @@ static int device_visitor(const device_handle_t *handles,
 		}
 	}
 
-	return handle_count;
+	return handle_बिलांग;
 }
 
 int device_required_foreach(const struct device *dev,
 			    device_visitor_callback_t visitor_cb,
 			    void *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_required_handles_get(dev, &handle_count);
+	size_t handle_बिलांग = 0;
+	const device_handle_t *handles = device_required_handles_get(dev, &handle_बिलांग);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	return device_visitor(handles, handle_बिलांग, visitor_cb, context);
 }
 
 int device_supported_foreach(const struct device *dev,
 			     device_visitor_callback_t visitor_cb,
 			     void *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_supported_handles_get(dev, &handle_count);
+	size_t handle_बिलांग = 0;
+	const device_handle_t *handles = device_supported_handles_get(dev, &handle_बिलांग);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	return device_visitor(handles, handle_बिलांग, visitor_cb, context);
 }
 
 #endif /* CONFIG_DEVICE_DEPS */

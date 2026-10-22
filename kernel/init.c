@@ -52,23 +52,23 @@ atomic_t _cpus_active;
 #endif
 
 /* init/main and idle threads */
-K_THREAD_STACK_DEFINE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_THREAD_सालानसान_DEFINE(z_main_सालानसान, CONFIG_MAIN_सालानसान_SIZE);
 
 #ifdef CONFIG_MULTITHREADING
 struct k_thread z_main_thread;
-struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+struct k_thread z_idle_threads[CONFIG_MP_MAX_नुमेरो_CPUS];
 
-static K_KERNEL_STACK_ARRAY_DEFINE(z_idle_stacks,
-					  CONFIG_MP_MAX_NUM_CPUS,
-					  CONFIG_IDLE_STACK_SIZE);
+static K_KERNEL_सालानसान_ARRAY_DEFINE(z_idle_stacks,
+					  CONFIG_MP_MAX_नुमेरो_CPUS,
+					  CONFIG_IDLE_सालानसान_SIZE);
 
 static void z_init_static_threads(void)
 {
 	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
 		z_setup_new_thread(
 			thread_data->init_thread,
-			thread_data->init_stack,
-			thread_data->init_stack_size,
+			thread_data->init_सालानसान,
+			thread_data->init_सालानसान_size,
 			thread_data->init_entry,
 			thread_data->init_p1,
 			thread_data->init_p2,
@@ -139,9 +139,9 @@ extern const struct init_entry __init_SMP_start[];
  * of this area is safe since interrupts are disabled until the kernel context
  * switches to the init thread.
  */
-K_KERNEL_STACK_ARRAY_DEFINE(z_interrupt_stacks,
-				   CONFIG_MP_MAX_NUM_CPUS,
-				   CONFIG_ISR_STACK_SIZE);
+K_KERNEL_सालानसान_ARRAY_DEFINE(z_interrupt_stacks,
+				   CONFIG_MP_MAX_नुमेरो_CPUS,
+				   CONFIG_ISR_सालानसान_SIZE);
 
 extern void idle(void *unused1, void *unused2, void *unused3);
 
@@ -167,8 +167,8 @@ K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 #endif /* CONFIG_OBJ_CORE_SYSTEM */
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-#ifdef CONFIG_STACK_CANARIES_TLS
+#ifdef CONFIG_REQUIRES_सालानसान_CANARIES
+#ifdef CONFIG_सालानसान_CANARIES_TLS
 extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
 #else
 extern volatile uintptr_t __stack_chk_guard;
@@ -298,8 +298,8 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-	z_stack_adjust_initialized = 1;
+#if defined(CONFIG_सालानसान_POINTER_RANDOM) && (CONFIG_सालानसान_POINTER_RANDOM != 0)
+	z_सालानसान_adjust_initialized = 1;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
 #ifdef CONFIG_STATIC_INIT_GNU
@@ -330,10 +330,10 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 #ifdef CONFIG_BOOTARGS
 	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+	extern char **sys_boot_prepare_main_मगा_कातविरान(int *argc);
 
 	int argc = 0;
-	char **argv = sys_boot_prepare_main_args(&argc);
+	char **argv = sys_boot_prepare_main_मगा_कातविरान(&argc);
 	(void)main(argc, argv);
 #else
 	extern int main(void);
@@ -359,12 +359,12 @@ __boot_func
 static void init_idle_thread(int i)
 {
 	struct k_thread *thread = &z_idle_threads[i];
-	k_thread_stack_t *stack = z_idle_stacks[i];
-	size_t stack_size = K_KERNEL_STACK_SIZEOF(z_idle_stacks[i]);
+	k_thread_सालानसान_t *सालानसान = z_idle_stacks[i];
+	size_t सालानसान_size = K_KERNEL_सालानसान_SIZEOF(z_idle_stacks[i]);
 
 #ifdef CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
+#if CONFIG_MP_MAX_नुमेरो_CPUS > 1
 	char tname[8];
 	snprintk(tname, 8, "idle %02d", i);
 #else
@@ -375,8 +375,8 @@ static void init_idle_thread(int i)
 	char *tname = NULL;
 #endif /* CONFIG_THREAD_NAME */
 
-	z_setup_new_thread(thread, stack,
-			  stack_size, idle, &_kernel.cpus[i],
+	z_setup_new_thread(thread, सालानसान,
+			  सालानसान_size, idle, &_kernel.cpus[i],
 			  NULL, NULL, K_IDLE_PRIO, K_ESSENTIAL,
 			  tname);
 	z_mark_thread_as_not_sleeping(thread);
@@ -391,9 +391,9 @@ void z_init_cpu(int id)
 	init_idle_thread(id);
 	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
 	_kernel.cpus[id].id = id;
-	_kernel.cpus[id].irq_stack =
-		(K_KERNEL_STACK_BUFFER(z_interrupt_stacks[id]) +
-		 K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[id]));
+	_kernel.cpus[id].irq_सालानसान =
+		(K_KERNEL_सालानसान_BUFFER(z_interrupt_stacks[id]) +
+		 K_KERNEL_सालानसान_SIZEOF(z_interrupt_stacks[id]));
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
 	_kernel.cpus[id].usage = &_kernel.usage[id];
 	_kernel.cpus[id].usage->track_usage =
@@ -437,7 +437,7 @@ void z_init_cpu(int id)
 __boot_func
 static char *prepare_multithreading(void)
 {
-	char *stack_ptr;
+	char *सालानसान_ptr;
 
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
@@ -454,8 +454,8 @@ static char *prepare_multithreading(void)
 	 */
 	_kernel.ready_q.cache = &z_main_thread;
 #endif /* CONFIG_SMP */
-	stack_ptr = z_setup_new_thread(&z_main_thread, z_main_stack,
-				       K_THREAD_STACK_SIZEOF(z_main_stack),
+	सालानसान_ptr = z_setup_new_thread(&z_main_thread, z_main_सालानसान,
+				       K_THREAD_सालानसान_SIZEOF(z_main_सालानसान),
 				       bg_thread_main,
 				       NULL, NULL, NULL,
 				       CONFIG_MAIN_THREAD_PRIORITY,
@@ -465,16 +465,16 @@ static char *prepare_multithreading(void)
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	return सालानसान_ptr;
 }
 
 __boot_func
-static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
+static FUNC_NORETURN void switch_to_main_thread(char *सालानसान_ptr)
 {
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
-	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
+	arch_switch_to_main_thread(&z_main_thread, सालानसान_ptr, bg_thread_main);
 #else
-	ARG_UNUSED(stack_ptr);
+	ARG_UNUSED(सालानसान_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
 	 * current fake thread is not on a wait queue or ready queue, so it
@@ -487,7 +487,7 @@ static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
 #endif /* CONFIG_MULTITHREADING */
 
 __boot_func
-FUNC_NO_STACK_PROTECTOR
+FUNC_NO_सालानसान_PROTECTOR
 void __weak z_early_rand_get(uint8_t *buf, size_t length)
 {
 	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
@@ -531,7 +531,7 @@ void __weak z_early_rand_get(uint8_t *buf, size_t length)
  * @return Does not return
  */
 __boot_func
-FUNC_NO_STACK_PROTECTOR
+FUNC_NO_सालानसान_PROTECTOR
 FUNC_NORETURN void z_cstart(void)
 {
 	/* gcov hook needed to get the coverage report.*/
@@ -571,11 +571,11 @@ FUNC_NORETURN void z_cstart(void)
 #endif
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-	uintptr_t stack_guard;
+#ifdef CONFIG_REQUIRES_सालानसान_CANARIES
+	uintptr_t सालानसान_guard;
 
-	z_early_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	z_early_rand_get((uint8_t *)&सालानसान_guard, sizeof(सालानसान_guard));
+	__stack_chk_guard = सालानसान_guard;
 	__stack_chk_guard <<= 8;
 #endif	/* CONFIG_REQUIRES_STACK_CANARIES */
 

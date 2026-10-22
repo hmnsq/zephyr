@@ -19,10 +19,10 @@ static inline uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
 {
 	/* microseconds per second */
 	const uint64_t denom = 1000000ULL;
-	uint64_t num = (uint64_t)usec * (uint64_t)hz;
+	uint64_t नुमेरो = (uint64_t)usec * (uint64_t)hz;
 
 	/* Round up to avoid returning early. */
-	return (uint32_t)((num + denom - 1U) / denom);
+	return (uint32_t)((नुमेरो + denom - 1U) / denom);
 }
 #endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 

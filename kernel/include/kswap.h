@@ -15,10 +15,10 @@
 #include <timeslicing.h>
 #include <usage.h>
 
-#ifdef CONFIG_STACK_SENTINEL
-extern void z_check_stack_sentinel(void);
+#ifdef CONFIG_सालानसान_SENTINEL
+extern void z_check_सालानसान_sentinel(void);
 #else
-#define z_check_stack_sentinel() /**/
+#define z_check_सालानसान_sentinel() /**/
 #endif /* CONFIG_STACK_SENTINEL */
 
 /* In SMP, the irq_lock() is a spinlock which is implicitly released
@@ -76,19 +76,19 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
  * Note that is_spinlock is a compile-time construct which will be
  * optimized out when this function is expanded.
  */
-static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
+static ALWAYS_INLINE unsigned int do_swap(unsigned int सुसि,
 					  struct k_spinlock *lock,
 					  bool is_spinlock)
 {
 	struct k_thread *new_thread, *old_thread;
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, lock);
+	z_assert_can_swap(सुसि, lock);
 #endif /* CONFIG_SPIN_VALIDATE */
 
 	old_thread = _current;
 
-	z_check_stack_sentinel();
+	z_check_सालानसान_sentinel();
 
 	old_thread->swap_retval = -EAGAIN;
 
@@ -165,22 +165,22 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 	}
 
 	if (is_spinlock) {
-		arch_irq_unlock(key);
+		arch_irq_unlock(सुसि);
 	} else {
-		irq_unlock(key);
+		irq_unlock(सुसि);
 	}
 
 	return _current->swap_retval;
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+static inline int z_swap_irqlock(unsigned int सुसि)
 {
-	return do_swap(key, NULL, false);
+	return do_swap(सुसि, NULL, false);
 }
 
-static inline int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+static inline int z_swap(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि)
 {
-	return do_swap(key.key, lock, true);
+	return do_swap(सुसि.सुसि, lock, true);
 }
 
 static inline void z_swap_unlocked(void)
@@ -196,16 +196,16 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
 	ARG_UNUSED(thread);
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+static inline int z_swap_irqlock(unsigned int सुसि)
 {
 	int ret;
-	z_check_stack_sentinel();
+	z_check_सालानसान_sentinel();
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, NULL);
+	z_assert_can_swap(सुसि, NULL);
 #endif /* CONFIG_SPIN_VALIDATE */
 
-	ret = arch_swap(key);
+	ret = arch_swap(सुसि);
 	return ret;
 }
 
@@ -213,10 +213,10 @@ static inline int z_swap_irqlock(unsigned int key)
  * can't be in SMP.  The k_spin_release() call is just for validation
  * handling.
  */
-static ALWAYS_INLINE int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+static ALWAYS_INLINE int z_swap(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि)
 {
 	k_spin_release(lock);
-	return z_swap_irqlock(key.key);
+	return z_swap_irqlock(सुसि.सुसि);
 }
 
 static inline void z_swap_unlocked(void)
@@ -229,9 +229,9 @@ static inline void z_swap_unlocked(void)
 /**
  * @brief - Like z_swap() but it is known that the scheduler's spinlock is already held.
  */
-static inline int z_swap_locked(k_spinlock_key_t key)
+static inline int z_swap_locked(k_spinlock_सुसि_t सुसि)
 {
-	return z_swap(&_sched_spinlock, key);
+	return z_swap(&_sched_spinlock, सुसि);
 }
 
 /**

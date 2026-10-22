@@ -19,7 +19,7 @@ extern struct k_spinlock _sched_spinlock;
  * would degenerate into an IRQ lock). For that degenerate case, this macro
  * will expand to nothing.
  */
-#if (CONFIG_MP_MAX_NUM_CPUS == 1)
+#if (CONFIG_MP_MAX_नुमेरो_CPUS == 1)
 #define LOCK_SCHED_SPINLOCK
 #else
 #define LOCK_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
@@ -68,7 +68,7 @@ static ALWAYS_INLINE void z_sched_spinlock_release(void)
 /**
  * @brief Lock the scheduler's spinlock
  */
-static ALWAYS_INLINE k_spinlock_key_t z_sched_spinlock_lock(void)
+static ALWAYS_INLINE k_spinlock_सुसि_t z_sched_spinlock_lock(void)
 {
 	return k_spin_lock(&_sched_spinlock);
 }
@@ -76,9 +76,9 @@ static ALWAYS_INLINE k_spinlock_key_t z_sched_spinlock_lock(void)
 /**
  * @brief Unlock the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_unlock(k_spinlock_key_t key)
+static ALWAYS_INLINE void z_sched_spinlock_unlock(k_spinlock_सुसि_t सुसि)
 {
-	k_spin_unlock(&_sched_spinlock, key);
+	k_spin_unlock(&_sched_spinlock, सुसि);
 }
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */

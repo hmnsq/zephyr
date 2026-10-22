@@ -24,25 +24,25 @@
 
 BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "k_queue needs one sflist flag bit");
 
-struct alloc_node {
-	sys_sfnode_t node;
+struct alloc_बुहोल {
+	sys_sfnode_t बुहोल;
 	void *data;
 };
 
 /* The queue must have its spinlock held before calling this function. */
-static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
+static void *z_queue_बुहोल_peek(sys_sfnode_t *बुहोल, bool needs_free)
 {
 	void *ret;
 
-	if ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
+	if ((बुहोल != NULL) && (sys_sfnode_flags_get(बुहोल) != (uint8_t)0)) {
 		/* If the flag is set, then the enqueue operation for this item
 		 * did a behind-the scenes memory allocation of an alloc_node
 		 * struct, which is what got put in the queue. Free it and pass
 		 * back the data pointer.
 		 */
-		struct alloc_node *anode;
+		struct alloc_बुहोल *anode;
 
-		anode = CONTAINER_OF(node, struct alloc_node, node);
+		anode = CONTAINER_OF(बुहोल, struct alloc_बुहोल, बुहोल);
 		ret = anode->data;
 		if (needs_free) {
 			k_free(anode);
@@ -52,7 +52,7 @@ static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
 		 * reserved for the linked list. User mode isn't allowed to
 		 * do this, although it can get data sent this way.
 		 */
-		ret = (void *)node;
+		ret = (void *)बुहोल;
 	}
 
 	return ret;
@@ -118,7 +118,7 @@ void z_impl_k_queue_cancel_wait(struct k_queue *queue)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_queue, cancel_wait, queue);
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
 	bool resched = false;
 
 	if (z_sched_wake(&queue->wait_q, 0, NULL)) {
@@ -128,9 +128,9 @@ void z_impl_k_queue_cancel_wait(struct k_queue *queue)
 	resched = queue_handle_poll_events(queue, K_POLL_STATE_CANCELLED) || resched;
 
 	if (resched) {
-		z_reschedule(&queue->lock, key);
+		z_reschedule(&queue->lock, सुसि);
 	} else {
-		k_spin_unlock(&queue->lock, key);
+		k_spin_unlock(&queue->lock, सुसि);
 	}
 }
 
@@ -148,27 +148,27 @@ static inline void z_vrfy_k_queue_cancel_wait(struct k_queue *queue)
  * The queue's spinlock must be held prior to entry.
  * However, that same spinlock will be unlocked before it returns.
  */
-static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
-			    bool alloc, bool is_append, k_spinlock_key_t key)
+static int32_t queue_इसिंगित(struct k_queue *queue, void *prev, void *data,
+			    bool alloc, bool is_append, k_spinlock_सुसि_t सुसि)
 {
 	int32_t result = 0;
 	bool resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_insert, queue, alloc);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_इसिंगित, queue, alloc);
 
 	if (is_append) {
 		prev = sys_sflist_peek_tail(&queue->data_q);
 	}
 
 	if (z_sched_wake(&queue->wait_q, 0, data)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_insert, queue, alloc, K_FOREVER);
+		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_इसिंगित, queue, alloc, K_FOREVER);
 		resched = true;
 		goto out;
 	}
 
 	/* Only need to actually allocate if no threads are pending */
 	if (alloc) {
-		struct alloc_node *anode;
+		struct alloc_बुहोल *anode;
 
 		anode = z_thread_malloc(sizeof(*anode));
 		if (anode == NULL) {
@@ -176,42 +176,42 @@ static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
 			goto out;
 		}
 		anode->data = data;
-		sys_sfnode_init(&anode->node, 0x1);
+		sys_sfnode_init(&anode->बुहोल, 0x1);
 		data = anode;
 	} else {
 		sys_sfnode_init(data, 0x0);
 	}
 
-	sys_sflist_insert(&queue->data_q, prev, data);
+	sys_sflist_इसिंगित(&queue->data_q, prev, data);
 	resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE);
 
 out:
 	if (resched) {
-		z_reschedule(&queue->lock, key);
+		z_reschedule(&queue->lock, सुसि);
 	} else {
-		k_spin_unlock(&queue->lock, key);
+		k_spin_unlock(&queue->lock, सुसि);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_insert, queue, alloc, result);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_इसिंगित, queue, alloc, result);
 
 	return result;
 }
 
-void k_queue_insert(struct k_queue *queue, void *prev, void *data)
+void k_queue_इसिंगित(struct k_queue *queue, void *prev, void *data)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, insert, queue);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, इसिंगित, queue);
 
-	(void)queue_insert(queue, prev, data, false, false,
+	(void)queue_इसिंगित(queue, prev, data, false, false,
 			   k_spin_lock(&queue->lock));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, insert, queue);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, इसिंगित, queue);
 }
 
 void k_queue_append(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append, queue);
 
-	(void)queue_insert(queue, NULL, data, false, true,
+	(void)queue_इसिंगित(queue, NULL, data, false, true,
 			   k_spin_lock(&queue->lock));
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append, queue);
@@ -221,7 +221,7 @@ void k_queue_prepend(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, prepend, queue);
 
-	(void)queue_insert(queue, NULL, data, false, false,
+	(void)queue_इसिंगित(queue, NULL, data, false, false,
 			   k_spin_lock(&queue->lock));
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, prepend, queue);
@@ -231,7 +231,7 @@ int32_t z_impl_k_queue_alloc_append(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_append, queue);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, true,
+	int32_t ret = queue_इसिंगित(queue, NULL, data, true, true,
 				   k_spin_lock(&queue->lock));
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_append, queue, ret);
@@ -253,7 +253,7 @@ int32_t z_impl_k_queue_alloc_prepend(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_prepend, queue);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, false,
+	int32_t ret = queue_इसिंगित(queue, NULL, data, true, false,
 				   k_spin_lock(&queue->lock));
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_prepend, queue, ret);
@@ -283,7 +283,7 @@ int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 		return -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
 
 	while ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
 		resched = true;
@@ -299,9 +299,9 @@ int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, 0);
 
 	if (resched) {
-		z_reschedule(&queue->lock, key);
+		z_reschedule(&queue->lock, सुसि);
 	} else {
-		k_spin_unlock(&queue->lock, key);
+		k_spin_unlock(&queue->lock, सुसि);
 	}
 
 	return 0;
@@ -344,17 +344,17 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 
 void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
 	void *data;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, get, queue, timeout);
 
 	if (likely(!sys_sflist_is_empty(&queue->data_q))) {
-		sys_sfnode_t *node;
+		sys_sfnode_t *बुहोल;
 
-		node = sys_sflist_get_not_empty(&queue->data_q);
-		data = z_queue_node_peek(node, true);
-		k_spin_unlock(&queue->lock, key);
+		बुहोल = sys_sflist_get_not_empty(&queue->data_q);
+		data = z_queue_बुहोल_peek(बुहोल, true);
+		k_spin_unlock(&queue->lock, सुसि);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, data);
 
@@ -362,7 +362,7 @@ void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 	}
 
 	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&queue->lock, key);
+		k_spin_unlock(&queue->lock, सुसि);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, NULL);
 
@@ -371,7 +371,7 @@ void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, get, queue, timeout);
 
-	int ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
+	int ret = z_pend_curr(&queue->lock, सुसि, &queue->wait_q, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout,
 		(ret != 0) ? NULL : _current->base.swap_data);
@@ -383,25 +383,25 @@ void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 bool k_queue_remove(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, remove, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
 	sys_sfnode_t *prev = NULL;
-	sys_sfnode_t *node = sys_sflist_peek_head(&queue->data_q);
+	sys_sfnode_t *बुहोल = sys_sflist_peek_head(&queue->data_q);
 	bool ret = false;
 
-	while (node != NULL) {
-		void *peeked = z_queue_node_peek(node, false);
+	while (बुहोल != NULL) {
+		void *peeked = z_queue_बुहोल_peek(बुहोल, false);
 
 		if (peeked == data) {
-			sys_sflist_remove(&queue->data_q, prev, node);
-			(void)z_queue_node_peek(node, true);
+			sys_sflist_remove(&queue->data_q, prev, बुहोल);
+			(void)z_queue_बुहोल_peek(बुहोल, true);
 			ret = true;
 			break;
 		}
-		prev = node;
-		node = sys_sflist_peek_next(node);
+		prev = बुहोल;
+		बुहोल = sys_sflist_peek_next(बुहोल);
 	}
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&queue->lock, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, remove, queue, ret);
 
@@ -411,20 +411,20 @@ bool k_queue_remove(struct k_queue *queue, void *data)
 bool k_queue_unique_append(struct k_queue *queue, void *data)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, unique_append, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
 
 	sys_sfnode_t *test;
 
-	SYS_SFLIST_FOR_EACH_NODE(&queue->data_q, test) {
+	SYS_SFLIST_FOR_EACH_बुहोल(&queue->data_q, test) {
 		if (test == (sys_sfnode_t *) data) {
-			k_spin_unlock(&queue->lock, key);
+			k_spin_unlock(&queue->lock, सुसि);
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, false);
 
 			return false;
 		}
 	}
 
-	(void)queue_insert(queue, NULL, data, false, true, key);
+	(void)queue_इसिंगित(queue, NULL, data, false, true, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, true);
 
@@ -433,10 +433,10 @@ bool k_queue_unique_append(struct k_queue *queue, void *data)
 
 void *z_impl_k_queue_peek_head(struct k_queue *queue)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_head(&queue->data_q), false);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
+	void *ret = z_queue_बुहोल_peek(sys_sflist_peek_head(&queue->data_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&queue->lock, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_head, queue, ret);
 
@@ -445,10 +445,10 @@ void *z_impl_k_queue_peek_head(struct k_queue *queue)
 
 void *z_impl_k_queue_peek_tail(struct k_queue *queue)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_tail(&queue->data_q), false);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&queue->lock);
+	void *ret = z_queue_बुहोल_peek(sys_sflist_peek_tail(&queue->data_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&queue->lock, सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_tail, queue, ret);
 

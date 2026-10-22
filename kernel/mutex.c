@@ -87,23 +87,23 @@ K_OBJ_TYPE_DEFINE(obj_type_mutex, k_mutex, K_OBJ_TYPE_MUTEX_ID, NULL);
  */
 static int mutex_init(struct k_mutex *mutex, bool refuse_if_owned)
 {
-	k_spinlock_key_t key = k_spin_lock(&mutex_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&mutex_lock);
 
 	if (refuse_if_owned && (mutex->owner != NULL)) {
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, सुसि);
 		return -EBUSY;
 	}
 
 	mutex->owner = NULL;
-	mutex->lock_count = 0U;
+	mutex->lock_बिलांग = 0U;
 
 	z_waitq_init(&mutex->wait_q);
 
 #if Z_MUTEX_PI_ENABLED
-	mutex->held_node.next = NULL;
+	mutex->held_बुहोल.next = NULL;
 #endif
 
-	k_spin_unlock(&mutex_lock, key);
+	k_spin_unlock(&mutex_lock, सुसि);
 
 	k_object_init(mutex);
 
@@ -131,7 +131,7 @@ static inline int z_vrfy_k_mutex_init(struct k_mutex *mutex)
 	/* The owner field is only meaningful once the mutex was initialized */
 	initialized = (k_object_find(mutex)->flags & K_OBJ_FLAG_INITIALIZED) != 0U;
 
-	K_OOPS(K_SYSCALL_VERIFY_MSG(mutex_init(mutex, initialized) == 0,
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(mutex_init(mutex, initialized) == 0,
 				    "mutex %p is locked", mutex));
 
 	return 0;
@@ -177,13 +177,13 @@ static bool adjust_owner_prio(struct k_mutex *mutex, int32_t new_prio)
 static int32_t held_mutexes_highest_waiter_prio(struct k_thread *thread,
 						 int32_t floor_prio)
 {
-	sys_snode_t *node;
+	sys_snode_t *बुहोल;
 	int32_t prio = floor_prio;
 
 	LOCK_SCHED_SPINLOCK {
-		SYS_SLIST_FOR_EACH_NODE(&thread->held_mutexes, node) {
+		SYS_SLIST_FOR_EACH_बुहोल(&thread->held_mutexes, बुहोल) {
 			struct k_mutex *m =
-				CONTAINER_OF(node, struct k_mutex, held_node);
+				CONTAINER_OF(बुहोल, struct k_mutex, held_बुहोल);
 			struct k_thread *waiter = z_waitq_head_locked(&m->wait_q);
 
 			if (waiter != NULL) {
@@ -201,7 +201,7 @@ static int32_t held_mutexes_highest_waiter_prio(struct k_thread *thread,
 
 int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 #if Z_MUTEX_PI_ENABLED
 	bool resched = false;
 #endif
@@ -210,34 +210,34 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mutex, lock, mutex, timeout);
 
-	key = k_spin_lock(&mutex_lock);
+	सुसि = k_spin_lock(&mutex_lock);
 
-	if (likely((mutex->lock_count == 0U) || (mutex->owner == _current))) {
+	if (likely((mutex->lock_बिलांग == 0U) || (mutex->owner == _current))) {
 
-		mutex->lock_count++;
+		mutex->lock_बिलांग++;
 		mutex->owner = _current;
 
 #if Z_MUTEX_PI_ENABLED
 		LOG_DBG("%p took mutex %p, count: %d, orig prio: %d",
-			_current, mutex, mutex->lock_count,
+			_current, mutex, mutex->lock_बिलांग,
 			_current->orig_prio);
 
 		/* Add to held list on first acquisition; recursive locks skip this. */
-		if (mutex->lock_count == 1U) {
+		if (mutex->lock_बिलांग == 1U) {
 			/* Capture the thread's true pre-inheritance priority
 			 * the first time it acquires any mutex.
 			 */
 			if (sys_slist_is_empty(&_current->held_mutexes)) {
 				_current->orig_prio = _current->base.prio;
 			}
-			sys_slist_append(&_current->held_mutexes, &mutex->held_node);
+			sys_slist_append(&_current->held_mutexes, &mutex->held_बुहोल);
 		}
 #else
 		LOG_DBG("%p took mutex %p, count: %d",
-			_current, mutex, mutex->lock_count);
+			_current, mutex, mutex->lock_बिलांग);
 #endif
 
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, सुसि);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, 0);
 
@@ -245,7 +245,7 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 	}
 
 	if (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, सुसि);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, -EBUSY);
 
@@ -337,7 +337,7 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 	}
 #endif
 
-	int got_mutex = z_pend_curr(&mutex_lock, key, &mutex->wait_q, timeout);
+	int got_mutex = z_pend_curr(&mutex_lock, सुसि, &mutex->wait_q, timeout);
 
 	LOG_DBG("on mutex %p got_mutex value: %d", mutex, got_mutex);
 
@@ -356,7 +356,7 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 
 	LOG_DBG("%p timeout on mutex %p", _current, mutex);
 
-	key = k_spin_lock(&mutex_lock);
+	सुसि = k_spin_lock(&mutex_lock);
 
 	/*
 	 * Clear mutex_pended_on under mutex_lock so no concurrent chain walk
@@ -383,9 +383,9 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 	}
 
 	if (resched) {
-		z_reschedule(&mutex_lock, key);
+		z_reschedule(&mutex_lock, सुसि);
 	} else {
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, सुसि);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, -EAGAIN);
@@ -436,24 +436,24 @@ int z_impl_k_mutex_unlock(struct k_mutex *mutex)
 	 * therefore no underflow check is required. Use assert to catch
 	 * undefined behavior.
 	 */
-	__ASSERT_NO_MSG(mutex->lock_count > 0U);
+	__ASSERT_NO_MSG(mutex->lock_बिलांग > 0U);
 
-	LOG_DBG("mutex %p lock_count: %d", mutex, mutex->lock_count);
+	LOG_DBG("mutex %p lock_count: %d", mutex, mutex->lock_बिलांग);
 
 	/*
 	 * If we are the owner and count is greater than 1, then decrement
 	 * the count and return and keep current thread as the owner.
 	 */
-	if (mutex->lock_count > 1U) {
-		mutex->lock_count--;
+	if (mutex->lock_बिलांग > 1U) {
+		mutex->lock_बिलांग--;
 		goto k_mutex_unlock_return;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&mutex_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&mutex_lock);
 
 #if Z_MUTEX_PI_ENABLED
 	/* Remove this mutex from the owner's list of held mutexes */
-	sys_slist_find_and_remove(&_current->held_mutexes, &mutex->held_node);
+	sys_slist_find_and_remove(&_current->held_mutexes, &mutex->held_बुहोल);
 
 	/*
 	 * If the thread's priority was boosted, recalculate it by scanning
@@ -489,20 +489,20 @@ int z_impl_k_mutex_unlock(struct k_mutex *mutex)
 			if (sys_slist_is_empty(&new_owner->held_mutexes)) {
 				new_owner->orig_prio = new_owner->base.prio;
 			}
-			sys_slist_append(&new_owner->held_mutexes, &mutex->held_node);
+			sys_slist_append(&new_owner->held_mutexes, &mutex->held_बुहोल);
 			new_owner->mutex_pended_on = NULL;
 #endif
-			arch_thread_return_value_set(new_owner, 0);
+			arch_thread_return_हालागा_set(new_owner, 0);
 			z_sched_ready_locked(new_owner);
 		} else {
-			mutex->lock_count = 0U;
+			mutex->lock_बिलांग = 0U;
 		}
 	}
 
 	if (unlikely(new_owner != NULL)) {
-		z_reschedule(&mutex_lock, key);
+		z_reschedule(&mutex_lock, सुसि);
 	} else {
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, सुसि);
 	}
 
 

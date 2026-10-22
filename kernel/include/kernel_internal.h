@@ -76,7 +76,7 @@ extern FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
 			  void *p1, void *p2, void *p3);
 
 extern char *z_setup_new_thread(struct k_thread *new_thread,
-				k_thread_stack_t *stack, size_t stack_size,
+				k_thread_सालानसान_t *सालानसान, size_t सालानसान_size,
 				k_thread_entry_t entry,
 				void *p1, void *p2, void *p3,
 				int prio, uint32_t options, const char *name);
@@ -118,18 +118,18 @@ void *z_thread_malloc(size_t size);
  * z_swap() is in use it's a simple inline provided by the kernel.
  */
 static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
+arch_thread_return_हालागा_set(struct k_thread *thread, unsigned int हालागा)
 {
-	thread->swap_retval = value;
+	thread->swap_retval = हालागा;
 }
 #endif
 
 static ALWAYS_INLINE void
-z_thread_return_value_set_with_data(struct k_thread *thread,
-				   unsigned int value,
+z_thread_return_हालागा_set_with_data(struct k_thread *thread,
+				   unsigned int हालागा,
 				   void *data)
 {
-	arch_thread_return_value_set(thread, value);
+	arch_thread_return_हालागा_set(thread, हालागा);
 	thread->base.swap_data = data;
 }
 
@@ -142,8 +142,8 @@ extern void smp_timer_init(void);
 
 extern void z_early_rand_get(uint8_t *buf, size_t length);
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-extern int z_stack_adjust_initialized;
+#if defined(CONFIG_सालानसान_POINTER_RANDOM) && (CONFIG_सालानसान_POINTER_RANDOM != 0)
+extern int z_सालानसान_adjust_initialized;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
 #ifdef CONFIG_MULTITHREADING
@@ -151,19 +151,19 @@ extern struct k_thread z_main_thread;
 #endif /* CONFIG_MULTITHREADING */
 
 
-K_KERNEL_STACK_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_NUM_CPUS,
-				    CONFIG_ISR_STACK_SIZE);
-K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_KERNEL_सालानसान_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_नुमेरो_CPUS,
+				    CONFIG_ISR_सालानसान_SIZE);
+K_THREAD_सालानसान_DECLARE(z_main_सालानसान, CONFIG_MAIN_सालानसान_SIZE);
 
 #ifdef CONFIG_GEN_PRIV_STACKS
-extern uint8_t *z_priv_stack_find(k_thread_stack_t *stack);
+extern uint8_t *z_priv_सालानसान_find(k_thread_सालानसान_t *सालानसान);
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 /* Calculate stack usage. */
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
+int z_सालानसान_space_get(const uint8_t *सालानसान_start, size_t size, size_t *unused_ptr);
 
 #ifdef CONFIG_USERSPACE
-bool z_stack_is_user_capable(k_thread_stack_t *stack);
+bool z_सालानसान_is_user_capable(k_thread_सालानसान_t *सालानसान);
 
 /* Memory domain setup hook, called from z_setup_new_thread() */
 void z_mem_domain_init_thread(struct k_thread *thread);

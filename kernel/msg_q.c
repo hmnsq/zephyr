@@ -40,17 +40,17 @@ static inline bool msgq_handle_poll_events(struct k_msgq *msgq)
 #endif /* CONFIG_POLL */
 }
 
-void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
+void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t मेनसाहे_size,
 		 uint32_t max_msgs)
 {
-	__ASSERT_NO_MSG(!size_mul_overflow(max_msgs, msg_size, &(size_t){0}));
-	__ASSERT_NO_MSG(!size_add_overflow((size_t)(uintptr_t)buffer, max_msgs * msg_size,
+	__ASSERT_NO_MSG(!size_mul_overflow(max_msgs, मेनसाहे_size, &(size_t){0}));
+	__ASSERT_NO_MSG(!size_add_overflow((size_t)(uintptr_t)buffer, max_msgs * मेनसाहे_size,
 					&(size_t){0}));
 
-	msgq->msg_size = msg_size;
+	msgq->मेनसाहे_size = मेनसाहे_size;
 	msgq->max_msgs = max_msgs;
 	msgq->buffer_start = buffer;
-	msgq->buffer_end = buffer + (max_msgs * msg_size);
+	msgq->buffer_end = buffer + (max_msgs * मेनसाहे_size);
 	msgq->read_ptr = buffer;
 	msgq->write_ptr = buffer;
 	msgq->used_msgs = 0;
@@ -70,7 +70,7 @@ void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
 	k_object_init(msgq);
 }
 
-int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t मेनसाहे_size,
 			    uint32_t max_msgs)
 {
 	void *buffer;
@@ -79,12 +79,12 @@ int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
 
-	if (size_mul_overflow(msg_size, max_msgs, &total_size)) {
+	if (size_mul_overflow(मेनसाहे_size, max_msgs, &total_size)) {
 		ret = -EINVAL;
 	} else {
 		buffer = z_thread_malloc(total_size);
 		if (buffer != NULL) {
-			k_msgq_init(msgq, buffer, msg_size, max_msgs);
+			k_msgq_init(msgq, buffer, मेनसाहे_size, max_msgs);
 			msgq->flags = K_MSGQ_FLAG_ALLOC;
 			ret = 0;
 		} else {
@@ -97,12 +97,12 @@ int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+int z_vrfy_k_msgq_alloc_init(struct k_msgq *msgq, size_t मेनसाहे_size,
 			    uint32_t max_msgs)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(msgq, K_OBJ_MSGQ));
 
-	return z_impl_k_msgq_alloc_init(msgq, msg_size, max_msgs);
+	return z_impl_k_msgq_alloc_init(msgq, मेनसाहे_size, max_msgs);
 }
 #include <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -113,7 +113,7 @@ int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
 
 	int ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&msgq->lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&msgq->lock);
 
 	CHECKIF(locked && (z_waitq_head_locked(&msgq->wait_q) != NULL)) {
 		ret = -EBUSY;
@@ -132,7 +132,7 @@ int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
 	}
 
 out:
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->lock, सुसि);
 
 #ifdef CONFIG_OBJ_CORE_MSGQ
 	if (freed) {
@@ -149,17 +149,17 @@ int k_msgq_cleanup(struct k_msgq *msgq)
 	return z_msgq_cleanup(msgq, false);
 }
 
-static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
+static inline int put_मेनसाहे_in_queue(struct k_msgq *msgq, const void *data,
 			k_timeout_t timeout, bool put_at_back)
 {
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	struct k_thread *pending_thread = NULL;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int result;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	सुसि = k_spin_lock(&msgq->lock);
 
 	if (put_at_back) {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
@@ -179,20 +179,20 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 			if (pending_thread != NULL) {
 				/* copy into the receiver's buffer */
 				(void)memcpy(pending_thread->base.swap_data, data,
-					     msgq->msg_size);
-				arch_thread_return_value_set(pending_thread, 0);
+					     msgq->मेनसाहे_size);
+				arch_thread_return_हालागा_set(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
 		}
 		if (pending_thread == NULL) {
-			size_t msg_size = msgq->msg_size;
+			size_t मेनसाहे_size = msgq->मेनसाहे_size;
 			char *slot;
 
 			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
 					(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
 					((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-						msgq->msg_size));
+						msgq->मेनसाहे_size));
 			/*
 			 * Pick the slot and update the ring state from
 			 * registers first: the compiler cannot tell that the
@@ -208,7 +208,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 				char *next;
 
 				slot = msgq->write_ptr;
-				next = slot + msg_size;
+				next = slot + मेनसाहे_size;
 				if (next == msgq->buffer_end) {
 					next = msgq->buffer_start;
 				}
@@ -224,11 +224,11 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 				if (slot == msgq->buffer_start) {
 					slot = msgq->buffer_end;
 				}
-				slot -= msg_size;
+				slot -= मेनसाहे_size;
 				msgq->read_ptr = slot;
 			}
 			msgq->used_msgs++;
-			(void)memcpy(slot, data, msg_size);
+			(void)memcpy(slot, data, मेनसाहे_size);
 			resched = msgq_handle_poll_events(msgq);
 		}
 		result = 0;
@@ -245,7 +245,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 		/* wait for put message success, failure, or timeout */
 		_current->base.swap_data = (void *) data;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
+		result = z_pend_curr(&msgq->lock, सुसि, &msgq->wait_q, timeout);
 
 		if (put_at_back) {
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
@@ -263,9 +263,9 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 	}
 
 	if (resched) {
-		z_reschedule(&msgq->lock, key);
+		z_reschedule(&msgq->lock, सुसि);
 	} else {
-		k_spin_unlock(&msgq->lock, key);
+		k_spin_unlock(&msgq->lock, सुसि);
 	}
 
 	return result;
@@ -274,12 +274,12 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 
 int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout)
 {
-	return put_msg_in_queue(msgq, data, timeout, true);
+	return put_मेनसाहे_in_queue(msgq, data, timeout, true);
 }
 
 int z_impl_k_msgq_put_front(struct k_msgq *msgq, const void *data)
 {
-	return put_msg_in_queue(msgq, data, K_NO_WAIT, false);
+	return put_मेनसाहे_in_queue(msgq, data, K_NO_WAIT, false);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -287,7 +287,7 @@ static inline int z_vrfy_k_msgq_put(struct k_msgq *msgq, const void *data,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->मेनसाहे_size));
 
 	return z_impl_k_msgq_put(msgq, data, timeout);
 }
@@ -296,7 +296,7 @@ static inline int z_vrfy_k_msgq_put(struct k_msgq *msgq, const void *data,
 static inline int z_vrfy_k_msgq_put_front(struct k_msgq *msgq, const void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->मेनसाहे_size));
 
 	return z_impl_k_msgq_put_front(msgq, data);
 }
@@ -305,7 +305,7 @@ static inline int z_vrfy_k_msgq_put_front(struct k_msgq *msgq, const void *data)
 
 void z_impl_k_msgq_get_attrs(struct k_msgq *msgq, struct k_msgq_attrs *attrs)
 {
-	attrs->msg_size = msgq->msg_size;
+	attrs->मेनसाहे_size = msgq->मेनसाहे_size;
 	attrs->max_msgs = msgq->max_msgs;
 	attrs->used_msgs = msgq->used_msgs;
 }
@@ -325,19 +325,19 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 {
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	struct k_thread *pending_thread;
 	int result;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	सुसि = k_spin_lock(&msgq->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
 
 	if (likely(msgq->used_msgs > 0U)) {
-		size_t msg_size = msgq->msg_size;
+		size_t मेनसाहे_size = msgq->मेनसाहे_size;
 		char *slot = msgq->read_ptr;
-		char *next = slot + msg_size;
+		char *next = slot + मेनसाहे_size;
 
 		/* drop the message from the queue, then copy it out */
 		if (next == msgq->buffer_end) {
@@ -346,13 +346,13 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 		msgq->read_ptr = next;
 		msgq->used_msgs--;
 
-		(void)memcpy(data, slot, msg_size);
+		(void)memcpy(data, slot, मेनसाहे_size);
 
 		/* sanity-check write_ptr in case we hand the slot to a sender */
 		__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
 				(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
 				((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-					msgq->msg_size));
+					msgq->मेनसाहे_size));
 
 		/* handle first thread waiting to write (if any). Done
 		 * atomically under the scheduler's spinlock so we read the
@@ -366,16 +366,16 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 
 				/* add the sender's pending message to the queue */
 				slot = msgq->write_ptr;
-				next = slot + msg_size;
+				next = slot + मेनसाहे_size;
 				if (next == msgq->buffer_end) {
 					next = msgq->buffer_start;
 				}
 				msgq->write_ptr = next;
 				msgq->used_msgs++;
 
-				(void)memcpy(slot, pending_thread->base.swap_data, msg_size);
+				(void)memcpy(slot, pending_thread->base.swap_data, मेनसाहे_size);
 
-				arch_thread_return_value_set(pending_thread, 0);
+				arch_thread_return_हालागा_set(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
@@ -390,7 +390,7 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 		/* wait for get message success or timeout */
 		_current->base.swap_data = data;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
+		result = z_pend_curr(&msgq->lock, सुसि, &msgq->wait_q, timeout);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
 		return result;
 	}
@@ -398,9 +398,9 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
 
 	if (resched) {
-		z_reschedule(&msgq->lock, key);
+		z_reschedule(&msgq->lock, सुसि);
 	} else {
-		k_spin_unlock(&msgq->lock, key);
+		k_spin_unlock(&msgq->lock, सुसि);
 	}
 
 	return result;
@@ -411,7 +411,7 @@ static inline int z_vrfy_k_msgq_get(struct k_msgq *msgq, void *data,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->मेनसाहे_size));
 
 	return z_impl_k_msgq_get(msgq, data, timeout);
 }
@@ -420,14 +420,14 @@ static inline int z_vrfy_k_msgq_get(struct k_msgq *msgq, void *data,
 
 int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int result;
 
-	key = k_spin_lock(&msgq->lock);
+	सुसि = k_spin_lock(&msgq->lock);
 
 	if (msgq->used_msgs > 0U) {
 		/* take first available message from queue */
-		(void)memcpy(data, msgq->read_ptr, msgq->msg_size);
+		(void)memcpy(data, msgq->read_ptr, msgq->मेनसाहे_size);
 		result = 0;
 	} else {
 		/* don't wait for a message to become available */
@@ -436,7 +436,7 @@ int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->lock, सुसि);
 
 	return result;
 }
@@ -445,7 +445,7 @@ int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
 static inline int z_vrfy_k_msgq_peek(struct k_msgq *msgq, void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->मेनसाहे_size));
 
 	return z_impl_k_msgq_peek(msgq, data);
 }
@@ -454,17 +454,17 @@ static inline int z_vrfy_k_msgq_peek(struct k_msgq *msgq, void *data)
 
 int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	int result;
 	uint32_t bytes_to_end;
 	uint32_t byte_offset;
 	char *start_addr;
 
-	key = k_spin_lock(&msgq->lock);
+	सुसि = k_spin_lock(&msgq->lock);
 
 	if (msgq->used_msgs > idx) {
 		bytes_to_end = (msgq->buffer_end - msgq->read_ptr);
-		byte_offset = idx * msgq->msg_size;
+		byte_offset = idx * msgq->मेनसाहे_size;
 		start_addr = msgq->read_ptr;
 		/* check item available in start/end of ring buffer */
 		if (bytes_to_end <= byte_offset) {
@@ -473,7 +473,7 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 			/* wrap-around is required */
 			start_addr = msgq->buffer_start;
 		}
-		(void)memcpy(data, start_addr + byte_offset, msgq->msg_size);
+		(void)memcpy(data, start_addr + byte_offset, msgq->मेनसाहे_size);
 		result = 0;
 	} else {
 		/* don't wait for a message to become available */
@@ -482,7 +482,7 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->lock, सुसि);
 
 	return result;
 }
@@ -491,7 +491,7 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 static inline int z_vrfy_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->मेनसाहे_size));
 
 	return z_impl_k_msgq_peek_at(msgq, data, idx);
 }
@@ -500,10 +500,10 @@ static inline int z_vrfy_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_
 
 void z_impl_k_msgq_purge(struct k_msgq *msgq)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	सुसि = k_spin_lock(&msgq->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
 
@@ -516,9 +516,9 @@ void z_impl_k_msgq_purge(struct k_msgq *msgq)
 	msgq->read_ptr = msgq->write_ptr;
 
 	if (resched) {
-		z_reschedule(&msgq->lock, key);
+		z_reschedule(&msgq->lock, सुसि);
 	} else {
-		k_spin_unlock(&msgq->lock, key);
+		k_spin_unlock(&msgq->lock, सुसि);
 	}
 }
 
@@ -530,17 +530,17 @@ static inline void z_vrfy_k_msgq_purge(struct k_msgq *msgq)
 }
 #include <zephyr/syscalls/k_msgq_purge_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_free_get(struct k_msgq *msgq)
+static inline uint32_t z_vrfy_k_msgq_नुमेरो_free_get(struct k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_free_get(msgq);
+	return z_impl_k_msgq_नुमेरो_free_get(msgq);
 }
 #include <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_used_get(struct k_msgq *msgq)
+static inline uint32_t z_vrfy_k_msgq_नुमेरो_used_get(struct k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_used_get(msgq);
+	return z_impl_k_msgq_नुमेरो_used_get(msgq);
 }
 #include <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
 

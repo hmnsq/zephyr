@@ -87,7 +87,7 @@ static void futex_post_walk_op(int status, void *data)
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
 		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_हालागा_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
 
@@ -128,7 +128,7 @@ static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
 		 * is invoked with _sched_spinlock held.
 		 */
 		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_हालागा_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
 #else  /* !CONFIG_WAITQ_SCALABLE */
@@ -142,10 +142,10 @@ static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
 
 int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 {
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
 
-	key = k_spin_lock(&futex_lock);
+	सुसि = k_spin_lock(&futex_lock);
 
 	/*
 	 * Walk through the wait queue to find threads waiting on this futex.
@@ -166,9 +166,9 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 			   futex_post_walk_op, &walk_data);
 
 	if (walk_data.woken == 0) {
-		k_spin_unlock(&futex_lock, key);
+		k_spin_unlock(&futex_lock, सुसि);
 	} else {
-		z_reschedule(&futex_lock, key);
+		z_reschedule(&futex_lock, सुसि);
 	}
 
 	return walk_data.woken;
@@ -187,12 +187,12 @@ static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
 int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
 {
 	int ret;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
-	key = k_spin_lock(&futex_lock);
+	सुसि = k_spin_lock(&futex_lock);
 
 	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
-		k_spin_unlock(&futex_lock, key);
+		k_spin_unlock(&futex_lock, सुसि);
 		return -EAGAIN;
 	}
 
@@ -204,7 +204,7 @@ int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout
 #ifdef CONFIG_WAITQ_SCALABLE
 	_current->next_wake_link = NULL;
 #endif /* CONFIG_WAITQ_SCALABLE */
-	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
+	ret = z_pend_curr(&futex_lock, सुसि, &futex_wait_q, timeout);
 	if (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}

@@ -72,12 +72,12 @@ bool k_is_in_isr(void)
 {
 	return arch_is_in_isr();
 }
-EXPORT_SYMBOL(k_is_in_isr);
+EXPORT_सिम्बोलो(k_is_in_isr);
 
 #ifdef CONFIG_THREAD_CUSTOM_DATA
-void z_impl_k_thread_custom_data_set(void *value)
+void z_impl_k_thread_custom_data_set(void *हालागा)
 {
-	_current->custom_data = value;
+	_current->custom_data = हालागा;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -320,7 +320,7 @@ static inline int z_vrfy_k_thread_name_copy(k_tid_t thread,
 #include <zephyr/syscalls/k_thread_name_copy_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_STACK_SENTINEL
+#ifdef CONFIG_सालानसान_SENTINEL
 /* Check that the stack sentinel is still present
  *
  * The stack sentinel feature writes a magic value to the lowest 4 bytes of
@@ -336,31 +336,31 @@ static inline int z_vrfy_k_thread_name_copy(k_tid_t thread,
  * If the check fails, the thread will be terminated appropriately through
  * the system fatal error handler.
  */
-void z_check_stack_sentinel(void)
+void z_check_सालानसान_sentinel(void)
 {
-	uint32_t *stack;
+	uint32_t *सालानसान;
 
 	if ((_current->base.thread_state & _THREAD_DUMMY) != 0) {
 		return;
 	}
 
-	stack = (uint32_t *)_current->stack_info.start;
-	if (*stack != STACK_SENTINEL) {
+	सालानसान = (uint32_t *)_current->सालानसान_info.start;
+	if (*सालानसान != सालानसान_SENTINEL) {
 		/* Restore it so further checks don't trigger this same error */
-		*stack = STACK_SENTINEL;
-		z_except_reason(K_ERR_STACK_CHK_FAIL);
+		*सालानसान = सालानसान_SENTINEL;
+		z_except_reason(K_ERR_सालानसान_CHK_FAIL);
 	}
 }
 #endif /* CONFIG_STACK_SENTINEL */
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-int z_stack_adjust_initialized;
+#if defined(CONFIG_सालानसान_POINTER_RANDOM) && (CONFIG_सालानसान_POINTER_RANDOM != 0)
+int z_सालानसान_adjust_initialized;
 
-static size_t random_offset(size_t stack_size)
+static size_t random_offset(size_t सालानसान_size)
 {
 	size_t random_val;
 
-	if (!z_stack_adjust_initialized) {
+	if (!z_सालानसान_adjust_initialized) {
 		z_early_rand_get((uint8_t *)&random_val, sizeof(random_val));
 	} else {
 		sys_rand_get((uint8_t *)&random_val, sizeof(random_val));
@@ -372,15 +372,15 @@ static size_t random_offset(size_t stack_size)
 	 * FIXME: Not the best way to get a random number in a range.
 	 * See #6493
 	 */
-	const size_t fuzz = random_val % CONFIG_STACK_POINTER_RANDOM;
+	const size_t fuzz = random_val % CONFIG_सालानसान_POINTER_RANDOM;
 
-	if (unlikely(fuzz * 2 > stack_size)) {
+	if (unlikely(fuzz * 2 > सालानसान_size)) {
 		return 0;
 	}
 
 	return fuzz;
 }
-#if defined(CONFIG_STACK_GROWS_UP)
+#if defined(CONFIG_सालानसान_GROWS_UP)
 	/* This is so rare not bothering for now */
 #error "Stack pointer randomization not implemented for upward growing stacks"
 #endif /* CONFIG_STACK_GROWS_UP */
@@ -390,7 +390,7 @@ static size_t random_offset(size_t stack_size)
  * Geometry of a thread's stack object, computed once and threaded through the
  * setup_thread_stack() helpers below.
  */
-struct stack_geometry {
+struct सालानसान_geometry {
 	size_t obj_size;	/* size of the whole stack object */
 	char *buf_start;	/* start of the usable stack buffer */
 	size_t buf_size;	/* size of the usable stack buffer */
@@ -400,30 +400,30 @@ struct stack_geometry {
  * Derive the stack object geometry from the caller-supplied stack and size.
  * User-capable stacks and kernel-only stacks reserve different amounts.
  */
-static struct stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
-						    size_t stack_size)
+static struct सालानसान_geometry compute_सालानसान_geometry(k_thread_सालानसान_t *सालानसान,
+						    size_t सालानसान_size)
 {
-	struct stack_geometry geo;
+	struct सालानसान_geometry geo;
 
 #ifdef CONFIG_USERSPACE
-	if (z_stack_is_user_capable(stack)) {
-		geo.obj_size = K_THREAD_STACK_LEN(stack_size);
-		geo.buf_start = K_THREAD_STACK_BUFFER(stack);
-		geo.buf_size = geo.obj_size - K_THREAD_STACK_RESERVED;
+	if (z_सालानसान_is_user_capable(सालानसान)) {
+		geo.obj_size = K_THREAD_सालानसान_LEN(सालानसान_size);
+		geo.buf_start = K_THREAD_सालानसान_BUFFER(सालानसान);
+		geo.buf_size = geo.obj_size - K_THREAD_सालानसान_RESERVED;
 	} else
 #endif /* CONFIG_USERSPACE */
 	{
 		/* Object cannot host a user mode thread */
-		geo.obj_size = K_KERNEL_STACK_LEN(stack_size);
-		geo.buf_start = K_KERNEL_STACK_BUFFER(stack);
-		geo.buf_size = geo.obj_size - K_KERNEL_STACK_RESERVED;
+		geo.obj_size = K_KERNEL_सालानसान_LEN(सालानसान_size);
+		geo.buf_start = K_KERNEL_सालानसान_BUFFER(सालानसान);
+		geo.buf_size = geo.obj_size - K_KERNEL_सालानसान_RESERVED;
 
-#if defined(ARCH_KERNEL_STACK_RESERVED)
+#if defined(ARCH_KERNEL_सालानसान_RESERVED)
 		/* Zephyr treats stack overflow as an app bug.  But
 		 * this particular overflow can be seen by static
 		 * analysis so needs to be handled somehow.
 		 */
-		if (K_KERNEL_STACK_RESERVED > geo.obj_size) {
+		if (K_KERNEL_सालानसान_RESERVED > geo.obj_size) {
 			k_panic();
 		}
 #endif
@@ -437,13 +437,13 @@ static struct stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
  * this maps the object into virtual memory, records the mapping so it can be
  * torn down at thread exit, and rebases buf_start onto the mapped address.
  */
-static char *map_thread_stack(struct k_thread *new_thread,
-			      k_thread_stack_t *stack,
-			      struct stack_geometry *geo)
+static char *map_thread_सालानसान(struct k_thread *new_thread,
+			      k_thread_सालानसान_t *सालानसान,
+			      struct सालानसान_geometry *geo)
 {
-	char *stack_ptr;
+	char *सालानसान_ptr;
 
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
 	/* Map the stack into virtual memory and use that as the base to
 	 * calculate the initial stack pointer at the high end of the stack
 	 * object. The stack pointer may be reduced later by TLS or random
@@ -453,42 +453,42 @@ static char *map_thread_stack(struct k_thread *new_thread,
 	 * stack. If CONFIG_INIT_STACKS is enabled, the stack will be
 	 * cleared later.
 	 */
-	void *stack_mapped = k_mem_map_phys_guard((uintptr_t)stack, geo->obj_size,
+	void *सालानसान_mapped = k_mem_map_phys_guard((uintptr_t)सालानसान, geo->obj_size,
 				K_MEM_PERM_RW | K_MEM_CACHE_WB | K_MEM_MAP_UNINIT,
 				false);
 
-	__ASSERT_NO_MSG((uintptr_t)stack_mapped != 0);
+	__ASSERT_NO_MSG((uintptr_t)सालानसान_mapped != 0);
 
 #ifdef CONFIG_USERSPACE
-	if (z_stack_is_user_capable(stack)) {
-		geo->buf_start = K_THREAD_STACK_BUFFER(stack_mapped);
+	if (z_सालानसान_is_user_capable(सालानसान)) {
+		geo->buf_start = K_THREAD_सालानसान_BUFFER(सालानसान_mapped);
 	} else
 #endif /* CONFIG_USERSPACE */
 	{
-		geo->buf_start = K_KERNEL_STACK_BUFFER(stack_mapped);
+		geo->buf_start = K_KERNEL_सालानसान_BUFFER(सालानसान_mapped);
 	}
 
-	stack_ptr = (char *)stack_mapped + geo->obj_size;
+	सालानसान_ptr = (char *)सालानसान_mapped + geo->obj_size;
 
 	/* Need to store the info on mapped stack so we can remove the mappings
 	 * when the thread ends.
 	 */
-	new_thread->stack_info.mapped.addr = stack_mapped;
-	new_thread->stack_info.mapped.sz = geo->obj_size;
+	new_thread->सालानसान_info.mapped.addr = सालानसान_mapped;
+	new_thread->सालानसान_info.mapped.sz = geo->obj_size;
 #else /* CONFIG_THREAD_STACK_MEM_MAPPED */
 	ARG_UNUSED(new_thread);
 
 	/* Initial stack pointer at the high end of the stack object, may
 	 * be reduced later by TLS or random offset
 	 */
-	stack_ptr = (char *)stack + geo->obj_size;
+	सालानसान_ptr = (char *)सालानसान + geo->obj_size;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-	return stack_ptr;
+	return सालानसान_ptr;
 }
 
 /* Pre-fill the stack buffer with a known pattern for usage measurement. */
-static inline void fill_init_stack(char *buf_start, size_t buf_size)
+static inline void fill_init_सालानसान(char *buf_start, size_t buf_size)
 {
 #ifdef CONFIG_INIT_STACKS
 	memset(buf_start, 0xaa, buf_size);
@@ -499,14 +499,14 @@ static inline void fill_init_stack(char *buf_start, size_t buf_size)
 }
 
 /* Place the overflow-detection sentinel at the low end of the stack buffer. */
-static inline void set_stack_sentinel(char *buf_start)
+static inline void set_सालानसान_sentinel(char *buf_start)
 {
-#ifdef CONFIG_STACK_SENTINEL
+#ifdef CONFIG_सालानसान_SENTINEL
 	/* Put the stack sentinel at the lowest 4 bytes of the stack area.
 	 * We periodically check that it's still present and kill the thread
 	 * if it isn't.
 	 */
-	*((uint32_t *)buf_start) = STACK_SENTINEL;
+	*((uint32_t *)buf_start) = सालानसान_SENTINEL;
 #else
 	ARG_UNUSED(buf_start);
 #endif /* CONFIG_STACK_SENTINEL */
@@ -517,18 +517,18 @@ static inline void set_stack_sentinel(char *buf_start)
  * userspace-local data and stack-pointer randomization, and return the
  * aligned amount the initial stack pointer must be lowered by.
  */
-static size_t reserve_stack_headroom(struct k_thread *new_thread,
-				     char *stack_ptr, size_t buf_size)
+static size_t reserve_सालानसान_headroom(struct k_thread *new_thread,
+				     char *सालानसान_ptr, size_t buf_size)
 {
 	size_t delta = 0;
 
 	ARG_UNUSED(new_thread);
-	ARG_UNUSED(stack_ptr);
+	ARG_UNUSED(सालानसान_ptr);
 	ARG_UNUSED(buf_size);
 
 #ifdef CONFIG_THREAD_LOCAL_STORAGE
 	/* TLS is always last within the stack buffer */
-	delta += arch_tls_stack_setup(new_thread, stack_ptr);
+	delta += arch_tls_सालानसान_setup(new_thread, सालानसान_ptr);
 #endif /* CONFIG_THREAD_LOCAL_STORAGE */
 #ifdef CONFIG_THREAD_USERSPACE_LOCAL_DATA
 	size_t tls_size = sizeof(struct _thread_userspace_local_data);
@@ -536,20 +536,20 @@ static size_t reserve_stack_headroom(struct k_thread *new_thread,
 	/* reserve space on highest memory of stack buffer for local data */
 	delta += tls_size;
 	new_thread->userspace_local_data =
-		(struct _thread_userspace_local_data *)(stack_ptr - delta);
+		(struct _thread_userspace_local_data *)(सालानसान_ptr - delta);
 #endif /* CONFIG_THREAD_USERSPACE_LOCAL_DATA */
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+#if defined(CONFIG_सालानसान_POINTER_RANDOM) && (CONFIG_सालानसान_POINTER_RANDOM != 0)
 	delta += random_offset(buf_size);
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
-	return ROUND_UP(delta, ARCH_STACK_PTR_ALIGN);
+	return ROUND_UP(delta, ARCH_सालानसान_PTR_ALIGN);
 }
 
 /* Record the thread-accessible stack bounds (and runtime-safety threshold). */
-static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
+static inline void set_सालानसान_info(struct k_thread *new_thread, char *buf_start,
 				  size_t buf_size, size_t delta)
 {
-#ifdef CONFIG_THREAD_STACK_INFO
+#ifdef CONFIG_THREAD_सालानसान_INFO
 	/* Initial values. Arches which implement MPU guards that "borrow"
 	 * memory from the stack buffer (not tracked in K_THREAD_STACK_RESERVED)
 	 * will need to appropriately update this.
@@ -557,13 +557,13 @@ static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
 	 * The bounds tracked here correspond to the area of the stack object
 	 * that the thread can access, which includes TLS.
 	 */
-	new_thread->stack_info.start = (uintptr_t)buf_start;
-	new_thread->stack_info.size = buf_size;
-	new_thread->stack_info.delta = delta;
+	new_thread->सालानसान_info.start = (uintptr_t)buf_start;
+	new_thread->सालानसान_info.size = buf_size;
+	new_thread->सालानसान_info.delta = delta;
 
-#ifdef CONFIG_THREAD_RUNTIME_STACK_SAFETY
-	new_thread->stack_info.usage.unused_threshold =
-		(CONFIG_THREAD_RUNTIME_STACK_SAFETY_DEFAULT_UNUSED_THRESHOLD_PCT *
+#ifdef CONFIG_THREAD_RUNTIME_सालानसान_SAFETY
+	new_thread->सालानसान_info.usage.unused_threshold =
+		(CONFIG_THREAD_RUNTIME_सालानसान_SAFETY_DEFAULT_UNUSED_THRESHOLD_PCT *
 		 buf_size) / 100;
 #endif
 #else
@@ -574,35 +574,35 @@ static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
 #endif /* CONFIG_THREAD_STACK_INFO */
 }
 
-static char *setup_thread_stack(struct k_thread *new_thread,
-				k_thread_stack_t *stack, size_t stack_size)
+static char *setup_thread_सालानसान(struct k_thread *new_thread,
+				k_thread_सालानसान_t *सालानसान, size_t सालानसान_size)
 {
-	struct stack_geometry geo = compute_stack_geometry(stack, stack_size);
-	char *stack_ptr = map_thread_stack(new_thread, stack, &geo);
+	struct सालानसान_geometry geo = compute_सालानसान_geometry(सालानसान, सालानसान_size);
+	char *सालानसान_ptr = map_thread_सालानसान(new_thread, सालानसान, &geo);
 	size_t delta;
 
 	LOG_DBG("stack %p for thread %p: obj_size=%zu buf_start=%p "
 		" buf_size %zu stack_ptr=%p",
-		stack, new_thread, geo.obj_size, (void *)geo.buf_start,
-		geo.buf_size, (void *)stack_ptr);
+		सालानसान, new_thread, geo.obj_size, (void *)geo.buf_start,
+		geo.buf_size, (void *)सालानसान_ptr);
 
-	fill_init_stack(geo.buf_start, geo.buf_size);
-	set_stack_sentinel(geo.buf_start);
-	delta = reserve_stack_headroom(new_thread, stack_ptr, geo.buf_size);
-	set_stack_info(new_thread, geo.buf_start, geo.buf_size, delta);
+	fill_init_सालानसान(geo.buf_start, geo.buf_size);
+	set_सालानसान_sentinel(geo.buf_start);
+	delta = reserve_सालानसान_headroom(new_thread, सालानसान_ptr, geo.buf_size);
+	set_सालानसान_info(new_thread, geo.buf_start, geo.buf_size, delta);
 
-	return stack_ptr - delta;
+	return सालानसान_ptr - delta;
 }
 
-#ifdef CONFIG_HW_SHADOW_STACK
-static void setup_shadow_stack(struct k_thread *new_thread,
-			 k_thread_stack_t *stack)
+#ifdef CONFIG_HW_SHADOW_सालानसान
+static void setup_shadow_सालानसान(struct k_thread *new_thread,
+			 k_thread_सालानसान_t *सालानसान)
 {
 	int ret = -ENOENT;
 
-	STRUCT_SECTION_FOREACH(_stack_to_hw_shadow_stack, stk_to_hw_shstk) {
-		if (stk_to_hw_shstk->stack == stack) {
-			ret = k_thread_hw_shadow_stack_attach(new_thread,
+	STRUCT_SECTION_FOREACH(सालानसान_to_hw_shadow_सालानसान, stk_to_hw_shstk) {
+		if (stk_to_hw_shstk->सालानसान == सालानसान) {
+			ret = k_thread_hw_shadow_सालानसान_attach(new_thread,
 							      stk_to_hw_shstk->shstk_addr,
 							      stk_to_hw_shstk->size);
 			if (ret != 0) {
@@ -621,25 +621,25 @@ static void setup_shadow_stack(struct k_thread *new_thread,
 		return;
 	}
 
-	STRUCT_SECTION_FOREACH(_stack_to_hw_shadow_stack_arr, stk_to_hw_shstk) {
-		if ((uintptr_t)stack >= stk_to_hw_shstk->stack_addr &&
-		    (uintptr_t)stack < stk_to_hw_shstk->stack_addr +
-		    stk_to_hw_shstk->stack_size * stk_to_hw_shstk->nmemb) {
+	STRUCT_SECTION_FOREACH(सालानसान_to_hw_shadow_सालानसान_arr, stk_to_hw_shstk) {
+		if ((uintptr_t)सालानसान >= stk_to_hw_shstk->सालानसान_addr &&
+		    (uintptr_t)सालानसान < stk_to_hw_shstk->सालानसान_addr +
+		    stk_to_hw_shstk->सालानसान_size * stk_to_hw_shstk->nmemb) {
 			/* Now we have to guess which index of the stack array is being used */
-			uintptr_t stack_offset = (uintptr_t)stack - stk_to_hw_shstk->stack_addr;
-			uintptr_t stack_index = stack_offset / stk_to_hw_shstk->stack_size;
+			uintptr_t सालानसान_offset = (uintptr_t)सालानसान - stk_to_hw_shstk->सालानसान_addr;
+			uintptr_t सालानसान_index = सालानसान_offset / stk_to_hw_shstk->सालानसान_size;
 			uintptr_t addr;
 
-			if (stack_index >= stk_to_hw_shstk->nmemb) {
+			if (सालानसान_index >= stk_to_hw_shstk->nmemb) {
 				LOG_ERR("Could not find shadow stack for thread %p, stack %p",
-					new_thread, stack);
+					new_thread, सालानसान);
 				k_panic();
 			}
 
 			addr = stk_to_hw_shstk->shstk_addr +
-				stk_to_hw_shstk->shstk_size * stack_index;
-			ret = k_thread_hw_shadow_stack_attach(new_thread,
-							      (arch_thread_hw_shadow_stack_t *)addr,
+				stk_to_hw_shstk->shstk_size * सालानसान_index;
+			ret = k_thread_hw_shadow_सालानसान_attach(new_thread,
+							      (arch_thread_hw_shadow_सालानसान_t *)addr,
 							      stk_to_hw_shstk->shstk_size);
 			if (ret != 0) {
 				LOG_ERR("Could not set thread %p shadow stack 0x%lx, got error %d",
@@ -652,17 +652,17 @@ static void setup_shadow_stack(struct k_thread *new_thread,
 
 	if (ret == -ENOENT) {
 		LOG_ERR("Could not find shadow stack for thread %p, stack %p",
-			new_thread, stack);
+			new_thread, सालानसान);
 		k_panic();
 	}
 }
 #else
 /* No-op stub used when hardware shadow stacks are not configured. */
-static inline void setup_shadow_stack(struct k_thread *new_thread,
-				      k_thread_stack_t *stack)
+static inline void setup_shadow_सालानसान(struct k_thread *new_thread,
+				      k_thread_सालानसान_t *सालानसान)
 {
 	ARG_UNUSED(new_thread);
-	ARG_UNUSED(stack);
+	ARG_UNUSED(सालानसान);
 }
 #endif
 
@@ -703,29 +703,29 @@ static inline void init_thread_obj_core(struct k_thread *thread)
  * objects, record stack ownership, and grant the thread access to itself.
  */
 static inline void init_thread_userspace(struct k_thread *thread,
-					 k_thread_stack_t *stack,
+					 k_thread_सालानसान_t *सालानसान,
 					 uint32_t options)
 {
 #ifdef CONFIG_USERSPACE
-	__ASSERT((options & K_USER) == 0U || z_stack_is_user_capable(stack),
-		 "user thread %p with kernel-only stack %p", thread, stack);
+	__ASSERT((options & K_USER) == 0U || z_सालानसान_is_user_capable(सालानसान),
+		 "user thread %p with kernel-only stack %p", thread, सालानसान);
 	k_object_init(thread);
-	k_object_init(stack);
-	thread->stack_obj = stack;
+	k_object_init(सालानसान);
+	thread->सालानसान_obj = सालानसान;
 	thread->syscall_frame = NULL;
 
 	/* Any given thread has access to itself */
 	k_object_access_grant(thread, thread);
 #else
 	ARG_UNUSED(thread);
-	ARG_UNUSED(stack);
+	ARG_UNUSED(सालानसान);
 	ARG_UNUSED(options);
 #endif /* CONFIG_USERSPACE */
 }
 
 /* Assert the thread object is cache-coherent while its stack stays cached. */
 static inline void assert_thread_coherence(struct k_thread *thread,
-					   k_thread_stack_t *stack)
+					   k_thread_सालानसान_t *सालानसान)
 {
 #ifdef CONFIG_KERNEL_COHERENCE
 	/* Check that the thread object is safe, but that the stack is
@@ -737,11 +737,11 @@ static inline void assert_thread_coherence(struct k_thread *thread,
 	 * uncached area.
 	 */
 #ifndef CONFIG_DYNAMIC_THREAD
-	__ASSERT_NO_MSG(!sys_cache_is_mem_coherent(stack));
+	__ASSERT_NO_MSG(!sys_cache_is_mem_coherent(सालानसान));
 #endif /* CONFIG_DYNAMIC_THREAD */
 #endif /* CONFIG_KERNEL_COHERENCE */
 	ARG_UNUSED(thread);
-	ARG_UNUSED(stack);
+	ARG_UNUSED(सालानसान);
 }
 
 /* Assert the arch layer populated switch_handle on USE_SWITCH builds. */
@@ -783,11 +783,11 @@ static inline void add_thread_to_monitor(struct k_thread *thread,
 	thread->entry.parameter2 = p2;
 	thread->entry.parameter3 = p3;
 
-	k_spinlock_key_t key = k_spin_lock(&z_thread_monitor_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_thread_monitor_lock);
 
 	thread->next_thread = _kernel.threads;
 	_kernel.threads = thread;
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, सुसि);
 #else
 	ARG_UNUSED(thread);
 	ARG_UNUSED(entry);
@@ -876,7 +876,7 @@ static inline void assert_thread_not_reused(struct k_thread *new_thread)
 {
 #ifdef CONFIG_THREAD_MONITOR
 #ifdef CONFIG_ASSERT
-	k_spinlock_key_t key = k_spin_lock(&z_thread_monitor_lock);
+	k_spinlock_सुसि_t सुसि = k_spin_lock(&z_thread_monitor_lock);
 	bool reused = false;
 
 	/* Check if the thread is already in the list */
@@ -887,7 +887,7 @@ static inline void assert_thread_not_reused(struct k_thread *new_thread)
 		}
 	}
 
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, सुसि);
 
 	__ASSERT(!reused, "thread %p is already in the running list", new_thread);
 #endif /* CONFIG_ASSERT */
@@ -901,12 +901,12 @@ static inline void assert_thread_not_reused(struct k_thread *new_thread)
  * of K_THREAD_STACK_DEFINE() which defined 'stack'.
  */
 char *z_setup_new_thread(struct k_thread *new_thread,
-			 k_thread_stack_t *stack, size_t stack_size,
+			 k_thread_सालानसान_t *सालानसान, size_t सालानसान_size,
 			 k_thread_entry_t entry,
 			 void *p1, void *p2, void *p3,
 			 int prio, uint32_t options, const char *name)
 {
-	char *stack_ptr;
+	char *सालानसान_ptr;
 
 	Z_ASSERT_VALID_PRIO(prio, entry);
 
@@ -914,13 +914,13 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 
 	thread_abort_cleanup_check_reuse(new_thread);
 	init_thread_obj_core(new_thread);
-	init_thread_userspace(new_thread, stack, options);
+	init_thread_userspace(new_thread, सालानसान, options);
 
 	z_waitq_init(&new_thread->join_queue);
 
 	/* Initialize various struct k_thread members */
 	z_init_thread_base(&new_thread->base, prio, _THREAD_SLEEPING, options);
-	stack_ptr = setup_thread_stack(new_thread, stack, stack_size);
+	सालानसान_ptr = setup_thread_सालानसान(new_thread, सालानसान, सालानसान_size);
 
 #if Z_MUTEX_PI_ENABLED
 	sys_slist_init(&new_thread->held_mutexes);
@@ -928,10 +928,10 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 	new_thread->orig_prio = new_thread->base.prio;
 #endif /* Z_MUTEX_PI_ENABLED */
 
-	setup_shadow_stack(new_thread, stack);
-	assert_thread_coherence(new_thread, stack);
+	setup_shadow_सालानसान(new_thread, सालानसान);
+	assert_thread_coherence(new_thread, सालानसान);
 
-	arch_new_thread(new_thread, stack, stack_ptr, entry, p1, p2, p3);
+	arch_new_thread(new_thread, सालानसान, सालानसान_ptr, entry, p1, p2, p3);
 
 	/* static threads overwrite it afterwards with real value */
 	new_thread->init_data = NULL;
@@ -946,7 +946,7 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 	if (IS_ENABLED(CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN) &&
 	    (_current == NULL)) {
 		new_thread->resource_pool = NULL;
-		return stack_ptr;
+		return सालानसान_ptr;
 	}
 
 	init_thread_userspace_perms(new_thread, options);
@@ -957,11 +957,11 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, create, new_thread);
 
-	return stack_ptr;
+	return सालानसान_ptr;
 }
 
-#ifdef CONFIG_THREAD_RUNTIME_STACK_SAFETY
-int z_impl_k_thread_runtime_stack_unused_threshold_pct_set(struct k_thread *thread,
+#ifdef CONFIG_THREAD_RUNTIME_सालानसान_SAFETY
+int z_impl_k_thread_runtime_सालानसान_unused_threshold_pct_set(struct k_thread *thread,
 							   uint32_t pct)
 {
 	size_t unused_threshold;
@@ -970,68 +970,68 @@ int z_impl_k_thread_runtime_stack_unused_threshold_pct_set(struct k_thread *thre
 		return -EINVAL;   /* 100% unused stack and up is invalid */
 	}
 
-	unused_threshold = (thread->stack_info.size * pct) / 100;
+	unused_threshold = (thread->सालानसान_info.size * pct) / 100;
 
-	thread->stack_info.usage.unused_threshold = unused_threshold;
+	thread->सालानसान_info.usage.unused_threshold = unused_threshold;
 
 	return 0;
 }
 
-int z_impl_k_thread_runtime_stack_unused_threshold_set(struct k_thread *thread,
+int z_impl_k_thread_runtime_सालानसान_unused_threshold_set(struct k_thread *thread,
 						       size_t threshold)
 {
-	if (threshold > thread->stack_info.size) {
+	if (threshold > thread->सालानसान_info.size) {
 		return -EINVAL;
 	}
 
-	thread->stack_info.usage.unused_threshold = threshold;
+	thread->सालानसान_info.usage.unused_threshold = threshold;
 
 	return 0;
 }
 
-size_t z_impl_k_thread_runtime_stack_unused_threshold_get(struct k_thread *thread)
+size_t z_impl_k_thread_runtime_सालानसान_unused_threshold_get(struct k_thread *thread)
 {
-	return thread->stack_info.usage.unused_threshold;
+	return thread->सालानसान_info.usage.unused_threshold;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_thread_runtime_stack_unused_threshold_pct_set(struct k_thread *thread,
+int z_vrfy_k_thread_runtime_सालानसान_unused_threshold_pct_set(struct k_thread *thread,
 							   uint32_t pct)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_pct_set(thread, pct);
+	return z_impl_k_thread_runtime_सालानसान_unused_threshold_pct_set(thread, pct);
 }
 #include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_pct_set_mrsh.c>
 
-int z_vrfy_k_thread_runtime_stack_unused_threshold_set(struct k_thread *thread,
+int z_vrfy_k_thread_runtime_सालानसान_unused_threshold_set(struct k_thread *thread,
 						       size_t threshold)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_set(thread, threshold);
+	return z_impl_k_thread_runtime_सालानसान_unused_threshold_set(thread, threshold);
 }
 #include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_set_mrsh.c>
 
-size_t z_vrfy_k_thread_runtime_stack_unused_threshold_get(struct k_thread *thread)
+size_t z_vrfy_k_thread_runtime_सालानसान_unused_threshold_get(struct k_thread *thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_get(thread);
+	return z_impl_k_thread_runtime_सालानसान_unused_threshold_get(thread);
 }
 #include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 #endif /* CONFIG_THREAD_RUNTIME_STACK_SAFETY */
 
 k_tid_t z_impl_k_thread_create(struct k_thread *new_thread,
-			      k_thread_stack_t *stack,
-			      size_t stack_size, k_thread_entry_t entry,
+			      k_thread_सालानसान_t *सालानसान,
+			      size_t सालानसान_size, k_thread_entry_t entry,
 			      void *p1, void *p2, void *p3,
 			      int prio, uint32_t options, k_timeout_t delay)
 {
 	__ASSERT(!arch_is_in_isr(), "Threads may not be created in ISRs");
 
-	z_setup_new_thread(new_thread, stack, stack_size, entry, p1, p2, p3,
+	z_setup_new_thread(new_thread, सालानसान, सालानसान_size, entry, p1, p2, p3,
 			  prio, options, NULL);
 
 	thread_schedule_new(new_thread, delay);
@@ -1040,19 +1040,19 @@ k_tid_t z_impl_k_thread_create(struct k_thread *new_thread,
 }
 
 #ifdef CONFIG_USERSPACE
-bool z_stack_is_user_capable(k_thread_stack_t *stack)
+bool z_सालानसान_is_user_capable(k_thread_सालानसान_t *सालानसान)
 {
-	return k_object_find(stack) != NULL;
+	return k_object_find(सालानसान) != NULL;
 }
 
 k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
-			       k_thread_stack_t *stack,
-			       size_t stack_size, k_thread_entry_t entry,
+			       k_thread_सालानसान_t *सालानसान,
+			       size_t सालानसान_size, k_thread_entry_t entry,
 			       void *p1, void *p2, void *p3,
 			       int prio, uint32_t options, k_timeout_t delay)
 {
-	size_t total_size, stack_obj_size;
-	struct k_object *stack_object;
+	size_t total_size, सालानसान_obj_size;
+	struct k_object *सालानसान_object;
 
 	/* The thread and stack objects *must* be in an uninitialized state */
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(new_thread, K_OBJ_THREAD));
@@ -1060,32 +1060,32 @@ k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
 	/* No need to check z_stack_is_user_capable(), it won't be in the
 	 * object table if it isn't
 	 */
-	stack_object = k_object_find(stack);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(k_object_validation_check(stack_object, stack,
-						K_OBJ_THREAD_STACK_ELEMENT,
+	सालानसान_object = k_object_find(सालानसान);
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(k_object_validation_check(सालानसान_object, सालानसान,
+						K_OBJ_THREAD_सालानसान_ELEMENT,
 						_OBJ_INIT_FALSE) == 0,
 				    "bad stack object"));
 
 	/* Verify that the stack size passed in is OK by computing the total
 	 * size and comparing it with the size value in the object metadata
 	 */
-	K_OOPS(K_SYSCALL_VERIFY_MSG(!size_add_overflow(K_THREAD_STACK_RESERVED,
-						       stack_size, &total_size),
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(!size_add_overflow(K_THREAD_सालानसान_RESERVED,
+						       सालानसान_size, &total_size),
 				    "stack size overflow (%zu+%zu)",
-				    stack_size,
-				    K_THREAD_STACK_RESERVED));
+				    सालानसान_size,
+				    K_THREAD_सालानसान_RESERVED));
 
 	/* Testing less-than-or-equal since additional room may have been
 	 * allocated for alignment constraints
 	 */
 #ifdef CONFIG_GEN_PRIV_STACKS
-	stack_obj_size = stack_object->data.stack_data->size;
+	सालानसान_obj_size = सालानसान_object->data.सालानसान_data->size;
 #else
-	stack_obj_size = stack_object->data.stack_size;
+	सालानसान_obj_size = सालानसान_object->data.सालानसान_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
-	K_OOPS(K_SYSCALL_VERIFY_MSG(total_size <= stack_obj_size,
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(total_size <= सालानसान_obj_size,
 				    "stack size %zu is too big, max is %zu",
-				    total_size, stack_obj_size));
+				    total_size, सालानसान_obj_size));
 
 	/* User threads may only create other user threads and they can't
 	 * be marked as essential
@@ -1100,7 +1100,7 @@ k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
 	K_OOPS(K_SYSCALL_VERIFY(z_is_prio_lower_or_equal(prio,
 							_current->base.prio)));
 
-	z_setup_new_thread(new_thread, stack, stack_size,
+	z_setup_new_thread(new_thread, सालानसान, सालानसान_size,
 			   entry, p1, p2, p3, prio, options, NULL);
 
 	thread_schedule_new(new_thread, delay);
@@ -1159,16 +1159,16 @@ FUNC_NORETURN void k_thread_user_mode_enter(k_thread_entry_t entry,
 	_current->entry.parameter3 = p3;
 #endif /* CONFIG_THREAD_MONITOR */
 #ifdef CONFIG_USERSPACE
-	__ASSERT(z_stack_is_user_capable(_current->stack_obj),
+	__ASSERT(z_सालानसान_is_user_capable(_current->सालानसान_obj),
 		 "dropping to user mode with kernel-only stack object");
 #ifdef CONFIG_THREAD_USERSPACE_LOCAL_DATA
 	memset(_current->userspace_local_data, 0,
 	       sizeof(struct _thread_userspace_local_data));
 #endif /* CONFIG_THREAD_USERSPACE_LOCAL_DATA */
 #ifdef CONFIG_THREAD_LOCAL_STORAGE
-	arch_tls_stack_setup(_current,
-			     (char *)(_current->stack_info.start +
-				      _current->stack_info.size));
+	arch_tls_सालानसान_setup(_current,
+			     (char *)(_current->सालानसान_info.start +
+				      _current->सालानसान_info.size));
 #endif /* CONFIG_THREAD_LOCAL_STORAGE */
 	arch_user_mode_enter(entry, p1, p2, p3);
 #else
@@ -1177,20 +1177,20 @@ FUNC_NORETURN void k_thread_user_mode_enter(k_thread_entry_t entry,
 #endif /* CONFIG_USERSPACE */
 }
 
-#if defined(CONFIG_INIT_STACKS) && defined(CONFIG_THREAD_STACK_INFO)
-#ifdef CONFIG_STACK_GROWS_UP
+#if defined(CONFIG_INIT_STACKS) && defined(CONFIG_THREAD_सालानसान_INFO)
+#ifdef CONFIG_सालानसान_GROWS_UP
 #error "Unsupported configuration for stack analysis"
 #endif /* CONFIG_STACK_GROWS_UP */
 
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr)
+int z_सालानसान_space_get(const uint8_t *सालानसान_start, size_t size, size_t *unused_ptr)
 {
 	size_t unused = 0;
-	const uint8_t *checked_stack = stack_start;
+	const uint8_t *checked_सालानसान = सालानसान_start;
 	/* Take the address of any local variable as a shallow bound for the
 	 * stack pointer.  Addresses above it are guaranteed to be
 	 * accessible.
 	 */
-	const uint8_t *stack_pointer = (const uint8_t *)&stack_start;
+	const uint8_t *सालानसान_pointer = (const uint8_t *)&सालानसान_start;
 
 	/* If we are currently running on the stack being analyzed, some
 	 * memory management hardware will generate an exception if we
@@ -1199,8 +1199,8 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 	 * This never happens when invoked from user mode, as user mode
 	 * will always run this function on the privilege elevation stack.
 	 */
-	if ((stack_pointer > stack_start) && (stack_pointer <= (stack_start + size)) &&
-	    IS_ENABLED(CONFIG_NO_UNUSED_STACK_INSPECTION)) {
+	if ((सालानसान_pointer > सालानसान_start) && (सालानसान_pointer <= (सालानसान_start + size)) &&
+	    IS_ENABLED(CONFIG_NO_UNUSED_सालानसान_INSPECTION)) {
 		/* TODO: We could add an arch_ API call to temporarily
 		 * disable the stack checking in the CPU, but this would
 		 * need to be properly managed wrt context switches/interrupts
@@ -1208,7 +1208,7 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 		return -ENOTSUP;
 	}
 
-	if (IS_ENABLED(CONFIG_STACK_SENTINEL)) {
+	if (IS_ENABLED(CONFIG_सालानसान_SENTINEL)) {
 		/* First 4 bytes of the stack buffer reserved for the
 		 * sentinel value, it won't be 0xAAAAAAAA for thread
 		 * stacks.
@@ -1216,12 +1216,12 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 		 * FIXME: thread->stack_info.start ought to reflect
 		 * this!
 		 */
-		checked_stack += 4;
+		checked_सालानसान += 4;
 		size -= 4;
 	}
 
 	for (size_t i = 0; i < size; i++) {
-		if ((checked_stack[i]) == 0xaaU) {
+		if ((checked_सालानसान[i]) == 0xaaU) {
 			unused++;
 		} else {
 			break;
@@ -1233,10 +1233,10 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 	return 0;
 }
 
-#ifdef CONFIG_THREAD_RUNTIME_STACK_SAFETY
-int k_thread_runtime_stack_safety_full_check(const struct k_thread *thread,
+#ifdef CONFIG_THREAD_RUNTIME_सालानसान_SAFETY
+int k_thread_runtime_सालानसान_safety_full_check(const struct k_thread *thread,
 					     size_t *unused_ptr,
-					     k_thread_stack_safety_handler_t handler,
+					     k_thread_सालानसान_safety_handler_t handler,
 					     void *arg)
 {
 	int    rv;
@@ -1244,8 +1244,8 @@ int k_thread_runtime_stack_safety_full_check(const struct k_thread *thread,
 
 	__ASSERT_NO_MSG(thread != NULL);
 
-	rv = z_stack_space_get((const uint8_t *)thread->stack_info.start,
-			       thread->stack_info.size, &unused_space);
+	rv = z_सालानसान_space_get((const uint8_t *)thread->सालानसान_info.start,
+			       thread->सालानसान_info.size, &unused_space);
 
 	if (rv != 0) {
 		return rv;
@@ -1255,7 +1255,7 @@ int k_thread_runtime_stack_safety_full_check(const struct k_thread *thread,
 		*unused_ptr = unused_space;
 	}
 
-	if ((unused_space < thread->stack_info.usage.unused_threshold) &&
+	if ((unused_space < thread->सालानसान_info.usage.unused_threshold) &&
 	    (handler != NULL)) {
 		handler(thread, unused_space, arg);
 	}
@@ -1263,9 +1263,9 @@ int k_thread_runtime_stack_safety_full_check(const struct k_thread *thread,
 	return 0;
 }
 
-int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
+int k_thread_runtime_सालानसान_safety_threshold_check(const struct k_thread *thread,
 						  size_t *unused_ptr,
-						  k_thread_stack_safety_handler_t handler,
+						  k_thread_सालानसान_safety_handler_t handler,
 						  void *arg)
 {
 	int    rv;
@@ -1275,7 +1275,7 @@ int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
 
 	__ASSERT_NO_MSG(thread != NULL);
 
-	threshold = thread->stack_info.usage.unused_threshold;
+	threshold = thread->सालानसान_info.usage.unused_threshold;
 	scan_size = threshold;
 
 	/* z_stack_space_get() reserves the first bytes of the stack buffer for
@@ -1285,11 +1285,11 @@ int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
 	 * otherwise a fully unused window would report fewer than 'threshold'
 	 * unused bytes and spuriously trip the threshold.
 	 */
-	if (IS_ENABLED(CONFIG_STACK_SENTINEL) && (threshold != 0U)) {
+	if (IS_ENABLED(CONFIG_सालानसान_SENTINEL) && (threshold != 0U)) {
 		scan_size += sizeof(uint32_t);
 	}
 
-	rv = z_stack_space_get((const uint8_t *)thread->stack_info.start,
+	rv = z_सालानसान_space_get((const uint8_t *)thread->सालानसान_info.start,
 			       scan_size, &unused_space);
 
 	if (rv != 0) {
@@ -1308,21 +1308,21 @@ int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
 }
 #endif /* CONFIG_THREAD_RUNTIME_STACK_SAFETY */
 
-int z_impl_k_thread_stack_space_get(const struct k_thread *thread,
+int z_impl_k_thread_सालानसान_space_get(const struct k_thread *thread,
 				    size_t *unused_ptr)
 {
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-	if (thread->stack_info.mapped.addr == NULL) {
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
+	if (thread->सालानसान_info.mapped.addr == NULL) {
 		return -EINVAL;
 	}
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-	return z_stack_space_get((const uint8_t *)thread->stack_info.start,
-				 thread->stack_info.size, unused_ptr);
+	return z_सालानसान_space_get((const uint8_t *)thread->सालानसान_info.start,
+				 thread->सालानसान_info.size, unused_ptr);
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_thread_stack_space_get(const struct k_thread *thread,
+int z_vrfy_k_thread_सालानसान_space_get(const struct k_thread *thread,
 				    size_t *unused_ptr)
 {
 	size_t unused;
@@ -1330,7 +1330,7 @@ int z_vrfy_k_thread_stack_space_get(const struct k_thread *thread,
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	ret = z_impl_k_thread_stack_space_get(thread, &unused);
+	ret = z_impl_k_thread_सालानसान_space_get(thread, &unused);
 	CHECKIF(ret != 0) {
 		return ret;
 	}
@@ -1426,9 +1426,9 @@ int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
 	/* Retrieve the usage stats for each core and amalgamate them. */
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned int नुमेरो_cpus = arch_नुमेरो_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	for (unsigned int i = 0; i < नुमेरो_cpus; i++) {
 		z_sched_cpu_usage(i, &tmp_stats);
 
 		stats->execution_cycles += tmp_stats.execution_cycles;
@@ -1454,7 +1454,7 @@ int k_thread_runtime_stats_cpu_get(int cpu, k_thread_runtime_stats_t *stats)
 	*stats = (k_thread_runtime_stats_t) {};
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-	CHECKIF((cpu < 0) || ((unsigned int)cpu >= arch_num_cpus())) {
+	CHECKIF((cpu < 0) || ((unsigned int)cpu >= arch_नुमेरो_cpus())) {
 		return -EINVAL;
 	}
 
@@ -1473,11 +1473,11 @@ static struct k_thread *thread_to_cleanup;
 /** Spinlock for thread abort cleanup. */
 static struct k_spinlock thread_cleanup_lock;
 
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-static void *thread_cleanup_stack_addr;
-static size_t thread_cleanup_stack_sz;
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
+static void *thread_cleanup_सालानसान_addr;
+static size_t thread_cleanup_सालानसान_sz;
 
-static void unmap_thread_stack(void *addr, size_t sz)
+static void unmap_thread_सालानसान(void *addr, size_t sz)
 {
 	if (addr != NULL) {
 		k_mem_unmap_phys_guard(addr, sz, false);
@@ -1495,7 +1495,7 @@ void defer_thread_cleanup(struct k_thread *thread)
 	 */
 	thread_to_cleanup = thread;
 
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
 	/* Note that the permission of the stack should have been
 	 * stripped of user thread access due to the thread having
 	 * already exited from a memory domain. That is done via
@@ -1505,15 +1505,15 @@ void defer_thread_cleanup(struct k_thread *thread)
 	/* Stash the address and size so the region can be unmapped
 	 * later.
 	 */
-	thread_cleanup_stack_addr = thread->stack_info.mapped.addr;
-	thread_cleanup_stack_sz = thread->stack_info.mapped.sz;
+	thread_cleanup_सालानसान_addr = thread->सालानसान_info.mapped.addr;
+	thread_cleanup_सालानसान_sz = thread->सालानसान_info.mapped.sz;
 
 	/* The stack is now considered un-usable. This should prevent any functions
 	 * from looking directly into the mapped stack if they are made to be aware
 	 * of memory mapped stacks, e.g., z_stack_space_get().
 	 */
-	thread->stack_info.mapped.addr = NULL;
-	thread->stack_info.mapped.sz = 0;
+	thread->सालानसान_info.mapped.addr = NULL;
+	thread->सालानसान_info.mapped.sz = 0;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 }
 
@@ -1525,11 +1525,11 @@ void do_deferred_thread_cleanup(void)
 	 *   be used here, never anything from the thread object.
 	 */
 
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-	unmap_thread_stack(thread_cleanup_stack_addr, thread_cleanup_stack_sz);
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
+	unmap_thread_सालानसान(thread_cleanup_सालानसान_addr, thread_cleanup_सालानसान_sz);
 
-	thread_cleanup_stack_addr = NULL;
-	thread_cleanup_stack_sz = 0;
+	thread_cleanup_सालानसान_addr = NULL;
+	thread_cleanup_सालानसान_sz = 0;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 }
 
@@ -1540,17 +1540,17 @@ void do_thread_cleanup(struct k_thread *thread)
 	 * the cleanup can be driven from it directly.
 	 */
 
-#ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-	unmap_thread_stack(thread->stack_info.mapped.addr,
-			   thread->stack_info.mapped.sz);
+#ifdef CONFIG_THREAD_सालानसान_MEM_MAPPED
+	unmap_thread_सालानसान(thread->सालानसान_info.mapped.addr,
+			   thread->सालानसान_info.mapped.sz);
 
 	/* The stack is now unmapped and thus un-usable. Clear the mapping
 	 * info so nothing looks into the stack afterwards, and so that
 	 * a repeated cleanup of the same thread object is a no-op,
 	 * e.g., z_stack_space_get().
 	 */
-	thread->stack_info.mapped.addr = NULL;
-	thread->stack_info.mapped.sz = 0;
+	thread->सालानसान_info.mapped.addr = NULL;
+	thread->सालानसान_info.mapped.sz = 0;
 #else /* CONFIG_THREAD_STACK_MEM_MAPPED */
 	ARG_UNUSED(thread);
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
@@ -1616,9 +1616,9 @@ void z_dummy_thread_init(struct k_thread *dummy_thread)
 	dummy_thread->mutex_pended_on = NULL;
 	dummy_thread->orig_prio = dummy_thread->base.prio;
 #endif /* Z_MUTEX_PI_ENABLED */
-#ifdef CONFIG_THREAD_STACK_INFO
-	dummy_thread->stack_info.start = 0U;
-	dummy_thread->stack_info.size = 0U;
+#ifdef CONFIG_THREAD_सालानसान_INFO
+	dummy_thread->सालानसान_info.start = 0U;
+	dummy_thread->सालानसान_info.size = 0U;
 #endif /* CONFIG_THREAD_STACK_INFO */
 #ifdef CONFIG_USERSPACE
 	dummy_thread->mem_domain_info.mem_domain = &k_mem_domain_default;
@@ -1668,10 +1668,10 @@ void z_impl_k_thread_priority_set(k_tid_t thread, int prio)
 static inline void z_vrfy_k_thread_priority_set(k_tid_t thread, int prio)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_VERIFY_MSG(_is_valid_prio(prio, NULL),
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(_is_valid_prio(prio, NULL),
 				    "invalid thread priority %d", prio));
 #ifndef CONFIG_USERSPACE_THREAD_MAY_RAISE_PRIORITY
-	K_OOPS(K_SYSCALL_VERIFY_MSG((int8_t)prio >= thread->base.prio,
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे((int8_t)prio >= thread->base.prio,
 				    "thread priority may only be downgraded (%d < %d)",
 				    prio, thread->base.prio));
 #endif /* CONFIG_USERSPACE_THREAD_MAY_RAISE_PRIORITY */
@@ -1693,17 +1693,17 @@ void z_impl_k_thread_suspend(k_tid_t thread)
 		return;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	if (unlikely(z_is_thread_suspended(thread))) {
 
 		/* The target thread is already suspended. Nothing to do. */
 
-		z_sched_spinlock_unlock(key);
+		z_sched_spinlock_unlock(सुसि);
 		return;
 	}
 
-	z_thread_halt(thread, key, false);
+	z_thread_halt(thread, सुसि, false);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, suspend, thread);
 }
@@ -1721,18 +1721,18 @@ void z_impl_k_thread_resume(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, resume, thread);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	/* Do not try to resume a thread that was not suspended */
 	if (unlikely(!z_is_thread_suspended(thread))) {
-		z_sched_spinlock_unlock(key);
+		z_sched_spinlock_unlock(सुसि);
 		return;
 	}
 
 	z_mark_thread_as_not_suspended(thread);
 	z_sched_ready_locked(thread);
 
-	z_reschedule_locked(key);
+	z_reschedule_locked(सुसि);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, resume, thread);
 }
@@ -1750,15 +1750,15 @@ void z_impl_k_wakeup(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, wakeup, thread);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	if (z_is_thread_sleeping(thread)) {
 		(void)z_try_abort_thread_timeout(thread);
 		z_mark_thread_as_not_sleeping(thread);
 		z_sched_ready_locked(thread);
-		z_reschedule_locked(key);
+		z_reschedule_locked(सुसि);
 	} else {
-		z_sched_spinlock_unlock(key);
+		z_sched_spinlock_unlock(सुसि);
 	}
 }
 
@@ -1774,14 +1774,14 @@ static inline void z_vrfy_k_wakeup(k_tid_t thread)
 void z_thread_abort(struct k_thread *thread)
 {
 	bool essential = z_is_thread_essential(thread);
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 
 	if (z_is_thread_dead(thread)) {
-		z_sched_spinlock_unlock(key);
+		z_sched_spinlock_unlock(सुसि);
 		return;
 	}
 
-	z_thread_halt(thread, key, true);
+	z_thread_halt(thread, सुसि, true);
 
 	if (essential) {
 		__ASSERT(!essential, "aborted essential thread %p", thread);
@@ -1804,7 +1804,7 @@ void z_impl_k_thread_abort(k_tid_t thread)
 
 int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 	int ret;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, join, thread, timeout);
@@ -1823,7 +1823,7 @@ int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
 		z_add_thread_timeout(_current, timeout);
 
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_thread, join, thread, timeout);
-		ret = z_swap_locked(key);
+		ret = z_swap_locked(सुसि);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, join, thread, timeout, ret);
 
 		return ret;
@@ -1831,7 +1831,7 @@ int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, join, thread, timeout, ret);
 
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(सुसि);
 	return ret;
 }
 
@@ -1864,7 +1864,7 @@ static bool thread_obj_validate(struct k_thread *thread)
 		 * success and fall through to CODE_UNREACHABLE; verify ret == 0
 		 * so the oops is actually raised.
 		 */
-		K_OOPS(K_SYSCALL_VERIFY_MSG(ret == 0, "access denied"));
+		K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(ret == 0, "access denied"));
 	}
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
@@ -1886,7 +1886,7 @@ static inline void z_vrfy_k_thread_abort(k_tid_t thread)
 		return;
 	}
 
-	K_OOPS(K_SYSCALL_VERIFY_MSG(!z_is_thread_essential(thread),
+	K_OOPS(K_SYSCALL_VERIFY_मेनसाहे(!z_is_thread_essential(thread),
 				    "aborting essential thread %p", thread));
 
 	z_impl_k_thread_abort((struct k_thread *)thread);

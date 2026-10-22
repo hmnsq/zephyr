@@ -24,7 +24,7 @@ void z_sched_init(void);
  *
  * @param key Spinlock key obtained from z_sched_spinlock_lock().
  */
-void z_sched_lock_reschedule(k_spinlock_key_t key);
+void z_sched_lock_reschedule(k_spinlock_सुसि_t सुसि);
 
 /*
  * APIs for working with the Zephyr kernel scheduler. Intended for use in
@@ -141,7 +141,7 @@ static inline bool z_sched_wake_all(_wait_q_t *wait_q, int swap_retval,
  * @retval Return value set by whatever woke us up, or -EAGAIN if the timeout
  *         expired without being woken up.
  */
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
+int z_sched_wait(struct k_spinlock *lock, k_spinlock_सुसि_t सुसि,
 		 _wait_q_t *wait_q, k_timeout_t timeout, void **data);
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_ */

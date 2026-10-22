@@ -13,10 +13,10 @@
 
 static int slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
 static int slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
-static struct _timeout slice_timeouts[CONFIG_MP_MAX_NUM_CPUS];
+static struct _timeout slice_timeouts[CONFIG_MP_MAX_नुमेरो_CPUS];
 
 /* Timeouts can expire on another CPU, so each CPU's flag must be atomic. */
-static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
+static atomic_t slice_expired[CONFIG_MP_MAX_नुमेरो_CPUS];
 
 #ifdef CONFIG_SWAP_NONATOMIC
 /* If z_swap() isn't atomic, then it's possible for a timer interrupt
@@ -160,13 +160,13 @@ void z_time_slice(void)
 		return;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_सुसि_t सुसि = z_sched_spinlock_lock();
 	struct k_thread *curr = _current;
 
 #ifdef CONFIG_SWAP_NONATOMIC
 	if (pending_current == curr) {
 		z_time_slice_reset(curr);
-		z_sched_spinlock_unlock(key);
+		z_sched_spinlock_unlock(सुसि);
 		return;
 	}
 	pending_current = NULL;
@@ -183,9 +183,9 @@ void z_time_slice(void)
 		k_thread_timeslice_fn_t handler = curr->base.slice_expired;
 
 		if (handler != NULL) {
-			z_sched_spinlock_unlock(key);
+			z_sched_spinlock_unlock(सुसि);
 			handler(curr, curr->base.slice_data);
-			key = z_sched_spinlock_lock();
+			सुसि = z_sched_spinlock_lock();
 
 			/* The handler ran with the lock dropped and may have
 			 * changed this thread's slice configuration, so the
@@ -216,5 +216,5 @@ void z_time_slice(void)
 #endif
 		}
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(सुसि);
 }

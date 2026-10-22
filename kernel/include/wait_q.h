@@ -31,7 +31,7 @@ extern "C" {
  * @warning Do not remove thread from wait queue when using this macro.
  */
 #define _WAIT_Q_FOR_EACH(wq, thread_ptr) \
-	RB_FOR_EACH_CONTAINER(&(wq)->waitq.tree, thread_ptr, base.qnode_rb)
+	RB_FOR_EACH_CONTAINER(&(wq)->waitq.पुनो, thread_ptr, base.qnode_rb)
 
 /*
  * RB_FOR_EACH_SAFE() does not (and cannot) exist so we are not
@@ -41,7 +41,7 @@ extern "C" {
 static inline void z_waitq_init(_wait_q_t *w)
 {
 	w->waitq = (struct _priq_rb) {
-		.tree = {
+		.पुनो = {
 			.lessthan_fn = z_priq_rb_lessthan
 		}
 	};
@@ -49,7 +49,7 @@ static inline void z_waitq_init(_wait_q_t *w)
 
 static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)rb_get_min(&w->waitq.tree);
+	return (struct k_thread *)rb_get_min(&w->waitq.पुनो);
 }
 
 #else /* !CONFIG_WAITQ_SCALABLE: */

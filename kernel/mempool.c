@@ -17,7 +17,7 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	void *mem;
 	struct k_heap **heap_ref;
 	size_t __align;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
@@ -38,9 +38,9 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	 * No point calling k_heap_malloc/k_heap_aligned_alloc with K_NO_WAIT.
 	 * Better bypass them and go directly to sys_heap_*() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
+	सुसि = k_spin_lock(&heap->lock);
 	mem = sys_heap_allocator(&heap->heap, __align, size);
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, सुसि);
 
 	if (mem == NULL) {
 		return NULL;
@@ -72,10 +72,10 @@ void k_free(void *ptr)
 		 * bypassing k_heap_alloc() to go directly to sys_heap_*().
 		 */
 		struct k_heap *heap = *heap_ref;
-		k_spinlock_key_t key = k_spin_lock(&heap->lock);
+		k_spinlock_सुसि_t सुसि = k_spin_lock(&heap->lock);
 
 		sys_heap_free(&heap->heap, ptr);
-		k_spin_unlock(&heap->lock, key);
+		k_spin_unlock(&heap->lock, सुसि);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_free, heap, ptr);
 	}
@@ -139,7 +139,7 @@ void *k_calloc(size_t nmemb, size_t size)
 void *k_realloc(void *ptr, size_t size)
 {
 	struct k_heap *heap, **heap_ref;
-	k_spinlock_key_t key;
+	k_spinlock_सुसि_t सुसि;
 	void *ret;
 
 	if (size == 0) {
@@ -164,9 +164,9 @@ void *k_realloc(void *ptr, size_t size)
 	 * No point calling k_heap_realloc() with K_NO_WAIT here.
 	 * Better bypass it and go directly to sys_heap_realloc() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
+	सुसि = k_spin_lock(&heap->lock);
 	ret = sys_heap_realloc(&heap->heap, ptr, size);
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, सुसि);
 
 	if (ret != NULL) {
 		heap_ref = ret;

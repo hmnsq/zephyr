@@ -27,7 +27,7 @@ GEN_ABS_SYM_BEGIN(_OffsetAbsSyms)
 
 GEN_OFFSET_SYM(_cpu_t, current);
 GEN_OFFSET_SYM(_cpu_t, nested);
-GEN_OFFSET_SYM(_cpu_t, irq_stack);
+GEN_OFFSET_SYM(_cpu_t, irq_सालानसान);
 GEN_OFFSET_SYM(_cpu_t, arch);
 
 GEN_OFFSET_SYM(_kernel_t, cpus);
@@ -58,8 +58,8 @@ GEN_OFFSET_SYM(_thread_t, arch);
 GEN_OFFSET_SYM(_thread_t, switch_handle);
 #endif /* CONFIG_USE_SWITCH */
 
-#ifdef CONFIG_THREAD_STACK_INFO
-GEN_OFFSET_SYM(_thread_t, stack_info);
+#ifdef CONFIG_THREAD_सालानसान_INFO
+GEN_OFFSET_SYM(_thread_t, सालानसान_info);
 #endif /* CONFIG_THREAD_STACK_INFO */
 
 #ifdef CONFIG_THREAD_LOCAL_STORAGE

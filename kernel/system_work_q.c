@@ -14,8 +14,8 @@
 #include <zephyr/kernel.h>
 #include <kernel_internal.h>
 
-static K_KERNEL_STACK_DEFINE(sys_work_q_stack,
-			     CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE);
+static K_KERNEL_सालानसान_DEFINE(sys_work_q_सालानसान,
+			     CONFIG_SYSTEM_WORKQUEUE_सालानसान_SIZE);
 
 struct k_work_q k_sys_work_q;
 
@@ -29,8 +29,8 @@ static void sys_work_q_init(void)
 	};
 
 	k_work_queue_start(&k_sys_work_q,
-			    sys_work_q_stack,
-			    K_KERNEL_STACK_SIZEOF(sys_work_q_stack),
+			    sys_work_q_सालानसान,
+			    K_KERNEL_सालानसान_SIZEOF(sys_work_q_सालानसान),
 			    CONFIG_SYSTEM_WORKQUEUE_PRIORITY, &cfg);
 }
 

@@ -19,7 +19,7 @@
 #define _kernel_offset_to_nested \
 	(___cpu_t_nested_OFFSET)
 
-#define _kernel_offset_to_irq_stack \
+#define kernel_offset_to_irq_सालानसान \
 	(___cpu_t_irq_stack_OFFSET)
 
 #define _kernel_offset_to_current \

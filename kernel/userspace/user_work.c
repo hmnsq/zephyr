@@ -39,15 +39,15 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_सालानसान_t *सालानसान,
+			     size_t सालानसान_size, int prio, const char *name)
 {
 	k_queue_init(&work_q->queue);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
+	k_thread_create(&work_q->thread, सालानसान, सालानसान_size, z_work_user_q_main,
 			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
 	k_object_access_grant(&work_q->queue, &work_q->thread);
