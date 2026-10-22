@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/minmax.h>
-#include <zephyr/kernel.h>
-#include <zephyr/spinlock.h>
-#include <ksched.h>
-#include <timeout_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/sys/clock.h>
-#include <zephyr/llext/symbol.h>
+#अन्तर्भाव <zephyr/sys/minmax.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/spinlock.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <timeout_q.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <zephyr/drivers/timer/system_timer.h>
+#अन्तर्भाव <zephyr/sys/clock.h>
+#अन्तर्भाव <zephyr/llext/symbol.h>
 
-#include <timeslicing.h>
+#अन्तर्भाव <timeslicing.h>
 
 /* Absolute tick counter: ticks since boot. */
-static uint64_t curr_tick;
+स्थिर uint64_t curr_tick;
 
 /*
  * The timeout code shall take no locks other than its own (timeout_lock), nor
  * shall it call any other subsystem while holding this lock. Code outside this
  * file takes it through sys_clock_lock()/sys_clock_unlock().
  */
-static struct k_spinlock timeout_lock;
+स्थिर संरचना k_spinlock timeout_lock;
 
 /* Ticks left to process in the currently-executing sys_clock_announce() */
-static uint32_t announce_remaining;
+स्थिर uint32_t announce_remaining;
 
 /* CPU id currently inside sys_clock_announce_locked()'s firing loop, or -1
  * when no CPU is. The SMP early-return below ensures at most one CPU is in
@@ -36,16 +36,16 @@ static uint32_t announce_remaining;
  * within a tick (any other context, including running on a CPU while a
  * different CPU is the announcer).
  */
-static int announcing_cpu = -1;
+स्थिर पूर्णाङ्क announcing_cpu = -1;
 
-static inline bool this_cpu_announcing(void)
+स्थिर अन्तःस्थ bool this_cpu_announcing(शून्य)
 {
-	return announcing_cpu == CPU_ID;
+	प्रत्यागम announcing_cpu == CPU_ID;
 }
 
-static inline bool any_cpu_announcing(void)
+स्थिर अन्तःस्थ bool any_cpu_announcing(शून्य)
 {
-	return announcing_cpu != -1;
+	प्रत्यागम announcing_cpu != -1;
 }
 
 /* Timeout whose handler is currently being dispatched, or NULL when no
@@ -54,22 +54,22 @@ static inline bool any_cpu_announcing(void)
  * low "superseded" bit (struct _timeout is pointer-aligned so bit 0 is
  * free). Accessors below mask the bit.
  */
-static struct _timeout *inflight_timeout;
+स्थिर संरचना _timeout *inflight_timeout;
 
 #define INFLIGHT_SUPERSEDED_BIT 1UL
 
-static inline struct _timeout *inflight_ptr(void)
+स्थिर अन्तःस्थ संरचना _timeout *inflight_ptr(शून्य)
 {
-	return (struct _timeout *)((uintptr_t)inflight_timeout & ~INFLIGHT_SUPERSEDED_BIT);
+	प्रत्यागम (संरचना _timeout *)((uintptr_t)inflight_timeout & ~INFLIGHT_SUPERSEDED_BIT);
 }
 
-static inline void inflight_mark_superseded(void)
+स्थिर अन्तःस्थ शून्य inflight_mark_superseded(शून्य)
 {
-	inflight_timeout = (struct _timeout *)((uintptr_t)inflight_timeout |
+	inflight_timeout = (संरचना _timeout *)((uintptr_t)inflight_timeout |
 					       INFLIGHT_SUPERSEDED_BIT);
 }
 
-static uint32_t elapsed(void)
+स्थिर uint32_t elapsed(शून्य)
 {
 	/*
 	 * While *this* CPU is executing sys_clock_announce_locked()'s firing
@@ -90,10 +90,10 @@ static uint32_t elapsed(void)
 	 * sys_clock_elapsed() to get the real-time delta from curr_tick. This
 	 * keeps sys_clock_tick_get() monotonic across the announce window.
 	 */
-	if (this_cpu_announcing()) {
-		return 0U;
+	जइ (this_cpu_announcing()) {
+		प्रत्यागम 0U;
 	}
-	return sys_clock_elapsed() +
+	प्रत्यागम sys_clock_elapsed() +
 	       (IS_ENABLED(CONFIG_SMP) ? announce_remaining : 0);
 }
 
@@ -105,16 +105,16 @@ static uint32_t elapsed(void)
  * directly. The per-node helpers (z_init_timeout / z_is_inactive_timeout) are
  * tree-wide and live in timeout_q.h.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
-#include "timeout/minheap.h"
-#elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
-#include "timeout/wheel.h"
-#elif defined(CONFIG_TIMEOUT_BACKEND_BUCKET)
-#include "timeout/bucket.h"
-#elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
-#include "timeout/skiplist.h"
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST */
-#include "timeout/list.h"
+#जइ defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#अन्तर्भाव "timeout/minheap.h"
+#नोचेद्यदि defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
+#अन्तर्भाव "timeout/wheel.h"
+#नोचेद्यदि defined(CONFIG_TIMEOUT_BACKEND_BUCKET)
+#अन्तर्भाव "timeout/bucket.h"
+#नोचेद्यदि defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
+#अन्तर्भाव "timeout/skiplist.h"
+#अण्णहा /* CONFIG_TIMEOUT_BACKEND_DLIST */
+#अन्तर्भाव "timeout/list.h"
 #endif
 
 /*
@@ -123,7 +123,7 @@ static uint32_t elapsed(void)
  * backend has to reproduce it: the backend only reports the delta to its
  * earliest pending timeout via z_timeout_q_next_expiry().
  */
-static uint32_t next_timeout(uint32_t ticks_elapsed)
+स्थिर uint32_t next_timeout(uint32_t ticks_elapsed)
 {
 	k_ticks_t next = z_timeout_q_next_expiry();
 	uint32_t dticks;
@@ -135,8 +135,8 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
 	 * from now on is SYS_CLOCK_MAX_WAIT - ticks_elapsed; if it is already
 	 * spent ask for an announce right away.
 	 */
-	if (ticks_elapsed >= SYS_CLOCK_MAX_WAIT) {
-		return 0;
+	जइ (ticks_elapsed >= SYS_CLOCK_MAX_WAIT) {
+		प्रत्यागम 0;
 	}
 
 	/*
@@ -146,14 +146,14 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
 	 * remaining arithmetic in 32 bits. The empty case still returns the
 	 * budget so a driver keeps waking to maintain uptime.
 	 */
-	if (next == K_TICKS_FOREVER || next >= SYS_CLOCK_MAX_WAIT) {
-		return SYS_CLOCK_MAX_WAIT - ticks_elapsed;
+	जइ (next == K_TICKS_FOREVER || next >= SYS_CLOCK_MAX_WAIT) {
+		प्रत्यागम SYS_CLOCK_MAX_WAIT - ticks_elapsed;
 	}
 
 	/* Otherwise wait until the timeout, relative to now (0 if due). */
 	dticks = (uint32_t)next;
 
-	return (dticks > ticks_elapsed) ? (dticks - ticks_elapsed) : 0;
+	प्रत्यागम (dticks > ticks_elapsed) ? (dticks - ticks_elapsed) : 0;
 }
 
 /*
@@ -163,22 +163,22 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
  * timeout queue may have just drained (abort, end of announce); the add path
  * always has a pending timeout and calls sys_clock_set_timeout() directly.
  */
-static void reprogram_next(uint32_t ticks_elapsed)
+स्थिर शून्य reprogram_next(uint32_t ticks_elapsed)
 {
-	if (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
+	जइ (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
 	    z_timeout_q_next_expiry() == K_TICKS_FOREVER) {
 		sys_clock_no_timeout();
-	} else {
+	} अण्णहा {
 		sys_clock_set_timeout(next_timeout(ticks_elapsed), false);
 	}
 }
 
-k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t timeout)
+k_ticks_t z_add_timeout(संरचना _timeout *to, _timeout_func_t fn, k_timeout_t timeout)
 {
 	k_ticks_t ticks = 0;
 
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
-		return 0;
+	जइ (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+		प्रत्यागम 0;
 	}
 
 #ifdef CONFIG_KERNEL_COHERENCE
@@ -193,7 +193,7 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 		bool has_elapsed = false;
 		k_ticks_t dticks;
 
-		if (Z_IS_TIMEOUT_RELATIVE(timeout)) {
+		जइ (Z_IS_TIMEOUT_RELATIVE(timeout)) {
 			ticks_elapsed = elapsed();
 			has_elapsed = true;
 			/*
@@ -216,14 +216,14 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 			dticks = timeout.ticks + ticks_elapsed +
 				 (this_cpu_announcing() ? 0 : 1);
 			ticks = curr_tick + dticks;
-		} else {
+		} अण्णहा {
 			dticks = Z_TICK_ABS(timeout.ticks) - curr_tick;
 			dticks = max(1, dticks);
 			ticks = timeout.ticks;
 		}
 
-		if (z_timeout_q_insert(to, dticks) && !any_cpu_announcing()) {
-			if (!has_elapsed) {
+		जइ (z_timeout_q_निवेशय(to, dticks) && !any_cpu_announcing()) {
+			जइ (!has_elapsed) {
 				/* In case of absolute timeout that is first to expire
 				 * elapsed need to be read from the system clock.
 				 */
@@ -233,22 +233,22 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 		}
 	}
 
-	return ticks;
+	प्रत्यागम ticks;
 }
 
-int z_try_abort_timeout(struct _timeout *to)
+पूर्णाङ्क z_try_abort_timeout(संरचना _timeout *to)
 {
-	int ret = -EINVAL;
+	पूर्णाङ्क ret = -EINVAL;
 
 	K_SPINLOCK(&timeout_lock) {
-		if (!z_is_inactive_timeout(to)) {
+		जइ (!z_is_inactive_timeout(to)) {
 			bool was_first = z_timeout_q_remove(to);
 
 			ret = 0;
-			if (was_first) {
+			जइ (was_first) {
 				reprogram_next(elapsed());
 			}
-		} else if (IS_ENABLED(CONFIG_SMP) && inflight_ptr() == to &&
+		} अण्णहा जइ (IS_ENABLED(CONFIG_SMP) && inflight_ptr() == to &&
 			   !this_cpu_announcing()) {
 			/* Handler in flight on another CPU. Free-safety
 			 * callers retry on -EAGAIN to wait it out; others
@@ -261,36 +261,36 @@ int z_try_abort_timeout(struct _timeout *to)
 		 * handler that checks (z_timeout_inflight_superseded) can
 		 * tell its dispatch was overtaken.
 		 */
-		if (inflight_ptr() == to) {
+		जइ (inflight_ptr() == to) {
 			inflight_mark_superseded();
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_SMP) && ret == -EAGAIN) {
+	जइ (IS_ENABLED(CONFIG_SMP) && ret == -EAGAIN) {
 		arch_spin_relax();
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-bool z_timeout_inflight_superseded(const struct _timeout *to)
+bool z_timeout_inflight_superseded(ध्रुव संरचना _timeout *to)
 {
 	bool superseded = false;
 
 	K_SPINLOCK(&timeout_lock) {
 		superseded = inflight_timeout ==
-			     (struct _timeout *)((uintptr_t)to | INFLIGHT_SUPERSEDED_BIT);
+			     (संरचना _timeout *)((uintptr_t)to | INFLIGHT_SUPERSEDED_BIT);
 	}
 
-	return superseded;
+	प्रत्यागम superseded;
 }
 
-k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
+k_ticks_t z_timeout_remaining(ध्रुव संरचना _timeout *timeout)
 {
 	k_ticks_t ticks = 0;
 
 	K_SPINLOCK(&timeout_lock) {
-		if (!z_is_inactive_timeout(timeout)) {
+		जइ (!z_is_inactive_timeout(timeout)) {
 			k_ticks_t rem = z_timeout_q_remainder(timeout);
 			uint32_t el = elapsed();
 
@@ -299,26 +299,26 @@ k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
 		}
 	}
 
-	return ticks;
+	प्रत्यागम ticks;
 }
-EXPORT_SYMBOL(z_timeout_remaining);
+EXPORT_चिह्नम्(z_timeout_remaining);
 
-k_ticks_t z_timeout_expires(const struct _timeout *timeout)
+k_ticks_t z_timeout_expires(ध्रुव संरचना _timeout *timeout)
 {
 	k_ticks_t ticks = 0;
 
 	K_SPINLOCK(&timeout_lock) {
 		ticks = curr_tick;
-		if (!z_is_inactive_timeout(timeout)) {
+		जइ (!z_is_inactive_timeout(timeout)) {
 			ticks += z_timeout_q_remainder(timeout);
 		}
 	}
 
-	return ticks;
+	प्रत्यागम ticks;
 }
-EXPORT_SYMBOL(z_timeout_expires);
+EXPORT_चिह्नम्(z_timeout_expires);
 
-uint32_t z_get_next_timeout_expiry(void)
+uint32_t z_get_next_timeout_expiry(शून्य)
 {
 	uint32_t ret = (uint32_t)K_TICKS_FOREVER;
 
@@ -330,17 +330,17 @@ uint32_t z_get_next_timeout_expiry(void)
 		 * answer is a wait: either a real deadline, or the synthetic
 		 * one that keeps the announce range covered.
 		 */
-		if (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
+		जइ (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
 		    z_timeout_q_next_expiry() == K_TICKS_FOREVER) {
 			ret = (uint32_t)K_TICKS_FOREVER;
-		} else {
+		} अण्णहा {
 			ret = next_timeout(elapsed());
 		}
 	}
-	return ret;
+	प्रत्यागम ret;
 }
 
-void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
+शून्य sys_clock_announce_locked(uint32_t ticks, k_spinlock_कुञ्चिका_t कुञ्चिका)
 {
 	/* We release the lock around the callbacks below, so on SMP
 	 * systems someone might be already running the loop.  Don't
@@ -348,10 +348,10 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 * timeouts and confuse apps), just increment the tick count
 	 * and return.
 	 */
-	if (IS_ENABLED(CONFIG_SMP) && any_cpu_announcing()) {
+	जइ (IS_ENABLED(CONFIG_SMP) && any_cpu_announcing()) {
 		announce_remaining += ticks;
-		k_spin_unlock(&timeout_lock, key);
-		return;
+		k_spin_unlock(&timeout_lock, कुञ्चिका);
+		प्रत्यागम;
 	}
 
 	announce_remaining = ticks;
@@ -364,13 +364,13 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 * It advances curr_tick / announce_remaining and fires handlers via
 	 * the same inflight_timeout dance as below.
 	 */
-	key = z_timeout_q_announce(key);
-#else
-	while (announce_remaining > 0) {
-		struct _timeout *t;
+	कुञ्चिका = z_timeout_q_announce(कुञ्चिका);
+#अण्णहा
+	जाव (announce_remaining > 0) {
+		संरचना _timeout *t;
 		int32_t dt = z_timeout_q_next_gap();
 
-		if ((uint32_t)dt > announce_remaining) {
+		जइ ((uint32_t)dt > announce_remaining) {
 			/* Next event is past this announce window: advance the
 			 * backend by the residual ticks without firing anything.
 			 */
@@ -392,15 +392,15 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 		announce_remaining -= dt;
 
 		/* Drain everything due at the new curr_tick. */
-		while ((t = z_timeout_q_pop_due()) != NULL) {
+		जाव ((t = z_timeout_q_निष्कासय_due()) != रिक्त) {
 			_timeout_func_t handler = t->fn;
 
 			inflight_timeout = t;
 
-			k_spin_unlock(&timeout_lock, key);
+			k_spin_unlock(&timeout_lock, कुञ्चिका);
 			handler(t);
-			key = k_spin_lock(&timeout_lock);
-			inflight_timeout = NULL;
+			कुञ्चिका = k_spin_lock(&timeout_lock);
+			inflight_timeout = रिक्त;
 		}
 	}
 #endif /* _TIMEOUT_BACKEND_OWNS_ANNOUNCE */
@@ -409,108 +409,108 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 
 	reprogram_next(0);
 
-	k_spin_unlock(&timeout_lock, key);
+	k_spin_unlock(&timeout_lock, कुञ्चिका);
 
 #ifdef CONFIG_TIMESLICING
 	z_time_slice();
 #endif /* CONFIG_TIMESLICING */
 }
 
-#if defined(CONFIG_SMP) || defined(CONFIG_SPIN_VALIDATE)
-k_spinlock_key_t sys_clock_lock(void)
+#जइ defined(CONFIG_SMP) || defined(CONFIG_SPIN_VALIDATE)
+k_spinlock_कुञ्चिका_t sys_clock_lock(शून्य)
 {
-	return k_spin_lock(&timeout_lock);
+	प्रत्यागम k_spin_lock(&timeout_lock);
 }
 
-void sys_clock_unlock(k_spinlock_key_t key)
+शून्य sys_clock_unlock(k_spinlock_कुञ्चिका_t कुञ्चिका)
 {
-	k_spin_unlock(&timeout_lock, key);
-}
-#endif
-
-#if defined(CONFIG_TEST) || defined(CONFIG_ASSERT)
-bool sys_clock_is_locked(void)
-{
-	return z_spin_is_locked(&timeout_lock);
+	k_spin_unlock(&timeout_lock, कुञ्चिका);
 }
 #endif
 
-int64_t sys_clock_tick_get(void)
+#जइ defined(CONFIG_TEST) || defined(CONFIG_ASSERT)
+bool sys_clock_is_locked(शून्य)
+{
+	प्रत्यागम z_spin_is_locked(&timeout_lock);
+}
+#endif
+
+int64_t sys_clock_tick_get(शून्य)
 {
 	uint64_t t = 0U;
 
 	K_SPINLOCK(&timeout_lock) {
 		t = curr_tick + elapsed();
 	}
-	return t;
+	प्रत्यागम t;
 }
 
-uint32_t sys_clock_tick_get_32(void)
+uint32_t sys_clock_tick_get_32(शून्य)
 {
 #ifdef CONFIG_TICKLESS_KERNEL
-	return (uint32_t)sys_clock_tick_get();
-#else
-	return (uint32_t)curr_tick;
+	प्रत्यागम (uint32_t)sys_clock_tick_get();
+#अण्णहा
+	प्रत्यागम (uint32_t)curr_tick;
 #endif /* CONFIG_TICKLESS_KERNEL */
 }
 
-int64_t z_impl_k_uptime_ticks(void)
+int64_t z_impl_k_uptime_ticks(शून्य)
 {
-	return sys_clock_tick_get();
+	प्रत्यागम sys_clock_tick_get();
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int64_t z_vrfy_k_uptime_ticks(void)
+स्थिर अन्तःस्थ int64_t z_vrfy_k_uptime_ticks(शून्य)
 {
-	return z_impl_k_uptime_ticks();
+	प्रत्यागम z_impl_k_uptime_ticks();
 }
-#include <zephyr/syscalls/k_uptime_ticks_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_uptime_ticks_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 k_timepoint_t sys_timepoint_calc(k_timeout_t timeout)
 {
 	k_timepoint_t timepoint;
 
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+	जइ (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
 		timepoint.tick = UINT64_MAX;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	} अण्णहा जइ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		timepoint.tick = 0;
-	} else {
+	} अण्णहा {
 		k_ticks_t dt = timeout.ticks;
 
-		if (Z_IS_TIMEOUT_RELATIVE(timeout)) {
+		जइ (Z_IS_TIMEOUT_RELATIVE(timeout)) {
 			timepoint.tick = sys_clock_tick_get() + max(1, dt);
-		} else {
+		} अण्णहा {
 			timepoint.tick = Z_TICK_ABS(dt);
 		}
 	}
 
-	return timepoint;
+	प्रत्यागम timepoint;
 }
 
 k_timeout_t sys_timepoint_timeout(k_timepoint_t timepoint)
 {
 	uint64_t now, remaining;
 
-	if (timepoint.tick == UINT64_MAX) {
-		return K_FOREVER;
+	जइ (timepoint.tick == UINT64_MAX) {
+		प्रत्यागम K_FOREVER;
 	}
-	if (timepoint.tick == 0) {
-		return K_NO_WAIT;
+	जइ (timepoint.tick == 0) {
+		प्रत्यागम K_NO_WAIT;
 	}
 
 	now = sys_clock_tick_get();
 	remaining = (timepoint.tick > now) ? (timepoint.tick - now) : 0;
-	return K_TICKS(remaining);
+	प्रत्यागम K_TICKS(remaining);
 }
 
 #ifdef CONFIG_ZTEST
-void z_impl_sys_clock_tick_set(uint64_t tick)
+शून्य z_impl_sys_clock_tick_set(uint64_t tick)
 {
 	curr_tick = tick;
 }
 
-void z_vrfy_sys_clock_tick_set(uint64_t tick)
+शून्य z_vrfy_sys_clock_tick_set(uint64_t tick)
 {
 	z_impl_sys_clock_tick_set(tick);
 }

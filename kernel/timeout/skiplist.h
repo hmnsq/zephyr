@@ -26,25 +26,25 @@
 #define SKIPLIST_LEVELS CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL
 
 /* Sentinel: never expires, participates in every level, never fired. */
-static struct _timeout sl_head = {
+स्थिर संरचना _timeout sl_head = {
 	.height = SKIPLIST_LEVELS,
-	.forward = { NULL },
+	.forward = { रिक्त },
 };
 
 /* Highest height of any currently queued node; 0 when the list is empty. */
-static uint8_t sl_top;
+स्थिर uint8_t sl_शिखरम्;
 
 /*
  * Scratch predecessor vector shared by insert and remove. Both run with
  * timeout_lock held and neither keeps it across an unlock, so one array is
  * enough. Any future caller must hold that lock too.
  */
-static struct _timeout *sl_update[SKIPLIST_LEVELS];
+स्थिर संरचना _timeout *sl_update[SKIPLIST_LEVELS];
 
 /* Marsaglia xorshift32 state; period 2^32-1, must stay non-zero. */
-static uint32_t sl_rng = 2463534242U;
+स्थिर uint32_t sl_rng = 2463534242U;
 
-static uint8_t skiplist_random_height(void)
+स्थिर uint8_t skiplist_random_height(शून्य)
 {
 	uint32_t r = sl_rng;
 
@@ -54,53 +54,53 @@ static uint8_t skiplist_random_height(void)
 	sl_rng = r;
 
 	/* p = 1/2: height is 1 + the run of low 1-bits, capped at SKIPLIST_LEVELS. */
-	return 1 + MIN(u32_count_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
+	प्रत्यागम 1 + MIN(u32_गणनम्_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
 }
 
-static inline struct _timeout *skiplist_first(void)
+स्थिर अन्तःस्थ संरचना _timeout *skiplist_first(शून्य)
 {
-	return sl_head.forward[0];
+	प्रत्यागम sl_head.forward[0];
 }
 
-static void skiplist_drop_top(void)
+स्थिर शून्य skiplist_drop_शिखरम्(शून्य)
 {
-	while (sl_top > 0 && sl_head.forward[sl_top - 1] == NULL) {
-		sl_top--;
+	जाव (sl_शिखरम् > 0 && sl_head.forward[sl_शिखरम् - 1] == रिक्त) {
+		sl_शिखरम्--;
 	}
 }
 
-static void skiplist_update_init(struct _timeout **update)
+स्थिर शून्य skiplist_update_init(संरचना _timeout **update)
 {
 	uint8_t i;
 
-	for (i = 0; i < SKIPLIST_LEVELS; i++) {
+	प्रति (i = 0; i < SKIPLIST_LEVELS; i++) {
 		update[i] = &sl_head;
 	}
 }
 
 /* Splice @to out at every level it occupies. */
-static void skiplist_unlink(struct _timeout *to, struct _timeout **update)
+स्थिर शून्य skiplist_unlink(संरचना _timeout *to, संरचना _timeout **update)
 {
 	uint8_t i;
 	uint8_t height = to->height;
 
-	for (i = 0; i < height; i++) {
+	प्रति (i = 0; i < height; i++) {
 		__ASSERT_NO_MSG(update[i]->forward[i] == to);
 		update[i]->forward[i] = to->forward[i];
 	}
 
 	to->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_शिखरम्();
 }
 
 /* Equal keys are skipped so a later insert lands after them (same-tick FIFO). */
-static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **update)
+स्थिर शून्य skiplist_predecessors_after(int64_t abs_ticks, संरचना _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	संरचना _timeout *x = &sl_head;
+	पूर्णाङ्क i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks <= abs_ticks) {
+	प्रति (i = (पूर्णाङ्क)sl_शिखरम् - 1; i >= 0; i--) {
+		जाव (x->forward[i] != रिक्त && x->forward[i]->abs_ticks <= abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
@@ -108,20 +108,20 @@ static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **upd
 }
 
 /* Walk equal-key nodes so identity, not just expiry, selects the splice points. */
-static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **update)
+स्थिर शून्य skiplist_predecessors_of(संरचना _timeout *to, संरचना _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	संरचना _timeout *x = &sl_head;
+	पूर्णाङ्क i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks < to->abs_ticks) {
+	प्रति (i = (पूर्णाङ्क)sl_शिखरम् - 1; i >= 0; i--) {
+		जाव (x->forward[i] != रिक्त && x->forward[i]->abs_ticks < to->abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
 	}
 
-	for (i = 0; i < to->height; i++) {
-		while (update[i]->forward[i] != NULL &&
+	प्रति (i = 0; i < to->height; i++) {
+		जाव (update[i]->forward[i] != रिक्त &&
 		       update[i]->forward[i] != to &&
 		       update[i]->forward[i]->abs_ticks == to->abs_ticks) {
 			update[i] = update[i]->forward[i];
@@ -129,7 +129,7 @@ static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **upda
 	}
 }
 
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+स्थिर अन्तःस्थ bool z_timeout_q_निवेशय(संरचना _timeout *to, k_ticks_t dticks)
 {
 	uint8_t i;
 	uint8_t height;
@@ -141,19 +141,19 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 	skiplist_update_init(sl_update);
 	skiplist_predecessors_after(to->abs_ticks, sl_update);
 
-	if (height > sl_top) {
-		sl_top = height;
+	जइ (height > sl_शिखरम्) {
+		sl_शिखरम् = height;
 	}
 
-	for (i = 0; i < height; i++) {
+	प्रति (i = 0; i < height; i++) {
 		to->forward[i] = sl_update[i]->forward[i];
 		sl_update[i]->forward[i] = to;
 	}
 
-	return skiplist_first() == to;
+	प्रत्यागम skiplist_first() == to;
 }
 
-static inline bool z_timeout_q_remove(struct _timeout *to)
+स्थिर अन्तःस्थ bool z_timeout_q_remove(संरचना _timeout *to)
 {
 	bool was_first = (skiplist_first() == to);
 
@@ -164,69 +164,69 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
 
 	skiplist_unlink(to, sl_update);
 
-	return was_first;
+	प्रत्यागम was_first;
 }
 
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+स्थिर अन्तःस्थ k_ticks_t z_timeout_q_remainder(ध्रुव संरचना _timeout *to)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	प्रत्यागम (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
 }
 
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+स्थिर अन्तःस्थ k_ticks_t z_timeout_q_next_expiry(शून्य)
 {
-	struct _timeout *t = skiplist_first();
+	संरचना _timeout *t = skiplist_first();
 	int64_t gap;
 
-	if (t == NULL) {
-		return K_TICKS_FOREVER;
+	जइ (t == रिक्त) {
+		प्रत्यागम K_TICKS_FOREVER;
 	}
 
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	return (gap < 0) ? 0 : (k_ticks_t)gap;
+	प्रत्यागम (gap < 0) ? 0 : (k_ticks_t)gap;
 }
 
-static inline int32_t z_timeout_q_next_gap(void)
+स्थिर अन्तःस्थ int32_t z_timeout_q_next_gap(शून्य)
 {
-	struct _timeout *t = skiplist_first();
+	संरचना _timeout *t = skiplist_first();
 	int64_t gap;
 
-	if (t == NULL) {
-		return INT32_MAX;
+	जइ (t == रिक्त) {
+		प्रत्यागम INT32_MAX;
 	}
 
 	/* Overdue must be 0: announce casts dt to uint32_t. */
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	if (gap <= 0) {
-		return 0;
+	जइ (gap <= 0) {
+		प्रत्यागम 0;
 	}
 
-	return (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	प्रत्यागम (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static inline void z_timeout_q_advance(int32_t dt)
+स्थिर अन्तःस्थ शून्य z_timeout_q_advance(int32_t dt)
 {
 	ARG_UNUSED(dt);
 }
 
 /* Earliest node, so it is the head's successor at every level it occupies. */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+स्थिर अन्तःस्थ संरचना _timeout *z_timeout_q_निष्कासय_due(शून्य)
 {
-	struct _timeout *t = skiplist_first();
+	संरचना _timeout *t = skiplist_first();
 	uint8_t i;
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	जइ ((t == रिक्त) || (t->abs_ticks > (int64_t)curr_tick)) {
+		प्रत्यागम रिक्त;
 	}
 
-	for (i = 0; i < t->height; i++) {
+	प्रति (i = 0; i < t->height; i++) {
 		__ASSERT_NO_MSG(sl_head.forward[i] == t);
 		sl_head.forward[i] = t->forward[i];
 	}
 
 	t->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_शिखरम्();
 
-	return t;
+	प्रत्यागम t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_ */
