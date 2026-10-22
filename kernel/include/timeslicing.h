@@ -4,10 +4,10 @@
  */
 
 
-#ifndef ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
-#define ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
+#अगर_अघोषित ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
+#घोषणा ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
 
-void z_time_slice(void);
-void z_time_slice_reset(struct k_thread *curr);
+व्योम z_time_slice(व्योम);
+व्योम z_time_slice_reset(काष्ठा k_thread *curr);
 
-#endif /* ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H */
+#पूर्ण_अगर /* ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H */

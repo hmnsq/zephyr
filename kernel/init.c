@@ -11,83 +11,83 @@
  * This module contains routines that are used to initialize the kernel.
  */
 
-#include <ctype.h>
-#include <stdbool.h>
-#include <string.h>
-#include <offsets_short.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/debug/stack.h>
-#include <zephyr/random/random.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/device.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/platform/hooks.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <ipi.h>
-#include <zephyr/sys/dlist.h>
-#include <kernel_internal.h>
-#include <zephyr/drivers/entropy.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/debug/gcov.h>
-#include <kswap.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/arch/common/init.h>
-#include <scheduler.h>
+#समावेश <ctype.h>
+#समावेश <stdbool.h>
+#समावेश <string.h>
+#समावेश <offsets_short.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <zephyr/sys/minmax.h>
+#समावेश <zephyr/sys/printk.h>
+#समावेश <zephyr/debug/stack.h>
+#समावेश <zephyr/random/random.h>
+#समावेश <zephyr/linker/sections.h>
+#समावेश <zephyr/toolchain.h>
+#समावेश <zephyr/device.h>
+#समावेश <zephyr/init.h>
+#समावेश <zephyr/linker/linker-defs.h>
+#समावेश <zephyr/platform/hooks.h>
+#समावेश <ksched.h>
+#समावेश <kthread.h>
+#समावेश <ipi.h>
+#समावेश <zephyr/sys/dlist.h>
+#समावेश <kernel_internal.h>
+#समावेश <zephyr/drivers/entropy.h>
+#समावेश <zephyr/logging/log_ctrl.h>
+#समावेश <zephyr/tracing/tracing.h>
+#समावेश <zephyr/debug/gcov.h>
+#समावेश <kswap.h>
+#समावेश <zephyr/timing/timing.h>
+#समावेश <zephyr/logging/log.h>
+#समावेश <zephyr/internal/syscall_handler.h>
+#समावेश <zephyr/arch/common/init.h>
+#समावेश <scheduler.h>
 
 LOG_MODULE_REGISTER(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* the only struct z_kernel instance */
-struct z_kernel _kernel;
+काष्ठा z_kernel _kernel;
 
-#ifdef CONFIG_PM
+#अगर_घोषित CONFIG_PM
 atomic_t _cpus_active;
-#endif
+#पूर्ण_अगर
 
 /* init/main and idle threads */
-K_THREAD_STACK_DEFINE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_THREAD_ढेर_DEFINE(z_main_ढेर, CONFIG_MAIN_ढेर_आकार);
 
-#ifdef CONFIG_MULTITHREADING
-struct k_thread z_main_thread;
-struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+#अगर_घोषित CONFIG_MULTITHREADING
+काष्ठा k_thread z_main_thread;
+काष्ठा k_thread z_idle_threads[CONFIG_MP_MAX_अंक_CPUS];
 
-static K_KERNEL_STACK_ARRAY_DEFINE(z_idle_stacks,
-					  CONFIG_MP_MAX_NUM_CPUS,
-					  CONFIG_IDLE_STACK_SIZE);
+अटल K_KERNEL_ढेर_ARRAY_DEFINE(z_idle_stacks,
+					  CONFIG_MP_MAX_अंक_CPUS,
+					  CONFIG_IDLE_ढेर_आकार);
 
-static void z_init_static_threads(void)
+अटल व्योम z_init_static_threads(व्योम)
 {
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
+	STRUCT_SECTION_FOREACH(static_thread_तथ्य, thread_तथ्य) {
 		z_setup_new_thread(
-			thread_data->init_thread,
-			thread_data->init_stack,
-			thread_data->init_stack_size,
-			thread_data->init_entry,
-			thread_data->init_p1,
-			thread_data->init_p2,
-			thread_data->init_p3,
-			thread_data->init_prio,
-			thread_data->init_options,
-			thread_data->init_name);
+			thread_तथ्य->init_thread,
+			thread_तथ्य->init_ढेर,
+			thread_तथ्य->init_ढेर_आकार,
+			thread_तथ्य->init_entry,
+			thread_तथ्य->init_p1,
+			thread_तथ्य->init_p2,
+			thread_तथ्य->init_p3,
+			thread_तथ्य->init_prio,
+			thread_तथ्य->init_options,
+			thread_तथ्य->init_name);
 
-		thread_data->init_thread->init_data = thread_data;
+		thread_तथ्य->init_thread->init_तथ्य = thread_तथ्य;
 	}
 
-#ifdef CONFIG_USERSPACE
+#अगर_घोषित CONFIG_USERSPACE
 	STRUCT_SECTION_FOREACH(k_object_assignment, pos) {
-		for (int i = 0; pos->objects[i] != NULL; i++) {
+		क्रम (पूर्णांक i = 0; pos->objects[i] != शून्य; i++) {
 			k_object_access_grant(pos->objects[i],
 					      pos->thread);
 		}
 	}
-#endif /* CONFIG_USERSPACE */
+#पूर्ण_अगर /* CONFIG_USERSPACE */
 
 	/*
 	 * Static threads may be started immediately or
@@ -97,39 +97,39 @@ static void z_init_static_threads(void)
 	 * until they are all started.
 	 */
 	k_sched_lock();
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
-		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_data);
+	STRUCT_SECTION_FOREACH(static_thread_तथ्य, thread_तथ्य) {
+		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_तथ्य);
 
-		thread_schedule_new(thread_data->init_thread, init_delay);
+		thread_schedule_new(thread_तथ्य->init_thread, init_delay);
 	}
 	k_sched_unlock();
 }
-#else
-#define z_init_static_threads() do { } while (false)
-#endif /* CONFIG_MULTITHREADING */
+#अन्यथा
+#घोषणा z_init_static_threads() करो { } जबतक (false)
+#पूर्ण_अगर /* CONFIG_MULTITHREADING */
 
-extern const struct init_entry __init_start[];
-extern const struct init_entry __init_EARLY_start[];
-extern const struct init_entry __init_PRE_KERNEL_1_start[];
-extern const struct init_entry __init_PRE_KERNEL_2_start[];
-extern const struct init_entry __init_POST_KERNEL_start[];
-extern const struct init_entry __init_APPLICATION_start[];
-extern const struct init_entry __init_end[];
+बाह्य स्थिर काष्ठा init_entry __init_start[];
+बाह्य स्थिर काष्ठा init_entry __init_EARLY_start[];
+बाह्य स्थिर काष्ठा init_entry __init_PRE_KERNEL_1_start[];
+बाह्य स्थिर काष्ठा init_entry __init_PRE_KERNEL_2_start[];
+बाह्य स्थिर काष्ठा init_entry __init_POST_KERNEL_start[];
+बाह्य स्थिर काष्ठा init_entry __init_APPLICATION_start[];
+बाह्य स्थिर काष्ठा init_entry __init_end[];
 
-enum init_level {
+क्रमागत init_level {
 	INIT_LEVEL_EARLY = 0,
 	INIT_LEVEL_PRE_KERNEL_1,
 	INIT_LEVEL_PRE_KERNEL_2,
 	INIT_LEVEL_POST_KERNEL,
 	INIT_LEVEL_APPLICATION,
-#ifdef CONFIG_SMP
+#अगर_घोषित CONFIG_SMP
 	INIT_LEVEL_SMP,
-#endif /* CONFIG_SMP */
+#पूर्ण_अगर /* CONFIG_SMP */
 };
 
-#ifdef CONFIG_SMP
-extern const struct init_entry __init_SMP_start[];
-#endif /* CONFIG_SMP */
+#अगर_घोषित CONFIG_SMP
+बाह्य स्थिर काष्ठा init_entry __init_SMP_start[];
+#पूर्ण_अगर /* CONFIG_SMP */
 
 /*
  * storage space for the interrupt stack
@@ -139,22 +139,22 @@ extern const struct init_entry __init_SMP_start[];
  * of this area is safe since interrupts are disabled until the kernel context
  * switches to the init thread.
  */
-K_KERNEL_STACK_ARRAY_DEFINE(z_interrupt_stacks,
-				   CONFIG_MP_MAX_NUM_CPUS,
-				   CONFIG_ISR_STACK_SIZE);
+K_KERNEL_ढेर_ARRAY_DEFINE(z_interrupt_stacks,
+				   CONFIG_MP_MAX_अंक_CPUS,
+				   CONFIG_ISR_ढेर_आकार);
 
-extern void idle(void *unused1, void *unused2, void *unused3);
+बाह्य व्योम idle(व्योम *unused1, व्योम *unused2, व्योम *unused3);
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc  cpu_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats),
-	.query_size = sizeof(struct k_thread_runtime_stats),
+#अगर_घोषित CONFIG_OBJ_CORE_SYSTEM
+#अगर_घोषित CONFIG_OBJ_CORE_STATS_SYSTEM
+अटल काष्ठा k_obj_core_stats_desc  cpu_stats_desc = {
+	.raw_आकार = माप(काष्ठा k_cycle_stats),
+	.query_आकार = माप(काष्ठा k_thread_runtime_stats),
 	.raw   = z_cpu_stats_raw,
 	.query = z_cpu_stats_query,
-	.reset = NULL,
-	.disable = NULL,
-	.enable  = NULL,
+	.reset = शून्य,
+	.disable = शून्य,
+	.enable  = शून्य,
 };
 
 /* CPU object cores have no static instances to walk; each CPU links its own
@@ -162,23 +162,23 @@ static struct k_obj_core_stats_desc  cpu_stats_desc = {
  */
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID,
 			    &cpu_stats_desc);
-#else
-K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
-#endif /* CONFIG_OBJ_CORE_SYSTEM */
+#अन्यथा
+K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, शून्य);
+#पूर्ण_अगर /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#पूर्ण_अगर /* CONFIG_OBJ_CORE_SYSTEM */
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-#ifdef CONFIG_STACK_CANARIES_TLS
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-extern volatile uintptr_t __stack_chk_guard;
-#endif /* CONFIG_STACK_CANARIES_TLS */
-#endif /* CONFIG_REQUIRES_STACK_CANARIES */
+#अगर_घोषित CONFIG_REQUIRES_ढेर_CANARIES
+#अगर_घोषित CONFIG_ढेर_CANARIES_TLS
+बाह्य Z_THREAD_LOCAL अस्थिर uintptr_t __stack_chk_guard;
+#अन्यथा
+बाह्य अस्थिर uintptr_t __stack_chk_guard;
+#पूर्ण_अगर /* CONFIG_STACK_CANARIES_TLS */
+#पूर्ण_अगर /* CONFIG_REQUIRES_STACK_CANARIES */
 
 bool z_sys_post_kernel;
 
 /* defined in device.c */
-extern int do_device_init(const struct device *dev);
+बाह्य पूर्णांक do_device_init(स्थिर काष्ठा device *dev);
 
 /**
  * @brief Initialize state for all static devices.
@@ -186,7 +186,7 @@ extern int do_device_init(const struct device *dev);
  * The state object is always zero-initialized, but this may not be
  * sufficient.
  */
-static void z_device_state_init(void)
+अटल व्योम z_device_state_init(व्योम)
 {
 	STRUCT_SECTION_FOREACH(device, dev) {
 		k_object_init(dev);
@@ -204,57 +204,57 @@ static void z_device_state_init(void)
  *
  * @param level init level to run.
  */
-static void z_sys_init_run_level(enum init_level level)
+अटल व्योम z_sys_init_run_level(क्रमागत init_level level)
 {
-	static const struct init_entry *levels[] = {
+	अटल स्थिर काष्ठा init_entry *levels[] = {
 		__init_EARLY_start,
 		__init_PRE_KERNEL_1_start,
 		__init_PRE_KERNEL_2_start,
 		__init_POST_KERNEL_start,
 		__init_APPLICATION_start,
-#ifdef CONFIG_SMP
+#अगर_घोषित CONFIG_SMP
 		__init_SMP_start,
-#endif /* CONFIG_SMP */
+#पूर्ण_अगर /* CONFIG_SMP */
 		/* End marker */
 		__init_end,
 	};
-	const struct init_entry *entry;
+	स्थिर काष्ठा init_entry *entry;
 
-	for (entry = levels[level]; entry < levels[level+1]; entry++) {
-		const struct device *dev = entry->dev;
-		int result = 0;
+	क्रम (entry = levels[level]; entry < levels[level+1]; entry++) {
+		स्थिर काष्ठा device *dev = entry->dev;
+		पूर्णांक परिणाम = 0;
 
 		sys_trace_sys_init_enter(entry, level);
-		if (dev != NULL) {
-			if ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
-				result = do_device_init(dev);
+		अगर (dev != शून्य) {
+			अगर ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
+				परिणाम = do_device_init(dev);
 			}
-		} else {
-			result = entry->init_fn();
+		} अन्यथा {
+			परिणाम = entry->init_fn();
 		}
-		sys_trace_sys_init_exit(entry, level, result);
+		sys_trace_sys_init_exit(entry, level, परिणाम);
 	}
 }
 
-#ifdef CONFIG_STATIC_INIT_GNU
+#अगर_घोषित CONFIG_STATIC_INIT_GNU
 
-extern void (*__zephyr_init_array_start[])();
-extern void (*__zephyr_init_array_end[])();
+बाह्य व्योम (*__zephyr_init_array_start[])();
+बाह्य व्योम (*__zephyr_init_array_end[])();
 
-static void z_static_init_gnu(void)
+अटल व्योम z_static_init_gnu(व्योम)
 {
-	void	(**fn)();
+	व्योम	(**fn)();
 
-	for (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
+	क्रम (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
 		/* MWDT toolchain sticks a NULL at the end of the array */
-		if (*fn == NULL) {
-			break;
+		अगर (*fn == शून्य) {
+			अवरोध;
 		}
 		(**fn)();
 	}
 }
 
-#endif
+#पूर्ण_अगर
 
 /**
  * @brief Mainline for kernel's background thread
@@ -263,25 +263,25 @@ static void z_static_init_gnu(void)
  * init functions, then invokes application's main() routine.
  */
 __boot_func
-static void bg_thread_main(void *unused1, void *unused2, void *unused3)
+अटल व्योम bg_thread_main(व्योम *unused1, व्योम *unused2, व्योम *unused3)
 {
 	ARG_UNUSED(unused1);
 	ARG_UNUSED(unused2);
 	ARG_UNUSED(unused3);
 
-#ifdef CONFIG_MMU
+#अगर_घोषित CONFIG_MMU
 	/* Invoked here such that backing store or eviction algorithms may
 	 * initialize kernel objects, and that all POST_KERNEL and later tasks
 	 * may perform memory management tasks (except for
 	 * k_mem_map_phys_bare() which is allowed at any time)
 	 */
 	z_mem_manage_init();
-#endif /* CONFIG_MMU */
+#पूर्ण_अगर /* CONFIG_MMU */
 	z_sys_post_kernel = true;
 
-#if CONFIG_IRQ_OFFLOAD
+#अगर CONFIG_IRQ_OFFLOAD
 	arch_irq_offload_init();
-#endif
+#पूर्ण_अगर
 
 	/* Run kernel post-init hooks before POST_KERNEL device init, so that
 	 * drivers initialized there may use them (e.g. submit to the system
@@ -298,128 +298,128 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-	z_stack_adjust_initialized = 1;
-#endif /* CONFIG_STACK_POINTER_RANDOM */
+#अगर defined(CONFIG_ढेर_POINTER_RANDOM) && (CONFIG_ढेर_POINTER_RANDOM != 0)
+	z_ढेर_adjust_initialized = 1;
+#पूर्ण_अगर /* CONFIG_STACK_POINTER_RANDOM */
 
-#ifdef CONFIG_STATIC_INIT_GNU
+#अगर_घोषित CONFIG_STATIC_INIT_GNU
 	z_static_init_gnu();
-#endif /* CONFIG_STATIC_INIT_GNU */
+#पूर्ण_अगर /* CONFIG_STATIC_INIT_GNU */
 
 	/* Final init level before app starts */
 	z_sys_init_run_level(INIT_LEVEL_APPLICATION);
 
 	z_init_static_threads();
 
-#ifdef CONFIG_KERNEL_COHERENCE
+#अगर_घोषित CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(&_kernel));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#पूर्ण_अगर /* CONFIG_KERNEL_COHERENCE */
 
-#ifdef CONFIG_SMP
+#अगर_घोषित CONFIG_SMP
 	/* Start the secondary CPUs; CPUs whose devicetree node carries
 	 * zephyr,deferred-start are skipped and left for a run-time
 	 * k_smp_cpu_start()/k_smp_cpu_resume().
 	 */
 	z_smp_init();
 	z_sys_init_run_level(INIT_LEVEL_SMP);
-#endif /* CONFIG_SMP */
+#पूर्ण_अगर /* CONFIG_SMP */
 
-#ifdef CONFIG_MMU
+#अगर_घोषित CONFIG_MMU
 	z_mem_manage_boot_finish();
-#endif /* CONFIG_MMU */
+#पूर्ण_अगर /* CONFIG_MMU */
 
-#ifdef CONFIG_BOOTARGS
-	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+#अगर_घोषित CONFIG_BOOTARGS
+	बाह्य पूर्णांक मुख्य(पूर्णांक argc, अक्षर **argv);
+	बाह्य अक्षर **sys_boot_prepare_main_args(पूर्णांक *argc);
 
-	int argc = 0;
-	char **argv = sys_boot_prepare_main_args(&argc);
-	(void)main(argc, argv);
-#else
-	extern int main(void);
+	पूर्णांक argc = 0;
+	अक्षर **argv = sys_boot_prepare_main_args(&argc);
+	(व्योम)मुख्य(argc, argv);
+#अन्यथा
+	बाह्य पूर्णांक मुख्य(व्योम);
 
-	(void)main();
-#endif /* CONFIG_BOOTARGS */
+	(व्योम)मुख्य();
+#पूर्ण_अगर /* CONFIG_BOOTARGS */
 
-#ifdef CONFIG_MULTITHREADING
+#अगर_घोषित CONFIG_MULTITHREADING
 	/* Mark non-essential since main() has no more work to do */
 	z_thread_essential_clear(&z_main_thread);
-#endif
+#पूर्ण_अगर
 
-#ifdef CONFIG_COVERAGE_DUMP
+#अगर_घोषित CONFIG_COVERAGE_DUMP
 	/* Dump coverage data once the main() has exited. */
 	gcov_coverage_dump();
-#elif defined(CONFIG_COVERAGE_SEMIHOST)
+#या_अगर defined(CONFIG_COVERAGE_SEMIHOST)
 	gcov_coverage_semihost();
-#endif /* CONFIG_COVERAGE_DUMP */
+#पूर्ण_अगर /* CONFIG_COVERAGE_DUMP */
 } /* LCOV_EXCL_LINE ... because we just dumped final coverage data */
 
-#if defined(CONFIG_MULTITHREADING)
+#अगर defined(CONFIG_MULTITHREADING)
 __boot_func
-static void init_idle_thread(int i)
+अटल व्योम init_idle_thread(पूर्णांक i)
 {
-	struct k_thread *thread = &z_idle_threads[i];
-	k_thread_stack_t *stack = z_idle_stacks[i];
-	size_t stack_size = K_KERNEL_STACK_SIZEOF(z_idle_stacks[i]);
+	काष्ठा k_thread *thread = &z_idle_threads[i];
+	k_thread_ढेर_t *ढेर = z_idle_stacks[i];
+	माप_प्रकार ढेर_आकार = K_KERNEL_ढेर_SIZEOF(z_idle_stacks[i]);
 
-#ifdef CONFIG_THREAD_NAME
+#अगर_घोषित CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
-	char tname[8];
+#अगर CONFIG_MP_MAX_अंक_CPUS > 1
+	अक्षर tname[8];
 	snprintk(tname, 8, "idle %02d", i);
-#else
-	char *tname = "idle";
-#endif /* CONFIG_MP_MAX_NUM_CPUS */
+#अन्यथा
+	अक्षर *tname = "idle";
+#पूर्ण_अगर /* CONFIG_MP_MAX_NUM_CPUS */
 
-#else
-	char *tname = NULL;
-#endif /* CONFIG_THREAD_NAME */
+#अन्यथा
+	अक्षर *tname = शून्य;
+#पूर्ण_अगर /* CONFIG_THREAD_NAME */
 
-	z_setup_new_thread(thread, stack,
-			  stack_size, idle, &_kernel.cpus[i],
-			  NULL, NULL, K_IDLE_PRIO, K_ESSENTIAL,
+	z_setup_new_thread(thread, ढेर,
+			  ढेर_आकार, idle, &_kernel.cpus[i],
+			  शून्य, शून्य, K_IDLE_PRIO, K_ESSENTIAL,
 			  tname);
 	z_mark_thread_as_not_sleeping(thread);
 
-#ifdef CONFIG_SMP
+#अगर_घोषित CONFIG_SMP
 	thread->base.is_idle = 1U;
-#endif /* CONFIG_SMP */
+#पूर्ण_अगर /* CONFIG_SMP */
 }
 
-void z_init_cpu(int id)
+व्योम z_init_cpu(पूर्णांक id)
 {
 	init_idle_thread(id);
 	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
 	_kernel.cpus[id].id = id;
-	_kernel.cpus[id].irq_stack =
-		(K_KERNEL_STACK_BUFFER(z_interrupt_stacks[id]) +
-		 K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[id]));
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
+	_kernel.cpus[id].irq_ढेर =
+		(K_KERNEL_ढेर_बफर(z_interrupt_stacks[id]) +
+		 K_KERNEL_ढेर_SIZEOF(z_interrupt_stacks[id]));
+#अगर_घोषित CONFIG_SCHED_THREAD_USAGE_ALL
 	_kernel.cpus[id].usage = &_kernel.usage[id];
 	_kernel.cpus[id].usage->track_usage =
 		CONFIG_SCHED_THREAD_USAGE_AUTO_ENABLE;
-#endif
+#पूर्ण_अगर
 
-#ifdef CONFIG_PM
+#अगर_घोषित CONFIG_PM
 	/*
 	 * Increment number of CPUs active. The pm subsystem
 	 * will keep track of this from here.
 	 */
 	atomic_inc(&_cpus_active);
-#endif
+#पूर्ण_अगर
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
+#अगर_घोषित CONFIG_OBJ_CORE_SYSTEM
 	k_obj_core_init_and_link(K_OBJ_CORE(&_kernel.cpus[id]), &obj_type_cpu);
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
+#अगर_घोषित CONFIG_OBJ_CORE_STATS_SYSTEM
 	k_obj_core_stats_register(K_OBJ_CORE(&_kernel.cpus[id]),
 				  _kernel.cpus[id].usage,
-				  sizeof(struct k_cycle_stats));
-#endif
-#endif
+				  माप(काष्ठा k_cycle_stats));
+#पूर्ण_अगर
+#पूर्ण_अगर
 
-#ifdef CONFIG_SCHED_IPI_SUPPORTED
+#अगर_घोषित CONFIG_SCHED_IPI_SUPPORTED
 	sys_dlist_init(&_kernel.cpus[id].ipi_workq);
-#endif
+#पूर्ण_अगर
 }
 
 /**
@@ -435,14 +435,14 @@ void z_init_cpu(int id)
  * @return initial stack pointer for the main thread
  */
 __boot_func
-static char *prepare_multithreading(void)
+अटल अक्षर *prepare_multithreading(व्योम)
 {
-	char *stack_ptr;
+	अक्षर *ढेर_ptr;
 
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
 
-#ifndef CONFIG_SMP
+#अगर_अघोषित CONFIG_SMP
 	/*
 	 * prime the cache with the main thread since:
 	 *
@@ -453,11 +453,11 @@ static char *prepare_multithreading(void)
 	 *   to work as intended
 	 */
 	_kernel.ready_q.cache = &z_main_thread;
-#endif /* CONFIG_SMP */
-	stack_ptr = z_setup_new_thread(&z_main_thread, z_main_stack,
-				       K_THREAD_STACK_SIZEOF(z_main_stack),
+#पूर्ण_अगर /* CONFIG_SMP */
+	ढेर_ptr = z_setup_new_thread(&z_main_thread, z_main_ढेर,
+				       K_THREAD_ढेर_SIZEOF(z_main_ढेर),
 				       bg_thread_main,
-				       NULL, NULL, NULL,
+				       शून्य, शून्य, शून्य,
 				       CONFIG_MAIN_THREAD_PRIORITY,
 				       K_ESSENTIAL, "main");
 	z_mark_thread_as_not_sleeping(&z_main_thread);
@@ -465,57 +465,57 @@ static char *prepare_multithreading(void)
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	वापस ढेर_ptr;
 }
 
 __boot_func
-static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
+अटल FUNC_NORETURN व्योम switch_to_main_thread(अक्षर *ढेर_ptr)
 {
-#ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
-	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
-#else
-	ARG_UNUSED(stack_ptr);
+#अगर_घोषित CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
+	arch_switch_to_main_thread(&z_main_thread, ढेर_ptr, bg_thread_main);
+#अन्यथा
+	ARG_UNUSED(ढेर_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
 	 * current fake thread is not on a wait queue or ready queue, so it
 	 * will never be rescheduled in.
 	 */
 	z_swap_unlocked();
-#endif /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
+#पूर्ण_अगर /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
-#endif /* CONFIG_MULTITHREADING */
+#पूर्ण_अगर /* CONFIG_MULTITHREADING */
 
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-void __weak z_early_rand_get(uint8_t *buf, size_t length)
+FUNC_NO_ढेर_PROTECTOR
+व्योम __weak z_early_rand_get(uint8_t *buf, माप_प्रकार लंबाई)
 {
-	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
-	int rc;
+	अटल uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
+	पूर्णांक rc;
 
-#ifdef CONFIG_ENTROPY_HAS_DRIVER
-	const struct device *const entropy = entropy_get_default_device();
+#अगर_घोषित CONFIG_ENTROPY_HAS_DRIVER
+	स्थिर काष्ठा device *स्थिर entropy = entropy_get_default_device();
 
-	if ((entropy != NULL) && device_is_ready(entropy)) {
+	अगर ((entropy != शून्य) && device_is_ready(entropy)) {
 		/* Try to see if driver provides an ISR-specific API */
-		rc = entropy_get_entropy_isr(entropy, buf, length, ENTROPY_BUSYWAIT);
-		if (rc > 0) {
-			length -= rc;
+		rc = entropy_get_entropy_isr(entropy, buf, लंबाई, ENTROPY_BUSYWAIT);
+		अगर (rc > 0) {
+			लंबाई -= rc;
 			buf += rc;
 		}
 	}
-#endif /* CONFIG_ENTROPY_HAS_DRIVER */
+#पूर्ण_अगर /* CONFIG_ENTROPY_HAS_DRIVER */
 
-	while (length > 0) {
+	जबतक (लंबाई > 0) {
 		uint32_t val;
 
 		state = state + k_cycle_get_32();
 		state = state * 2862933555777941757ULL + 3037000493ULL;
 		val = (uint32_t)(state >> 32);
-		rc = min(length, sizeof(val));
-		arch_early_memcpy((void *)buf, &val, rc);
+		rc = min(लंबाई, माप(val));
+		arch_early_memcpy((व्योम *)buf, &val, rc);
 
-		length -= rc;
+		लंबाई -= rc;
 		buf += rc;
 	}
 }
@@ -531,8 +531,8 @@ void __weak z_early_rand_get(uint8_t *buf, size_t length)
  * @return Does not return
  */
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-FUNC_NORETURN void z_cstart(void)
+FUNC_NO_ढेर_PROTECTOR
+FUNC_NORETURN व्योम z_cstart(व्योम)
 {
 	/* gcov hook needed to get the coverage report.*/
 	gcov_static_init();
@@ -545,9 +545,9 @@ FUNC_NORETURN void z_cstart(void)
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
+#अगर defined(CONFIG_MULTITHREADING)
 	z_dummy_thread_init(&_thread_dummy);
-#endif /* CONFIG_MULTITHREADING */
+#पूर्ण_अगर /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
 	z_device_state_init();
 
@@ -566,45 +566,45 @@ FUNC_NORETURN void z_cstart(void)
 
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+#अगर defined(CONFIG_SMP)
 	arch_smp_init();
-#endif
+#पूर्ण_अगर
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-	uintptr_t stack_guard;
+#अगर_घोषित CONFIG_REQUIRES_ढेर_CANARIES
+	uintptr_t ढेर_guard;
 
-	z_early_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	z_early_rand_get((uint8_t *)&ढेर_guard, माप(ढेर_guard));
+	__stack_chk_guard = ढेर_guard;
 	__stack_chk_guard <<= 8;
-#endif	/* CONFIG_REQUIRES_STACK_CANARIES */
+#पूर्ण_अगर	/* CONFIG_REQUIRES_STACK_CANARIES */
 
-#ifdef CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT
+#अगर_घोषित CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT
 	timing_init();
 	timing_start();
-#endif /* CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT */
+#पूर्ण_अगर /* CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT */
 
-#ifdef CONFIG_MULTITHREADING
+#अगर_घोषित CONFIG_MULTITHREADING
 	switch_to_main_thread(prepare_multithreading());
-#else
-#ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
+#अन्यथा
+#अगर_घोषित ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
 	 * in the case of no multi-threading.
 	 */
 	ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING(bg_thread_main,
-		NULL, NULL, NULL);
-#else
-	bg_thread_main(NULL, NULL, NULL);
+		शून्य, शून्य, शून्य);
+#अन्यथा
+	bg_thread_main(शून्य, शून्य, शून्य);
 
 	/* LCOV_EXCL_START
 	 * We've already dumped coverage data at this point.
 	 */
 	irq_lock();
-	while (true) {
+	जबतक (true) {
 	}
 	/* LCOV_EXCL_STOP */
-#endif /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */
-#endif /* CONFIG_MULTITHREADING */
+#पूर्ण_अगर /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */
+#पूर्ण_अगर /* CONFIG_MULTITHREADING */
 
 	/*
 	 * Compiler can't tell that the above routines won't return and issues

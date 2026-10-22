@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
-#include <stddef.h>
-#include <string.h>
-#include <zephyr/device.h>
-#include <zephyr/sys/atomic.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/kobject.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/pm/device_runtime.h>
+#समावेश <errno.h>
+#समावेश <stddef.h>
+#समावेश <string.h>
+#समावेश <zephyr/device.h>
+#समावेश <zephyr/sys/atomic.h>
+#समावेश <zephyr/sys/iterable_sections.h>
+#समावेश <zephyr/sys/kobject.h>
+#समावेश <zephyr/internal/syscall_handler.h>
+#समावेश <zephyr/toolchain.h>
+#समावेश <zephyr/pm/device_runtime.h>
 
-int do_device_init(const struct device *dev)
+पूर्णांक do_device_init(स्थिर काष्ठा device *dev)
 {
-	int rc = 0;
+	पूर्णांक rc = 0;
 
-	if (dev->ops.init != NULL) {
+	अगर (dev->ops.init != शून्य) {
 		rc = dev->ops.init(dev);
 		/* If initialization failed, record in dev->state->init_res
 		 * the POSITIVE value of the resulting errno
 		 */
-		if (rc != 0) {
+		अगर (rc != 0) {
 			/* device's init function should return:
 			 *   0 on success
 			 *   a negative value on failure (-errno)
@@ -33,13 +33,13 @@ int do_device_init(const struct device *dev)
 			__ASSERT(rc >= -UINT8_MAX && rc < 0, "device %s init: invalid error (%d)",
 				 dev->name, rc);
 
-			if (rc < 0) {
+			अगर (rc < 0) {
 				rc = -rc;
 			}
 			/* handle error value overflow in production
 			 * this is likely a bug in the device's init function. Signals it
 			 */
-			if (rc > UINT8_MAX) {
+			अगर (rc > UINT8_MAX) {
 				rc = UINT8_MAX;
 			}
 		}
@@ -51,7 +51,7 @@ int do_device_init(const struct device *dev)
 		dev->state->init_res = rc;
 	}
 
-	if (rc == 0) {
+	अगर (rc == 0) {
 		/* A failed init leaves the device uninitialized, so it can be
 		 * retried by device_init() and nothing can be released by
 		 * device_deinit().
@@ -59,88 +59,88 @@ int do_device_init(const struct device *dev)
 		dev->state->initialized = true;
 
 		/* Run automatic device runtime enablement */
-		(void)pm_device_runtime_auto_enable(dev);
+		(व्योम)pm_device_runtime_auto_enable(dev);
 	}
 
 	/* here, the value of rc is either 0 or +errno
 	 * flip the sign to return a negative value on failure as expected
 	 */
-	return -rc;
+	वापस -rc;
 }
 
-int z_impl_device_init(const struct device *dev)
+पूर्णांक z_impl_device_init(स्थिर काष्ठा device *dev)
 {
-	if (dev->state->initialized) {
-		return -EALREADY;
+	अगर (dev->state->initialized) {
+		वापस -EALREADY;
 	}
 
-	return do_device_init(dev);
+	वापस do_device_init(dev);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_init(const struct device *dev)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत पूर्णांक z_vrfy_device_init(स्थिर काष्ठा device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_init(dev);
+	वापस z_impl_device_init(dev);
 }
-#include <zephyr/syscalls/device_init_mrsh.c>
-#endif
+#समावेश <zephyr/syscalls/device_init_mrsh.c>
+#पूर्ण_अगर
 
 
-const struct device *z_impl_device_get_binding(const char *name)
+स्थिर काष्ठा device *z_impl_device_get_binding(स्थिर अक्षर *name)
 {
 	/* A null string identifies no device.  So does an empty
 	 * string.
 	 */
-	if ((name == NULL) || (name[0] == '\0')) {
-		return NULL;
+	अगर ((name == शून्य) || (name[0] == '\0')) {
+		वापस शून्य;
 	}
 
 	/* Return NULL if the device matching 'name' is not ready. */
 	STRUCT_SECTION_FOREACH(device, dev) {
-		if ((dev->name == name) || (strcmp(name, dev->name) == 0)) {
-			return z_impl_device_is_ready(dev) ? dev : NULL;
+		अगर ((dev->name == name) || (म_भेद(name, dev->name) == 0)) {
+			वापस z_impl_device_is_ready(dev) ? dev : शून्य;
 		}
 	}
 
-	return NULL;
+	वापस शून्य;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline const struct device *z_vrfy_device_get_binding(const char *name)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत स्थिर काष्ठा device *z_vrfy_device_get_binding(स्थिर अक्षर *name)
 {
-	char name_copy[Z_DEVICE_MAX_NAME_LEN];
+	अक्षर name_copy[Z_DEVICE_MAX_NAME_LEN];
 
-	if (k_usermode_string_copy(name_copy, name, sizeof(name_copy))
+	अगर (k_usermode_string_copy(name_copy, name, माप(name_copy))
 	    != 0) {
-		return NULL;
+		वापस शून्य;
 	}
 
-	return z_impl_device_get_binding(name_copy);
+	वापस z_impl_device_get_binding(name_copy);
 }
-#include <zephyr/syscalls/device_get_binding_mrsh.c>
+#समावेश <zephyr/syscalls/device_get_binding_mrsh.c>
 
-static inline bool z_vrfy_device_is_ready(const struct device *dev)
+अटल अंतरभूत bool z_vrfy_device_is_ready(स्थिर काष्ठा device *dev)
 {
 	/* NULL is a documented argument, not an invalid kernel object */
-	if (dev == NULL) {
-		return false;
+	अगर (dev == शून्य) {
+		वापस false;
 	}
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_is_ready(dev);
+	वापस z_impl_device_is_ready(dev);
 }
-#include <zephyr/syscalls/device_is_ready_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#समावेश <zephyr/syscalls/device_is_ready_mrsh.c>
+#पूर्ण_अगर /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_DEVICE_DT_METADATA
-const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
+#अगर_घोषित CONFIG_DEVICE_DT_METADATA
+स्थिर काष्ठा device *z_impl_device_get_by_dt_nodelabel(स्थिर अक्षर *nodelabel)
 {
 	/* For consistency with device_get_binding(). */
-	if ((nodelabel == NULL) || (nodelabel[0] == '\0')) {
-		return NULL;
+	अगर ((nodelabel == शून्य) || (nodelabel[0] == '\0')) {
+		वापस शून्य;
 	}
 
 	/* Unlike device_get_binding(), which has a history of being
@@ -153,138 +153,138 @@ const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
 	 * device_get_binding() does.
 	 */
 	STRUCT_SECTION_FOREACH(device, dev) {
-		const struct device_dt_nodelabels *nl = device_get_dt_nodelabels(dev);
+		स्थिर काष्ठा device_dt_nodelabels *nl = device_get_dt_nodelabels(dev);
 
-		if (!z_impl_device_is_ready(dev) || nl == NULL) {
-			continue;
+		अगर (!z_impl_device_is_ready(dev) || nl == शून्य) {
+			जारी;
 		}
 
-		for (size_t i = 0; i < nl->num_nodelabels; i++) {
-			const char *dev_nodelabel = nl->nodelabels[i];
+		क्रम (माप_प्रकार i = 0; i < nl->अंक_nodelabels; i++) {
+			स्थिर अक्षर *dev_nodelabel = nl->nodelabels[i];
 
-			if (strcmp(nodelabel, dev_nodelabel) == 0) {
-				return dev;
+			अगर (म_भेद(nodelabel, dev_nodelabel) == 0) {
+				वापस dev;
 			}
 		}
 	}
 
-	return NULL;
+	वापस शून्य;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline const struct device *z_vrfy_device_get_by_dt_nodelabel(const char *nodelabel)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत स्थिर काष्ठा device *z_vrfy_device_get_by_dt_nodelabel(स्थिर अक्षर *nodelabel)
 {
-	char nl_copy[Z_DEVICE_MAX_NODELABEL_LEN];
+	अक्षर nl_copy[Z_DEVICE_MAX_NODELABEL_LEN];
 
-	if (k_usermode_string_copy(nl_copy, (char *)nodelabel, sizeof(nl_copy)) != 0) {
-		return NULL;
+	अगर (k_usermode_string_copy(nl_copy, (अक्षर *)nodelabel, माप(nl_copy)) != 0) {
+		वापस शून्य;
 	}
 
-	return z_impl_device_get_by_dt_nodelabel(nl_copy);
+	वापस z_impl_device_get_by_dt_nodelabel(nl_copy);
 }
-#include <zephyr/syscalls/device_get_by_dt_nodelabel_mrsh.c>
-#endif /* CONFIG_USERSPACE */
-#endif /* CONFIG_DEVICE_DT_METADATA */
+#समावेश <zephyr/syscalls/device_get_by_dt_nodelabel_mrsh.c>
+#पूर्ण_अगर /* CONFIG_USERSPACE */
+#पूर्ण_अगर /* CONFIG_DEVICE_DT_METADATA */
 
-size_t z_device_get_all_static(struct device const **devices)
+माप_प्रकार z_device_get_all_static(काष्ठा device स्थिर **devices)
 {
-	size_t cnt;
+	माप_प्रकार cnt;
 
 	STRUCT_SECTION_GET(device, 0, devices);
-	STRUCT_SECTION_COUNT(device, &cnt);
+	STRUCT_SECTION_गिनती(device, &cnt);
 
-	return cnt;
+	वापस cnt;
 }
 
-bool z_impl_device_is_ready(const struct device *dev)
+bool z_impl_device_is_ready(स्थिर काष्ठा device *dev)
 {
 	/*
 	 * if an invalid device pointer is passed as argument, this call
 	 * reports the `device` as not ready for usage.
 	 */
-	if (dev == NULL) {
-		return false;
+	अगर (dev == शून्य) {
+		वापस false;
 	}
 
-	return dev->state->initialized;
+	वापस dev->state->initialized;
 }
 
-int z_impl_device_deinit(const struct device *dev)
+पूर्णांक z_impl_device_deinit(स्थिर काष्ठा device *dev)
 {
-#ifdef CONFIG_DEVICE_DEINIT_SUPPORT
-	int ret;
+#अगर_घोषित CONFIG_DEVICE_DEINIT_SUPPORT
+	पूर्णांक ret;
 
-	if (!dev->state->initialized) {
-		return -EPERM;
+	अगर (!dev->state->initialized) {
+		वापस -EPERM;
 	}
 
-	if (dev->ops.deinit == NULL) {
-		return -ENOTSUP;
+	अगर (dev->ops.deinit == शून्य) {
+		वापस -ENOTSUP;
 	}
 
 	ret = dev->ops.deinit(dev);
-	if (ret < 0) {
-		return ret;
+	अगर (ret < 0) {
+		वापस ret;
 	}
 
 	dev->state->initialized = false;
 
-	return 0;
-#else
+	वापस 0;
+#अन्यथा
 	ARG_UNUSED(dev);
-	return -ENOTSUP;
-#endif /* CONFIG_DEVICE_DEINIT_SUPPORT */
+	वापस -ENOTSUP;
+#पूर्ण_अगर /* CONFIG_DEVICE_DEINIT_SUPPORT */
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_deinit(const struct device *dev)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत पूर्णांक z_vrfy_device_deinit(स्थिर काष्ठा device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_deinit(dev);
+	वापस z_impl_device_deinit(dev);
 }
-#include <zephyr/syscalls/device_deinit_mrsh.c>
-#endif
+#समावेश <zephyr/syscalls/device_deinit_mrsh.c>
+#पूर्ण_अगर
 
-#ifdef CONFIG_DEVICE_DEPS
+#अगर_घोषित CONFIG_DEVICE_DEPS
 
-static int device_visitor(const device_handle_t *handles,
-			   size_t handle_count,
+अटल पूर्णांक device_visitor(स्थिर device_handle_t *handles,
+			   माप_प्रकार handle_गिनती,
 			   device_visitor_callback_t visitor_cb,
-			   void *context)
+			   व्योम *context)
 {
 	/* Iterate over fixed devices */
-	for (size_t i = 0; i < handle_count; ++i) {
+	क्रम (माप_प्रकार i = 0; i < handle_गिनती; ++i) {
 		device_handle_t dh = handles[i];
-		const struct device *rdev = device_from_handle(dh);
-		int rc = visitor_cb(rdev, context);
+		स्थिर काष्ठा device *rdev = device_from_handle(dh);
+		पूर्णांक rc = visitor_cb(rdev, context);
 
-		if (rc < 0) {
-			return rc;
+		अगर (rc < 0) {
+			वापस rc;
 		}
 	}
 
-	return handle_count;
+	वापस handle_गिनती;
 }
 
-int device_required_foreach(const struct device *dev,
+पूर्णांक device_required_foreach(स्थिर काष्ठा device *dev,
 			    device_visitor_callback_t visitor_cb,
-			    void *context)
+			    व्योम *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_required_handles_get(dev, &handle_count);
+	माप_प्रकार handle_गिनती = 0;
+	स्थिर device_handle_t *handles = device_required_handles_get(dev, &handle_गिनती);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	वापस device_visitor(handles, handle_गिनती, visitor_cb, context);
 }
 
-int device_supported_foreach(const struct device *dev,
+पूर्णांक device_supported_foreach(स्थिर काष्ठा device *dev,
 			     device_visitor_callback_t visitor_cb,
-			     void *context)
+			     व्योम *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_supported_handles_get(dev, &handle_count);
+	माप_प्रकार handle_गिनती = 0;
+	स्थिर device_handle_t *handles = device_supported_handles_get(dev, &handle_गिनती);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	वापस device_visitor(handles, handle_गिनती, visitor_cb, context);
 }
 
-#endif /* CONFIG_DEVICE_DEPS */
+#पूर्ण_अगर /* CONFIG_DEVICE_DEPS */

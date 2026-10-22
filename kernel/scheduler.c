@@ -2,29 +2,29 @@
  * Copyright The Zephyr Project Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <run_q.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <kspinlock.h>
+#समावेश <ksched.h>
+#समावेश <zephyr/sys/__assert.h>
+#समावेश <zephyr/spinlock.h>
+#समावेश <zephyr/internal/syscall_handler.h>
+#समावेश <run_q.h>
+#समावेश <wait_q.h>
+#समावेश <scheduler.h>
 
 
-void z_sched_init(void)
+व्योम z_sched_init(व्योम)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
+#अगर_घोषित CONFIG_SCHED_CPU_MASK_PIN_ONLY
+	क्रम (पूर्णांक i = 0; i < CONFIG_MP_MAX_अंक_CPUS; i++) {
 		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
 	}
-#else
+#अन्यथा
 	_priq_run_init(&_kernel.ready_q.runq);
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#पूर्ण_अगर /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-void k_sched_lock(void)
+व्योम k_sched_lock(व्योम)
 {
 	Z_SCHED_SPINLOCK {
 		SYS_PORT_TRACING_FUNC(k_thread, sched_lock);
@@ -38,63 +38,63 @@ void k_sched_lock(void)
 	}
 }
 
-void k_sched_unlock(void)
+व्योम k_sched_unlock(व्योम)
 {
 	SYS_PORT_TRACING_FUNC(k_thread, sched_unlock);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_कुंजी_t कुंजी = z_sched_spinlock_lock();
 
 	__ASSERT(_current->base.sched_locked != 0U, "");
 	__ASSERT(!arch_is_in_isr(), "");
 	++_current->base.sched_locked;
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(कुंजी);
 }
 
-void z_impl_k_reschedule(void)
+व्योम z_impl_k_reschedule(व्योम)
 {
-	k_spinlock_key_t key;
+	k_spinlock_कुंजी_t कुंजी;
 
-	key = z_sched_spinlock_lock();
+	कुंजी = z_sched_spinlock_lock();
 
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(कुंजी);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_reschedule(void)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत व्योम z_vrfy_k_reschedule(व्योम)
 {
 	z_impl_k_reschedule();
 }
-#include <zephyr/syscalls/k_reschedule_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#समावेश <zephyr/syscalls/k_reschedule_mrsh.c>
+#पूर्ण_अगर /* CONFIG_USERSPACE */
 
-k_tid_t z_impl_k_sched_current_thread_query(void)
+k_tid_t z_impl_k_sched_current_thread_query(व्योम)
 {
-	return _current;
+	वापस _current;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_tid_t z_vrfy_k_sched_current_thread_query(void)
+#अगर_घोषित CONFIG_USERSPACE
+अटल अंतरभूत k_tid_t z_vrfy_k_sched_current_thread_query(व्योम)
 {
-	return z_impl_k_sched_current_thread_query();
+	वापस z_impl_k_sched_current_thread_query();
 }
-#include <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#समावेश <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
+#पूर्ण_अगर /* CONFIG_USERSPACE */
 
 
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
-		       _waitq_post_walk_cb_t post_func, void *data)
+पूर्णांक z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+		       _waitq_post_walk_cb_t post_func, व्योम *तथ्य)
 {
-	struct k_thread *thread;
-	int  status = 0;
+	काष्ठा k_thread *thread;
+	पूर्णांक  status = 0;
 
 	Z_SCHED_SPINLOCK {
-#ifndef CONFIG_WAITQ_SCALABLE
-		struct k_thread *tmp;
+#अगर_अघोषित CONFIG_WAITQ_SCALABLE
+		काष्ठा k_thread *tmp;
 
 		_WAIT_Q_FOR_EACH_SAFE(wait_q, thread, tmp)
-#else /* !CONFIG_WAITQ_SCALABLE */
+#अन्यथा /* !CONFIG_WAITQ_SCALABLE */
 		_WAIT_Q_FOR_EACH(wait_q, thread)
-#endif /* !CONFIG_WAITQ_SCALABLE */
+#पूर्ण_अगर /* !CONFIG_WAITQ_SCALABLE */
 		{
 
 			/*
@@ -103,9 +103,9 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 			 * it returns 0.
 			 */
 
-			status = walk_func(thread, data);
-			if (status != 0) {
-				break;
+			status = walk_func(thread, तथ्य);
+			अगर (status != 0) {
+				अवरोध;
 			}
 		}
 
@@ -114,12 +114,12 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		 * still holding the scheduler spinlock to enable atomic
 		 * operations (from the scheduler's point of view).
 		 */
-		if (post_func != NULL) {
-			post_func(status, data);
+		अगर (post_func != शून्य) {
+			post_func(status, तथ्य);
 		}
 	}
 
-	return status;
+	वापस status;
 }
 
 
@@ -127,13 +127,13 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
-		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
+पूर्णांक z_sched_wait(काष्ठा k_spinlock *lock, k_spinlock_कुंजी_t कुंजी,
+		 _wait_q_t *wait_q, k_timeout_t timeout, व्योम **तथ्य)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	पूर्णांक ret = z_pend_curr(lock, कुंजी, wait_q, timeout);
 
-	if (data != NULL) {
-		*data = _current->base.swap_data;
+	अगर (तथ्य != शून्य) {
+		*तथ्य = _current->base.swap_तथ्य;
 	}
-	return ret;
+	वापस ret;
 }

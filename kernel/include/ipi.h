@@ -4,37 +4,37 @@
  */
 
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_IPI_H_
-#define ZEPHYR_KERNEL_INCLUDE_IPI_H_
+#अगर_अघोषित ZEPHYR_KERNEL_INCLUDE_IPI_H_
+#घोषणा ZEPHYR_KERNEL_INCLUDE_IPI_H_
 
-#include <zephyr/kernel.h>
-#include <stdint.h>
-#include <zephyr/sys/atomic.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <stdint.h>
+#समावेश <zephyr/sys/atomic.h>
 
-#define IPI_ALL_CPUS_MASK  (UINT32_MAX >> (32 - CONFIG_MP_MAX_NUM_CPUS))
+#घोषणा IPI_ALL_CPUS_MASK  (UINT32_MAX >> (32 - CONFIG_MP_MAX_अंक_CPUS))
 
-#define IPI_CPU_MASK(cpu_id)   \
+#घोषणा IPI_CPU_MASK(cpu_id)   \
 	(IS_ENABLED(CONFIG_IPI_OPTIMIZE) ? BIT(cpu_id) : IPI_ALL_CPUS_MASK)
 
 
-void z_sched_ipi(void);
+व्योम z_sched_ipi(व्योम);
 
 /* defined in ipi.c when CONFIG_SMP=y */
-#ifdef CONFIG_SMP
-void flag_ipi(uint32_t ipi_mask);
-void signal_pending_ipi(void);
-atomic_val_t ipi_mask_create(struct k_thread *thread);
-#else
-#define flag_ipi(ipi_mask) do { } while (false)
-#define signal_pending_ipi() do { } while (false)
-#endif /* CONFIG_SMP */
+#अगर_घोषित CONFIG_SMP
+व्योम flag_ipi(uint32_t ipi_mask);
+व्योम signal_pending_ipi(व्योम);
+atomic_val_t ipi_mask_create(काष्ठा k_thread *thread);
+#अन्यथा
+#घोषणा flag_ipi(ipi_mask) करो { } जबतक (false)
+#घोषणा signal_pending_ipi() करो { } जबतक (false)
+#पूर्ण_अगर /* CONFIG_SMP */
 
-#ifdef CONFIG_IPI_OPTIMIZE_IDLE
+#अगर_घोषित CONFIG_IPI_OPTIMIZE_IDLE
 /*
  * Consume and return the thread covered by the current CPU's reservation.
  * Returns NULL if no reservation exists. Caller must hold _sched_spinlock.
  */
-struct k_thread *ipi_idle_reserved_take(void);
+काष्ठा k_thread *ipi_idle_reserved_take(व्योम);
 
 /*
  * Remove a thread's reservation before it leaves the run queue or changes
@@ -44,7 +44,7 @@ struct k_thread *ipi_idle_reserved_take(void);
  * Caller must hold _sched_spinlock. Safe if no reservation exists; does not
  * cancel a pending IPI.
  */
-void ipi_idle_thread_unreserve(struct k_thread *thread);
+व्योम ipi_idle_thread_unreserve(काष्ठा k_thread *thread);
 
 /*
  * Transfer coverage from old_thread to new_thread using an outstanding idle
@@ -53,14 +53,14 @@ void ipi_idle_thread_unreserve(struct k_thread *thread);
  *
  * Caller must hold _sched_spinlock.
  */
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread);
-#else
-#define ipi_idle_reserved_take() NULL
-#define ipi_idle_thread_unreserve(thread) do { \
+bool ipi_idle_thread_rebind(काष्ठा k_thread *old_thread,
+			    काष्ठा k_thread *new_thread);
+#अन्यथा
+#घोषणा ipi_idle_reserved_take() शून्य
+#घोषणा ipi_idle_thread_unreserve(thread) करो { \
 	ARG_UNUSED(thread); \
-} while (false)
-#define ipi_idle_thread_rebind(old_thread, new_thread) false
-#endif /* CONFIG_IPI_OPTIMIZE_IDLE */
+} जबतक (false)
+#घोषणा ipi_idle_thread_rebind(old_thread, new_thread) false
+#पूर्ण_अगर /* CONFIG_IPI_OPTIMIZE_IDLE */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_IPI_H_ */
+#पूर्ण_अगर /* ZEPHYR_KERNEL_INCLUDE_IPI_H_ */

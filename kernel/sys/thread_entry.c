@@ -11,17 +11,17 @@
  * This file provides the common thread entry function
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/arch/cfi.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <zephyr/arch/cfi.h>
 
-#ifdef CONFIG_CURRENT_THREAD_USE_TLS
+#अगर_घोषित CONFIG_CURRENT_THREAD_USE_TLS
 Z_THREAD_LOCAL k_tid_t z_tls_current;
-#endif
+#पूर्ण_अगर
 
-#ifdef CONFIG_STACK_CANARIES_TLS
-#include <zephyr/random/random.h>
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#endif /* CONFIG_STACK_CANARIES_TLS */
+#अगर_घोषित CONFIG_ढेर_CANARIES_TLS
+#समावेश <zephyr/random/random.h>
+बाह्य Z_THREAD_LOCAL अस्थिर uintptr_t __stack_chk_guard;
+#पूर्ण_अगर /* CONFIG_STACK_CANARIES_TLS */
 
 /*
  * Common thread entry point function (used by all threads)
@@ -33,8 +33,8 @@ extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
  * This routine does not return, and is marked as such so the compiler won't
  * generate preamble code that is only used by functions that actually return.
  */
-FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-				 void *p1, void *p2, void *p3)
+FUNC_NORETURN व्योम z_thread_entry(k_thread_entry_t entry,
+				 व्योम *p1, व्योम *p2, व्योम *p3)
 {
 /*
  * Inform the unwinder that the current return address is undefined.
@@ -47,16 +47,16 @@ FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
  * unwinding or debugging.
  */
 	ARCH_CFI_UNDEFINED_RETURN_ADDRESS();
-#ifdef CONFIG_CURRENT_THREAD_USE_TLS
+#अगर_घोषित CONFIG_CURRENT_THREAD_USE_TLS
 	z_tls_current = k_sched_current_thread_query();
-#endif
-#ifdef CONFIG_STACK_CANARIES_TLS
-	uintptr_t stack_guard;
+#पूर्ण_अगर
+#अगर_घोषित CONFIG_ढेर_CANARIES_TLS
+	uintptr_t ढेर_guard;
 
-	sys_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	sys_rand_get((uint8_t *)&ढेर_guard, माप(ढेर_guard));
+	__stack_chk_guard = ढेर_guard;
 	__stack_chk_guard <<= 8;
-#endif	/* CONFIG_STACK_CANARIES_TLS */
+#पूर्ण_अगर	/* CONFIG_STACK_CANARIES_TLS */
 	entry(p1, p2, p3);
 
 	k_thread_abort(k_current_get());

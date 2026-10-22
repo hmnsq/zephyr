@@ -3,39 +3,39 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <kernel_internal.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/llext/symbol.h>
+#समावेश <kernel_internal.h>
+#समावेश <zephyr/spinlock.h>
+#समावेश <zephyr/llext/symbol.h>
 
-#define SPIN_CPU_ID_MASK (sizeof(void *) - 1)
+#घोषणा SPIN_CPU_ID_MASK (माप(व्योम *) - 1)
 
 /* Outermost spinlock held on each CPU; set-if-NULL on lock,
  * clear-if-matches on unlock.
  */
-static struct k_spinlock *z_held_spinlock[CONFIG_MP_MAX_NUM_CPUS];
+अटल काष्ठा k_spinlock *z_held_spinlock[CONFIG_MP_MAX_अंक_CPUS];
 
 /* Total spinlock hold count per CPU, incremented on every lock and
  * decremented on every unlock regardless of nesting depth.
  */
-static int z_held_spinlock_count[CONFIG_MP_MAX_NUM_CPUS];
+अटल पूर्णांक z_held_spinlock_गिनती[CONFIG_MP_MAX_अंक_CPUS];
 
 /* Sentinel: set in swap_data by the ztest harness before force-aborting a
  * thread that holds a lock after an expected panic/assert.
  */
-const uint8_t z_spinlock_abort_sentinel;
+स्थिर uint8_t z_spinlock_abort_sentinel;
 
-bool z_spin_lock_valid(struct k_spinlock *l)
+bool z_spin_lock_valid(काष्ठा k_spinlock *l)
 {
 	uintptr_t thread_cpu = l->thread_cpu;
 
-	if (thread_cpu != 0U) {
-		if ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
-			return false;
+	अगर (thread_cpu != 0U) {
+		अगर ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
+			वापस false;
 		}
 	}
-	return true;
+	वापस true;
 }
-EXPORT_SYMBOL(z_spin_lock_valid);
+EXPORT_प्रतीक(z_spin_lock_valid);
 
 /* z_spin_unlock_valid() and z_spin_lock_set_owner() below use _raw_current
  * rather than _current: they run at points where z_current_thread_set() may
@@ -44,47 +44,47 @@ EXPORT_SYMBOL(z_spin_lock_valid);
  * called from k_spin_lock() and k_spin_unlock() with the lock held, hence with
  * interrupts locked as _raw_current requires.
  */
-bool z_spin_unlock_valid(struct k_spinlock *l)
+bool z_spin_unlock_valid(काष्ठा k_spinlock *l)
 {
 	uint8_t cpu_id = _current_cpu->id;
 	uintptr_t tcpu = l->thread_cpu;
 
 	l->thread_cpu = 0;
 
-	if (z_held_spinlock[cpu_id] == l) {
-		z_held_spinlock[cpu_id] = NULL;
+	अगर (z_held_spinlock[cpu_id] == l) {
+		z_held_spinlock[cpu_id] = शून्य;
 	}
 
-	if (arch_is_in_isr() &&
+	अगर (arch_is_in_isr() &&
 	    (_raw_current->base.thread_state & _THREAD_DUMMY) != 0) {
 		/* Edge case where an ISR aborted _current */
-		z_held_spinlock_count[cpu_id]--;
-		__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
+		z_held_spinlock_गिनती[cpu_id]--;
+		__ASSERT(z_held_spinlock_गिनती[cpu_id] >= 0,
 			 "spinlock unlock with no matching lock");
-		return true;
+		वापस true;
 	}
-	if (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
-		return false;
+	अगर (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
+		वापस false;
 	}
-	z_held_spinlock_count[cpu_id]--;
-	__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
+	z_held_spinlock_गिनती[cpu_id]--;
+	__ASSERT(z_held_spinlock_गिनती[cpu_id] >= 0,
 		 "spinlock unlock with no matching lock");
-	return true;
+	वापस true;
 }
-EXPORT_SYMBOL(z_spin_unlock_valid);
+EXPORT_प्रतीक(z_spin_unlock_valid);
 
-void z_spin_lock_set_owner(struct k_spinlock *l)
+व्योम z_spin_lock_set_owner(काष्ठा k_spinlock *l)
 {
 	uint8_t cpu_id = _current_cpu->id;
 
 	l->thread_cpu = cpu_id | (uintptr_t)_raw_current;
 
-	if (z_held_spinlock[cpu_id] == NULL) {
+	अगर (z_held_spinlock[cpu_id] == शून्य) {
 		z_held_spinlock[cpu_id] = l;
 	}
-	z_held_spinlock_count[cpu_id]++;
+	z_held_spinlock_गिनती[cpu_id]++;
 }
-EXPORT_SYMBOL(z_spin_lock_set_owner);
+EXPORT_प्रतीक(z_spin_lock_set_owner);
 
 /* Called from the switch paths after z_current_thread_set() to transfer
  * ownership of an inherited lock.  Does NOT update the tracking arrays.
@@ -93,11 +93,11 @@ EXPORT_SYMBOL(z_spin_lock_set_owner);
  * made it current, and _current is not required to report it until the switch
  * completes (see z_current_thread_set()).
  */
-void z_spin_lock_transfer_owner(struct k_spinlock *l, struct k_thread *thread)
+व्योम z_spin_lock_transfer_owner(काष्ठा k_spinlock *l, काष्ठा k_thread *thread)
 {
 	l->thread_cpu = _current_cpu->id | (uintptr_t)thread;
 }
-EXPORT_SYMBOL(z_spin_lock_transfer_owner);
+EXPORT_प्रतीक(z_spin_lock_transfer_owner);
 
 /* Reset per-CPU spinlock tracking after abnormal thread termination.
  * All locks the dying thread held are abandoned (it will never resume to
@@ -105,30 +105,30 @@ EXPORT_SYMBOL(z_spin_lock_transfer_owner);
  * path need to be counted.  lock_held=true if exactly one such lock
  * remains and will be released after this call.
  */
-void z_spin_validate_reset(bool lock_held)
+व्योम z_spin_validate_reset(bool lock_held)
 {
 	uint8_t cpu_id = _current_cpu->id;
 
-	z_held_spinlock[cpu_id] = NULL;
-	z_held_spinlock_count[cpu_id] = lock_held ? 1 : 0;
+	z_held_spinlock[cpu_id] = शून्य;
+	z_held_spinlock_गिनती[cpu_id] = lock_held ? 1 : 0;
 }
 
 /* Internal: caller must ensure IRQs are disabled. */
-static inline struct k_spinlock *z_spin_get_held_lock_locked(uint8_t cpu_id)
+अटल अंतरभूत काष्ठा k_spinlock *z_spin_get_held_lock_locked(uint8_t cpu_id)
 {
-	return z_held_spinlock[cpu_id];
+	वापस z_held_spinlock[cpu_id];
 }
 
-#ifdef CONFIG_TEST
-struct k_spinlock *z_spin_get_held_lock(void)
+#अगर_घोषित CONFIG_TEST
+काष्ठा k_spinlock *z_spin_get_held_lock(व्योम)
 {
-	unsigned int key = arch_irq_lock();
-	struct k_spinlock *l = z_spin_get_held_lock_locked(_current_cpu->id);
+	अचिन्हित पूर्णांक कुंजी = arch_irq_lock();
+	काष्ठा k_spinlock *l = z_spin_get_held_lock_locked(_current_cpu->id);
 
-	arch_irq_unlock(key);
-	return l;
+	arch_irq_unlock(कुंजी);
+	वापस l;
 }
-#endif /* CONFIG_TEST */
+#पूर्ण_अगर /* CONFIG_TEST */
 
 /*
  * Verify that a context switch is safe to perform.  Called from
@@ -143,25 +143,25 @@ struct k_spinlock *z_spin_get_held_lock(void)
  * section — i.e. breaking the lock of someone higher up the call stack,
  * which is forbidden.
  */
-void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
+व्योम z_assert_can_swap(अचिन्हित पूर्णांक कुंजी, काष्ठा k_spinlock *swap_lock)
 {
 	uint8_t cpu_id = _current_cpu->id;
-	struct k_spinlock *held = z_spin_get_held_lock_locked(cpu_id);
-	int count = z_held_spinlock_count[cpu_id];
-	int extra = (swap_lock != NULL) ? count - 1 : count;
+	काष्ठा k_spinlock *held = z_spin_get_held_lock_locked(cpu_id);
+	पूर्णांक गिनती = z_held_spinlock_गिनती[cpu_id];
+	पूर्णांक extra = (swap_lock != शून्य) ? गिनती - 1 : गिनती;
 
 	ARG_UNUSED(held);
 	ARG_UNUSED(extra);
 
 	/* ztest expected-fault: thread aborted with a lock held.*/
-	if ((_current->base.thread_state & _THREAD_DEAD) &&
-	    _current->base.swap_data == (void *)&z_spinlock_abort_sentinel) {
-		z_spin_validate_reset(swap_lock != NULL);
-	} else {
+	अगर ((_current->base.thread_state & _THREAD_DEAD) &&
+	    _current->base.swap_तथ्य == (व्योम *)&z_spinlock_abort_sentinel) {
+		z_spin_validate_reset(swap_lock != शून्य);
+	} अन्यथा {
 		__ASSERT(extra >= 0,
 			 "swap_lock %p is not tracked in the spinlock hold count!", swap_lock);
 
-		__ASSERT(held == NULL || held == swap_lock,
+		__ASSERT(held == शून्य || held == swap_lock,
 			 "Context switching while holding spinlock %p!", held);
 
 		/* Catches lock(A); lock(B); unlock(A); z_swap(): slot cleared when A
@@ -171,23 +171,23 @@ void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
 			 "Context switching while holding %d extra spinlock(s)!", extra);
 	}
 
-#ifndef CONFIG_ARM64
+#अगर_अघोषित CONFIG_ARM64
 	/* Dummy threads start with IRQs masked and dead threads are being
 	 * torn down; in both cases the IRQ state self-heals on the next
 	 * switch-in, so they are exempt.  Disabled on ARM64 where FP/SIMD
 	 * usage in exception context may leave IRQs masked without holding
 	 * a lock (see #94285).
 	 */
-	__ASSERT(arch_irq_unlocked(key) ||
+	__ASSERT(arch_irq_unlocked(कुंजी) ||
 		 _current->base.thread_state & (_THREAD_DUMMY | _THREAD_DEAD),
 		 "Context switching with irq_lock held!");
-#endif
+#पूर्ण_अगर
 }
 
-#ifdef CONFIG_KERNEL_COHERENCE
-bool z_spin_lock_mem_coherent(struct k_spinlock *l)
+#अगर_घोषित CONFIG_KERNEL_COHERENCE
+bool z_spin_lock_mem_coherent(काष्ठा k_spinlock *l)
 {
-	return sys_cache_is_mem_coherent((void *)l);
+	वापस sys_cache_is_mem_coherent((व्योम *)l);
 }
-EXPORT_SYMBOL(z_spin_lock_mem_coherent);
-#endif /* CONFIG_KERNEL_COHERENCE */
+EXPORT_प्रतीक(z_spin_lock_mem_coherent);
+#पूर्ण_अगर /* CONFIG_KERNEL_COHERENCE */

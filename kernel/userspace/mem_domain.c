@@ -4,398 +4,398 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <stdbool.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/libc-hooks.h>
-#include <zephyr/logging/log.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <kernel_internal.h>
+#समावेश <zephyr/sys/__assert.h>
+#समावेश <stdbool.h>
+#समावेश <zephyr/spinlock.h>
+#समावेश <zephyr/sys/check.h>
+#समावेश <zephyr/sys/libc-hooks.h>
+#समावेश <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-struct k_spinlock z_mem_domain_lock;
-static uint8_t max_partitions;
+काष्ठा k_spinlock z_mem_domain_lock;
+अटल uint8_t max_partitions;
 
-struct k_mem_domain k_mem_domain_default;
+काष्ठा k_mem_domain k_mem_domain_default;
 
-static bool check_add_partition(struct k_mem_domain *domain,
-				struct k_mem_partition *part)
+अटल bool check_add_partition(काष्ठा k_mem_domain *domain,
+				काष्ठा k_mem_partition *part)
 {
 
-	int i;
+	पूर्णांक i;
 	uintptr_t pstart, pend, dstart, dend;
 
-	if (part == NULL) {
+	अगर (part == शून्य) {
 		LOG_ERR("NULL k_mem_partition provided");
-		return false;
+		वापस false;
 	}
 
-#ifdef CONFIG_EXECUTE_XOR_WRITE
+#अगर_घोषित CONFIG_EXECUTE_XOR_WRITE
 	/* Arches where execution cannot be disabled should always return
 	 * false to this check
 	 */
-	if (K_MEM_PARTITION_IS_EXECUTABLE(part->attr) &&
+	अगर (K_MEM_PARTITION_IS_EXECUTABLE(part->attr) &&
 	    K_MEM_PARTITION_IS_WRITABLE(part->attr)) {
 		LOG_ERR("partition is writable and executable <start %lx>",
 			part->start);
-		return false;
+		वापस false;
 	}
-#endif /* CONFIG_EXECUTE_XOR_WRITE */
+#पूर्ण_अगर /* CONFIG_EXECUTE_XOR_WRITE */
 
-	if (part->size == 0U) {
+	अगर (part->आकार == 0U) {
 		LOG_ERR("zero sized partition at %p with base 0x%lx",
 			part, part->start);
-		return false;
+		वापस false;
 	}
 
 	pstart = part->start;
-	pend = part->start + part->size;
+	pend = part->start + part->आकार;
 
-	if (pend <= pstart) {
+	अगर (pend <= pstart) {
 		LOG_ERR("invalid partition %p, wraparound detected. base 0x%lx size %zu",
-			part, part->start, part->size);
-		return false;
+			part, part->start, part->आकार);
+		वापस false;
 	}
 
 	/* Check that this partition doesn't overlap any existing ones already
 	 * in the domain
 	 */
-	for (i = 0; i < domain->num_partitions; i++) {
-		struct k_mem_partition *dpart = &domain->partitions[i];
+	क्रम (i = 0; i < domain->अंक_partitions; i++) {
+		काष्ठा k_mem_partition *dpart = &domain->partitions[i];
 
-		if (dpart->size == 0U) {
+		अगर (dpart->आकार == 0U) {
 			/* Unused slot */
-			continue;
+			जारी;
 		}
 
 		dstart = dpart->start;
-		dend = dstart + dpart->size;
+		dend = dstart + dpart->आकार;
 
-		if (pend > dstart && dend > pstart) {
+		अगर (pend > dstart && dend > pstart) {
 			LOG_ERR("partition %p base %lx (size %zu) overlaps existing base %lx (size %zu)",
-				part, part->start, part->size,
-				dpart->start, dpart->size);
-			return false;
+				part, part->start, part->आकार,
+				dpart->start, dpart->आकार);
+			वापस false;
 		}
 	}
 
-	return true;
+	वापस true;
 }
 
-int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
-		      struct k_mem_partition *parts[])
+पूर्णांक k_mem_domain_init(काष्ठा k_mem_domain *domain, uint8_t अंक_parts,
+		      काष्ठा k_mem_partition *parts[])
 {
-	k_spinlock_key_t key;
-	int ret = 0;
+	k_spinlock_कुंजी_t कुंजी;
+	पूर्णांक ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == शून्य) {
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	CHECKIF(!(num_parts == 0U || parts != NULL)) {
+	CHECKIF(!(अंक_parts == 0U || parts != शून्य)) {
 		LOG_ERR("parts array is NULL and num_parts is nonzero");
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	CHECKIF(!(num_parts <= max_partitions)) {
+	CHECKIF(!(अंक_parts <= max_partitions)) {
 		LOG_ERR("num_parts of %d exceeds maximum allowable partitions (%d)",
-			num_parts, max_partitions);
+			अंक_parts, max_partitions);
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	कुंजी = k_spin_lock(&z_mem_domain_lock);
 
-	domain->num_partitions = 0U;
-	(void)memset(domain->partitions, 0, sizeof(domain->partitions));
+	domain->अंक_partitions = 0U;
+	(व्योम)स_रखो(domain->partitions, 0, माप(domain->partitions));
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+#अगर_घोषित CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_init(&domain->thread_mem_domain_list);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+#पूर्ण_अगर /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_DATA
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_तथ्य
 	ret = arch_mem_domain_init(domain);
 
-	if (ret != 0) {
+	अगर (ret != 0) {
 		LOG_ERR("architecture-specific initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
-		goto unlock_out;
+		जाओ unlock_out;
 	}
-#endif /* CONFIG_ARCH_MEM_DOMAIN_DATA */
-	if (num_parts != 0U) {
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_DATA */
+	अगर (अंक_parts != 0U) {
 		uint32_t i;
 
-		for (i = 0U; i < num_parts; i++) {
+		क्रम (i = 0U; i < अंक_parts; i++) {
 			CHECKIF(!check_add_partition(domain, parts[i])) {
 				LOG_ERR("invalid partition index %d (%p)",
 					i, parts[i]);
 				ret = -EINVAL;
-				goto unlock_out;
+				जाओ unlock_out;
 			}
 
 			domain->partitions[i] = *parts[i];
-			domain->num_partitions++;
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-			int ret2 = arch_mem_domain_partition_add(domain, i);
+			domain->अंक_partitions++;
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+			पूर्णांक ret2 = arch_mem_domain_partition_add(domain, i);
 
 			ARG_UNUSED(ret2);
 			CHECKIF(ret2 != 0) {
 				ret = ret2;
 			}
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 		}
 	}
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 
 out:
-	return ret;
+	वापस ret;
 }
 
-int k_mem_domain_deinit(struct k_mem_domain *domain)
+पूर्णांक k_mem_domain_deinit(काष्ठा k_mem_domain *domain)
 {
-#if defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
-	k_spinlock_key_t key;
-	int ret = 0;
+#अगर defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
+	k_spinlock_कुंजी_t कुंजी;
+	पूर्णांक ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == शून्य) {
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	if (domain == &k_mem_domain_default) {
+	अगर (domain == &k_mem_domain_default) {
 		/* Default memory domain must be there forever. */
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	कुंजी = k_spin_lock(&z_mem_domain_lock);
 
 	/* Must make sure there are no threads associated with this memory
 	 * domain anymore. Or else these threads will run with an invalid
 	 * memory domain.
 	 */
-	if (!sys_dlist_is_empty(&domain->thread_mem_domain_list)) {
+	अगर (!sys_dlist_is_empty(&domain->thread_mem_domain_list)) {
 		ret = -EBUSY;
-		goto unlock_out;
+		जाओ unlock_out;
 	}
 
 	ret = arch_mem_domain_deinit(domain);
-	if (ret != 0) {
+	अगर (ret != 0) {
 		LOG_ERR("architecture-specific de-initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
-		goto unlock_out;
+		जाओ unlock_out;
 	}
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 
 out:
-	return ret;
-#else  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
+	वापस ret;
+#अन्यथा  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
 	ARG_UNUSED(domain);
-	return -ENOTSUP;
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
+	वापस -ENOTSUP;
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
 }
 
-int k_mem_domain_add_partition(struct k_mem_domain *domain,
-			       struct k_mem_partition *part)
+पूर्णांक k_mem_domain_add_partition(काष्ठा k_mem_domain *domain,
+			       काष्ठा k_mem_partition *part)
 {
-	int p_idx;
-	k_spinlock_key_t key;
-	int ret = 0;
+	पूर्णांक p_idx;
+	k_spinlock_कुंजी_t कुंजी;
+	पूर्णांक ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == शून्य) {
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
 	CHECKIF(!check_add_partition(domain, part)) {
 		LOG_ERR("invalid partition %p", part);
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	कुंजी = k_spin_lock(&z_mem_domain_lock);
 
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
+	क्रम (p_idx = 0; p_idx < max_partitions; p_idx++) {
 		/* A zero-sized partition denotes it's a free partition */
-		if (domain->partitions[p_idx].size == 0U) {
-			break;
+		अगर (domain->partitions[p_idx].आकार == 0U) {
+			अवरोध;
 		}
 	}
 
 	CHECKIF(!(p_idx < max_partitions)) {
 		LOG_ERR("no free partition slots available");
 		ret = -ENOSPC;
-		goto unlock_out;
+		जाओ unlock_out;
 	}
 
 	LOG_DBG("add partition base %lx size %zu to domain %p",
-		part->start, part->size, domain);
+		part->start, part->आकार, domain);
 
 	domain->partitions[p_idx].start = part->start;
-	domain->partitions[p_idx].size = part->size;
+	domain->partitions[p_idx].आकार = part->आकार;
 	domain->partitions[p_idx].attr = part->attr;
 
-	domain->num_partitions++;
+	domain->अंक_partitions++;
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_partition_add(domain, p_idx);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 
 out:
-	return ret;
+	वापस ret;
 }
 
-int k_mem_domain_remove_partition(struct k_mem_domain *domain,
-				  struct k_mem_partition *part)
+पूर्णांक k_mem_domain_remove_partition(काष्ठा k_mem_domain *domain,
+				  काष्ठा k_mem_partition *part)
 {
-	int p_idx;
-	k_spinlock_key_t key;
-	int ret = 0;
+	पूर्णांक p_idx;
+	k_spinlock_कुंजी_t कुंजी;
+	पूर्णांक ret = 0;
 
-	CHECKIF((domain == NULL) || (part == NULL)) {
+	CHECKIF((domain == शून्य) || (part == शून्य)) {
 		ret = -EINVAL;
-		goto out;
+		जाओ out;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	कुंजी = k_spin_lock(&z_mem_domain_lock);
 
 	/* find a partition that matches the given start and size */
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
-		if ((domain->partitions[p_idx].start == part->start) &&
-		    (domain->partitions[p_idx].size == part->size)) {
-			break;
+	क्रम (p_idx = 0; p_idx < max_partitions; p_idx++) {
+		अगर ((domain->partitions[p_idx].start == part->start) &&
+		    (domain->partitions[p_idx].आकार == part->आकार)) {
+			अवरोध;
 		}
 	}
 
 	CHECKIF(!(p_idx < max_partitions)) {
 		LOG_ERR("no matching partition found");
 		ret = -ENOENT;
-		goto unlock_out;
+		जाओ unlock_out;
 	}
 
 	LOG_DBG("remove partition base %lx size %zu from domain %p",
-		part->start, part->size, domain);
+		part->start, part->आकार, domain);
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_partition_remove(domain, p_idx);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
 	/* A zero-sized partition denotes it's a free partition */
-	domain->partitions[p_idx].size = 0U;
+	domain->partitions[p_idx].आकार = 0U;
 
-	domain->num_partitions--;
+	domain->अंक_partitions--;
 
 unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 
 out:
-	return ret;
+	वापस ret;
 }
 
-static int add_thread_locked(struct k_mem_domain *domain,
+अटल पूर्णांक add_thread_locked(काष्ठा k_mem_domain *domain,
 			     k_tid_t thread)
 {
-	int ret = 0;
+	पूर्णांक ret = 0;
 
-	__ASSERT_NO_MSG(domain != NULL);
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(domain != शून्य);
+	__ASSERT_NO_MSG(thread != शून्य);
 
 	LOG_DBG("add thread %p to domain %p", thread, domain);
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+#अगर_घोषित CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_append(&domain->thread_mem_domain_list,
-			 &thread->mem_domain_info.thread_mem_domain_node);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+			 &thread->mem_domain_info.thread_mem_domain_गाँठ);
+#पूर्ण_अगर /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
 	thread->mem_domain_info.mem_domain = domain;
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_thread_add(thread);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	वापस ret;
 }
 
-static int remove_thread_locked(struct k_thread *thread)
+अटल पूर्णांक remove_thread_locked(काष्ठा k_thread *thread)
 {
-	int ret = 0;
+	पूर्णांक ret = 0;
 
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(thread != शून्य);
 	LOG_DBG("remove thread %p from memory domain %p",
 		thread, thread->mem_domain_info.mem_domain);
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
-	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_node);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+#अगर_घोषित CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_गाँठ);
+#पूर्ण_अगर /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+#अगर_घोषित CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_thread_remove(thread);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#पूर्ण_अगर /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	वापस ret;
 }
 
 /* Called from thread object initialization */
-void z_mem_domain_init_thread(struct k_thread *thread)
+व्योम z_mem_domain_init_thread(काष्ठा k_thread *thread)
 {
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	पूर्णांक ret;
+	k_spinlock_कुंजी_t कुंजी = k_spin_lock(&z_mem_domain_lock);
 
 	/* New threads inherit memory domain configuration from parent */
 	ret = add_thread_locked(_current->mem_domain_info.mem_domain, thread);
 	__ASSERT_NO_MSG(ret == 0);
 	ARG_UNUSED(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 }
 
 /* Called when thread aborts during teardown tasks. The scheduler's spinlock is held */
-void z_mem_domain_exit_thread(struct k_thread *thread)
+व्योम z_mem_domain_exit_thread(काष्ठा k_thread *thread)
 {
-	int ret;
+	पूर्णांक ret;
 
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	k_spinlock_कुंजी_t कुंजी = k_spin_lock(&z_mem_domain_lock);
 
 	ret = remove_thread_locked(thread);
 	__ASSERT_NO_MSG(ret == 0);
 	ARG_UNUSED(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 }
 
-int k_mem_domain_add_thread(struct k_mem_domain *domain, k_tid_t thread)
+पूर्णांक k_mem_domain_add_thread(काष्ठा k_mem_domain *domain, k_tid_t thread)
 {
-	int ret = 0;
-	k_spinlock_key_t key;
+	पूर्णांक ret = 0;
+	k_spinlock_कुंजी_t कुंजी;
 
-	key = k_spin_lock(&z_mem_domain_lock);
-	if (thread->mem_domain_info.mem_domain != domain) {
+	कुंजी = k_spin_lock(&z_mem_domain_lock);
+	अगर (thread->mem_domain_info.mem_domain != domain) {
 		ret = remove_thread_locked(thread);
 
-		if (ret == 0) {
+		अगर (ret == 0) {
 			ret = add_thread_locked(domain, thread);
 		}
 	}
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_lock, कुंजी);
 
-	return ret;
+	वापस ret;
 }
 
-static void init_mem_domain_module(void)
+अटल व्योम init_mem_domain_module(व्योम)
 {
-	int ret;
+	पूर्णांक ret;
 
 	ARG_UNUSED(ret);
 
@@ -407,14 +407,14 @@ static void init_mem_domain_module(void)
 	 */
 	__ASSERT(max_partitions <= CONFIG_MAX_DOMAIN_PARTITIONS, "");
 
-	ret = k_mem_domain_init(&k_mem_domain_default, 0, NULL);
+	ret = k_mem_domain_init(&k_mem_domain_default, 0, शून्य);
 	__ASSERT(ret == 0, "failed to init default mem domain");
 
-#ifdef Z_LIBC_PARTITION_EXISTS
+#अगर_घोषित Z_LIBC_PARTITION_EXISTS
 	ret = k_mem_domain_add_partition(&k_mem_domain_default,
 					 &z_libc_partition);
 	__ASSERT(ret == 0, "failed to add default libc mem partition");
-#endif /* Z_LIBC_PARTITION_EXISTS */
+#पूर्ण_अगर /* Z_LIBC_PARTITION_EXISTS */
 }
 
 K_KERNEL_INIT_PRE(init_mem_domain_module);

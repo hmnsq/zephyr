@@ -5,106 +5,106 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kthread.h>
+#समावेश <zephyr/kernel.h>
+#समावेश <kthread.h>
 
-struct k_spinlock z_thread_monitor_lock;
+काष्ठा k_spinlock z_thread_monitor_lock;
 /*
  * Remove a thread from the kernel's list of active threads.
  */
-void z_thread_monitor_exit(struct k_thread *thread)
+व्योम z_thread_monitor_exit(काष्ठा k_thread *thread)
 {
-	k_spinlock_key_t key = k_spin_lock(&z_thread_monitor_lock);
+	k_spinlock_कुंजी_t कुंजी = k_spin_lock(&z_thread_monitor_lock);
 
-	if (thread == _kernel.threads) {
-		_kernel.threads = _kernel.threads->next_thread;
-	} else {
-		struct k_thread *prev_thread;
+	अगर (thread == _kernel.threads) {
+		_kernel.threads = _kernel.threads->अग्र_thread;
+	} अन्यथा {
+		काष्ठा k_thread *पूर्व_thread;
 
-		prev_thread = _kernel.threads;
-		while ((prev_thread != NULL) &&
-			(thread != prev_thread->next_thread)) {
-			prev_thread = prev_thread->next_thread;
+		पूर्व_thread = _kernel.threads;
+		जबतक ((पूर्व_thread != शून्य) &&
+			(thread != पूर्व_thread->अग्र_thread)) {
+			पूर्व_thread = पूर्व_thread->अग्र_thread;
 		}
-		if (prev_thread != NULL) {
-			prev_thread->next_thread = thread->next_thread;
+		अगर (पूर्व_thread != शून्य) {
+			पूर्व_thread->अग्र_thread = thread->अग्र_thread;
 		}
 	}
 
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, कुंजी);
 }
 
 /*
  * Helper function to iterate over threads with optional filtering and locking behavior.
  */
-static void thread_foreach_helper(k_thread_user_cb_t user_cb, void *user_data,
-		bool unlocked, bool filter_by_cpu, unsigned int cpu)
+अटल व्योम thread_foreach_helper(k_thread_user_cb_t user_cb, व्योम *user_तथ्य,
+		bool unlocked, bool filter_by_cpu, अचिन्हित पूर्णांक cpu)
 {
-	struct k_thread *thread;
-	k_spinlock_key_t key;
+	काष्ठा k_thread *thread;
+	k_spinlock_कुंजी_t कुंजी;
 
-	__ASSERT(user_cb != NULL, "user_cb can not be NULL");
+	__ASSERT(user_cb != शून्य, "user_cb can not be NULL");
 
-	if (filter_by_cpu) {
-		__ASSERT(cpu < CONFIG_MP_MAX_NUM_CPUS, "cpu filter out of bounds");
+	अगर (filter_by_cpu) {
+		__ASSERT(cpu < CONFIG_MP_MAX_अंक_CPUS, "cpu filter out of bounds");
 	}
 
-	key = k_spin_lock(&z_thread_monitor_lock);
+	कुंजी = k_spin_lock(&z_thread_monitor_lock);
 
-	for (thread = _kernel.threads; thread; thread = thread->next_thread) {
+	क्रम (thread = _kernel.threads; thread; thread = thread->अग्र_thread) {
 		/* cpu is only defined when SMP=y*/
-#ifdef CONFIG_SMP
+#अगर_घोषित CONFIG_SMP
 		bool on_cpu = (thread->base.cpu == cpu);
-#else
+#अन्यथा
 		bool on_cpu = false;
-#endif
-		if (filter_by_cpu && !on_cpu) {
-			continue;
+#पूर्ण_अगर
+		अगर (filter_by_cpu && !on_cpu) {
+			जारी;
 		}
 
-		if (unlocked) {
-			k_spin_unlock(&z_thread_monitor_lock, key);
-			user_cb(thread, user_data);
-			key = k_spin_lock(&z_thread_monitor_lock);
-		} else {
-			user_cb(thread, user_data);
+		अगर (unlocked) {
+			k_spin_unlock(&z_thread_monitor_lock, कुंजी);
+			user_cb(thread, user_तथ्य);
+			कुंजी = k_spin_lock(&z_thread_monitor_lock);
+		} अन्यथा {
+			user_cb(thread, user_तथ्य);
 		}
 	}
 
-	k_spin_unlock(&z_thread_monitor_lock, key);
+	k_spin_unlock(&z_thread_monitor_lock, कुंजी);
 }
 
 /*
  * Public API functions using the helper.
  */
-void k_thread_foreach(k_thread_user_cb_t user_cb, void *user_data)
+व्योम k_thread_foreach(k_thread_user_cb_t user_cb, व्योम *user_तथ्य)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, foreach);
-	thread_foreach_helper(user_cb, user_data, false, false, 0);
+	thread_foreach_helper(user_cb, user_तथ्य, false, false, 0);
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, foreach);
 }
 
-void k_thread_foreach_unlocked(k_thread_user_cb_t user_cb, void *user_data)
+व्योम k_thread_foreach_unlocked(k_thread_user_cb_t user_cb, व्योम *user_तथ्य)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, foreach_unlocked);
-	thread_foreach_helper(user_cb, user_data, true, false, 0);
+	thread_foreach_helper(user_cb, user_तथ्य, true, false, 0);
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, foreach_unlocked);
 }
 
-#ifdef CONFIG_SMP
-void k_thread_foreach_filter_by_cpu(unsigned int cpu, k_thread_user_cb_t user_cb,
-		void *user_data)
+#अगर_घोषित CONFIG_SMP
+व्योम k_thread_foreach_filter_by_cpu(अचिन्हित पूर्णांक cpu, k_thread_user_cb_t user_cb,
+		व्योम *user_तथ्य)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, foreach);
-	thread_foreach_helper(user_cb, user_data, false, true, cpu);
+	thread_foreach_helper(user_cb, user_तथ्य, false, true, cpu);
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, foreach);
 }
 
-void k_thread_foreach_unlocked_filter_by_cpu(unsigned int cpu, k_thread_user_cb_t user_cb,
-		void *user_data)
+व्योम k_thread_foreach_unlocked_filter_by_cpu(अचिन्हित पूर्णांक cpu, k_thread_user_cb_t user_cb,
+		व्योम *user_तथ्य)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, foreach_unlocked);
-	thread_foreach_helper(user_cb, user_data, true, true, cpu);
+	thread_foreach_helper(user_cb, user_तथ्य, true, true, cpu);
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, foreach_unlocked);
 }
-#endif /* CONFIG_SMP */
+#पूर्ण_अगर /* CONFIG_SMP */
