@@ -9,15 +9,15 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
 #define ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
 
-#include <zephyr/kernel_structs.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/rb.h>
-#include <timeout_q.h>
-#include <priority_q.h>
-#include <kspinlock.h>
+#ضمن <zephyr/kernel_structs.h>
+#ضمن <zephyr/sys/dlist.h>
+#ضمن <zephyr/sys/rb.h>
+#ضمن <timeout_q.h>
+#ضمن <priority_q.h>
+#ضمن <kspinlock.h>
 
 #ifdef __cplusplus
-extern "C" {
+خارجي "C" {
 #endif
 
 #ifdef CONFIG_WAITQ_SCALABLE
@@ -38,21 +38,21 @@ extern "C" {
  * able to provide _WAIT_Q_FOR_EACH_SAFE when CONFIG_WAITQ_SCALABLE=y.
  */
 
-static inline void z_waitq_init(_wait_q_t *w)
+ساكن مضمن فراغ z_waitq_init(_wait_q_t *w)
 {
-	w->waitq = (struct _priq_rb) {
+	w->waitq = (بنية _priq_rb) {
 		.tree = {
 			.lessthan_fn = z_priq_rb_lessthan
 		}
 	};
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+ساكن مضمن بنية k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)rb_get_min(&w->waitq.tree);
+	أرجع (بنية k_thread *)rb_get_min(&w->waitq.tree);
 }
 
-#else /* !CONFIG_WAITQ_SCALABLE: */
+#وإلا /* !CONFIG_WAITQ_SCALABLE: */
 
 /**
  * Walk all threads pending on a wait queue.
@@ -85,21 +85,21 @@ static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&((wq)->waitq), thread_ptr, \
 					  loop_ptr, base.qnode_dlist)
 
-static inline void z_waitq_init(_wait_q_t *w)
+ساكن مضمن فراغ z_waitq_init(_wait_q_t *w)
 {
 	sys_dlist_init(&w->waitq);
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+ساكن مضمن بنية k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)sys_dlist_peek_head(&w->waitq);
+	أرجع (بنية k_thread *)sys_dlist_peek_head(&w->waitq);
 }
 
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
-static inline struct k_thread *z_waitq_head(_wait_q_t *w)
+ساكن مضمن بنية k_thread *z_waitq_head(_wait_q_t *w)
 {
-	struct k_thread *thread = NULL;
+	بنية k_thread *thread = عدم;
 
 	/*
 	 * On a single core system, all callers of this function are already
@@ -114,7 +114,7 @@ static inline struct k_thread *z_waitq_head(_wait_q_t *w)
 		thread = z_waitq_head_locked(w);
 	}
 
-	return thread;
+	أرجع thread;
 }
 
 
