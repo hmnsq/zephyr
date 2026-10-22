@@ -25,7 +25,7 @@
 #define _kernel_offset_to_current \
 	(___cpu_t_current_OFFSET)
 
-#if defined(CONFIG_FPU_SHARING)
+#ຖ້າ defined(CONFIG_FPU_SHARING)
 #define _kernel_offset_to_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
 #endif /* CONFIG_FPU_SHARING */

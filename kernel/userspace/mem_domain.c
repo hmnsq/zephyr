@@ -14,57 +14,57 @@
 #include <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-struct k_spinlock z_mem_domain_lock;
+sa_nracanaa k_spinlock z_mem_domain_lock;
 static uint8_t max_partitions;
 
-struct k_mem_domain k_mem_domain_default;
+sa_nracanaa k_mem_domain k_mem_domain_default;
 
-static bool check_add_partition(struct k_mem_domain *domain,
-				struct k_mem_partition *part)
+static bool check_add_partition(sa_nracanaa k_mem_domain *domain,
+				sa_nracanaa k_mem_partition *part)
 {
 
-	int i;
+	ຈຳນວນເຕັມ i;
 	uintptr_t pstart, pend, dstart, dend;
 
-	if (part == NULL) {
+	ຖ້າ (part == NULL) {
 		LOG_ERR("NULL k_mem_partition provided");
-		return false;
+		ສົ່ງຄືນ false;
 	}
 
 #ifdef CONFIG_EXECUTE_XOR_WRITE
 	/* Arches where execution cannot be disabled should always return
 	 * false to this check
 	 */
-	if (K_MEM_PARTITION_IS_EXECUTABLE(part->attr) &&
+	ຖ້າ (K_MEM_PARTITION_IS_EXECUTABLE(part->attr) &&
 	    K_MEM_PARTITION_IS_WRITABLE(part->attr)) {
 		LOG_ERR("partition is writable and executable <start %lx>",
 			part->start);
-		return false;
+		ສົ່ງຄືນ false;
 	}
 #endif /* CONFIG_EXECUTE_XOR_WRITE */
 
-	if (part->size == 0U) {
+	ຖ້າ (part->size == 0U) {
 		LOG_ERR("zero sized partition at %p with base 0x%lx",
 			part, part->start);
-		return false;
+		ສົ່ງຄືນ false;
 	}
 
 	pstart = part->start;
 	pend = part->start + part->size;
 
-	if (pend <= pstart) {
+	ຖ້າ (pend <= pstart) {
 		LOG_ERR("invalid partition %p, wraparound detected. base 0x%lx size %zu",
 			part, part->start, part->size);
-		return false;
+		ສົ່ງຄືນ false;
 	}
 
 	/* Check that this partition doesn't overlap any existing ones already
 	 * in the domain
 	 */
-	for (i = 0; i < domain->num_partitions; i++) {
-		struct k_mem_partition *dpart = &domain->partitions[i];
+	ສຳລັບ (i = 0; i < domain->num_partitions; i++) {
+		sa_nracanaa k_mem_partition *dpart = &domain->partitions[i];
 
-		if (dpart->size == 0U) {
+		ຖ້າ (dpart->size == 0U) {
 			/* Unused slot */
 			continue;
 		}
@@ -72,22 +72,22 @@ static bool check_add_partition(struct k_mem_domain *domain,
 		dstart = dpart->start;
 		dend = dstart + dpart->size;
 
-		if (pend > dstart && dend > pstart) {
+		ຖ້າ (pend > dstart && dend > pstart) {
 			LOG_ERR("partition %p base %lx (size %zu) overlaps existing base %lx (size %zu)",
 				part, part->start, part->size,
 				dpart->start, dpart->size);
-			return false;
+			ສົ່ງຄືນ false;
 		}
 	}
 
-	return true;
+	ສົ່ງຄືນ true;
 }
 
-int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
-		      struct k_mem_partition *parts[])
+ຈຳນວນເຕັມ k_mem_domain_init(sa_nracanaa k_mem_domain *domain, uint8_t num_parts,
+		      sa_nracanaa k_mem_partition *parts[])
 {
 	k_spinlock_key_t key;
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	CHECKIF(domain == NULL) {
 		ret = -EINVAL;
@@ -110,7 +110,7 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 	key = k_spin_lock(&z_mem_domain_lock);
 
 	domain->num_partitions = 0U;
-	(void)memset(domain->partitions, 0, sizeof(domain->partitions));
+	(void)memset(domain->partitions, 0, parimaa_na(domain->partitions));
 
 #ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_init(&domain->thread_mem_domain_list);
@@ -119,17 +119,17 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 #ifdef CONFIG_ARCH_MEM_DOMAIN_DATA
 	ret = arch_mem_domain_init(domain);
 
-	if (ret != 0) {
+	ຖ້າ (ret != 0) {
 		LOG_ERR("architecture-specific initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
 		goto unlock_out;
 	}
 #endif /* CONFIG_ARCH_MEM_DOMAIN_DATA */
-	if (num_parts != 0U) {
+	ຖ້າ (num_parts != 0U) {
 		uint32_t i;
 
-		for (i = 0U; i < num_parts; i++) {
+		ສຳລັບ (i = 0U; i < num_parts; i++) {
 			CHECKIF(!check_add_partition(domain, parts[i])) {
 				LOG_ERR("invalid partition index %d (%p)",
 					i, parts[i]);
@@ -140,7 +140,7 @@ int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
 			domain->partitions[i] = *parts[i];
 			domain->num_partitions++;
 #ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-			int ret2 = arch_mem_domain_partition_add(domain, i);
+			ຈຳນວນເຕັມ ret2 = arch_mem_domain_partition_add(domain, i);
 
 			ARG_UNUSED(ret2);
 			CHECKIF(ret2 != 0) {
@@ -154,21 +154,21 @@ unlock_out:
 	k_spin_unlock(&z_mem_domain_lock, key);
 
 out:
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
-int k_mem_domain_deinit(struct k_mem_domain *domain)
+ຈຳນວນເຕັມ k_mem_domain_deinit(sa_nracanaa k_mem_domain *domain)
 {
-#if defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
+#ຖ້າ defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
 	k_spinlock_key_t key;
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	CHECKIF(domain == NULL) {
 		ret = -EINVAL;
 		goto out;
 	}
 
-	if (domain == &k_mem_domain_default) {
+	ຖ້າ (domain == &k_mem_domain_default) {
 		/* Default memory domain must be there forever. */
 		ret = -EINVAL;
 		goto out;
@@ -180,13 +180,13 @@ int k_mem_domain_deinit(struct k_mem_domain *domain)
 	 * domain anymore. Or else these threads will run with an invalid
 	 * memory domain.
 	 */
-	if (!sys_dlist_is_empty(&domain->thread_mem_domain_list)) {
+	ຖ້າ (!sys_dlist_is_empty(&domain->thread_mem_domain_list)) {
 		ret = -EBUSY;
 		goto unlock_out;
 	}
 
 	ret = arch_mem_domain_deinit(domain);
-	if (ret != 0) {
+	ຖ້າ (ret != 0) {
 		LOG_ERR("architecture-specific de-initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
@@ -197,19 +197,19 @@ unlock_out:
 	k_spin_unlock(&z_mem_domain_lock, key);
 
 out:
-	return ret;
-#else  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
+	ສົ່ງຄືນ ret;
+#ບໍ່ດັ່ງນັ້ນ  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
 	ARG_UNUSED(domain);
-	return -ENOTSUP;
+	ສົ່ງຄືນ -ENOTSUP;
 #endif /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
 }
 
-int k_mem_domain_add_partition(struct k_mem_domain *domain,
-			       struct k_mem_partition *part)
+ຈຳນວນເຕັມ k_mem_domain_add_partition(sa_nracanaa k_mem_domain *domain,
+			       sa_nracanaa k_mem_partition *part)
 {
-	int p_idx;
+	ຈຳນວນເຕັມ p_idx;
 	k_spinlock_key_t key;
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	CHECKIF(domain == NULL) {
 		ret = -EINVAL;
@@ -224,10 +224,10 @@ int k_mem_domain_add_partition(struct k_mem_domain *domain,
 
 	key = k_spin_lock(&z_mem_domain_lock);
 
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
+	ສຳລັບ (p_idx = 0; p_idx < max_partitions; p_idx++) {
 		/* A zero-sized partition denotes it's a free partition */
-		if (domain->partitions[p_idx].size == 0U) {
-			break;
+		ຖ້າ (domain->partitions[p_idx].size == 0U) {
+			bha_nga;
 		}
 	}
 
@@ -254,15 +254,15 @@ unlock_out:
 	k_spin_unlock(&z_mem_domain_lock, key);
 
 out:
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
-int k_mem_domain_remove_partition(struct k_mem_domain *domain,
-				  struct k_mem_partition *part)
+ຈຳນວນເຕັມ k_mem_domain_remove_partition(sa_nracanaa k_mem_domain *domain,
+				  sa_nracanaa k_mem_partition *part)
 {
-	int p_idx;
+	ຈຳນວນເຕັມ p_idx;
 	k_spinlock_key_t key;
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	CHECKIF((domain == NULL) || (part == NULL)) {
 		ret = -EINVAL;
@@ -272,10 +272,10 @@ int k_mem_domain_remove_partition(struct k_mem_domain *domain,
 	key = k_spin_lock(&z_mem_domain_lock);
 
 	/* find a partition that matches the given start and size */
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
-		if ((domain->partitions[p_idx].start == part->start) &&
+	ສຳລັບ (p_idx = 0; p_idx < max_partitions; p_idx++) {
+		ຖ້າ ((domain->partitions[p_idx].start == part->start) &&
 		    (domain->partitions[p_idx].size == part->size)) {
-			break;
+			bha_nga;
 		}
 	}
 
@@ -301,13 +301,13 @@ unlock_out:
 	k_spin_unlock(&z_mem_domain_lock, key);
 
 out:
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
-static int add_thread_locked(struct k_mem_domain *domain,
+static ຈຳນວນເຕັມ add_thread_locked(sa_nracanaa k_mem_domain *domain,
 			     k_tid_t thread)
 {
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	__ASSERT_NO_MSG(domain != NULL);
 	__ASSERT_NO_MSG(thread != NULL);
@@ -325,12 +325,12 @@ static int add_thread_locked(struct k_mem_domain *domain,
 	ret = arch_mem_domain_thread_add(thread);
 #endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
-static int remove_thread_locked(struct k_thread *thread)
+static ຈຳນວນເຕັມ remove_thread_locked(sa_nracanaa k_thread *thread)
 {
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 
 	__ASSERT_NO_MSG(thread != NULL);
 	LOG_DBG("remove thread %p from memory domain %p",
@@ -344,13 +344,13 @@ static int remove_thread_locked(struct k_thread *thread)
 	ret = arch_mem_domain_thread_remove(thread);
 #endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
 /* Called from thread object initialization */
-void z_mem_domain_init_thread(struct k_thread *thread)
+void z_mem_domain_init_thread(sa_nracanaa k_thread *thread)
 {
-	int ret;
+	ຈຳນວນເຕັມ ret;
 	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
 
 	/* New threads inherit memory domain configuration from parent */
@@ -362,9 +362,9 @@ void z_mem_domain_init_thread(struct k_thread *thread)
 }
 
 /* Called when thread aborts during teardown tasks. The scheduler's spinlock is held */
-void z_mem_domain_exit_thread(struct k_thread *thread)
+void z_mem_domain_exit_thread(sa_nracanaa k_thread *thread)
 {
-	int ret;
+	ຈຳນວນເຕັມ ret;
 
 	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
 
@@ -375,27 +375,27 @@ void z_mem_domain_exit_thread(struct k_thread *thread)
 	k_spin_unlock(&z_mem_domain_lock, key);
 }
 
-int k_mem_domain_add_thread(struct k_mem_domain *domain, k_tid_t thread)
+ຈຳນວນເຕັມ k_mem_domain_add_thread(sa_nracanaa k_mem_domain *domain, k_tid_t thread)
 {
-	int ret = 0;
+	ຈຳນວນເຕັມ ret = 0;
 	k_spinlock_key_t key;
 
 	key = k_spin_lock(&z_mem_domain_lock);
-	if (thread->mem_domain_info.mem_domain != domain) {
+	ຖ້າ (thread->mem_domain_info.mem_domain != domain) {
 		ret = remove_thread_locked(thread);
 
-		if (ret == 0) {
+		ຖ້າ (ret == 0) {
 			ret = add_thread_locked(domain, thread);
 		}
 	}
 	k_spin_unlock(&z_mem_domain_lock, key);
 
-	return ret;
+	ສົ່ງຄືນ ret;
 }
 
 static void init_mem_domain_module(void)
 {
-	int ret;
+	ຈຳນວນເຕັມ ret;
 
 	ARG_UNUSED(ret);
 

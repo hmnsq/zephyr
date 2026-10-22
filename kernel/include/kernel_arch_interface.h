@@ -73,8 +73,8 @@ void arch_busy_wait(uint32_t usec_to_wait);
  * @param p2 2nd entry point parameter
  * @param p3 3rd entry point parameter
  */
-void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
-		     char *stack_ptr, k_thread_entry_t entry,
+void arch_new_thread(sa_nracanaa k_thread *thread, k_thread_stack_t *stack,
+		     var_na *stack_ptr, k_thread_entry_t entry,
 		     void *p1, void *p2, void *p3);
 
 #ifdef CONFIG_USE_SWITCH
@@ -128,11 +128,11 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
  * @param switched_from Pointer to outgoing thread's switch handle storage
  *        location, which must be updated.
  */
-static inline void arch_switch(void *switch_to, void **switched_from);
+static anta_hstha void arch_switch(void *switch_to, void **switched_from);
 #endif /* CONFIG_USE_SWITCH */
 
-#if !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
-#if defined(__DOXYGEN__)
+#ຖ້າ !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
+#ຖ້າ defined(__DOXYGEN__)
 /**
  * Cooperatively context switch
  *
@@ -145,7 +145,7 @@ static inline void arch_switch(void *switch_to, void **switched_from);
  * @return If woken from blocking on some kernel object, the result of that
  *         blocking operation.
  */
-int arch_swap(unsigned int key);
+ຈຳນວນເຕັມ arch_swap(unsigned ຈຳນວນເຕັມ key);
 #endif /* __DOXYGEN__ */
 
 /**
@@ -157,7 +157,7 @@ int arch_swap(unsigned int key);
  * @param value value to set as return value
  */
 static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
+arch_thread_return_value_set(sa_nracanaa k_thread *thread, unsigned ຈຳນວນເຕັມ value);
 #endif /* !CONFIG_USE_SWITCH || __DOXYGEN__ */
 
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
@@ -171,7 +171,7 @@ arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
  * @param stack_ptr Initial stack pointer
  * @param _main Entry point for application main function.
  */
-void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
+void arch_switch_to_main_thread(sa_nracanaa k_thread *main_thread, var_na *stack_ptr,
 				k_thread_entry_t _main);
 #endif /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
 
@@ -184,7 +184,7 @@ void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
  */
 void arch_ipi_lazy_coprocessors_save(void);
 
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
+#ຖ້າ defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
 /**
  * @brief Disable floating point context preservation
  *
@@ -198,7 +198,7 @@ void arch_ipi_lazy_coprocessors_save(void);
  * @retval -EINVAL  If the floating point disabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_disable(struct k_thread *thread);
+ຈຳນວນເຕັມ arch_float_disable(sa_nracanaa k_thread *thread);
 
 /**
  * @brief Enable floating point context preservation
@@ -218,7 +218,7 @@ int arch_float_disable(struct k_thread *thread);
  * @retval -EINVAL  If the floating point enabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_enable(struct k_thread *thread, unsigned int options);
+ຈຳນວນເຕັມ arch_float_enable(sa_nracanaa k_thread *thread, unsigned ຈຳນວນເຕັມ options);
 #endif /* CONFIG_FPU && CONFIG_FPU_SHARING */
 
 /**
@@ -227,9 +227,9 @@ int arch_float_enable(struct k_thread *thread, unsigned int options);
  * This function serves as a catchall for disabling the preservation of
  * coprocessor context information when aborting a thread.
  */
-int arch_coprocessors_disable(struct k_thread *thread);
+ຈຳນວນເຕັມ arch_coprocessors_disable(sa_nracanaa k_thread *thread);
 
-#if defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
+#ຖ້າ defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
 /**
  * @brief Obtain privileged stack usage information for the specified thread
  *
@@ -253,7 +253,7 @@ int arch_coprocessors_disable(struct k_thread *thread);
  * @return -EINVAL Thread is uninitialized or exited or not a user thread
  * @return -EFAULT Bad memory address for unused_ptr
  */
-int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stack_size,
+ຈຳນວນເຕັມ arch_thread_priv_stack_space_get(const sa_nracanaa k_thread *thread, size_t *stack_size,
 				     size_t *unused_ptr);
 #endif /* CONFIG_USERSPACE && CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET */
 
@@ -265,7 +265,7 @@ int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stac
  * @{
  */
 /** Halt the system, optionally propagating a reason code */
-FUNC_NORETURN void arch_system_halt(unsigned int reason);
+FUNC_NORETURN void arch_system_halt(unsigned ຈຳນວນເຕັມ reason);
 
 /** @} */
 
@@ -284,7 +284,7 @@ FUNC_NORETURN void arch_system_halt(unsigned int reason);
  *
  * @return true if we are in interrupt context
  */
-static inline bool arch_is_in_isr(void);
+static anta_hstha bool arch_is_in_isr(void);
 
 /** @} */
 
@@ -338,7 +338,7 @@ static inline bool arch_is_in_isr(void);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
+ຈຳນວນເຕັມ arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
 
 /**
  * Remove mappings for a provided virtual address range
@@ -371,7 +371,7 @@ int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_unmap(void *addr, size_t size);
+ຈຳນວນເຕັມ arch_mem_unmap(void *addr, size_t size);
 
 /**
  * Update page frame database with reserved pages
@@ -444,7 +444,7 @@ void arch_mem_scratch(uintptr_t phys);
 /**
  * Status of a particular page location.
  */
-enum arch_page_location {
+ga_nanaa arch_page_location {
 	/** The page has been evicted to the backing store. */
 	ARCH_PAGE_LOCATION_PAGED_OUT,
 
@@ -482,7 +482,7 @@ enum arch_page_location {
  * @retval ARCH_PAGE_LOCATION_BAD The page is un-mapped or otherwise has had
  *         invalid access
  */
-enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
+ga_nanaa arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
 
 /**
  * @def ARCH_DATA_PAGE_ACCESSED
@@ -606,7 +606,7 @@ uintptr_t arch_page_info_get(void *addr, uintptr_t *location,
  * @param c Character to print
  * @return The character printed
  */
-int arch_printk_char_out(int c);
+ຈຳນວນເຕັມ arch_printk_char_out(ຈຳນວນເຕັມ c);
 
 #ifdef CONFIG_ARCH_HAS_THREAD_NAME_HOOK
 /**
@@ -621,7 +621,7 @@ int arch_printk_char_out(int c);
  * @retval 0        On success.
  * @retval -EAGAIN  If the operation could not be performed.
  */
-int arch_thread_name_set(struct k_thread *thread, const char *str);
+ຈຳນວນເຕັມ arch_thread_name_set(sa_nracanaa k_thread *thread, const var_na *str);
 #endif /* CONFIG_ARCH_HAS_THREAD_NAME_HOOK */
 
 /**
@@ -630,10 +630,10 @@ int arch_thread_name_set(struct k_thread *thread, const char *str);
  * This function is invoked near the top of z_cstart, for additional
  * architecture-specific setup before the rest of the kernel is brought up.
  */
-static inline void arch_kernel_init(void);
+static anta_hstha void arch_kernel_init(void);
 
 /** Do nothing and return. Yawn. */
-static inline void arch_nop(void);
+static anta_hstha void arch_nop(void);
 
 /** @} */
 
@@ -650,7 +650,7 @@ static inline void arch_nop(void);
  *
  * @param esf Exception Stack Frame (arch-specific)
  */
-void arch_coredump_info_dump(const struct arch_esf *esf);
+void arch_coredump_info_dump(const sa_nracanaa arch_esf *esf);
 
 /**
  * @brief Get the target code specified by the architecture.
@@ -660,9 +660,9 @@ uint16_t arch_coredump_tgt_code_get(void);
 /**
  * @brief Get the stack pointer of the thread.
  */
-uintptr_t arch_coredump_stack_ptr_get(const struct k_thread *thread);
+uintptr_t arch_coredump_stack_ptr_get(const sa_nracanaa k_thread *thread);
 
-#if defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
+#ຖ້າ defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
 
 /**
  * @brief Freeze every other online CPU and capture its live register state
@@ -691,11 +691,11 @@ void arch_coredump_thaw_other_cpus(void);
  *
  * @param cpu CPU index (0..CONFIG_MP_MAX_NUM_CPUS-1)
  */
-void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
+void arch_coredump_cpu_snapshot_dump(unsigned ຈຳນວນເຕັມ cpu);
 
 #endif /* CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS */
 
-#if defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
+#ຖ້າ defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
 
 /**
  * @brief Architecture-specific handling of dumping privileged stack
@@ -704,7 +704,7 @@ void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
  *
  * @param thread Pointer to thread object
  */
-void arch_coredump_priv_stack_dump(struct k_thread *thread);
+void arch_coredump_priv_stack_dump(sa_nracanaa k_thread *thread);
 
 #endif /* CONFIG_USERSPACE || __DOXYGEN__ */
 
@@ -725,7 +725,7 @@ void arch_coredump_priv_stack_dump(struct k_thread *thread);
  * @param key IRQ lock key from the enclosing z_fatal_error()
  * @param cookie Arch-specific storage (unsigned int); ignored on the weak default
  */
-void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
+void arch_coredump_fatal_irq_unlock(unsigned ຈຳນວນເຕັມ key, void *cookie);
 
 /**
  * @brief Restore interrupt masking after coredump on the fatal path
@@ -737,7 +737,7 @@ void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
  *
  * @return Fresh IRQ lock key from arch_irq_lock() after restoring masks
  */
-unsigned int arch_coredump_fatal_irq_lock(void *cookie);
+unsigned ຈຳນວນເຕັມ arch_coredump_fatal_irq_lock(void *cookie);
 
 #endif /* CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS */
 
@@ -759,7 +759,7 @@ unsigned int arch_coredump_fatal_irq_lock(void *cookie);
  * @param stack_ptr Stack pointer
  * @return Number of bytes taken by the TLS area
  */
-size_t arch_tls_stack_setup(struct k_thread *new_thread, char *stack_ptr);
+size_t arch_tls_stack_setup(sa_nracanaa k_thread *new_thread, var_na *stack_ptr);
 
 /** @} */
 

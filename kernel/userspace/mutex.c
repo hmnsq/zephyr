@@ -8,66 +8,66 @@
 #include <zephyr/sys/mutex.h>
 #include <zephyr/internal/syscall_handler.h>
 
-static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
+static sa_nracanaa k_mutex *get_k_mutex(sa_nracanaa sys_mutex *mutex)
 {
-	struct k_object *obj;
+	sa_nracanaa k_object *obj;
 
 	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	ຖ້າ ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		ສົ່ງຄືນ NULL;
 	}
 
-	return obj->data.mutex;
+	ສົ່ງຄືນ obj->data.mutex;
 }
 
-static bool check_sys_mutex_addr(struct sys_mutex *addr)
+static bool check_sys_mutex_addr(sa_nracanaa sys_mutex *addr)
 {
 	/* sys_mutex memory is never touched, just used to lookup the
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	ສົ່ງຄືນ K_SYSCALL_MEMORY_WRITE(addr, parimaa_na(sa_nracanaa sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+ຈຳນວນເຕັມ z_impl_z_sys_mutex_kernel_lock(sa_nracanaa sys_mutex *mutex, k_timeout_t timeout)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	sa_nracanaa k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	ຖ້າ (kernel_mutex == NULL) {
+		ສົ່ງຄືນ -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	ສົ່ງຄືນ k_mutex_lock(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+static anta_hstha ຈຳນວນເຕັມ z_vrfy_z_sys_mutex_kernel_lock(sa_nracanaa sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ຖ້າ (check_sys_mutex_addr(mutex)) {
+		ສົ່ງຄືນ -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	ສົ່ງຄືນ z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+ຈຳນວນເຕັມ z_impl_z_sys_mutex_kernel_unlock(sa_nracanaa sys_mutex *mutex)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	sa_nracanaa k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	ຖ້າ ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
+		ສົ່ງຄືນ -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	ສົ່ງຄືນ k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+static anta_hstha ຈຳນວນເຕັມ z_vrfy_z_sys_mutex_kernel_unlock(sa_nracanaa sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ຖ້າ (check_sys_mutex_addr(mutex)) {
+		ສົ່ງຄືນ -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	ສົ່ງຄືນ z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
