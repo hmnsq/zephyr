@@ -1,0 +1,489 @@
+# What is still missing
+
+76 languages. Each line says in how many languages it is missing.
+
+## Files in languages BURP cannot read yet
+
+
+## Keywords with no word in a language's table
+
+- guru:size_t: 71
+- guru:offsetof: 71
+- guru:realloc: 71
+- guru:ULONG_MAX: 71
+- guru:close: 71
+- guru:remove: 71
+- guru:strncpy: 71
+- guru:abort: 71
+- guru:ptrdiff_t: 71
+- guru:memset: 70
+- guru:wait: 70
+- guru:strcmp: 70
+- guru:#endif: 66
+- guru:#ifdef: 66
+- guru:#define: 66
+- guru:#ifndef: 66
+- guru:#error: 66
+- guru:#undef: 66
+- guru:unsigned: 62
+- guru:memcpy: 62
+- guru:long: 62
+- guru:INT_MAX: 62
+- guru:calloc: 62
+- guru:strlen: 62
+- guru:main: 54
+- guru:void: 25
+- guru:static: 25
+- guru:NULL: 25
+- guru:const: 25
+- guru:goto: 25
+- guru:extern: 25
+- guru:continue: 25
+- guru:do: 25
+- guru:switch: 25
+- guru:default: 25
+- guru:#elif: 25
+- guru:typedef: 25
+- guru:free: 25
+- guru:write: 25
+- guru:read: 25
+- guru:for: 9
+- guru:struct: 9
+- guru:inline: 9
+- guru:break: 9
+- guru:char: 9
+- guru:sizeof: 9
+- guru:case: 9
+- guru:enum: 9
+- guru:volatile: 9
+- guru:signal: 9
+- guru:union: 9
+- guru:if: 1
+- guru:return: 1
+- guru:int: 1
+- guru:else: 1
+- guru:#else: 1
+- guru:#if: 1
+- guru:while: 1
+
+## Names with no dictionary entry (the most common first)
+
+- `thread`: 76
+- `ret`: 76
+- `k_thread`: 76
+- `timeout`: 76
+- `i`: 76
+- `work`: 76
+- `k_spin_unlock`: 76
+- `msgq`: 76
+- `t`: 76
+- `_current`: 76
+- `flags`: 76
+- `pf`: 76
+- `event`: 76
+- `cpu`: 76
+- `defined`: 76
+- `_timeout`: 76
+- `K_OOPS`: 76
+- `addr`: 76
+- `slab`: 76
+- `new_thread`: 76
+- `stats`: 76
+- `timer`: 76
+- `mutex`: 76
+- `events`: 76
+- `pipe`: 76
+- `ko`: 76
+- `type`: 76
+- `obj_core`: 76
+- `prio`: 76
+- `CONFIG_USERSPACE`: 76
+- `wait_q`: 76
+- `sem`: 76
+- `dticks`: 76
+- `k_timeout_t`: 76
+- `K_SYSCALL_OBJ`: 76
+- `_kernel`: 76
+- `wheel`: 76
+- `id`: 76
+- `rc`: 76
+- `CONFIG_SMP`: 76
+- `usage`: 76
+- `phys`: 76
+- `EINVAL`: 76
+- `k_work`: 76
+- `rv`: 76
+- `dwork`: 76
+- `IS_ENABLED`: 76
+- `k_spinlock`: 76
+- `pq`: 76
+- `obj`: 76
+- `poller`: 76
+- `dyn`: 76
+- `dev`: 76
+- `ALWAYS_INLINE`: 76
+- `k_ticks_t`: 76
+- `name`: 76
+- `_current_cpu`: 76
+- `info`: 76
+- `domain`: 76
+- `k_msgq`: 76
+- `LOG_ERR`: 76
+- `cpu_id`: 76
+- `k_obj_core`: 76
+- `k_tid_t`: 76
+- `state`: 76
+- `idx`: 76
+- `options`: 76
+- `pos`: 76
+- `mbox`: 76
+- `otype`: 76
+- `resched`: 76
+- `k_object`: 76
+- `K_TIMEOUT_EQ`: 76
+- `K_FOREVER`: 76
+- `buf`: 76
+- `k_timer`: 76
+- `thread_state`: 76
+- `dst`: 76
+- `ticks`: 76
+- `ptr`: 76
+- `handler`: 76
+- `K_NO_WAIT`: 76
+- `align`: 76
+- `len`: 76
+- `EAGAIN`: 76
+- `_wait_q_t`: 76
+- `n`: 76
+- `condvar`: 76
+- `part`: 76
+- `cpus`: 76
+- `dirty`: 76
+- `sig`: 76
+- `k_work_q`: 76
+- `k_mutex`: 76
+- `k_event`: 76
+- `current`: 76
+- `delay`: 76
+- `geo`: 76
+- `now`: 76
+- `location`: 76
+- `CHECKIF`: 76
+- `k_pipe`: 76
+- `pending`: 76
+- `z_reschedule`: 76
+- `K_OBJ_THREAD`: 76
+- `core`: 76
+- `desc`: 76
+- `curr_tick`: 76
+- `unlikely`: 76
+- `device`: 76
+- `LOG_DBG`: 76
+- `k_poll_event`: 76
+- `reset`: 76
+- `hist`: 76
+- `abs_ticks`: 76
+- `mem`: 76
+- `k_mem_slab`: 76
+- `range`: 76
+- `k_work_poll`: 76
+- `sync`: 76
+- `K_OBJ_CORE`: 76
+- `old_thread`: 76
+- `p2`: 76
+- `p3`: 76
+- `forward`: 76
+- `k_sem`: 76
+- `z_waitq_init`: 76
+- `sys_dlist_t`: 76
+- `dest_addr`: 76
+- `func`: 76
+- `work_q`: 76
+- `cfg`: 76
+- `z_pend_curr`: 76
+- `k_free`: 76
+- `CONFIG_MULTITHREADING`: 76
+- `qnode_dlist`: 76
+- `fn`: 76
+- `bounds`: 76
+- `k_mbox`: 76
+- `k_obj_type`: 76
+- `futex`: 76
+- `kobj`: 76
+- `flag_test`: 76
+- `owner`: 76
+- `src`: 76
+- `object`: 76
+- `flusher`: 76
+- `STRUCT_SECTION_FOREACH`: 76
+- `reason`: 76
+- `p1`: 76
+- `x`: 76
+- `paging_stats`: 76
+- `registry`: 76
+- `need_resched`: 76
+- `written`: 76
+- `gap`: 76
+- `p_idx`: 76
+- `k_condvar`: 76
+- `EBUSY`: 76
+- `sys_dlist_append`: 76
+- `track_usage`: 76
+- `twork`: 76
+- `arg`: 76
+- `usage0`: 76
+- `Z_SCHED_SPINLOCK`: 76
+- `waitq`: 76
+- `dummy_thread`: 76
+- `atomic_t`: 76
+- `CONFIG_DEMAND_PAGING_ALLOW_IRQ`: 76
+- `locked`: 76
+- `r`: 76
+- `list`: 76
+- `dt`: 76
+- `dyn_obj`: 76
+- `k_work_delayable`: 76
+- `k_object_init`: 76
+- `ENOTSUP`: 76
+- `ready_q`: 76
+- `va_and_flags`: 76
+- `sys_dlist_init`: 76
+- `sys_dlist_remove`: 76
+- `poll_events`: 76
+- `pending_thread`: 76
+- `is_polling`: 76
+- `actual_len`: 76
+- `k_obj_core_init_and_link`: 76
+- `deadline`: 76
+- `z_try_abort_thread_timeout`: 76
+- `z_sched_spinlock_unlock`: 76
+- `_cpu`: 76
+- `val`: 76
+- `k_panic`: 76
+- `new_owner`: 76
+- `l`: 76
+- `woken`: 76
+- `tid`: 76
+- `k_mem_paging_histogram_t`: 76
+- `switch_handle`: 76
+- `z_is_inactive_timeout`: 76
+- `bitmask`: 76
+- `K_TICKS_FOREVER`: 76
+- `sending_thread`: 76
+- `faulting_thread`: 76
+- `max_msgs`: 76
+- `delta`: 76
+- `update`: 76
+- `perms`: 76
+- `z_sched_wake`: 76
+- `context`: 76
+- `esf`: 76
+- `CONFIG_USE_SWITCH`: 76
+- `curr`: 76
+- `unpend_thread_no_timeout`: 76
+- `_sched_spinlock`: 76
+- `sys_dnode_t`: 76
+- `likely`: 76
+- `get`: 76
+- `ENOMEM`: 76
+- `region`: 76
+- `thread_cpu`: 76
+- `thread_id`: 76
+- `period`: 76
+- `k_objects`: 76
+- `tidx`: 76
+- `flagp`: 76
+- `CONFIG_SYS_CLOCK_EXISTS`: 76
+- `z_is_thread_queued`: 76
+- `CONFIG_KERNEL_LOG_LEVEL`: 76
+- `str`: 76
+- `z_sched_ready_locked`: 76
+- `K_SPINLOCK`: 76
+- `CONFIG_DEMAND_PAGING`: 76
+- `async`: 76
+- `free_list`: 76
+- `vaddr_u8`: 76
+- `write_ptr`: 76
+- `K_OBJ_MSGQ`: 76
+- `new_prio`: 76
+- `statics`: 76
+- `off`: 76
+- `user_cb`: 76
+- `soon`: 76
+- `ticks_elapsed`: 76
+- `tick`: 76
+- `obs`: 76
+- `init`: 76
+- `os`: 76
+- `CONFIG_WAITQ_SCALABLE`: 76
+- `virt`: 76
+- `arch_mem_unmap`: 76
+- `pended_on`: 76
+- `z_try_abort_timeout`: 76
+- `CONFIG_KERNEL_COHERENCE`: 76
+- `sys_cache_is_mem_coherent`: 76
+- `alloc`: 76
+- `printk`: 76
+- `sz`: 76
+- `aligned_phys`: 76
+- `chain_owner`: 76
+- `elem`: 76
+- `events_registered`: 76
+- `retval`: 76
+- `anode`: 76
+- `mapped`: 76
+- `CONFIG_SCHED_THREAD_USAGE_ANALYSIS`: 76
+- `timepoint`: 76
+- `usage_now`: 76
+- `partitions`: 76
+- `need_flush`: 76
+- `K_OBJ_TYPE_DEFINE`: 76
+- `LOG_MODULE_DECLARE`: 76
+- `_THREAD_DEAD`: 76
+- `arch_irq_unlock`: 76
+- `cache`: 76
+- `flag_ipi`: 76
+- `CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM`: 76
+- `dest`: 76
+- `BUILD_ASSERT`: 76
+- `prio1`: 76
+- `prio2`: 76
+- `wq`: 76
+- `w`: 76
+- `p`: 76
+- `COLOR`: 76
+- `virt_region_bitmap`: 76
+- `Z_MUTEX_PI_ENABLED`: 76
+- `mutex_pended_on`: 76
+- `reader`: 76
+- `k_poll_api`: 76
+- `signaled`: 76
+- `update_cache`: 76
+- `SS_ENT`: 76
+- `sifted`: 76
+- `duration`: 76
+- `queuep`: 76
+- `canceller`: 76
+- `hz`: 76
+- `INT32_MAX`: 76
+- `_THREAD_DUMMY`: 76
+- `K_OBJ_EVENT`: 76
+
+## Comments with no translation
+
+- CONFIG_USERSPACE: 76
+- CONFIG_SMP: 76
+- CONFIG_DEMAND_PAGING_ALLOW_IRQ: 76
+- CONFIG_SCHED_THREAD_USAGE_ANALYSIS: 76
+- CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM: 76
+- CONFIG_KERNEL_COHERENCE: 76
+- !CONFIG_WAITQ_SCALABLE: 76
+- CONFIG_SYS_CLOCK_EXISTS: 76
+- LCOV_EXCL_LINE: 76
+- CONFIG_MULTITHREADING: 76
+- CONFIG_DEMAND_PAGING: 76
+- CONFIG_SCHED_CPU_MASK: 76
+- CONFIG_THREAD_NAME: 76
+- CONFIG_POLL: 76
+- CONFIG_THREAD_STACK_MEM_MAPPED: 76
+- LCOV_EXCL_STOP: 76
+- CONFIG_OBJ_CORE_STATS_SYSTEM: 76
+- CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS: 76
+- CONFIG_DYNAMIC_OBJECTS: 76
+- CONFIG_OBJ_CORE_STATS_THREAD: 76
+- CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION: 76
+- CONFIG_SCHED_THREAD_USAGE_ALL: 76
+- private kernel APIs: 76
+- CONFIG_WAITQ_SCALABLE: 76
+- LCOV_EXCL_START: 76
+- CONFIG_STACK_SENTINEL: 76
+- CONFIG_USE_SWITCH: 76
+- CONFIG_GEN_PRIV_STACKS: 76
+- CONFIG_SCHED_CPU_MASK_PIN_ONLY: 76
+- CONFIG_THREAD_LOCAL_STORAGE: 76
+- CONFIG_TIMESLICING: 76
+- CONFIG_THREAD_MONITOR: 76
+- The object type is not configured for this operation: 76
+- must be called with interrupts locked: 76
+- CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API: 76
+- defined(CONFIG_WORKQUEUE_WORK_TIMEOUT): 76
+- CONFIG_STACK_POINTER_RANDOM: 76
+- CONFIG_THREAD_ABORT_NEED_CLEANUP: 76
+- CONFIG_NUM_METAIRQ_PRIORITIES > 0: 76
+- CONFIG_DEMAND_PAGING_THREAD_STATS: 76
+- CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE: 76
+- CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION: 76
+- CONFIG_FPU && CONFIG_FPU_SHARING: 76
+- CONFIG_PM: 76
+- CONFIG_THREAD_STACK_INFO: 76
+- CONFIG_MMU: 76
+- CONFIG_SCHED_THREAD_USAGE: 76
+- CONFIG_STACK_CANARIES_TLS: 76
+- CONFIG_NUM_MBOX_ASYNC_MSGS: 76
+- CONFIG_ASSERT: 76
+- CONFIG_LINKER_USE_BOOT_SECTION: 76
+- CONFIG_DEMAND_PAGING_STATS: 76
+- CONFIG_OBJ_CORE_MSGQ: 76
+- don't wait for a message to become available: 76
+- CONFIG_OBJ_CORE_STATS: 76
+- This kernel object is not configured for statistics: 76
+- Copy statistics: 76
+- CONFIG_OBJ_CORE_THREAD: 76
+- CONFIG_SCHED_IPI_SUPPORTED: 76
+- CONFIG_OBJ_CORE_STACK: 76
+- CONFIG_LOG: 76
+- CONFIG_OBJ_CORE_TIMER: 76
+- CONFIG_MEM_DOMAIN_HAS_THREAD_LIST: 76
+- Frequency changed while sampling; retry.: 76
+- CONFIG_OBJ_CORE_CONDVAR: 76
+- wake up any threads that are waiting to write: 76
+- CONFIG_DEVICE_DEPS: 76
+- CONFIG_OBJ_CORE_EVENT: 76
+- * Note: z_sched_wake_thread_locked() is safe
+	 * to call here because this walk_op callback
+	 * is i: 76
+- * Note: z_sched_wake_thread_locked() is safe
+		 * to call here because this walk_op callback
+		 * is: 76
+- CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN: 76
+- CONFIG_ARCH_HAS_THREAD_NAME_HOOK: 76
+- _ASMLANGUAGE: 76
+- CONFIG_INSTRUMENT_THREAD_SWITCHING: 76
+- *
+ * Increment the counter in the timing histogram.
+ *
+ * @param hist The timing histogram to be upd: 76
+- CONFIG_FPU_SHARING: 76
+- CONFIG_SPIN_VALIDATE: 76
+- !CONFIG_USE_SWITCH: 76
+- main: 76
+- CONFIG_SCHED_DEADLINE: 76
+- *
+ * Walk all threads pending on a wait queue.
+ *
+ * @param wq Wait queue
+ * @param thread_ptr Threa: 76
+- CONFIG_OBJ_CORE_SYSTEM: 76
+- CONFIG_REQUIRES_STACK_CANARIES: 76
+- A power of 2 as well as 0 is OK: 76
+- CONFIG_OBJ_CORE_MAILBOX: 76
+- No match. Proceed to next in wait queue: 76
+- Final step in the walk. Remove thread from wait queue.: 76
+- CONFIG_OBJ_CORE_STATS_MEM_SLAB: 76
+- CONFIG_OBJ_CORE_MEM_SLAB: 76
+- CONFIG_OBJ_CORE_EVICT_ON_FREE: 76
+- K_HEAP_MEM_POOL_SIZE: 76
+- !CONFIG_KERNEL_DIRECT_MAP: 76
+- Cannot fully recover from mapping
+						 * failure. We cannot free the allocated
+						 * virtual me: 76
+- Fail to unmap. Must bail without releasing any resources
+			 * as some pages are still be mapped.: 76
+- CONFIG_OBJ_CORE_MUTEX: 76
+- * Either the size of the stats buffer is wrong or
+		 * the kernel object was not registered for stat: 76
+- Copy histogram: 76
+- CONFIG_OBJ_CORE_PIPE: 76
+- nothing to do: 76
+- Claim the wake before aborting so a racing in-flight
+		 * handler observes is_polling=false and bail: 76
