@@ -9,15 +9,15 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
 #define ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
 
-#include <zephyr/kernel_structs.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/rb.h>
-#include <timeout_q.h>
-#include <priority_q.h>
-#include <kspinlock.h>
+#അന്തര്ഭാവ <zephyr/kernel_structs.h>
+#അന്തര്ഭാവ <zephyr/sys/dlist.h>
+#അന്തര്ഭാവ <zephyr/sys/rb.h>
+#അന്തര്ഭാവ <timeout_q.h>
+#അന്തര്ഭാവ <priority_q.h>
+#അന്തര്ഭാവ <kspinlock.h>
 
 #ifdef __cplusplus
-extern "C" {
+ബാഹ്യ "C" {
 #endif
 
 #ifdef CONFIG_WAITQ_SCALABLE
@@ -31,28 +31,28 @@ extern "C" {
  * @warning Do not remove thread from wait queue when using this macro.
  */
 #define _WAIT_Q_FOR_EACH(wq, thread_ptr) \
-	RB_FOR_EACH_CONTAINER(&(wq)->waitq.tree, thread_ptr, base.qnode_rb)
+	RB_FOR_EACH_CONTAINER(&(wq)->waitq.വൃക്ഷം, thread_ptr, base.qnode_rb)
 
 /*
  * RB_FOR_EACH_SAFE() does not (and cannot) exist so we are not
  * able to provide _WAIT_Q_FOR_EACH_SAFE when CONFIG_WAITQ_SCALABLE=y.
  */
 
-static inline void z_waitq_init(_wait_q_t *w)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_waitq_init(_wait_q_t *w)
 {
-	w->waitq = (struct _priq_rb) {
-		.tree = {
+	w->waitq = (ഘടന _priq_rb) {
+		.വൃക്ഷം = {
 			.lessthan_fn = z_priq_rb_lessthan
 		}
 	};
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+സ്ഥിതം വരിയിൽ ഘടന k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)rb_get_min(&w->waitq.tree);
+	തിരികെ (ഘടന k_thread *)rb_get_min(&w->waitq.വൃക്ഷം);
 }
 
-#else /* !CONFIG_WAITQ_SCALABLE: */
+#അല്ലെങ്കിൽ /* !CONFIG_WAITQ_SCALABLE: */
 
 /**
  * Walk all threads pending on a wait queue.
@@ -85,21 +85,21 @@ static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&((wq)->waitq), thread_ptr, \
 					  loop_ptr, base.qnode_dlist)
 
-static inline void z_waitq_init(_wait_q_t *w)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_waitq_init(_wait_q_t *w)
 {
 	sys_dlist_init(&w->waitq);
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+സ്ഥിതം വരിയിൽ ഘടന k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)sys_dlist_peek_head(&w->waitq);
+	തിരികെ (ഘടന k_thread *)sys_dlist_peek_head(&w->waitq);
 }
 
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
-static inline struct k_thread *z_waitq_head(_wait_q_t *w)
+സ്ഥിതം വരിയിൽ ഘടന k_thread *z_waitq_head(_wait_q_t *w)
 {
-	struct k_thread *thread = NULL;
+	ഘടന k_thread *thread = ശൂന്യ;
 
 	/*
 	 * On a single core system, all callers of this function are already
@@ -114,7 +114,7 @@ static inline struct k_thread *z_waitq_head(_wait_q_t *w)
 		thread = z_waitq_head_locked(w);
 	}
 
-	return thread;
+	തിരികെ thread;
 }
 
 

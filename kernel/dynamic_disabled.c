@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#അന്തര്ഭാവ <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/kernel/thread_stack.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_അട്ടി_t *z_impl_k_thread_അട്ടി_alloc(size_t size, പൂർണ്ണസംഖ്യ flags)
 {
 	ARG_UNUSED(size);
 	ARG_UNUSED(flags);
 
-	return NULL;
+	തിരികെ ശൂന്യ;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+സ്ഥിതം വരിയിൽ k_thread_അട്ടി_t *z_vrfy_k_thread_അട്ടി_alloc(size_t size, പൂർണ്ണസംഖ്യ flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	തിരികെ z_impl_k_thread_അട്ടി_alloc(size, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+പൂർണ്ണസംഖ്യ z_impl_k_thread_അട്ടി_free(k_thread_അട്ടി_t *അട്ടി)
 {
-	ARG_UNUSED(stack);
+	ARG_UNUSED(അട്ടി);
 
-	return -ENOSYS;
+	തിരികെ -ENOSYS;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_thread_അട്ടി_free(k_thread_അട്ടി_t *അട്ടി)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	തിരികെ z_impl_k_thread_അട്ടി_free(അട്ടി);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_thread_stack_free_mrsh.c>
 #endif /* CONFIG_USERSPACE */

@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/iterable_sections.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/init.h>
+#അന്തര്ഭാവ <zephyr/linker/linker-defs.h>
+#അന്തര്ഭാവ <zephyr/sys/iterable_sections.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <wait_q.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+പൂർണ്ണസംഖ്യ k_heap_array_get(ഘടന k_heap **heap)
 {
-	int num;
+	പൂർണ്ണസംഖ്യ അക്കം;
 
 	/* Pointer to the start of the heap array */
 	STRUCT_SECTION_GET(k_heap, 0, heap);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_എണ്ണം(k_heap, &അക്കം);
+	തിരികെ അക്കം;
 }
 
-void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
+ശൂന്യം k_heap_init(ഘടന k_heap *heap, ശൂന്യം *mem, size_t bytes)
 {
 	z_waitq_init(&heap->wait_q);
-	heap->lock = (struct k_spinlock) {};
+	heap->lock = (ഘടന k_spinlock) {};
 	sys_heap_init(&heap->heap, mem, bytes);
 
 	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
 }
 
-static int statics_init(void)
+സ്ഥിതം പൂർണ്ണസംഖ്യ statics_init(ശൂന്യം)
 {
 	STRUCT_SECTION_FOREACH(k_heap, heap) {
 		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
 	}
-	return 0;
+	തിരികെ 0;
 }
 
 /*
@@ -48,61 +48,61 @@ static int statics_init(void)
  */
 SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_OBJECTS);
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+തരനിർവചനം ശൂന്യം * (sys_heap_allocator_t)(ഘടന sys_heap *heap, size_t align, size_t bytes);
 
-static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes,
+സ്ഥിതം ശൂന്യം *z_heap_alloc_helper(ഘടന k_heap *heap, size_t align, size_t bytes,
 				 k_timeout_t timeout,
 				 sys_heap_allocator_t *sys_heap_allocator)
 {
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	ശൂന്യം *ret = ശൂന്യ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&heap->lock);
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
+	ആകുമ്പോൾ (ret == ശൂന്യ) {
 		ret = sys_heap_allocator(&heap->heap, align, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		എങ്കിൽ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ശൂന്യ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			നിർത്തുക;
 		}
 
-		if (!blocked_alloc) {
+		എങ്കിൽ (!blocked_alloc) {
 			blocked_alloc = true;
 
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+		} അല്ലെങ്കിൽ {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(ശൂന്യം) z_pend_curr(&heap->lock, താക്കോൽ, &heap->wait_q, timeout);
+		താക്കോൽ = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
-	return ret;
+	k_spin_unlock(&heap->lock, താക്കോൽ);
+	തിരികെ ret;
 }
 
-void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
+ശൂന്യം *k_heap_alloc(ഘടന k_heap *heap, size_t bytes, k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, alloc, heap, timeout);
 
-	void *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
+	ശൂന്യം *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
 					sys_heap_noalign_alloc);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
+ശൂന്യം *k_heap_aligned_alloc(ഘടന k_heap *heap, size_t align, size_t bytes,
 			k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, aligned_alloc, heap, timeout);
@@ -111,7 +111,7 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	__ASSERT((align & (align - 1)) == 0,
 		 "align must be a power of 2");
 
-	void *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
+	ശൂന്യം *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
 					sys_heap_aligned_alloc);
 
 	/*
@@ -125,69 +125,69 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+ശൂന്യം *k_heap_calloc(ഘടന k_heap *heap, size_t അക്കം, size_t size, k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
 
-	void *ret = NULL;
+	ശൂന്യം *ret = ശൂന്യ;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
+	എങ്കിൽ (!size_mul_overflow(അക്കം, size, &bounds)) {
 		ret = k_heap_alloc(heap, bounds, timeout);
 	}
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	എങ്കിൽ (ret != ശൂന്യ) {
+		(ശൂന്യം)memset(ret, 0, bounds);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
+ശൂന്യം *k_heap_realloc(ഘടന k_heap *heap, ശൂന്യം *ptr, size_t bytes, k_timeout_t timeout)
 {
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	ശൂന്യം *ret = ശൂന്യ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&heap->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
+	ആകുമ്പോൾ (ret == ശൂന്യ) {
 		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		എങ്കിൽ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ശൂന്യ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			നിർത്തുക;
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(ശൂന്യം) z_pend_curr(&heap->lock, താക്കോൽ, &heap->wait_q, timeout);
+		താക്കോൽ = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-void k_heap_free(struct k_heap *heap, void *mem)
+ശൂന്യം k_heap_free(ഘടന k_heap *heap, ശൂന്യം *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&heap->lock);
 
 	sys_heap_free(&heap->heap, mem);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
-	} else {
-		k_spin_unlock(&heap->lock, key);
+	SYS_PORT_TRACING_OBJ_FUNC(k_heap, സ്വതന്ത്രം, heap);
+	എങ്കിൽ (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
+		z_reschedule(&heap->lock, താക്കോൽ);
+	} അല്ലെങ്കിൽ {
+		k_spin_unlock(&heap->lock, താക്കോൽ);
 	}
 }

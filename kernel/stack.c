@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/sys/math_extras.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#അന്തര്ഭാവ <zephyr/toolchain.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <scheduler.h>
+#അന്തര്ഭാവ <wait_q.h>
+#അന്തര്ഭാവ <zephyr/init.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <kernel_internal.h>
+#അന്തര്ഭാവ <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
+#ifdef CONFIG_OBJ_CORE_അട്ടി
+K_OBJ_TYPE_DEFINE(obj_type_അട്ടി, k_അട്ടി, K_OBJ_TYPE_അട്ടി_ID, ശൂന്യ);
 #endif /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+ശൂന്യം k_അട്ടി_init(ഘടന k_അട്ടി *അട്ടി, അട്ടി_data_t *buffer,
+		  uint32_t അക്കം_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&അട്ടി->wait_q);
+	അട്ടി->lock = (ഘടന k_spinlock) {};
+	അട്ടി->next = buffer;
+	അട്ടി->base = buffer;
+	അട്ടി->മുകൾ = അട്ടി->base + അക്കം_entries;
+	അട്ടി->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_PORT_TRACING_OBJ_INIT(k_അട്ടി, അട്ടി);
+	k_object_init(അട്ടി);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
+#ifdef CONFIG_OBJ_CORE_അട്ടി
+	k_obj_core_init_and_link(K_OBJ_CORE(അട്ടി), &obj_type_അട്ടി);
 #endif /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_അട്ടി_alloc_init(ഘടന k_അട്ടി *അട്ടി, uint32_t അക്കം_entries)
 {
-	void *buffer;
+	ശൂന്യം *buffer;
 	size_t total_size;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_അട്ടി, alloc_init, അട്ടി);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	എങ്കിൽ (size_mul_overflow(അക്കം_entries, വലുപ്പം(അട്ടി_data_t), &total_size)) {
 		ret = -ENOMEM;
-	} else {
+	} അല്ലെങ്കിൽ {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+		എങ്കിൽ (buffer != ശൂന്യ) {
+			k_അട്ടി_init(അട്ടി, buffer, അക്കം_entries);
+			അട്ടി->flags = K_അട്ടി_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} അല്ലെങ്കിൽ {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, alloc_init, അട്ടി, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+സ്ഥിതം വരിയിൽ int32_t z_vrfy_k_അട്ടി_alloc_init(ഘടന k_അട്ടി *അട്ടി,
+					      uint32_t അക്കം_entries)
 {
 	size_t total_size;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(അട്ടി, K_OBJ_അട്ടി));
+	K_OOPS(K_SYSCALL_VERIFY(അക്കം_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(അക്കം_entries, വലുപ്പം(അട്ടി_data_t),
 					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	തിരികെ z_impl_k_അട്ടി_alloc_init(അട്ടി, അക്കം_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+പൂർണ്ണസംഖ്യ z_അട്ടി_cleanup(ഘടന k_അട്ടി *അട്ടി, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_അട്ടി, cleanup, അട്ടി);
 
-	int ret = 0;
+	പൂർണ്ണസംഖ്യ ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&അട്ടി->lock);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	എങ്കിൽ (locked && (z_waitq_head_locked(&അട്ടി->wait_q) != ശൂന്യ)) {
 		ret = -EAGAIN;
-		goto out;
+		പോകുക out;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	എങ്കിൽ (!locked && (z_waitq_head(&അട്ടി->wait_q) != ശൂന്യ)) {
 		ret = -EAGAIN;
-		goto out;
+		പോകുക out;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	എങ്കിൽ ((അട്ടി->flags & K_അട്ടി_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(അട്ടി->base);
+		അട്ടി->base = ശൂന്യ;
+		അട്ടി->flags &= ~K_അട്ടി_FLAG_ALLOC;
 		freed = true;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&അട്ടി->lock, താക്കോൽ);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#ifdef CONFIG_OBJ_CORE_അട്ടി
+	എങ്കിൽ (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(അട്ടി));
 	}
 #endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, cleanup, അട്ടി, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+പൂർണ്ണസംഖ്യ k_അട്ടി_cleanup(ഘടന k_അട്ടി *അട്ടി)
 {
-	return z_stack_cleanup(stack, false);
+	തിരികെ z_അട്ടി_cleanup(അട്ടി, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+പൂർണ്ണസംഖ്യ z_impl_k_അട്ടി_തള്ളുക(ഘടന k_അട്ടി *അട്ടി, അട്ടി_data_t data)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	പൂർണ്ണസംഖ്യ ret = 0;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&അട്ടി->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_അട്ടി, തള്ളുക, അട്ടി);
 
-	if (stack->next == stack->top) {
+	എങ്കിൽ (അട്ടി->next == അട്ടി->മുകൾ) {
 		ret = -ENOMEM;
-		goto out;
+		പോകുക out;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	എങ്കിൽ (z_sched_wake(&അട്ടി->wait_q, 0, (ശൂന്യം *)data)) {
+		z_reschedule(&അട്ടി->lock, താക്കോൽ);
+		പോകുക end;
+	} അല്ലെങ്കിൽ {
+		*(അട്ടി->next) = data;
+		അട്ടി->next++;
+		പോകുക out;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&അട്ടി->lock, താക്കോൽ);
 
 end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, തള്ളുക, അട്ടി, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_അട്ടി_തള്ളുക(ഘടന k_അട്ടി *അട്ടി, അട്ടി_data_t data)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(അട്ടി, K_OBJ_അട്ടി));
 
-	return z_impl_k_stack_push(stack, data);
+	തിരികെ z_impl_k_അട്ടി_തള്ളുക(അട്ടി, data);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_stack_push_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+പൂർണ്ണസംഖ്യ z_impl_k_അട്ടി_എടുക്കുക(ഘടന k_അട്ടി *അട്ടി, അട്ടി_data_t *data,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_താക്കോൽ_t താക്കോൽ;
+	പൂർണ്ണസംഖ്യ result;
 
-	key = k_spin_lock(&stack->lock);
+	താക്കോൽ = k_spin_lock(&അട്ടി->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_അട്ടി, എടുക്കുക, അട്ടി, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	എങ്കിൽ (likely(അട്ടി->next > അട്ടി->base)) {
+		അട്ടി->next--;
+		*data = *(അട്ടി->next);
+		k_spin_unlock(&അട്ടി->lock, താക്കോൽ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, എടുക്കുക, അട്ടി, timeout, 0);
 
-		return 0;
+		തിരികെ 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	എങ്കിൽ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&അട്ടി->lock, താക്കോൽ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, എടുക്കുക, അട്ടി, timeout, -EBUSY);
 
-		return -EBUSY;
+		തിരികെ -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_അട്ടി, എടുക്കുക, അട്ടി, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	result = z_pend_curr(&അട്ടി->lock, താക്കോൽ, &അട്ടി->wait_q, timeout);
+	എങ്കിൽ (result != 0) {
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, എടുക്കുക, അട്ടി, timeout, result);
 
-		return result;
+		തിരികെ result;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*data = (അട്ടി_data_t)_current->base.swap_data;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_അട്ടി, എടുക്കുക, അട്ടി, timeout, 0);
 
-	return 0;
+	തിരികെ 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_അട്ടി_എടുക്കുക(ഘടന k_അട്ടി *അട്ടി,
+				     അട്ടി_data_t *data, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(അട്ടി, K_OBJ_അട്ടി));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, വലുപ്പം(അട്ടി_data_t)));
+	തിരികെ z_impl_k_അട്ടി_എടുക്കുക(അട്ടി, data, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_stack_pop_mrsh.c>
 #endif /* CONFIG_USERSPACE */

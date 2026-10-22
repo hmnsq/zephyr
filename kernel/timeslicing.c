@@ -3,20 +3,20 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <zephyr/sys/atomic.h>
-#include <kspinlock.h>
-#include <kswap.h>
-#include <ksched.h>
-#include <ipi.h>
-#include <timeslicing.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/sys/atomic.h>
+#അന്തര്ഭാവ <kspinlock.h>
+#അന്തര്ഭാവ <kswap.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <ipi.h>
+#അന്തര്ഭാവ <timeslicing.h>
 
-static int slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
-static int slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
-static struct _timeout slice_timeouts[CONFIG_MP_MAX_NUM_CPUS];
+സ്ഥിതം പൂർണ്ണസംഖ്യ slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
+സ്ഥിതം പൂർണ്ണസംഖ്യ slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
+സ്ഥിതം ഘടന _timeout slice_timeouts[CONFIG_MP_MAX_അക്കം_CPUS];
 
 /* Timeouts can expire on another CPU, so each CPU's flag must be atomic. */
-static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
+സ്ഥിതം atomic_t slice_expired[CONFIG_MP_MAX_അക്കം_CPUS];
 
 #ifdef CONFIG_SWAP_NONATOMIC
 /* If z_swap() isn't atomic, then it's possible for a timer interrupt
@@ -24,75 +24,75 @@ static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
  * itself but before the corresponding context switch.  Treat that as
  * a noop condition in z_time_slice().
  */
-struct k_thread *pending_current;
+ഘടന k_thread *pending_current;
 #endif
 
-static inline int slice_time(struct k_thread *thread)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ slice_time(ഘടന k_thread *thread)
 {
-	int ret = slice_ticks;
+	പൂർണ്ണസംഖ്യ ret = slice_ticks;
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
+	എങ്കിൽ (thread->base.slice_ticks != 0) {
 		ret = thread->base.slice_ticks;
 	}
-#else
+#അല്ലെങ്കിൽ
 	ARG_UNUSED(thread);
 #endif
-	return ret;
+	തിരികെ ret;
 }
 
-static int z_time_slice_size(struct k_thread *thread)
+സ്ഥിതം പൂർണ്ണസംഖ്യ z_time_slice_size(ഘടന k_thread *thread)
 {
-	if (z_is_thread_prevented_from_running(thread) ||
+	എങ്കിൽ (z_is_thread_prevented_from_running(thread) ||
 	    z_is_idle_thread_object(thread) ||
 	    (slice_time(thread) == 0)) {
-		return 0;
+		തിരികെ 0;
 	}
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		return thread->base.slice_ticks;
+	എങ്കിൽ (thread->base.slice_ticks != 0) {
+		തിരികെ thread->base.slice_ticks;
 	}
 #endif
 
-	if (thread_is_preemptible(thread) &&
+	എങ്കിൽ (thread_is_preemptible(thread) &&
 	    !z_is_prio_higher(thread->base.prio, slice_max_prio)) {
-		return slice_ticks;
+		തിരികെ slice_ticks;
 	}
 
-	return 0;
+	തിരികെ 0;
 }
 
-static void slice_timeout(struct _timeout *timeout)
+സ്ഥിതം ശൂന്യം slice_timeout(ഘടന _timeout *timeout)
 {
-	int cpu = ARRAY_INDEX(slice_timeouts, timeout);
+	പൂർണ്ണസംഖ്യ cpu = ARRAY_INDEX(slice_timeouts, timeout);
 
 	atomic_set(&slice_expired[cpu], 1);
 
 	/* We need an IPI if we just handled a timeslice expiration
 	 * for a different CPU.
 	 */
-	if (cpu != _current_cpu->id) {
+	എങ്കിൽ (cpu != _current_cpu->id) {
 		flag_ipi(IPI_CPU_MASK(cpu));
 	}
 }
 
-static void slice_reset(int slice_size)
+സ്ഥിതം ശൂന്യം slice_reset(പൂർണ്ണസംഖ്യ slice_size)
 {
-	int cpu = _current_cpu->id;
+	പൂർണ്ണസംഖ്യ cpu = _current_cpu->id;
 
 	/* Best-effort cancel: if the slice timeout is already in flight,
 	 * its handler only flips slice_expired[cpu] (which we clear below)
 	 * and possibly raises an IPI -- harmless either way.
 	 */
-	(void)z_try_abort_timeout(&slice_timeouts[cpu]);
-	if (slice_size != 0) {
+	(ശൂന്യം)z_try_abort_timeout(&slice_timeouts[cpu]);
+	എങ്കിൽ (slice_size != 0) {
 		/* When invoked because the slicer just fired (this CPU or
 		 * via IPI from another), we're at a tick edge but past the
 		 * announce window, so subtract 1 to cancel z_add_timeout()'s
 		 * "+1" round-up and land at exactly slice_size ticks.
 		 */
-		int delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
+		പൂർണ്ണസംഖ്യ delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
 
 		z_add_timeout(&slice_timeouts[cpu], slice_timeout,
 			      K_TICKS(delay));
@@ -100,22 +100,22 @@ static void slice_reset(int slice_size)
 	atomic_clear(&slice_expired[cpu]);
 }
 
-void z_time_slice_reset(struct k_thread *thread)
+ശൂന്യം z_time_slice_reset(ഘടന k_thread *thread)
 {
 	slice_reset(z_time_slice_size(thread));
 }
 
-static ALWAYS_INLINE bool thread_defines_time_slice_size(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE bool thread_defines_time_slice_size(ഘടന k_thread *thread)
 {
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	return (thread->base.slice_ticks != 0);
-#else  /* !CONFIG_TIMESLICE_PER_THREAD */
+	തിരികെ (thread->base.slice_ticks != 0);
+#അല്ലെങ്കിൽ  /* !CONFIG_TIMESLICE_PER_THREAD */
 	ARG_UNUSED(thread);
-	return false;
+	തിരികെ false;
 #endif /* !CONFIG_TIMESLICE_PER_THREAD */
 }
 
-void k_sched_time_slice_set(int32_t slice, int prio)
+ശൂന്യം k_sched_time_slice_set(int32_t slice, പൂർണ്ണസംഖ്യ prio)
 {
 	Z_SCHED_SPINLOCK {
 
@@ -128,15 +128,15 @@ void k_sched_time_slice_set(int32_t slice, int prio)
 		 * take precedence over the global time slice size.
 		 */
 
-		if (!thread_defines_time_slice_size(_current)) {
+		എങ്കിൽ (!thread_defines_time_slice_size(_current)) {
 			z_time_slice_reset(_current);
 		}
 	}
 }
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-void k_thread_time_slice_set(struct k_thread *thread, int32_t thread_slice_ticks,
-			     k_thread_timeslice_fn_t expired, void *data)
+ശൂന്യം k_thread_time_slice_set(ഘടന k_thread *thread, int32_t thread_slice_ticks,
+			     k_thread_timeslice_fn_t expired, ശൂന്യം *data)
 {
 	Z_SCHED_SPINLOCK {
 		thread->base.slice_ticks = thread_slice_ticks;
@@ -148,44 +148,44 @@ void k_thread_time_slice_set(struct k_thread *thread, int32_t thread_slice_ticks
 #endif
 
 /* Called out of each timer and IPI interrupt */
-void z_time_slice(void)
+ശൂന്യം z_time_slice(ശൂന്യം)
 {
 	/*
 	 * Atomic context switches need no scheduler work until this CPU's
 	 * time slice expires. Non-atomic context switches must still take
 	 * the scheduler lock to synchronize pending_current.
 	 */
-	if (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
+	എങ്കിൽ (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
 	    !atomic_get(&slice_expired[_current_cpu->id])) {
-		return;
+		തിരികെ;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
-	struct k_thread *curr = _current;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = z_sched_spinlock_lock();
+	ഘടന k_thread *curr = _current;
 
 #ifdef CONFIG_SWAP_NONATOMIC
-	if (pending_current == curr) {
+	എങ്കിൽ (pending_current == curr) {
 		z_time_slice_reset(curr);
-		z_sched_spinlock_unlock(key);
-		return;
+		z_sched_spinlock_unlock(താക്കോൽ);
+		തിരികെ;
 	}
-	pending_current = NULL;
+	pending_current = ശൂന്യ;
 #endif
 
-	int slice_size = 0;
+	പൂർണ്ണസംഖ്യ slice_size = 0;
 
-	if (atomic_get(&slice_expired[_current_cpu->id])) {
+	എങ്കിൽ (atomic_get(&slice_expired[_current_cpu->id])) {
 		slice_size = z_time_slice_size(curr);
 	}
 
-	if (slice_size != 0) {
+	എങ്കിൽ (slice_size != 0) {
 #ifdef CONFIG_TIMESLICE_PER_THREAD
 		k_thread_timeslice_fn_t handler = curr->base.slice_expired;
 
-		if (handler != NULL) {
-			z_sched_spinlock_unlock(key);
+		എങ്കിൽ (handler != ശൂന്യ) {
+			z_sched_spinlock_unlock(താക്കോൽ);
 			handler(curr, curr->base.slice_data);
-			key = z_sched_spinlock_lock();
+			താക്കോൽ = z_sched_spinlock_lock();
 
 			/* The handler ran with the lock dropped and may have
 			 * changed this thread's slice configuration, so the
@@ -194,7 +194,7 @@ void z_time_slice(void)
 			slice_size = z_time_slice_size(curr);
 		}
 #endif
-		if (!z_is_thread_prevented_from_running(curr)) {
+		എങ്കിൽ (!z_is_thread_prevented_from_running(curr)) {
 			move_current_to_end_of_prio_q();
 			/* If the rotation kept curr at the front (no other
 			 * runnable thread of equal-or-higher priority is
@@ -204,17 +204,17 @@ void z_time_slice(void)
 			 * picking up the tick-aligned delay.
 			 */
 #ifdef CONFIG_SMP
-			struct k_thread *next = runq_best();
+			ഘടന k_thread *next = runq_best();
 
-			if (next == NULL || z_is_idle_thread_object(next)) {
+			എങ്കിൽ (next == ശൂന്യ || z_is_idle_thread_object(next)) {
 				slice_reset(slice_size);
 			}
-#else
-			if (_kernel.ready_q.cache == curr) {
+#അല്ലെങ്കിൽ
+			എങ്കിൽ (_kernel.ready_q.cache == curr) {
 				slice_reset(slice_size);
 			}
 #endif
 		}
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(താക്കോൽ);
 }

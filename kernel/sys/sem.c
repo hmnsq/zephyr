@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+പൂർണ്ണസംഖ്യ sys_sem_init(ഘടന sys_sem *sem, unsigned പൂർണ്ണസംഖ്യ initial_എണ്ണം,
+		 unsigned പൂർണ്ണസംഖ്യ limit)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_എണ്ണം, limit);
 
-	return 0;
+	തിരികെ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+പൂർണ്ണസംഖ്യ sys_sem_give(ഘടന sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	തിരികെ 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+പൂർണ്ണസംഖ്യ sys_sem_take(ഘടന sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	പൂർണ്ണസംഖ്യ ret_മൂല്യം = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_മൂല്യം = k_sem_take(&sem->kernel_sem, timeout);
+	എങ്കിൽ ((ret_മൂല്യം == -EAGAIN) || (ret_മൂല്യം == -EBUSY)) {
+		ret_മൂല്യം = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	തിരികെ ret_മൂല്യം;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned പൂർണ്ണസംഖ്യ sys_sem_എണ്ണം_get(ഘടന sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	തിരികെ k_sem_എണ്ണം_get(&sem->kernel_sem);
 }

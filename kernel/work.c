@@ -10,74 +10,74 @@
  * Second generation work queue implementation
  */
 
-#include <zephyr/kernel.h>
-#include <wait_q.h>
-#include <zephyr/spinlock.h>
-#include <errno.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/logging/log.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <wait_q.h>
+#അന്തര്ഭാവ <zephyr/spinlock.h>
+#അന്തര്ഭാവ <errno.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <scheduler.h>
+#അന്തര്ഭാവ <zephyr/sys/printk.h>
+#അന്തര്ഭാവ <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-static inline void flag_clear(uint32_t *flagp,
+സ്ഥിതം വരിയിൽ ശൂന്യം flag_clear(uint32_t *flagp,
 			      uint32_t bit)
 {
 	*flagp &= ~BIT(bit);
 }
 
-static inline void flag_set(uint32_t *flagp,
+സ്ഥിതം വരിയിൽ ശൂന്യം flag_set(uint32_t *flagp,
 			    uint32_t bit)
 {
 	*flagp |= BIT(bit);
 }
 
-static inline bool flag_test(const uint32_t *flagp,
+സ്ഥിതം വരിയിൽ bool flag_test(സ്ഥിരം uint32_t *flagp,
 			     uint32_t bit)
 {
-	return (*flagp & BIT(bit)) != 0U;
+	തിരികെ (*flagp & BIT(bit)) != 0U;
 }
 
-static inline bool flag_test_and_clear(uint32_t *flagp,
-				       int bit)
+സ്ഥിതം വരിയിൽ bool flag_test_and_clear(uint32_t *flagp,
+				       പൂർണ്ണസംഖ്യ bit)
 {
 	bool ret = flag_test(flagp, bit);
 
 	flag_clear(flagp, bit);
 
-	return ret;
+	തിരികെ ret;
 }
 
-static inline void flags_set(uint32_t *flagp,
+സ്ഥിതം വരിയിൽ ശൂന്യം flags_set(uint32_t *flagp,
 			     uint32_t flags)
 {
 	*flagp = flags;
 }
 
-static inline uint32_t flags_get(const uint32_t *flagp)
+സ്ഥിതം വരിയിൽ uint32_t flags_get(സ്ഥിരം uint32_t *flagp)
 {
-	return *flagp;
+	തിരികെ *flagp;
 }
 
 /* Lock to protect the internal state of all work items, work queues,
  * and pending_cancels.
  */
-static struct k_spinlock work_lock;
+സ്ഥിതം ഘടന k_spinlock work_lock;
 
 /* Invoked by work thread */
-static void handle_flush(struct k_work *work) { }
+സ്ഥിതം ശൂന്യം handle_flush(ഘടന k_work *work) { }
 
-static inline void init_flusher(struct z_work_flusher *flusher)
+സ്ഥിതം വരിയിൽ ശൂന്യം init_flusher(ഘടന z_work_flusher *flusher)
 {
-	struct k_work *work = &flusher->work;
+	ഘടന k_work *work = &flusher->work;
 	k_sem_init(&flusher->sem, 0, 1);
 	k_work_init(&flusher->work, handle_flush);
 	flag_set(&work->flags, K_WORK_FLUSHING_BIT);
 }
 
 /* List of pending cancellations. */
-static sys_slist_t pending_cancels;
+സ്ഥിതം sys_slist_t pending_cancels;
 
 /* Initialize a canceler record and add it to the list of pending
  * cancels.
@@ -87,12 +87,12 @@ static sys_slist_t pending_cancels;
  * @param canceler the structure used to notify a waiting process.
  * @param work the work structure that is to be canceled
  */
-static inline void init_work_cancel(struct z_work_canceller *canceler,
-				    struct k_work *work)
+സ്ഥിതം വരിയിൽ ശൂന്യം init_work_cancel(ഘടന z_work_canceller *canceler,
+				    ഘടന k_work *work)
 {
 	k_sem_init(&canceler->sem, 0, 1);
 	canceler->work = work;
-	sys_slist_append(&pending_cancels, &canceler->node);
+	sys_slist_append(&pending_cancels, &canceler->കണ്ണി);
 }
 
 /* Complete flushing of a work item.
@@ -105,10 +105,10 @@ static inline void init_work_cancel(struct z_work_canceller *canceler,
  *
  * @param work the work structure that has completed flushing.
  */
-static void finalize_flush_locked(struct k_work *work)
+സ്ഥിതം ശൂന്യം finalize_flush_locked(ഘടന k_work *work)
 {
-	struct z_work_flusher *flusher
-		= CONTAINER_OF(work, struct z_work_flusher, work);
+	ഘടന z_work_flusher *flusher
+		= CONTAINER_OF(work, ഘടന z_work_flusher, work);
 
 	flag_clear(&work->flags, K_WORK_FLUSHING_BIT);
 
@@ -125,10 +125,10 @@ static void finalize_flush_locked(struct k_work *work)
  *
  * @param work the work structure that has completed cancellation
  */
-static void finalize_cancel_locked(struct k_work *work)
+സ്ഥിതം ശൂന്യം finalize_cancel_locked(ഘടന k_work *work)
 {
-	struct z_work_canceller *wc, *tmp;
-	sys_snode_t *prev = NULL;
+	ഘടന z_work_canceller *wc, *tmp;
+	sys_snode_t *prev = ശൂന്യ;
 
 	/* Clear this first, so released high-priority threads don't
 	 * see it when doing things.
@@ -140,40 +140,40 @@ static void finalize_cancel_locked(struct k_work *work)
 	 * appear multiple times in the list if multiple threads
 	 * attempt to cancel it; each waiter must be woken.
 	 */
-	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, node) {
-		if (wc->work == work) {
-			sys_slist_remove(&pending_cancels, prev, &wc->node);
+	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, കണ്ണി) {
+		എങ്കിൽ (wc->work == work) {
+			sys_slist_remove(&pending_cancels, prev, &wc->കണ്ണി);
 			k_sem_give(&wc->sem);
-		} else {
-			prev = &wc->node;
+		} അല്ലെങ്കിൽ {
+			prev = &wc->കണ്ണി;
 		}
 	}
 }
 
-void k_work_init(struct k_work *work,
+ശൂന്യം k_work_init(ഘടന k_work *work,
 		  k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(work != ശൂന്യ);
+	__ASSERT_NO_MSG(handler != ശൂന്യ);
 
-	*work = (struct k_work)Z_WORK_INITIALIZER(handler);
+	*work = (ഘടന k_work)Z_WORK_INITIALIZER(handler);
 
 	SYS_PORT_TRACING_OBJ_INIT(k_work, work);
 }
 
-static inline int work_busy_get_locked(const struct k_work *work)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ work_busy_get_locked(സ്ഥിരം ഘടന k_work *work)
 {
-	return flags_get(&work->flags) & K_WORK_MASK;
+	തിരികെ flags_get(&work->flags) & K_WORK_MASK;
 }
 
-int k_work_busy_get(const struct k_work *work)
+പൂർണ്ണസംഖ്യ k_work_busy_get(സ്ഥിരം ഘടന k_work *work)
 {
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_busy_get_locked(work);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = work_busy_get_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Add a flusher work item to the queue.
@@ -187,17 +187,17 @@ int k_work_busy_get(const struct k_work *work)
  * queue
  * @param flusher an uninitialized/unused flusher object
  */
-static void queue_flusher_locked(struct k_work_q *queue,
-				 struct k_work *work,
-				 struct z_work_flusher *flusher)
+സ്ഥിതം ശൂന്യം queue_flusher_locked(ഘടന k_work_q *queue,
+				 ഘടന k_work *work,
+				 ഘടന z_work_flusher *flusher)
 {
 	init_flusher(flusher);
 
-	if ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
-		sys_slist_insert(&queue->pending, &work->node,
-				 &flusher->work.node);
-	} else {
-		sys_slist_prepend(&queue->pending, &flusher->work.node);
+	എങ്കിൽ ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
+		sys_slist_തിരുകുക(&queue->pending, &work->കണ്ണി,
+				 &flusher->work.കണ്ണി);
+	} അല്ലെങ്കിൽ {
+		sys_slist_prepend(&queue->pending, &flusher->work.കണ്ണി);
 	}
 }
 
@@ -208,11 +208,11 @@ static void queue_flusher_locked(struct k_work_q *queue,
  * @param queue the queue from which the work should be removed
  * @param work work that may be on the queue
  */
-static inline void queue_remove_locked(struct k_work_q *queue,
-				       struct k_work *work)
+സ്ഥിതം വരിയിൽ ശൂന്യം queue_remove_locked(ഘടന k_work_q *queue,
+				       ഘടന k_work *work)
 {
-	if (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
-		(void)sys_slist_find_and_remove(&queue->pending, &work->node);
+	എങ്കിൽ (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
+		(ശൂന്യം)sys_slist_find_and_remove(&queue->pending, &work->കണ്ണി);
 	}
 }
 
@@ -227,15 +227,15 @@ static inline void queue_remove_locked(struct k_work_q *queue,
  * @return true if and only if the queue was notified and woken, i.e. a
  * reschedule is pending.
  */
-static inline bool notify_queue_locked(struct k_work_q *queue)
+സ്ഥിതം വരിയിൽ bool notify_queue_locked(ഘടന k_work_q *queue)
 {
 	bool rv = false;
 
-	if (queue != NULL) {
-		rv = z_sched_wake(&queue->notifyq, 0, NULL);
+	എങ്കിൽ (queue != ശൂന്യ) {
+		rv = z_sched_wake(&queue->notifyq, 0, ശൂന്യ);
 	}
 
-	return rv;
+	തിരികെ rv;
 }
 
 /* Submit an work item to a queue if queue state allows new work.
@@ -257,14 +257,14 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
  * @retval -ENODEV if the queue is not started
  * @retval -EBUSY if the submission was rejected (draining, plugged)
  */
-static inline int queue_submit_locked(struct k_work_q *queue,
-				      struct k_work *work)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ queue_submit_locked(ഘടന k_work_q *queue,
+				      ഘടന k_work *work)
 {
-	if (queue == NULL) {
-		return -EINVAL;
+	എങ്കിൽ (queue == ശൂന്യ) {
+		തിരികെ -EINVAL;
 	}
 
-	int ret;
+	പൂർണ്ണസംഖ്യ ret;
 	bool chained = (_current == queue->thread_id) && !k_is_in_isr();
 	bool draining = flag_test(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
 	bool plugged = flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
@@ -276,19 +276,19 @@ static inline int queue_submit_locked(struct k_work_q *queue,
 	 * * -EBUSY if plugged and not draining
 	 * * otherwise OK
 	 */
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	എങ്കിൽ (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
 		ret = -ENODEV;
-	} else if (draining && !chained) {
+	} അല്ലെങ്കിൽ എങ്കിൽ (draining && !chained) {
 		ret = -EBUSY;
-	} else if (plugged && !draining) {
+	} അല്ലെങ്കിൽ എങ്കിൽ (plugged && !draining) {
 		ret = -EBUSY;
-	} else {
-		sys_slist_append(&queue->pending, &work->node);
+	} അല്ലെങ്കിൽ {
+		sys_slist_append(&queue->pending, &work->കണ്ണി);
 		ret = 1;
-		(void)notify_queue_locked(queue);
+		(ശൂന്യം)notify_queue_locked(queue);
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Attempt to submit work to a queue.
@@ -317,21 +317,21 @@ static inline int queue_submit_locked(struct k_work_q *queue,
  * @retval -EINVAL if no queue is provided
  * @retval -ENODEV if the queue is not started
  */
-static int submit_to_queue_locked(struct k_work *work,
-				  struct k_work_q **queuep)
+സ്ഥിതം പൂർണ്ണസംഖ്യ submit_to_queue_locked(ഘടന k_work *work,
+				  ഘടന k_work_q **queuep)
 {
-	int ret = 0;
+	പൂർണ്ണസംഖ്യ ret = 0;
 
-	if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	എങ്കിൽ (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Disallowed */
 		ret = -EBUSY;
-	} else if (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
+	} അല്ലെങ്കിൽ എങ്കിൽ (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
 		/* Not currently queued */
 		ret = 1;
 
 		/* If no queue specified resubmit to last queue.
 		 */
-		if (*queuep == NULL) {
+		എങ്കിൽ (*queuep == ശൂന്യ) {
 			*queuep = work->queue;
 		}
 
@@ -339,29 +339,29 @@ static int submit_to_queue_locked(struct k_work *work,
 		 * queue it's running on to prevent handler
 		 * re-entrancy.
 		 */
-		if (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
-			__ASSERT_NO_MSG(work->queue != NULL);
+		എങ്കിൽ (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
+			__ASSERT_NO_MSG(work->queue != ശൂന്യ);
 			*queuep = work->queue;
 			ret = 2;
 		}
 
-		int rc = queue_submit_locked(*queuep, work);
+		പൂർണ്ണസംഖ്യ rc = queue_submit_locked(*queuep, work);
 
-		if (rc < 0) {
+		എങ്കിൽ (rc < 0) {
 			ret = rc;
-		} else {
+		} അല്ലെങ്കിൽ {
 			flag_set(&work->flags, K_WORK_QUEUED_BIT);
 			work->queue = *queuep;
 		}
-	} else {
+	} അല്ലെങ്കിൽ {
 		/* Already queued, do nothing. */
 	}
 
-	if (ret <= 0) {
-		*queuep = NULL;
+	എങ്കിൽ (ret <= 0) {
+		*queuep = ശൂന്യ;
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Submit work to a queue
@@ -375,47 +375,47 @@ static int submit_to_queue_locked(struct k_work *work,
  *
  * @retval see submit_to_queue_locked()
  */
-int z_work_submit_to_queue(struct k_work_q *queue,
-		  struct k_work *work)
+പൂർണ്ണസംഖ്യ z_work_submit_to_queue(ഘടന k_work_q *queue,
+		  ഘടന k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(work->handler != NULL);
+	__ASSERT_NO_MSG(work != ശൂന്യ);
+	__ASSERT_NO_MSG(work->handler != ശൂന്യ);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
-	int ret = submit_to_queue_locked(work, &queue);
+	പൂർണ്ണസംഖ്യ ret = submit_to_queue_locked(work, &queue);
 
 	/* No need to reschedule if the submission failed. */
-	if (ret > 0) {
-		z_reschedule(&work_lock, key);
-	} else {
-		k_spin_unlock(&work_lock, key);
+	എങ്കിൽ (ret > 0) {
+		z_reschedule(&work_lock, താക്കോൽ);
+	} അല്ലെങ്കിൽ {
+		k_spin_unlock(&work_lock, താക്കോൽ);
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_submit_to_queue(struct k_work_q *queue,
-			    struct k_work *work)
+പൂർണ്ണസംഖ്യ k_work_submit_to_queue(ഘടന k_work_q *queue,
+			    ഘടന k_work *work)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit_to_queue, queue, work);
 
-	int ret = z_work_submit_to_queue(queue, work);
+	പൂർണ്ണസംഖ്യ ret = z_work_submit_to_queue(queue, work);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit_to_queue, queue, work, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_submit(struct k_work *work)
+പൂർണ്ണസംഖ്യ k_work_submit(ഘടന k_work *work)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
 
-	int ret = z_work_submit_to_queue(&k_sys_work_q, work);
+	പൂർണ്ണസംഖ്യ ret = z_work_submit_to_queue(&k_sys_work_q, work);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Flush the work item if necessary.
@@ -433,46 +433,46 @@ int k_work_submit(struct k_work *work)
  *
  * @retval false otherwise.  No wait required.
  */
-static bool work_flush_locked(struct k_work *work,
-			      struct z_work_flusher *flusher)
+സ്ഥിതം bool work_flush_locked(ഘടന k_work *work,
+			      ഘടന z_work_flusher *flusher)
 {
 	bool need_flush = (flags_get(&work->flags)
 			   & (K_WORK_QUEUED | K_WORK_RUNNING)) != 0U;
 
-	if (need_flush) {
-		struct k_work_q *queue = work->queue;
+	എങ്കിൽ (need_flush) {
+		ഘടന k_work_q *queue = work->queue;
 
-		__ASSERT_NO_MSG(queue != NULL);
+		__ASSERT_NO_MSG(queue != ശൂന്യ);
 
 		queue_flusher_locked(queue, work, flusher);
 		notify_queue_locked(queue);
 	}
 
-	return need_flush;
+	തിരികെ need_flush;
 }
 
-bool k_work_flush(struct k_work *work,
-		  struct k_work_sync *sync)
+bool k_work_flush(ഘടന k_work *work,
+		  ഘടന k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
+	__ASSERT_NO_MSG(work != ശൂന്യ);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
 	__ASSERT_NO_MSG(!k_is_in_isr());
-	__ASSERT_NO_MSG(sync != NULL);
+	__ASSERT_NO_MSG(sync != ശൂന്യ);
 #ifdef CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
 #endif /* CONFIG_KERNEL_COHERENCE */
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
 
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	എങ്കിൽ (need_flush) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
 		k_sem_take(&flusher->sem, K_FOREVER);
@@ -480,7 +480,7 @@ bool k_work_flush(struct k_work *work,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
 
-	return need_flush;
+	തിരികെ need_flush;
 }
 
 /* Execute the non-waiting steps necessary to cancel a work item.
@@ -494,10 +494,10 @@ bool k_work_flush(struct k_work *work,
  *
  * @return k_busy_wait() captured under lock
  */
-static int cancel_async_locked(struct k_work *work)
+സ്ഥിതം പൂർണ്ണസംഖ്യ cancel_async_locked(ഘടന k_work *work)
 {
 	/* If we haven't already started canceling, do it now. */
-	if (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	എങ്കിൽ (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Remove it from the queue, if it's queued. */
 		queue_remove_locked(work->queue, work);
 	}
@@ -505,14 +505,14 @@ static int cancel_async_locked(struct k_work *work)
 	/* If it's still busy after it's been dequeued, then flag it
 	 * as canceling.
 	 */
-	int ret = work_busy_get_locked(work);
+	പൂർണ്ണസംഖ്യ ret = work_busy_get_locked(work);
 
-	if (ret != 0) {
+	എങ്കിൽ (ret != 0) {
 		flag_set(&work->flags, K_WORK_CANCELING_BIT);
 		ret = work_busy_get_locked(work);
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Complete cancellation necessary, release work lock, and wait if
@@ -530,8 +530,8 @@ static int cancel_async_locked(struct k_work *work)
  *
  * @retval false if work was idle on entry.  The caller need not wait.
  */
-static bool cancel_sync_locked(struct k_work *work,
-			       struct z_work_canceller *canceller)
+സ്ഥിതം bool cancel_sync_locked(ഘടന k_work *work,
+			       ഘടന z_work_canceller *canceller)
 {
 	bool ret = flag_test(&work->flags, K_WORK_CANCELING_BIT);
 
@@ -539,35 +539,35 @@ static bool cancel_sync_locked(struct k_work *work,
 	 * completion, which is indicated when finish_cancel() gets
 	 * invoked.
 	 */
-	if (ret) {
+	എങ്കിൽ (ret) {
 		init_work_cancel(canceller, work);
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_cancel(struct k_work *work)
+പൂർണ്ണസംഖ്യ k_work_cancel(ഘടന k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
+	__ASSERT_NO_MSG(work != ശൂന്യ);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_async_locked(work);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = cancel_async_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-bool k_work_cancel_sync(struct k_work *work,
-			struct k_work_sync *sync)
+bool k_work_cancel_sync(ഘടന k_work *work,
+			ഘടന k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
+	__ASSERT_NO_MSG(work != ശൂന്യ);
+	__ASSERT_NO_MSG(sync != ശൂന്യ);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
 	__ASSERT_NO_MSG(!k_is_in_isr());
 #ifdef CONFIG_KERNEL_COHERENCE
@@ -576,37 +576,37 @@ bool k_work_cancel_sync(struct k_work *work,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 	bool pending = (work_busy_get_locked(work) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_async_locked(work);
+	എങ്കിൽ (pending) {
+		(ശൂന്യം)cancel_async_locked(work);
 		need_wait = cancel_sync_locked(work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
-	if (need_wait) {
+	എങ്കിൽ (need_wait) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
-	return pending;
+	തിരികെ pending;
 }
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-static void work_timeout_handler(struct _timeout *record)
+#എങ്കിൽ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+സ്ഥിതം ശൂന്യം work_timeout_handler(ഘടന _timeout *record)
 {
-	struct k_work_q *queue = CONTAINER_OF(record, struct k_work_q, work_timeout_record);
-	struct k_work *work = NULL;
-	k_work_handler_t handler = NULL;
-	const char *name;
-	const char *space = " ";
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന k_work_q *queue = CONTAINER_OF(record, ഘടന k_work_q, work_timeout_record);
+	ഘടന k_work *work = ശൂന്യ;
+	k_work_handler_t handler = ശൂന്യ;
+	സ്ഥിരം അക്ഷരം *name;
+	സ്ഥിരം അക്ഷരം *space = " ";
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
 	work = queue->work;
 	handler = work->handler;
@@ -622,16 +622,16 @@ static void work_timeout_handler(struct _timeout *record)
 	 * wrong worker. work_timeout_stop_locked() aborts the timeout, which
 	 * flags it superseded; bail on that too.
 	 */
-	if (queue->finished || z_timeout_inflight_superseded(record)) {
-		k_spin_unlock(&work_lock, key);
-		return;
+	എങ്കിൽ (queue->finished || z_timeout_inflight_superseded(record)) {
+		k_spin_unlock(&work_lock, താക്കോൽ);
+		തിരികെ;
 	}
 	queue->finished = true;
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	name = k_thread_name_get(queue->thread_id);
-	if (name == NULL) {
+	എങ്കിൽ (name == ശൂന്യ) {
 		name = "";
 		space = "";
 	}
@@ -642,25 +642,25 @@ static void work_timeout_handler(struct _timeout *record)
 	k_thread_abort(queue->thread_id);
 }
 
-static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *work)
+സ്ഥിതം ശൂന്യം work_timeout_start_locked(ഘടന k_work_q *queue, ഘടന k_work *work)
 {
 	queue->finished = false;
 
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	എങ്കിൽ (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		തിരികെ;
 	}
 
 	queue->work = work;
 	z_add_timeout(&queue->work_timeout_record, work_timeout_handler, queue->work_timeout);
 }
 
-static void work_timeout_stop_locked(struct k_work_q *queue)
+സ്ഥിതം ശൂന്യം work_timeout_stop_locked(ഘടന k_work_q *queue)
 {
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	എങ്കിൽ (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		തിരികെ;
 	}
 
-	(void)z_try_abort_timeout(&queue->work_timeout_record);
+	(ശൂന്യം)z_try_abort_timeout(&queue->work_timeout_record);
 }
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
@@ -668,28 +668,28 @@ static void work_timeout_stop_locked(struct k_work_q *queue)
  *
  * @param workq_ptr pointer to the work queue structure
  */
-static void work_queue_main(void *workq_ptr, void *p2, void *p3)
+സ്ഥിതം ശൂന്യം work_queue_main(ശൂന്യം *workq_ptr, ശൂന്യം *p2, ശൂന്യം *p3)
 {
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	struct k_work_q *queue = (struct k_work_q *)workq_ptr;
+	ഘടന k_work_q *queue = (ഘടന k_work_q *)workq_ptr;
 
-	while (true) {
-		sys_snode_t *node;
-		struct k_work *work = NULL;
-		k_work_handler_t handler = NULL;
-		k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ആകുമ്പോൾ (true) {
+		sys_snode_t *കണ്ണി;
+		ഘടന k_work *work = ശൂന്യ;
+		k_work_handler_t handler = ശൂന്യ;
+		k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 		bool yield;
 
 		/* Check for and prepare any new work. */
-		node = sys_slist_get(&queue->pending);
-		if (node != NULL) {
+		കണ്ണി = sys_slist_get(&queue->pending);
+		എങ്കിൽ (കണ്ണി != ശൂന്യ) {
 			/* Mark that there's some work active that's
 			 * not on the pending list.
 			 */
 			flag_set(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-			work = CONTAINER_OF(node, struct k_work, node);
+			work = CONTAINER_OF(കണ്ണി, ഘടന k_work, കണ്ണി);
 			flag_set(&work->flags, K_WORK_RUNNING_BIT);
 			flag_clear(&work->flags, K_WORK_QUEUED_BIT);
 
@@ -706,7 +706,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * This means that if node is not NULL, then work will not be NULL.
 			 */
 			handler = work->handler;
-		} else if (flag_test_and_clear(&queue->flags,
+		} അല്ലെങ്കിൽ എങ്കിൽ (flag_test_and_clear(&queue->flags,
 					       K_WORK_QUEUE_DRAIN_BIT)) {
 			/* Not busy and draining: move threads waiting for
 			 * drain to ready state.  The held spinlock inhibits
@@ -717,39 +717,39 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * here doesn't mean that the queue will allow new
 			 * submissions.
 			 */
-			(void)z_sched_wake_all(&queue->drainq, 1, NULL);
-		} else if (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
+			(ശൂന്യം)z_sched_wake_all(&queue->drainq, 1, ശൂന്യ);
+		} അല്ലെങ്കിൽ എങ്കിൽ (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
 			/* User has requested that the queue stop. Clear the status flags and exit.
 			 */
 			flags_set(&queue->flags, 0);
-			k_spin_unlock(&work_lock, key);
-			return;
-		} else {
+			k_spin_unlock(&work_lock, താക്കോൽ);
+			തിരികെ;
+		} അല്ലെങ്കിൽ {
 			/* No work is available and no queue state requires
 			 * special handling.
 			 */
 			;
 		}
 
-		if (work == NULL) {
+		എങ്കിൽ (work == ശൂന്യ) {
 			/* Nothing's had a chance to add work since we took
 			 * the lock, and we didn't find work nor got asked to
 			 * stop.  Just go to sleep: when something happens the
 			 * work thread will be woken and we can check again.
 			 */
 
-			(void)z_sched_wait(&work_lock, key, &queue->notifyq,
-					   K_FOREVER, NULL);
-			continue;
+			(ശൂന്യം)z_sched_wait(&work_lock, താക്കോൽ, &queue->notifyq,
+					   K_FOREVER, ശൂന്യ);
+			തുടരുക;
 		}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+#എങ്കിൽ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
 		work_timeout_start_locked(queue, work);
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_lock, താക്കോൽ);
 
-		__ASSERT_NO_MSG(handler != NULL);
+		__ASSERT_NO_MSG(handler != ശൂന്യ);
 		handler(work);
 
 		/* Mark the work item as no longer running and deal
@@ -757,17 +757,17 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		 * was running.  Clear the BUSY flag and optionally
 		 * yield to prevent starving other threads.
 		 */
-		key = k_spin_lock(&work_lock);
+		താക്കോൽ = k_spin_lock(&work_lock);
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		if (queue->finished) {
+#എങ്കിൽ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		എങ്കിൽ (queue->finished) {
 			/*
 			 * The work item timeout handler has flagged this work
 			 * thread for taking too long and is going to abort it.
 			 * Do not proceed to the next work item.
 			 */
-			k_spin_unlock(&work_lock, key);
-			while (1) {
+			k_spin_unlock(&work_lock, താക്കോൽ);
+			ആകുമ്പോൾ (1) {
 				k_sleep(K_FOREVER);
 			}
 			CODE_UNREACHABLE;
@@ -777,56 +777,56 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 		flag_clear(&work->flags, K_WORK_RUNNING_BIT);
-		if (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
+		എങ്കിൽ (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
 			finalize_flush_locked(work);
 		}
-		if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+		എങ്കിൽ (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 			finalize_cancel_locked(work);
 		}
 
 		flag_clear(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
 		yield = (!flag_test(&queue->flags, K_WORK_QUEUE_NO_YIELD_BIT) &&
 			 !sys_slist_is_empty(&queue->pending));
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_lock, താക്കോൽ);
 
 		/* Optionally yield to prevent the work queue from
 		 * starving other threads.
 		 */
-		if (yield) {
+		എങ്കിൽ (yield) {
 			k_yield();
 		}
 	}
 }
 
-void k_work_queue_init(struct k_work_q *queue)
+ശൂന്യം k_work_queue_init(ഘടന k_work_q *queue)
 {
-	__ASSERT_NO_MSG(queue != NULL);
+	__ASSERT_NO_MSG(queue != ശൂന്യ);
 
-	*queue = (struct k_work_q) {
+	*queue = (ഘടന k_work_q) {
 		.flags = 0,
 	};
 
 	SYS_PORT_TRACING_OBJ_INIT(k_work_queue, queue);
 }
 
-void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *cfg)
+ശൂന്യം k_work_queue_run(ഘടന k_work_q *queue, സ്ഥിരം ഘടന k_work_queue_config *cfg)
 {
 	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
 
 	uint32_t flags = K_WORK_QUEUE_STARTED;
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	എങ്കിൽ ((cfg != ശൂന്യ) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
+	എങ്കിൽ ((cfg != ശൂന്യ) && (cfg->name != ശൂന്യ)) {
 		k_thread_name_set(_current, cfg->name);
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#എങ്കിൽ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	എങ്കിൽ ((cfg != ശൂന്യ) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} അല്ലെങ്കിൽ {
 		queue->work_timeout = K_FOREVER;
 	}
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
@@ -836,17 +836,17 @@ void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *
 	z_waitq_init(&queue->drainq);
 	queue->thread_id = _current;
 	flags_set(&queue->flags, flags);
-	work_queue_main(queue, NULL, NULL);
+	work_queue_main(queue, ശൂന്യ, ശൂന്യ);
 }
 
-void k_work_queue_start(struct k_work_q *queue,
-			k_thread_stack_t *stack,
-			size_t stack_size,
-			int prio,
-			const struct k_work_queue_config *cfg)
+ശൂന്യം k_work_queue_start(ഘടന k_work_q *queue,
+			k_thread_അട്ടി_t *അട്ടി,
+			size_t അട്ടി_size,
+			പൂർണ്ണസംഖ്യ prio,
+			സ്ഥിരം ഘടന k_work_queue_config *cfg)
 {
 	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(stack);
+	__ASSERT_NO_MSG(അട്ടി);
 	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
 
 	/* In future, this whole function will be deprecated, but for now, we
@@ -862,7 +862,7 @@ void k_work_queue_start(struct k_work_q *queue,
 	z_waitq_init(&queue->notifyq);
 	z_waitq_init(&queue->drainq);
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	എങ്കിൽ ((cfg != ശൂന്യ) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
@@ -872,22 +872,22 @@ void k_work_queue_start(struct k_work_q *queue,
 	 */
 	flags_set(&queue->flags, flags);
 
-	(void)k_thread_create(&queue->thread, stack, stack_size,
-			      work_queue_main, queue, NULL, NULL,
+	(ശൂന്യം)k_thread_create(&queue->thread, അട്ടി, അട്ടി_size,
+			      work_queue_main, queue, ശൂന്യ, ശൂന്യ,
 			      prio, 0, K_FOREVER);
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
+	എങ്കിൽ ((cfg != ശൂന്യ) && (cfg->name != ശൂന്യ)) {
 		k_thread_name_set(&queue->thread, cfg->name);
 	}
 
-	if ((cfg != NULL) && (cfg->essential)) {
+	എങ്കിൽ ((cfg != ശൂന്യ) && (cfg->essential)) {
 		queue->thread.base.user_options |= K_ESSENTIAL;
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#എങ്കിൽ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	എങ്കിൽ ((cfg != ശൂന്യ) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} അല്ലെങ്കിൽ {
 		queue->work_timeout = K_FOREVER;
 	}
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
@@ -900,7 +900,7 @@ void k_work_queue_start(struct k_work_q *queue,
 	TOOLCHAIN_ENABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 }
 
-int k_work_queue_drain(struct k_work_q *queue,
+പൂർണ്ണസംഖ്യ k_work_queue_drain(ഘടന k_work_q *queue,
 		       bool plug)
 {
 	__ASSERT_NO_MSG(queue);
@@ -908,90 +908,90 @@ int k_work_queue_drain(struct k_work_q *queue,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
 
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = 0;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
-	if (((flags_get(&queue->flags)
+	എങ്കിൽ (((flags_get(&queue->flags)
 	      & (K_WORK_QUEUE_BUSY | K_WORK_QUEUE_DRAIN)) != 0U)
 	    || plug
 	    || !sys_slist_is_empty(&queue->pending)) {
 		flag_set(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-		if (plug) {
+		എങ്കിൽ (plug) {
 			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
 		}
 
 		notify_queue_locked(queue);
-		ret = z_sched_wait(&work_lock, key, &queue->drainq,
-				   K_FOREVER, NULL);
-	} else {
-		k_spin_unlock(&work_lock, key);
+		ret = z_sched_wait(&work_lock, താക്കോൽ, &queue->drainq,
+				   K_FOREVER, ശൂന്യ);
+	} അല്ലെങ്കിൽ {
+		k_spin_unlock(&work_lock, താക്കോൽ);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_queue_unplug(struct k_work_q *queue)
+പൂർണ്ണസംഖ്യ k_work_queue_unplug(ഘടന k_work_q *queue)
 {
 	__ASSERT_NO_MSG(queue);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
 
-	int ret = -EALREADY;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = -EALREADY;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
-	if (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	എങ്കിൽ (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
 		ret = 0;
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
+പൂർണ്ണസംഖ്യ k_work_queue_stop(ഘടന k_work_q *queue, k_timeout_t timeout)
 {
 	__ASSERT_NO_MSG(queue);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
 
-	if (queue->thread_id) {
-		if (z_is_thread_essential(queue->thread_id)) {
-			return -ENOTSUP;
+	എങ്കിൽ (queue->thread_id) {
+		എങ്കിൽ (z_is_thread_essential(queue->thread_id)) {
+			തിരികെ -ENOTSUP;
 		}
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
-		k_spin_unlock(&work_lock, key);
+	എങ്കിൽ (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+		k_spin_unlock(&work_lock, താക്കോൽ);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
-		return -EALREADY;
+		തിരികെ -EALREADY;
 	}
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
-		k_spin_unlock(&work_lock, key);
+	എങ്കിൽ (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+		k_spin_unlock(&work_lock, താക്കോൽ);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
-		return -EBUSY;
+		തിരികെ -EBUSY;
 	}
 
 	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
 	notify_queue_locked(queue);
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
-	if (k_thread_join(queue->thread_id, timeout)) {
-		key = k_spin_lock(&work_lock);
+	എങ്കിൽ (k_thread_join(queue->thread_id, timeout)) {
+		താക്കോൽ = k_spin_lock(&work_lock);
 		flag_clear(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_lock, താക്കോൽ);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
-		return -ETIMEDOUT;
+		തിരികെ -ETIMEDOUT;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
-	return 0;
+	തിരികെ 0;
 }
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
@@ -1002,54 +1002,54 @@ int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
  * Takes and releases work lock.
  * Conditionally reschedules.
  */
-static void work_timeout(struct _timeout *to)
+സ്ഥിതം ശൂന്യം work_timeout(ഘടന _timeout *to)
 {
-	struct k_work_delayable *dw
-		= CONTAINER_OF(to, struct k_work_delayable, timeout);
-	struct k_work *wp = &dw->work;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	struct k_work_q *queue = NULL;
+	ഘടന k_work_delayable *dw
+		= CONTAINER_OF(to, ഘടന k_work_delayable, timeout);
+	ഘടന k_work *wp = &dw->work;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
+	ഘടന k_work_q *queue = ശൂന്യ;
 
 	/* K_WORK_DELAYED_BIT is the wake-ownership flag: whichever side
 	 * (this handler or unschedule_locked()) clears it via
 	 * flag_test_and_clear() first owns the outcome. If unschedule_locked
 	 * got here first, the bit is clear and we bail.
 	 */
-	if (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
+	എങ്കിൽ (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
 		queue = dw->queue;
-		(void)submit_to_queue_locked(wp, &queue);
+		(ശൂന്യം)submit_to_queue_locked(wp, &queue);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 }
 
-void k_work_init_delayable(struct k_work_delayable *dwork,
+ശൂന്യം k_work_init_delayable(ഘടന k_work_delayable *dwork,
 			    k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
+	__ASSERT_NO_MSG(handler != ശൂന്യ);
 
-	*dwork = (struct k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
+	*dwork = (ഘടന k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
 
 	z_init_timeout(&dwork->timeout);
 
 	SYS_PORT_TRACING_OBJ_INIT(k_work_delayable, dwork);
 }
 
-static inline int work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ work_delayable_busy_get_locked(സ്ഥിരം ഘടന k_work_delayable *dwork)
 {
-	return flags_get(&dwork->work.flags) & K_WORK_MASK;
+	തിരികെ flags_get(&dwork->work.flags) & K_WORK_MASK;
 }
 
-int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
+പൂർണ്ണസംഖ്യ k_work_delayable_busy_get(സ്ഥിരം ഘടന k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_delayable_busy_get_locked(dwork);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = work_delayable_busy_get_locked(dwork);
 
-	k_spin_unlock(&work_lock, key);
-	return ret;
+	k_spin_unlock(&work_lock, താക്കോൽ);
+	തിരികെ ret;
 }
 
 /* Attempt to schedule a work item for future (maybe immediate)
@@ -1075,15 +1075,15 @@ int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
  * @retval from submit_to_queue_locked() if delay is K_NO_WAIT; otherwise
  * @retval 1 to indicate successfully scheduled.
  */
-static int schedule_for_queue_locked(struct k_work_q **queuep,
-				     struct k_work_delayable *dwork,
+സ്ഥിതം പൂർണ്ണസംഖ്യ schedule_for_queue_locked(ഘടന k_work_q **queuep,
+				     ഘടന k_work_delayable *dwork,
 				     k_timeout_t delay)
 {
-	int ret = 1;
-	struct k_work *work = &dwork->work;
+	പൂർണ്ണസംഖ്യ ret = 1;
+	ഘടന k_work *work = &dwork->work;
 
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		return submit_to_queue_locked(work, queuep);
+	എങ്കിൽ (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		തിരികെ submit_to_queue_locked(work, queuep);
 	}
 
 	flag_set(&work->flags, K_WORK_DELAYED_BIT);
@@ -1092,7 +1092,7 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
 	/* Add timeout */
 	z_add_timeout(&dwork->timeout, work_timeout, delay);
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Unschedule delayable work.
@@ -1107,11 +1107,11 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
  * @return true if and only if work had been delayed so the timeout
  * was cancelled.
  */
-static inline bool unschedule_locked(struct k_work_delayable *dwork,
-				     k_spinlock_key_t *key)
+സ്ഥിതം വരിയിൽ bool unschedule_locked(ഘടന k_work_delayable *dwork,
+				     k_spinlock_താക്കോൽ_t *താക്കോൽ)
 {
 	bool ret = false;
-	struct k_work *work = &dwork->work;
+	ഘടന k_work *work = &dwork->work;
 
 	/* If scheduled, try to cancel.  If it fails, that means the
 	 * callback has been dequeued and will inevitably run (or has
@@ -1125,15 +1125,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
 	 * true, and either is unsafe while the handler is still about
 	 * to dereference dwork->work.flags.
 	 */
-	if (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
-		while (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
-			k_spin_unlock(&work_lock, *key);
-			*key = k_spin_lock(&work_lock);
+	എങ്കിൽ (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
+		ആകുമ്പോൾ (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
+			k_spin_unlock(&work_lock, *താക്കോൽ);
+			*താക്കോൽ = k_spin_lock(&work_lock);
 		}
 		ret = true;
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
 /* Full cancellation of a delayable work item.
@@ -1147,105 +1147,105 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
  *
  * @return k_work_busy_get() flags
  */
-static int cancel_delayable_async_locked(struct k_work_delayable *dwork,
-					 k_spinlock_key_t *key)
+സ്ഥിതം പൂർണ്ണസംഖ്യ cancel_delayable_async_locked(ഘടന k_work_delayable *dwork,
+					 k_spinlock_താക്കോൽ_t *താക്കോൽ)
 {
-	(void)unschedule_locked(dwork, key);
+	(ശൂന്യം)unschedule_locked(dwork, താക്കോൽ);
 
-	return cancel_async_locked(&dwork->work);
+	തിരികെ cancel_async_locked(&dwork->work);
 }
 
-int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+പൂർണ്ണസംഖ്യ k_work_schedule_for_queue(ഘടന k_work_q *queue, ഘടന k_work_delayable *dwork,
 			      k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(queue != ശൂന്യ);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule_for_queue, queue, dwork, delay);
 
-	struct k_work *work = &dwork->work;
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന k_work *work = &dwork->work;
+	പൂർണ്ണസംഖ്യ ret = 0;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
 	/* Schedule the work item if it's idle or running. */
-	if ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
+	എങ്കിൽ ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
 		ret = schedule_for_queue_locked(&queue, dwork, delay);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
+പൂർണ്ണസംഖ്യ k_work_schedule(ഘടന k_work_delayable *dwork, k_timeout_t delay)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule, dwork, delay);
 
-	int ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
+	പൂർണ്ണസംഖ്യ ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule, dwork, delay, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+പൂർണ്ണസംഖ്യ k_work_reschedule_for_queue(ഘടന k_work_q *queue, ഘടന k_work_delayable *dwork,
 				k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(queue != ശൂന്യ);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
 
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
 	/* Remove any active scheduling. */
-	(void)unschedule_locked(dwork, &key);
+	(ശൂന്യം)unschedule_locked(dwork, &താക്കോൽ);
 
 	/* Schedule the work item with the new parameters. */
 	ret = schedule_for_queue_locked(&queue, dwork, delay);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
+പൂർണ്ണസംഖ്യ k_work_reschedule(ഘടന k_work_delayable *dwork, k_timeout_t delay)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
 
-	int ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
+	പൂർണ്ണസംഖ്യ ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-int k_work_cancel_delayable(struct k_work_delayable *dwork)
+പൂർണ്ണസംഖ്യ k_work_cancel_delayable(ഘടന k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_delayable_async_locked(dwork, &key);
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
+	പൂർണ്ണസംഖ്യ ret = cancel_delayable_async_locked(dwork, &താക്കോൽ);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
 
-	return ret;
+	തിരികെ ret;
 }
 
-bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
-				  struct k_work_sync *sync)
+bool k_work_cancel_delayable_sync(ഘടന k_work_delayable *dwork,
+				  ഘടന k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
+	__ASSERT_NO_MSG(sync != ശൂന്യ);
 	__ASSERT_NO_MSG(!k_is_in_isr());
 #ifdef CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
@@ -1253,31 +1253,31 @@ bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 	bool pending = (work_delayable_busy_get_locked(dwork) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_delayable_async_locked(dwork, &key);
+	എങ്കിൽ (pending) {
+		(ശൂന്യം)cancel_delayable_async_locked(dwork, &താക്കോൽ);
 		need_wait = cancel_sync_locked(&dwork->work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
-	if (need_wait) {
+	എങ്കിൽ (need_wait) {
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
-	return pending;
+	തിരികെ pending;
 }
 
-bool k_work_flush_delayable(struct k_work_delayable *dwork,
-			    struct k_work_sync *sync)
+bool k_work_flush_delayable(ഘടന k_work_delayable *dwork,
+			    ഘടന k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
+	__ASSERT_NO_MSG(dwork != ശൂന്യ);
+	__ASSERT_NO_MSG(sync != ശൂന്യ);
 	__ASSERT_NO_MSG(!k_is_in_isr());
 #ifdef CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
@@ -1285,41 +1285,41 @@ bool k_work_flush_delayable(struct k_work_delayable *dwork,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
 
-	struct k_work *work = &dwork->work;
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ഘടന k_work *work = &dwork->work;
+	ഘടന z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_താക്കോൽ_t താക്കോൽ = k_spin_lock(&work_lock);
 
 	/* If it's idle release the lock and return immediately. */
-	if (work_busy_get_locked(work) == 0U) {
-		k_spin_unlock(&work_lock, key);
+	എങ്കിൽ (work_busy_get_locked(work) == 0U) {
+		k_spin_unlock(&work_lock, താക്കോൽ);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
 
-		return false;
+		തിരികെ false;
 	}
 
 	/* If unscheduling did something then submit it.  Ignore a
 	 * failed submission (e.g. when cancelling).
 	 */
-	if (unschedule_locked(dwork, &key)) {
-		struct k_work_q *queue = dwork->queue;
+	എങ്കിൽ (unschedule_locked(dwork, &താക്കോൽ)) {
+		ഘടന k_work_q *queue = dwork->queue;
 
-		(void)submit_to_queue_locked(work, &queue);
+		(ശൂന്യം)submit_to_queue_locked(work, &queue);
 	}
 
 	/* Wait for it to finish */
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_lock, താക്കോൽ);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	എങ്കിൽ (need_flush) {
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
 
-	return need_flush;
+	തിരികെ need_flush;
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */

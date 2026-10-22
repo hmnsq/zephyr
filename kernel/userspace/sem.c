@@ -4,102 +4,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/sem.h>
-#include <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <zephyr/sys/sem.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
 
 #define SYS_SEM_MINIMUM      0
 #define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+സ്ഥിതം വരിയിൽ atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_മൂല്യം, new_മൂല്യം;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+	ചെയ്യുക {
+		old_മൂല്യം = atomic_get(val);
+		എങ്കിൽ (old_മൂല്യം < minimum) {
+			നിർത്തുക;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_മൂല്യം = old_മൂല്യം - 1;
+	} ആകുമ്പോൾ (atomic_cas(val, old_മൂല്യം, new_മൂല്യം) == 0);
 
-	return old_value;
+	തിരികെ old_മൂല്യം;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+സ്ഥിതം വരിയിൽ atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_മൂല്യം, new_മൂല്യം;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+	ചെയ്യുക {
+		old_മൂല്യം = atomic_get(val);
+		എങ്കിൽ (old_മൂല്യം >= maximum) {
+			നിർത്തുക;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_മൂല്യം = ((old_മൂല്യം < minimum) ? minimum : old_മൂല്യം) + 1;
+	} ആകുമ്പോൾ (atomic_cas(val, old_മൂല്യം, new_മൂല്യം) == 0U);
 
-	return old_value;
+	തിരികെ old_മൂല്യം;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+പൂർണ്ണസംഖ്യ sys_sem_init(ഘടന sys_sem *sem, unsigned പൂർണ്ണസംഖ്യ initial_എണ്ണം,
+		 unsigned പൂർണ്ണസംഖ്യ limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+	എങ്കിൽ ((sem == ശൂന്യ) || (limit == SYS_SEM_MINIMUM) ||
+	    (initial_എണ്ണം > limit) || (limit > INT_MAX)) {
+		തിരികെ -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
+	(ശൂന്യം)atomic_set(&sem->futex.val, initial_എണ്ണം);
 	sem->limit = limit;
 
-	return 0;
+	തിരികെ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+പൂർണ്ണസംഖ്യ sys_sem_give(ഘടന sys_sem *sem)
 {
-	int ret = 0;
-	atomic_t old_value;
+	പൂർണ്ണസംഖ്യ ret = 0;
+	atomic_t old_മൂല്യം;
 
-	old_value = bounded_inc(&sem->futex.val,
+	old_മൂല്യം = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	എങ്കിൽ (old_മൂല്യം < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		എങ്കിൽ (ret > 0) {
+			തിരികെ 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} അല്ലെങ്കിൽ എങ്കിൽ (old_മൂല്യം >= sem->limit) {
+		തിരികെ -EAGAIN;
+	} അല്ലെങ്കിൽ {
 		;
 	}
-	return ret;
+	തിരികെ ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+പൂർണ്ണസംഖ്യ sys_sem_take(ഘടന sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
-	atomic_t old_value;
+	പൂർണ്ണസംഖ്യ ret = 0;
+	atomic_t old_മൂല്യം;
 
-	do {
-		old_value = bounded_dec(&sem->futex.val,
+	ചെയ്യുക {
+		old_മൂല്യം = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		എങ്കിൽ (old_മൂല്യം > 0) {
+			തിരികെ 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} ആകുമ്പോൾ (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	തിരികെ ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned പൂർണ്ണസംഖ്യ sys_sem_എണ്ണം_get(ഘടന sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	പൂർണ്ണസംഖ്യ മൂല്യം = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	തിരികെ (മൂല്യം > SYS_SEM_MINIMUM) ? മൂല്യം : SYS_SEM_MINIMUM;
 }

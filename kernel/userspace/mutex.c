@@ -4,70 +4,70 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/sys/mutex.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
 
-static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
+സ്ഥിതം ഘടന k_mutex *get_k_mutex(ഘടന sys_mutex *mutex)
 {
-	struct k_object *obj;
+	ഘടന k_object *obj;
 
 	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	എങ്കിൽ ((obj == ശൂന്യ) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		തിരികെ ശൂന്യ;
 	}
 
-	return obj->data.mutex;
+	തിരികെ obj->data.mutex;
 }
 
-static bool check_sys_mutex_addr(struct sys_mutex *addr)
+സ്ഥിതം bool check_sys_mutex_addr(ഘടന sys_mutex *addr)
 {
 	/* sys_mutex memory is never touched, just used to lookup the
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	തിരികെ K_SYSCALL_MEMORY_WRITE(addr, വലുപ്പം(ഘടന sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+പൂർണ്ണസംഖ്യ z_impl_z_sys_mutex_kernel_lock(ഘടന sys_mutex *mutex, k_timeout_t timeout)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	ഘടന k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	എങ്കിൽ (kernel_mutex == ശൂന്യ) {
+		തിരികെ -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	തിരികെ k_mutex_lock(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_z_sys_mutex_kernel_lock(ഘടന sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	എങ്കിൽ (check_sys_mutex_addr(mutex)) {
+		തിരികെ -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	തിരികെ z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+പൂർണ്ണസംഖ്യ z_impl_z_sys_mutex_kernel_unlock(ഘടന sys_mutex *mutex)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	ഘടന k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	എങ്കിൽ ((kernel_mutex == ശൂന്യ) || (kernel_mutex->lock_എണ്ണം == 0)) {
+		തിരികെ -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	തിരികെ k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_z_sys_mutex_kernel_unlock(ഘടന sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	എങ്കിൽ (check_sys_mutex_addr(mutex)) {
+		തിരികെ -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	തിരികെ z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>

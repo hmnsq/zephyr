@@ -12,12 +12,12 @@
  * @brief timeout queue for threads on kernel objects
  */
 
-#include <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
 
-#include <stdbool.h>
+#അന്തര്ഭാവ <stdbool.h>
 
 #ifdef __cplusplus
-extern "C" {
+ബാഹ്യ "C" {
 #endif
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
@@ -32,63 +32,63 @@ extern "C" {
  * operations and the backend instance) is private to kernel/timeout.c, which
  * includes the matching backend implementation header directly.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#എങ്കിൽ defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 
-static inline void z_init_timeout(struct _timeout *to)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_init_timeout(ഘടന _timeout *to)
 {
 	to->heap_handle.idx = 0U;
 	to->abs_ticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+സ്ഥിതം വരിയിൽ bool z_is_inactive_timeout(സ്ഥിരം ഘടന _timeout *to)
 {
-	return to->heap_handle.idx == 0U;
+	തിരികെ to->heap_handle.idx == 0U;
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
+#അല്ലെങ്കിലെങ്കിൽ defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
 
-static inline void z_init_timeout(struct _timeout *to)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_init_timeout(ഘടന _timeout *to)
 {
-	sys_dnode_init(&to->node);
+	sys_dnode_init(&to->കണ്ണി);
 	to->flags = 0U;
 	to->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+സ്ഥിതം വരിയിൽ bool z_is_inactive_timeout(സ്ഥിരം ഘടന _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	തിരികെ !sys_dnode_is_linked(&to->കണ്ണി);
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
+#അല്ലെങ്കിലെങ്കിൽ defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
 
-static inline void z_init_timeout(struct _timeout *to)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_init_timeout(ഘടന _timeout *to)
 {
 	uint8_t i;
 
 	to->height = 0;
 	to->abs_ticks = 0;
 
-	for (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
-		to->forward[i] = NULL;
+	വേണ്ടി (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
+		to->forward[i] = ശൂന്യ;
 	}
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+സ്ഥിതം വരിയിൽ bool z_is_inactive_timeout(സ്ഥിരം ഘടന _timeout *to)
 {
-	return to->height == 0;
+	തിരികെ to->height == 0;
 }
 
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
+#അല്ലെങ്കിൽ /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
 
-static inline void z_init_timeout(struct _timeout *to)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_init_timeout(ഘടന _timeout *to)
 {
-	sys_dnode_init(&to->node);
+	sys_dnode_init(&to->കണ്ണി);
 	to->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+സ്ഥിതം വരിയിൽ bool z_is_inactive_timeout(സ്ഥിരം ഘടന _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	തിരികെ !sys_dnode_is_linked(&to->കണ്ണി);
 }
 
 #endif
@@ -97,7 +97,7 @@ static inline bool z_is_inactive_timeout(const struct _timeout *to)
  *
  * @return Absolute tick value when timeout will expire.
  */
-k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
+k_ticks_t z_add_timeout(ഘടന _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
 
 /* Attempt to abort a timeout. Safe to use for callers that need to be
  * certain the handler is not in flight (e.g. when about to free the
@@ -118,50 +118,50 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
  * On -EAGAIN, the only correct response is to drop outer locks and call again.
  * After a non-EAGAIN return, the handler is guaranteed not to be in flight.
  */
-int z_try_abort_timeout(struct _timeout *to);
+പൂർണ്ണസംഖ്യ z_try_abort_timeout(ഘടന _timeout *to);
 
 /* True if @to is the currently in-flight timeout and a same-CPU aborter
  * has marked the slot as superseded. Handlers with non-idempotent side
  * effects (e.g. k_timer's expiry_fn) should call this at entry, after
  * taking their own lock, and bail if it returns true.
  */
-bool z_timeout_inflight_superseded(const struct _timeout *to);
+bool z_timeout_inflight_superseded(സ്ഥിരം ഘടന _timeout *to);
 
-static inline void z_init_thread_timeout(struct _thread_base *thread_base)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_init_thread_timeout(ഘടന _thread_base *thread_base)
 {
 	z_init_timeout(&thread_base->timeout);
 }
 
-extern void z_thread_timeout(struct _timeout *timeout);
+ബാഹ്യ ശൂന്യം z_thread_timeout(ഘടന _timeout *timeout);
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+സ്ഥിതം വരിയിൽ k_ticks_t z_add_thread_timeout(ഘടന k_thread *thread, k_timeout_t ticks)
 {
-	return z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
+	തിരികെ z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
 }
 
-static inline int z_try_abort_thread_timeout(struct k_thread *thread)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_try_abort_thread_timeout(ഘടന k_thread *thread)
 {
-	return z_try_abort_timeout(&thread->base.timeout);
+	തിരികെ z_try_abort_timeout(&thread->base.timeout);
 }
 
-uint32_t z_get_next_timeout_expiry(void);
+uint32_t z_get_next_timeout_expiry(ശൂന്യം);
 
-k_ticks_t z_timeout_remaining(const struct _timeout *timeout);
+k_ticks_t z_timeout_remaining(സ്ഥിരം ഘടന _timeout *timeout);
 
-#else
+#അല്ലെങ്കിൽ
 
 /* Stubs when !CONFIG_SYS_CLOCK_EXISTS */
-#define z_init_thread_timeout(thread_base) do {} while (false)
+#define z_init_thread_timeout(thread_base) ചെയ്യുക {} ആകുമ്പോൾ (false)
 #define z_try_abort_thread_timeout(to) 0
 #define z_is_inactive_timeout(to) 1
 #define z_get_next_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
-#define z_set_timeout_expiry(ticks, is_idle) do {} while (false)
+#define z_set_timeout_expiry(ticks, is_idle) ചെയ്യുക {} ആകുമ്പോൾ (false)
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+സ്ഥിതം വരിയിൽ k_ticks_t z_add_thread_timeout(ഘടന k_thread *thread, k_timeout_t ticks)
 {
 	ARG_UNUSED(thread);
 	ARG_UNUSED(ticks);
-	return 0;
+	തിരികെ 0;
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */

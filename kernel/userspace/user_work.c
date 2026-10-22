@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+സ്ഥിതം ശൂന്യം z_work_user_q_main(ശൂന്യം *work_q_ptr, ശൂന്യം *p2, ശൂന്യം *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	ഘടന k_work_user_q *work_q = work_q_ptr;
 
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	ആകുമ്പോൾ (true) {
+		ഘടന k_work_user *work;
 		k_work_user_handler_t handler;
 
 		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		എങ്കിൽ (work == ശൂന്യ) {
+			തുടരുക;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != ശൂന്യ, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		എങ്കിൽ (atomic_test_and_clear_bit(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,19 +39,19 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+ശൂന്യം k_work_user_queue_start(ഘടന k_work_user_q *work_q, k_thread_അട്ടി_t *അട്ടി,
+			     size_t അട്ടി_size, പൂർണ്ണസംഖ്യ prio, സ്ഥിരം അക്ഷരം *name)
 {
 	k_queue_init(&work_q->queue);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, അട്ടി, അട്ടി_size, z_work_user_q_main,
+			work_q, ശൂന്യ, ശൂന്യ, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
 	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
+	എങ്കിൽ (name != ശൂന്യ) {
 		k_thread_name_set(&work_q->thread, name);
 	}
 

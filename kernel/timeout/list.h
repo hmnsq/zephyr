@@ -20,78 +20,78 @@
  * translation unit. The per-node helpers live in kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/dlist.h>
+#അന്തര്ഭാവ <zephyr/sys/dlist.h>
 
-static sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
+സ്ഥിതം sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
 
-static inline struct _timeout *z_timeout_q_first(void)
+സ്ഥിതം വരിയിൽ ഘടന _timeout *z_timeout_q_first(ശൂന്യം)
 {
 	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	തിരികെ (t == ശൂന്യ) ? ശൂന്യ : CONTAINER_OF(t, ഘടന _timeout, കണ്ണി);
 }
 
-static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
+സ്ഥിതം വരിയിൽ ഘടന _timeout *z_timeout_q_next(ഘടന _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->കണ്ണി);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	തിരികെ (n == ശൂന്യ) ? ശൂന്യ : CONTAINER_OF(n, ഘടന _timeout, കണ്ണി);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout.
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+സ്ഥിതം വരിയിൽ bool z_timeout_q_തിരുകുക(ഘടന _timeout *to, k_ticks_t dticks)
 {
-	struct _timeout *t;
+	ഘടന _timeout *t;
 
 	to->dticks = dticks;
-	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
-		if (t->dticks > to->dticks) {
+	വേണ്ടി (t = z_timeout_q_first(); t != ശൂന്യ; t = z_timeout_q_next(t)) {
+		എങ്കിൽ (t->dticks > to->dticks) {
 			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
-			return z_timeout_q_first() == to;
+			sys_dlist_തിരുകുക(&t->കണ്ണി, &to->കണ്ണി);
+			തിരികെ z_timeout_q_first() == to;
 		}
 		to->dticks -= t->dticks;
 	}
 
-	sys_dlist_append(&timeout_list, &to->node);
-	return z_timeout_q_first() == to;
+	sys_dlist_append(&timeout_list, &to->കണ്ണി);
+	തിരികെ z_timeout_q_first() == to;
 }
 
 /* Remove an arbitrary timeout from the queue, absorbing its delta into the
  * successor so the remaining deltas stay valid. Returns true if @to was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+സ്ഥിതം വരിയിൽ bool z_timeout_q_remove(ഘടന _timeout *to)
 {
 	bool was_first = (z_timeout_q_first() == to);
-	struct _timeout *n = z_timeout_q_next(to);
+	ഘടന _timeout *n = z_timeout_q_next(to);
 
-	if (n != NULL) {
+	എങ്കിൽ (n != ശൂന്യ) {
 		n->dticks += to->dticks;
 	}
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&to->കണ്ണി);
 
-	return was_first;
+	തിരികെ was_first;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+സ്ഥിതം വരിയിൽ k_ticks_t z_timeout_q_remainder(സ്ഥിരം ഘടന _timeout *to)
 {
 	k_ticks_t ticks = 0;
 
-	for (struct _timeout *t = z_timeout_q_first(); t != NULL;
+	വേണ്ടി (ഘടന _timeout *t = z_timeout_q_first(); t != ശൂന്യ;
 	     t = z_timeout_q_next(t)) {
 		ticks += t->dticks;
-		if (to == t) {
-			break;
+		എങ്കിൽ (to == t) {
+			നിർത്തുക;
 		}
 	}
 
-	return ticks;
+	തിരികെ ticks;
 }
 
 /* Ticks from (curr_tick + ticks_elapsed) until the next expiry, clamped to
@@ -101,11 +101,11 @@ static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
  * the queue is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+സ്ഥിതം വരിയിൽ k_ticks_t z_timeout_q_next_expiry(ശൂന്യം)
 {
-	struct _timeout *to = z_timeout_q_first();
+	ഘടന _timeout *to = z_timeout_q_first();
 
-	return (to == NULL) ? K_TICKS_FOREVER : to->dticks;
+	തിരികെ (to == ശൂന്യ) ? K_TICKS_FOREVER : to->dticks;
 }
 
 /* --- announce-loop helpers (see sys_clock_announce_locked() in timeout.c) --- */
@@ -114,22 +114,22 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
  * (here: the earliest expiry). A value larger than any announce window when
  * the queue is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+സ്ഥിതം വരിയിൽ int32_t z_timeout_q_next_gap(ശൂന്യം)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ഘടന _timeout *t = z_timeout_q_first();
 
-	return (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
+	തിരികെ (t == ശൂന്യ) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. For the delta list this shifts the head
  * closer to expiry; a head whose gap is fully consumed reads dticks == 0 and
  * is then drained by z_timeout_q_pop_due(). The caller advances curr_tick.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_timeout_q_advance(int32_t dt)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ഘടന _timeout *t = z_timeout_q_first();
 
-	if (t != NULL) {
+	എങ്കിൽ (t != ശൂന്യ) {
 		t->dticks -= dt;
 	}
 }
@@ -140,17 +140,17 @@ static inline void z_timeout_q_advance(int32_t dt)
  * curr_tick was advanced to match, so the successor's stored delta stays
  * valid without propagation.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+സ്ഥിതം വരിയിൽ ഘടന _timeout *z_timeout_q_എടുക്കുക_due(ശൂന്യം)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ഘടന _timeout *t = z_timeout_q_first();
 
-	if ((t == NULL) || (t->dticks != 0)) {
-		return NULL;
+	എങ്കിൽ ((t == ശൂന്യ) || (t->dticks != 0)) {
+		തിരികെ ശൂന്യ;
 	}
 
-	sys_dlist_remove(&t->node);
+	sys_dlist_remove(&t->കണ്ണി);
 
-	return t;
+	തിരികെ t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */

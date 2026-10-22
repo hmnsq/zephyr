@@ -40,8 +40,8 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/init.h>
-#include <zephyr/sys/dlist.h>
+#അന്തര്ഭാവ <zephyr/init.h>
+#അന്തര്ഭാവ <zephyr/sys/dlist.h>
 
 #define BUCKET_LISTS CONFIG_TIMEOUT_BUCKET_LISTS
 #define BUCKET_MASK  (BUCKET_LISTS - 1)
@@ -54,30 +54,30 @@ BUILD_ASSERT(BUCKET_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
  * smallest, cheapest-to-scan on 32-bit targets) window and only widen to
  * 64-bit when more than 32 buckets are configured.
  */
-#if BUCKET_LISTS <= 32
-typedef uint32_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u32_count_trailing_zeros(x)
-#else
-typedef uint64_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u64_count_trailing_zeros(x)
+#എങ്കിൽ BUCKET_LISTS <= 32
+തരനിർവചനം uint32_t bucket_bitmap_t;
+#define bucket_bits_ctz(x) u32_എണ്ണം_trailing_zeros(x)
+#അല്ലെങ്കിൽ
+തരനിർവചനം uint64_t bucket_bitmap_t;
+#define bucket_bits_ctz(x) u64_എണ്ണം_trailing_zeros(x)
 #endif
 #define BUCKET_BIT(n) ((bucket_bitmap_t)1 << (n))
 
-static sys_dlist_t bucket[BUCKET_LISTS];
-static sys_dlist_t overflow;        /* sorted ascending by absolute expiry */
-static bucket_bitmap_t bucket_bits; /* bit p set => bucket[p] is non-empty */
-static uint64_t cursor_base;        /* window start, aligned to BUCKET_LISTS */
+സ്ഥിതം sys_dlist_t bucket[BUCKET_LISTS];
+സ്ഥിതം sys_dlist_t overflow;        /* sorted ascending by absolute expiry */
+സ്ഥിതം bucket_bitmap_t bucket_bits; /* bit p set => bucket[p] is non-empty */
+സ്ഥിതം uint64_t cursor_base;        /* window start, aligned to BUCKET_LISTS */
 
-static int timeout_bucket_init(void)
+സ്ഥിതം പൂർണ്ണസംഖ്യ timeout_bucket_init(ശൂന്യം)
 {
-	for (unsigned int i = 0; i < BUCKET_LISTS; i++) {
+	വേണ്ടി (unsigned പൂർണ്ണസംഖ്യ i = 0; i < BUCKET_LISTS; i++) {
 		sys_dlist_init(&bucket[i]);
 	}
 	sys_dlist_init(&overflow);
 	bucket_bits = 0U;
 	cursor_base = 0U;
 
-	return 0;
+	തിരികെ 0;
 }
 
 /* Runs before the timer driver (PRE_KERNEL_2) and before any timeout is added.
@@ -85,131 +85,131 @@ static int timeout_bucket_init(void)
  */
 SYS_INIT(timeout_bucket_init, PRE_KERNEL_1, 0);
 
-static struct _timeout *overflow_head(void)
+സ്ഥിതം ഘടന _timeout *overflow_head(ശൂന്യം)
 {
 	sys_dnode_t *n = sys_dlist_peek_head(&overflow);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	തിരികെ (n == ശൂന്യ) ? ശൂന്യ : CONTAINER_OF(n, ഘടന _timeout, കണ്ണി);
 }
 
 /* Ticks from curr_tick to the earliest pending expiry, or INT64_MAX if none. */
-static int64_t earliest_gap(void)
+സ്ഥിതം int64_t earliest_gap(ശൂന്യം)
 {
 	int64_t gap = INT64_MAX;
-	unsigned int cur_off = (unsigned int)(curr_tick & BUCKET_MASK);
+	unsigned പൂർണ്ണസംഖ്യ cur_off = (unsigned പൂർണ്ണസംഖ്യ)(curr_tick & BUCKET_MASK);
 
 	/* Nearest non-empty bucket strictly ahead of curr_tick in the window.
 	 * cursor_base is aligned, so bucket index == window offset.
 	 */
-	if (cur_off < (BUCKET_LISTS - 1)) {
+	എങ്കിൽ (cur_off < (BUCKET_LISTS - 1)) {
 		bucket_bitmap_t ahead = bucket_bits & (~(bucket_bitmap_t)0 << (cur_off + 1));
 
-		if (ahead != 0U) {
+		എങ്കിൽ (ahead != 0U) {
 			gap = (int64_t)bucket_bits_ctz(ahead) - cur_off;
 		}
 	}
 
-	if (gap == INT64_MAX) {
-		struct _timeout *t = overflow_head();
+	എങ്കിൽ (gap == INT64_MAX) {
+		ഘടന _timeout *t = overflow_head();
 
-		if (t != NULL) {
+		എങ്കിൽ (t != ശൂന്യ) {
 			gap = (int64_t)t->dticks - (int64_t)curr_tick;
 		}
 	}
 
-	return gap;
+	തിരികെ gap;
 }
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+സ്ഥിതം bool z_timeout_q_തിരുകുക(ഘടന _timeout *to, k_ticks_t dticks)
 {
 	uint64_t expiry = curr_tick + (uint64_t)dticks;
 	int64_t old_gap = earliest_gap();
 
-	if (expiry < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)(expiry & BUCKET_MASK);
+	എങ്കിൽ (expiry < cursor_base + BUCKET_LISTS) {
+		unsigned പൂർണ്ണസംഖ്യ idx = (unsigned പൂർണ്ണസംഖ്യ)(expiry & BUCKET_MASK);
 
 		to->dticks = idx;
 		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &to->node);
-	} else {
+		sys_dlist_append(&bucket[idx], &to->കണ്ണി);
+	} അല്ലെങ്കിൽ {
 		/* Overflow: keep sorted ascending by absolute expiry. Insert
 		 * after any equal-keyed entries so same-tick order stays FIFO.
 		 */
-		struct _timeout *t;
+		ഘടന _timeout *t;
 
 		to->dticks = (k_ticks_t)expiry;
-		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, node) {
-			if ((uint64_t)t->dticks > expiry) {
-				sys_dlist_insert(&t->node, &to->node);
-				return (int64_t)dticks < old_gap;
+		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, കണ്ണി) {
+			എങ്കിൽ ((uint64_t)t->dticks > expiry) {
+				sys_dlist_തിരുകുക(&t->കണ്ണി, &to->കണ്ണി);
+				തിരികെ (int64_t)dticks < old_gap;
 			}
 		}
-		sys_dlist_append(&overflow, &to->node);
+		sys_dlist_append(&overflow, &to->കണ്ണി);
 	}
 
-	return (int64_t)dticks < old_gap;
+	തിരികെ (int64_t)dticks < old_gap;
 }
 
-static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+സ്ഥിതം k_ticks_t z_timeout_q_remainder(സ്ഥിരം ഘടന _timeout *to)
 {
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
+	എങ്കിൽ ((uint64_t)to->dticks < BUCKET_LISTS) {
 		/* Bucket entry: reconstruct its absolute expiry, the unique
 		 * tick in the window whose low bits are the bucket index.
 		 */
 		uint64_t off = ((uint64_t)to->dticks - cursor_base) & BUCKET_MASK;
 
-		return (k_ticks_t)((cursor_base + off) - curr_tick);
+		തിരികെ (k_ticks_t)((cursor_base + off) - curr_tick);
 	}
 
-	return (k_ticks_t)((uint64_t)to->dticks - curr_tick);
+	തിരികെ (k_ticks_t)((uint64_t)to->dticks - curr_tick);
 }
 
-static bool z_timeout_q_remove(struct _timeout *to)
+സ്ഥിതം bool z_timeout_q_remove(ഘടന _timeout *to)
 {
 	bool was_first = (z_timeout_q_remainder(to) <= earliest_gap());
 
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)to->dticks;
+	എങ്കിൽ ((uint64_t)to->dticks < BUCKET_LISTS) {
+		unsigned പൂർണ്ണസംഖ്യ idx = (unsigned പൂർണ്ണസംഖ്യ)to->dticks;
 
-		sys_dlist_remove(&to->node);
-		if (sys_dlist_is_empty(&bucket[idx])) {
+		sys_dlist_remove(&to->കണ്ണി);
+		എങ്കിൽ (sys_dlist_is_empty(&bucket[idx])) {
 			bucket_bits &= ~BUCKET_BIT(idx);
 		}
-	} else {
+	} അല്ലെങ്കിൽ {
 		/* Overflow stores absolute expiry (not a delta), so removal
 		 * needs no successor fix-up.
 		 */
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&to->കണ്ണി);
 	}
 
-	return was_first;
+	തിരികെ was_first;
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * none. The announce-range cap is applied centrally by next_timeout() in
  * timeout.c.
  */
-static k_ticks_t z_timeout_q_next_expiry(void)
+സ്ഥിതം k_ticks_t z_timeout_q_next_expiry(ശൂന്യം)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
+	തിരികെ (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
 }
 
-static int32_t z_timeout_q_next_gap(void)
+സ്ഥിതം int32_t z_timeout_q_next_gap(ശൂന്യം)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	തിരികെ (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static void z_timeout_q_advance(int32_t dt)
+സ്ഥിതം ശൂന്യം z_timeout_q_advance(int32_t dt)
 {
 	uint64_t new_curr = curr_tick + (uint64_t)dt;
 
-	if (new_curr < cursor_base + BUCKET_LISTS) {
+	എങ്കിൽ (new_curr < cursor_base + BUCKET_LISTS) {
 		/* Still inside the current window: nothing to migrate. */
-		return;
+		തിരികെ;
 	}
 
 	/* Crossed the window. The loop only advances past the boundary when no
@@ -220,37 +220,37 @@ static void z_timeout_q_advance(int32_t dt)
 	cursor_base = new_curr & ~(uint64_t)BUCKET_MASK;
 	bucket_bits = 0U;
 
-	struct _timeout *t;
+	ഘടന _timeout *t;
 
-	while ((t = overflow_head()) != NULL &&
+	ആകുമ്പോൾ ((t = overflow_head()) != ശൂന്യ &&
 	       (uint64_t)t->dticks < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)((uint64_t)t->dticks & BUCKET_MASK);
+		unsigned പൂർണ്ണസംഖ്യ idx = (unsigned പൂർണ്ണസംഖ്യ)((uint64_t)t->dticks & BUCKET_MASK);
 
-		sys_dlist_remove(&t->node);
+		sys_dlist_remove(&t->കണ്ണി);
 		t->dticks = idx;
 		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &t->node);
+		sys_dlist_append(&bucket[idx], &t->കണ്ണി);
 	}
 }
 
-static struct _timeout *z_timeout_q_pop_due(void)
+സ്ഥിതം ഘടന _timeout *z_timeout_q_എടുക്കുക_due(ശൂന്യം)
 {
-	unsigned int idx = (unsigned int)(curr_tick & BUCKET_MASK);
+	unsigned പൂർണ്ണസംഖ്യ idx = (unsigned പൂർണ്ണസംഖ്യ)(curr_tick & BUCKET_MASK);
 	sys_dnode_t *n = sys_dlist_peek_head(&bucket[idx]);
-	struct _timeout *t;
+	ഘടന _timeout *t;
 
-	if (n == NULL) {
-		return NULL;
+	എങ്കിൽ (n == ശൂന്യ) {
+		തിരികെ ശൂന്യ;
 	}
 
 	/* All entries in bucket[curr_tick & MASK] expire exactly at curr_tick. */
-	t = CONTAINER_OF(n, struct _timeout, node);
-	sys_dlist_remove(&t->node);
-	if (sys_dlist_is_empty(&bucket[idx])) {
+	t = CONTAINER_OF(n, ഘടന _timeout, കണ്ണി);
+	sys_dlist_remove(&t->കണ്ണി);
+	എങ്കിൽ (sys_dlist_is_empty(&bucket[idx])) {
 		bucket_bits &= ~BUCKET_BIT(idx);
 	}
 
-	return t;
+	തിരികെ t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */

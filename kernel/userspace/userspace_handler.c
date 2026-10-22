@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+സ്ഥിതം ഘടന k_object *validate_kernel_object(സ്ഥിരം ശൂന്യം *obj,
+					       എണ്ണൽ k_objects otype,
+					       എണ്ണൽ _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	ഘടന k_object *ko;
+	പൂർണ്ണസംഖ്യ ret;
 
 	ko = k_object_find(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
+	എങ്കിൽ (ret != 0) {
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
 #endif /* CONFIG_LOG */
-		return NULL;
+		തിരികെ ശൂന്യ;
 	}
 
-	return ko;
+	തിരികെ ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+സ്ഥിതം ALWAYS_INLINE ഘടന k_object *validate_any_object(സ്ഥിരം ശൂന്യം *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	തിരികെ validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(സ്ഥിരം ശൂന്യം *obj, എണ്ണൽ k_objects otype)
 {
-	struct k_object *ko;
+	ഘടന k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	തിരികെ (ko != ശൂന്യ);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,47 +49,47 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_vrfy_k_object_access_grant(സ്ഥിരം ശൂന്യം *object,
+						ഘടന k_thread *thread)
 {
-	struct k_object *ko;
+	ഘടന k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied",
+	K_OOPS(K_SYSCALL_VERIFY_സന്ദേശം(ko != ശൂന്യ, "object %p access denied",
 				    object));
 	k_thread_perms_set(ko, thread);
 }
-#include <zephyr/syscalls/k_object_access_grant_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_object_access_grant_mrsh.c>
 
 /*
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_object_access_check(സ്ഥിരം ശൂന്യം *object)
 {
-	return z_impl_k_object_access_check(object);
+	തിരികെ z_impl_k_object_access_check(object);
 }
-#include <zephyr/syscalls/k_object_access_check_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_vrfy_k_object_release(സ്ഥിരം ശൂന്യം *object)
 {
-	struct k_object *ko;
+	ഘടന k_object *ko;
 
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
+	K_OOPS(K_SYSCALL_VERIFY_സന്ദേശം(ko != ശൂന്യ, "object %p access denied", object));
 	k_thread_perms_clear(ko, _current);
 }
-#include <zephyr/syscalls/k_object_release_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+സ്ഥിതം വരിയിൽ ശൂന്യം *z_vrfy_k_object_alloc(എണ്ണൽ k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	തിരികെ z_impl_k_object_alloc(otype);
 }
-#include <zephyr/syscalls/k_object_alloc_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+സ്ഥിതം വരിയിൽ ശൂന്യം *z_vrfy_k_object_alloc_size(എണ്ണൽ k_objects otype, size_t size)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	തിരികെ z_impl_k_object_alloc_size(otype, size);
 }
-#include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_object_alloc_size_mrsh.c>

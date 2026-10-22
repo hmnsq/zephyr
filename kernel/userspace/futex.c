@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
-#include <ksched.h>
-#include <scheduler.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <zephyr/spinlock.h>
+#അന്തര്ഭാവ <zephyr/internal/syscall_handler.h>
+#അന്തര്ഭാവ <zephyr/init.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <scheduler.h>
 
 /*
  * Kernel futex implementation
@@ -36,32 +36,32 @@
  *   expected to be the TID of the holder, so that a higher priority thread
  *   waiting for a futex can boost the holders priority.
  */
-static _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
-static struct k_spinlock futex_lock;
+സ്ഥിതം _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
+സ്ഥിതം ഘടന k_spinlock futex_lock;
 
 /**
  * Context structure for walking the futex wait queue
  */
-struct futex_walk_data {
+ഘടന futex_walk_data {
 	/**
 	 * List head of threads to wake up during post op (NULL if empty)
 	 * This is an intermediate value filled by the walk op
 	 * Must be initialized to NULL before the walk
 	 */
-	struct k_thread *head;
+	ഘടന k_thread *head;
 	/**
 	 * Futex address
 	 * This is an input to the walk
 	 */
-	struct k_futex *futex;
+	ഘടന k_futex *futex;
 	/**
 	 * Number of threads that have been woken up
 	 * This is an output of the walk and must be initialized to zero
 	 */
-	int woken;
+	പൂർണ്ണസംഖ്യ woken;
 };
 
-static void futex_post_walk_op(int status, void *data)
+സ്ഥിതം ശൂന്യം futex_post_walk_op(പൂർണ്ണസംഖ്യ status, ശൂന്യം *data)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
@@ -69,25 +69,25 @@ static void futex_post_walk_op(int status, void *data)
 	 * is invoked with _sched_spinlock held.
 	 */
 	ARG_UNUSED(status);
-	struct futex_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ഘടന futex_walk_data *walk_data = data;
+	ഘടന k_thread *thread, *next;
 
 	thread = walk_data->head;
 
 	/* Wake up threads if any */
-	while (thread != NULL) {
+	ആകുമ്പോൾ (thread != ശൂന്യ) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * walk_data->head will only ever be non-NULL for wake-one,
 		 * which has no "next" thread to wake by definition.
 		 */
-		next = NULL;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+		next = ശൂന്യ;
+#അല്ലെങ്കിൽ  /* !CONFIG_WAITQ_SCALABLE */
 		next = thread->next_wake_link;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(ശൂന്യം)z_try_abort_thread_timeout(thread);
+		arch_thread_return_മൂല്യം_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
 
@@ -95,14 +95,14 @@ static void futex_post_walk_op(int status, void *data)
 	}
 }
 
-static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
+സ്ഥിതം പൂർണ്ണസംഖ്യ futex_wake_one_walk_op(ഘടന k_thread *thread, ശൂന്യം *data)
 {
-	struct futex_walk_data *walk_data = data;
+	ഘടന futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	എങ്കിൽ (thread->futex_pointer == walk_data->futex) {
 		/* Find the highest priority thread */
-		if (walk_data->head == NULL ||
+		എങ്കിൽ (walk_data->head == ശൂന്യ ||
 		    z_is_prio_higher(thread->base.prio, walk_data->head->base.prio)) {
 			/*
 			 * next_wake_link is initialized to NULL in z_impl_k_futex_wait so
@@ -112,40 +112,40 @@ static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
 		}
 	}
 
-	return 0;
+	തിരികെ 0;
 }
 
-static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
+സ്ഥിതം പൂർണ്ണസംഖ്യ futex_wake_all_walk_op(ഘടന k_thread *thread, ശൂന്യം *data)
 {
-	struct futex_walk_data *walk_data = data;
+	ഘടന futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	എങ്കിൽ (thread->futex_pointer == walk_data->futex) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
 		 * to call here because this walk_op callback
 		 * is invoked with _sched_spinlock held.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(ശൂന്യം)z_try_abort_thread_timeout(thread);
+		arch_thread_return_മൂല്യം_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+#അല്ലെങ്കിൽ  /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = walk_data->head;
 		walk_data->head = thread;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	തിരികെ 0;
 }
 
-int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
+പൂർണ്ണസംഖ്യ z_impl_k_futex_wake(ഘടന k_futex *futex, bool wake_all)
 {
-	k_spinlock_key_t key;
-	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
+	k_spinlock_താക്കോൽ_t താക്കോൽ;
+	ഘടന futex_walk_data walk_data = {.head = ശൂന്യ, .futex = futex, .woken = 0};
 
-	key = k_spin_lock(&futex_lock);
+	താക്കോൽ = k_spin_lock(&futex_lock);
 
 	/*
 	 * Walk through the wait queue to find threads waiting on this futex.
@@ -165,35 +165,35 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 			   (wake_all) ? futex_wake_all_walk_op : futex_wake_one_walk_op,
 			   futex_post_walk_op, &walk_data);
 
-	if (walk_data.woken == 0) {
-		k_spin_unlock(&futex_lock, key);
-	} else {
-		z_reschedule(&futex_lock, key);
+	എങ്കിൽ (walk_data.woken == 0) {
+		k_spin_unlock(&futex_lock, താക്കോൽ);
+	} അല്ലെങ്കിൽ {
+		z_reschedule(&futex_lock, താക്കോൽ);
 	}
 
-	return walk_data.woken;
+	തിരികെ walk_data.woken;
 }
 
-static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_futex_wake(ഘടന k_futex *futex, bool wake_all)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	എങ്കിൽ (K_SYSCALL_MEMORY_WRITE(futex, വലുപ്പം(ഘടന k_futex)) != 0) {
+		തിരികെ -EACCES;
 	}
 
-	return z_impl_k_futex_wake(futex, wake_all);
+	തിരികെ z_impl_k_futex_wake(futex, wake_all);
 }
-#include <zephyr/syscalls/k_futex_wake_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_futex_wake_mrsh.c>
 
-int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+പൂർണ്ണസംഖ്യ z_impl_k_futex_wait(ഘടന k_futex *futex, പൂർണ്ണസംഖ്യ expected, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
+	പൂർണ്ണസംഖ്യ ret;
+	k_spinlock_താക്കോൽ_t താക്കോൽ;
 
-	key = k_spin_lock(&futex_lock);
+	താക്കോൽ = k_spin_lock(&futex_lock);
 
-	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
-		k_spin_unlock(&futex_lock, key);
-		return -EAGAIN;
+	എങ്കിൽ (atomic_get(&futex->val) != (atomic_val_t)expected) {
+		k_spin_unlock(&futex_lock, താക്കോൽ);
+		തിരികെ -EAGAIN;
 	}
 
 	/*
@@ -202,22 +202,22 @@ int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout
 	 */
 	_current->futex_pointer = futex;
 #ifdef CONFIG_WAITQ_SCALABLE
-	_current->next_wake_link = NULL;
+	_current->next_wake_link = ശൂന്യ;
 #endif /* CONFIG_WAITQ_SCALABLE */
-	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
-	if (ret == -EAGAIN) {
+	ret = z_pend_curr(&futex_lock, താക്കോൽ, &futex_wait_q, timeout);
+	എങ്കിൽ (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}
 
-	return ret;
+	തിരികെ ret;
 }
 
-static inline int z_vrfy_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_vrfy_k_futex_wait(ഘടന k_futex *futex, പൂർണ്ണസംഖ്യ expected, k_timeout_t timeout)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	എങ്കിൽ (K_SYSCALL_MEMORY_WRITE(futex, വലുപ്പം(ഘടന k_futex)) != 0) {
+		തിരികെ -EACCES;
 	}
 
-	return z_impl_k_futex_wait(futex, expected, timeout);
+	തിരികെ z_impl_k_futex_wait(futex, expected, timeout);
 }
-#include <zephyr/syscalls/k_futex_wait_mrsh.c>
+#അന്തര്ഭാവ <zephyr/syscalls/k_futex_wait_mrsh.c>

@@ -5,23 +5,23 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
 #define ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <wait_q.h>
-#include <kthread.h>
-#include <priority_q.h>
-#include <ipi.h>
+#അന്തര്ഭാവ <zephyr/kernel.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <zephyr/spinlock.h>
+#അന്തര്ഭാവ <wait_q.h>
+#അന്തര്ഭാവ <kthread.h>
+#അന്തര്ഭാവ <priority_q.h>
+#അന്തര്ഭാവ <ipi.h>
 
 
-static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം *thread_runq(ഘടന k_thread *thread)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
 	uint32_t cpu_mask = thread->base.cpu_mask;
 
 	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	unsigned പൂർണ്ണസംഖ്യ cpu = (unsigned പൂർണ്ണസംഖ്യ)u32_എണ്ണം_trailing_zeros(cpu_mask);
 
 	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",
@@ -30,25 +30,25 @@ static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
 	/* Clamp so static-analysis tools that cannot see the assert
 	 * above do not flag the array access as out-of-bounds.
 	 */
-	cpu = MIN(cpu, (unsigned int)(ARRAY_SIZE(_kernel.cpus) - 1U));
+	cpu = MIN(cpu, (unsigned പൂർണ്ണസംഖ്യ)(ARRAY_SIZE(_kernel.cpus) - 1U));
 
-	return &_kernel.cpus[cpu].ready_q.runq;
-#else
+	തിരികെ &_kernel.cpus[cpu].ready_q.runq;
+#അല്ലെങ്കിൽ
 	ARG_UNUSED(thread);
-	return &_kernel.ready_q.runq;
+	തിരികെ &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void *curr_cpu_runq(void)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം *curr_cpu_runq(ശൂന്യം)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	return &arch_curr_cpu()->ready_q.runq;
-#else
-	return &_kernel.ready_q.runq;
+	തിരികെ &arch_curr_cpu()->ready_q.runq;
+#അല്ലെങ്കിൽ
+	തിരികെ &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void runq_add(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം runq_add(ഘടന k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
@@ -56,7 +56,7 @@ static ALWAYS_INLINE void runq_add(struct k_thread *thread)
 	_priq_run_add(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം runq_remove(ഘടന k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
@@ -64,43 +64,43 @@ static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
 	_priq_run_remove(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_yield(void)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം runq_yield(ശൂന്യം)
 {
 	_priq_run_yield(curr_cpu_runq());
 }
 
-static ALWAYS_INLINE struct k_thread *runq_best(void)
+സ്ഥിതം ALWAYS_INLINE ഘടന k_thread *runq_best(ശൂന്യം)
 {
-	return _priq_run_best(curr_cpu_runq());
+	തിരികെ _priq_run_best(curr_cpu_runq());
 }
 
 /*
  * _current is never in the run queue until context switch on
  * SMP configurations.
  */
-static inline bool should_queue_thread(struct k_thread *thread)
+സ്ഥിതം വരിയിൽ bool should_queue_thread(ഘടന k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	തിരികെ !IS_ENABLED(CONFIG_SMP) || (thread != _current);
 }
 
-static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം queue_thread(ഘടന k_thread *thread)
 {
 	z_mark_thread_as_queued(thread);
-	if (should_queue_thread(thread)) {
+	എങ്കിൽ (should_queue_thread(thread)) {
 		runq_add(thread);
 	}
 #ifdef CONFIG_SMP
-	if (thread == _current) {
+	എങ്കിൽ (thread == _current) {
 		/* add current to end of queue means "yield" */
 		_current_cpu->swap_ok = true;
 	}
 #endif /* CONFIG_SMP */
 }
 
-static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
+സ്ഥിതം ALWAYS_INLINE ശൂന്യം dequeue_thread(ഘടന k_thread *thread)
 {
 	z_mark_thread_as_not_queued(thread);
-	if (should_queue_thread(thread)) {
+	എങ്കിൽ (should_queue_thread(thread)) {
 		runq_remove(thread);
 	}
 }

@@ -6,19 +6,19 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KSWAP_H_
 #define ZEPHYR_KERNEL_INCLUDE_KSWAP_H_
 
-#include <kspinlock.h>
-#include <ksched.h>
-#include <run_q.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/barrier.h>
-#include <kernel_arch_func.h>
-#include <timeslicing.h>
-#include <usage.h>
+#അന്തര്ഭാവ <kspinlock.h>
+#അന്തര്ഭാവ <ksched.h>
+#അന്തര്ഭാവ <run_q.h>
+#അന്തര്ഭാവ <zephyr/spinlock.h>
+#അന്തര്ഭാവ <zephyr/sys/barrier.h>
+#അന്തര്ഭാവ <kernel_arch_func.h>
+#അന്തര്ഭാവ <timeslicing.h>
+#അന്തര്ഭാവ <usage.h>
 
-#ifdef CONFIG_STACK_SENTINEL
-extern void z_check_stack_sentinel(void);
-#else
-#define z_check_stack_sentinel() /**/
+#ifdef CONFIG_അട്ടി_SENTINEL
+ബാഹ്യ ശൂന്യം z_check_അട്ടി_sentinel(ശൂന്യം);
+#അല്ലെങ്കിൽ
+#define z_check_അട്ടി_sentinel() /**/
 #endif /* CONFIG_STACK_SENTINEL */
 
 /* In SMP, the irq_lock() is a spinlock which is implicitly released
@@ -28,7 +28,7 @@ extern void z_check_stack_sentinel(void);
  * to restore the lock state to whatever the thread's counter
  * expects.
  */
-void z_smp_release_global_lock(struct k_thread *thread);
+ശൂന്യം z_smp_release_global_lock(ഘടന k_thread *thread);
 
 /* context switching and scheduling-related routines */
 #ifdef CONFIG_USE_SWITCH
@@ -52,12 +52,12 @@ void z_smp_release_global_lock(struct k_thread *thread);
  * switched-to thread, which is going to (obviously) be running its
  * own code and doesn't know it was switched out.
  */
-static inline void z_sched_switch_spin(struct k_thread *thread)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_sched_switch_spin(ഘടന k_thread *thread)
 {
 #ifdef CONFIG_SMP
-	volatile void **shp = (void *)&thread->switch_handle;
+	അസ്ഥിര ശൂന്യം **shp = (ശൂന്യം *)&thread->switch_handle;
 
-	while (*shp == NULL) {
+	ആകുമ്പോൾ (*shp == ശൂന്യ) {
 		arch_spin_relax();
 	}
 	/* Read barrier: don't allow any subsequent loads in the
@@ -76,19 +76,19 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
  * Note that is_spinlock is a compile-time construct which will be
  * optimized out when this function is expanded.
  */
-static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
-					  struct k_spinlock *lock,
+സ്ഥിതം ALWAYS_INLINE unsigned പൂർണ്ണസംഖ്യ do_swap(unsigned പൂർണ്ണസംഖ്യ താക്കോൽ,
+					  ഘടന k_spinlock *lock,
 					  bool is_spinlock)
 {
-	struct k_thread *new_thread, *old_thread;
+	ഘടന k_thread *new_thread, *old_thread;
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, lock);
+	z_assert_can_swap(താക്കോൽ, lock);
 #endif /* CONFIG_SPIN_VALIDATE */
 
 	old_thread = _current;
 
-	z_check_stack_sentinel();
+	z_check_അട്ടി_sentinel();
 
 	old_thread->swap_retval = -EAGAIN;
 
@@ -96,29 +96,29 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 	 * have it.  We "release" other spinlocks here.  But we never
 	 * drop the interrupt lock.
 	 */
-	if (is_spinlock && (lock != NULL) && !z_is_sched_spinlock(lock)) {
+	എങ്കിൽ (is_spinlock && (lock != ശൂന്യ) && !z_is_sched_spinlock(lock)) {
 		k_spin_release(lock);
 	}
-	if (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
+	എങ്കിൽ (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
 		/* Taking a nested uniprocessor lock in void context is a noop */
-		if (!is_spinlock || !z_is_sched_spinlock(lock)) {
-			(void)z_sched_spinlock_lock();
+		എങ്കിൽ (!is_spinlock || !z_is_sched_spinlock(lock)) {
+			(ശൂന്യം)z_sched_spinlock_lock();
 		}
 	}
 
 #ifdef CONFIG_SMP
 	new_thread = z_swap_next_thread();
-#else
+#അല്ലെങ്കിൽ
 	new_thread = _kernel.ready_q.cache;
 #endif
 
-	if (new_thread != old_thread) {
+	എങ്കിൽ (new_thread != old_thread) {
 		z_sched_usage_switch(new_thread);
 
 #ifdef CONFIG_SMP
 		new_thread->base.cpu = arch_curr_cpu()->id;
 
-		if (!is_spinlock) {
+		എങ്കിൽ (!is_spinlock) {
 			z_smp_release_global_lock(new_thread);
 		}
 #endif /* CONFIG_SMP */
@@ -132,7 +132,7 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 
 		z_sched_spinlock_transfer_owner(new_thread);
 
-		arch_cohere_stacks(old_thread, NULL, new_thread);
+		arch_cohere_stacks(old_thread, ശൂന്യ, new_thread);
 
 #ifdef CONFIG_SMP
 		/* Now add _current back to the run queue, once we are
@@ -143,85 +143,85 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 		 * set of CPUs pick a cycle of threads to run and wait for them
 		 * all to context switch forever.
 		 */
-		if (z_is_thread_queued(old_thread)) {
+		എങ്കിൽ (z_is_thread_queued(old_thread)) {
 			runq_add(old_thread);
 		}
 		signal_pending_ipi();
 #endif /* CONFIG_SMP */
-		void *newsh = new_thread->switch_handle;
+		ശൂന്യം *newsh = new_thread->switch_handle;
 
-		if (IS_ENABLED(CONFIG_SMP)) {
+		എങ്കിൽ (IS_ENABLED(CONFIG_SMP)) {
 			/* Active threads must have a null here.  And
 			 * it must be seen before the scheduler lock
 			 * is released!
 			 */
-			new_thread->switch_handle = NULL;
+			new_thread->switch_handle = ശൂന്യ;
 			barrier_dmem_fence_full(); /* write barrier */
 		}
 		z_sched_spinlock_release();
 		arch_switch(newsh, &old_thread->switch_handle);
-	} else {
+	} അല്ലെങ്കിൽ {
 		z_sched_spinlock_release();
 	}
 
-	if (is_spinlock) {
-		arch_irq_unlock(key);
-	} else {
-		irq_unlock(key);
+	എങ്കിൽ (is_spinlock) {
+		arch_irq_unlock(താക്കോൽ);
+	} അല്ലെങ്കിൽ {
+		irq_unlock(താക്കോൽ);
 	}
 
-	return _current->swap_retval;
+	തിരികെ _current->swap_retval;
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_swap_irqlock(unsigned പൂർണ്ണസംഖ്യ താക്കോൽ)
 {
-	return do_swap(key, NULL, false);
+	തിരികെ do_swap(താക്കോൽ, ശൂന്യ, false);
 }
 
-static inline int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_swap(ഘടന k_spinlock *lock, k_spinlock_താക്കോൽ_t താക്കോൽ)
 {
-	return do_swap(key.key, lock, true);
+	തിരികെ do_swap(താക്കോൽ.താക്കോൽ, lock, true);
 }
 
-static inline void z_swap_unlocked(void)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_swap_unlocked(ശൂന്യം)
 {
-	(void) do_swap(arch_irq_lock(), NULL, true);
+	(ശൂന്യം) do_swap(arch_irq_lock(), ശൂന്യ, true);
 }
 
-#else /* !CONFIG_USE_SWITCH */
+#അല്ലെങ്കിൽ /* !CONFIG_USE_SWITCH */
 
 
-static inline void z_sched_switch_spin(struct k_thread *thread)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_sched_switch_spin(ഘടന k_thread *thread)
 {
 	ARG_UNUSED(thread);
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_swap_irqlock(unsigned പൂർണ്ണസംഖ്യ താക്കോൽ)
 {
-	int ret;
-	z_check_stack_sentinel();
+	പൂർണ്ണസംഖ്യ ret;
+	z_check_അട്ടി_sentinel();
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, NULL);
+	z_assert_can_swap(താക്കോൽ, ശൂന്യ);
 #endif /* CONFIG_SPIN_VALIDATE */
 
-	ret = arch_swap(key);
-	return ret;
+	ret = arch_swap(താക്കോൽ);
+	തിരികെ ret;
 }
 
 /* If !USE_SWITCH, then spinlocks are guaranteed degenerate as we
  * can't be in SMP.  The k_spin_release() call is just for validation
  * handling.
  */
-static ALWAYS_INLINE int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+സ്ഥിതം ALWAYS_INLINE പൂർണ്ണസംഖ്യ z_swap(ഘടന k_spinlock *lock, k_spinlock_താക്കോൽ_t താക്കോൽ)
 {
 	k_spin_release(lock);
-	return z_swap_irqlock(key.key);
+	തിരികെ z_swap_irqlock(താക്കോൽ.താക്കോൽ);
 }
 
-static inline void z_swap_unlocked(void)
+സ്ഥിതം വരിയിൽ ശൂന്യം z_swap_unlocked(ശൂന്യം)
 {
-	(void) z_swap_irqlock(arch_irq_lock());
+	(ശൂന്യം) z_swap_irqlock(arch_irq_lock());
 }
 
 #endif /* !CONFIG_USE_SWITCH */
@@ -229,9 +229,9 @@ static inline void z_swap_unlocked(void)
 /**
  * @brief - Like z_swap() but it is known that the scheduler's spinlock is already held.
  */
-static inline int z_swap_locked(k_spinlock_key_t key)
+സ്ഥിതം വരിയിൽ പൂർണ്ണസംഖ്യ z_swap_locked(k_spinlock_താക്കോൽ_t താക്കോൽ)
 {
-	return z_swap(&_sched_spinlock, key);
+	തിരികെ z_swap(&_sched_spinlock, താക്കോൽ);
 }
 
 /**
@@ -243,6 +243,6 @@ static inline int z_swap_locked(k_spinlock_key_t key)
  *
  * The memory of the dummy thread can be completely uninitialized.
  */
-void z_dummy_thread_init(struct k_thread *dummy_thread);
+ശൂന്യം z_dummy_thread_init(ഘടന k_thread *dummy_thread);
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_KSWAP_H_ */
