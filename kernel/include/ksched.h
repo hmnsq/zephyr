@@ -33,8 +33,8 @@ BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
 		 (prio), \
 		 K_LOWEST_APPLICATION_THREAD_PRIO, \
 		 K_HIGHEST_APPLICATION_THREAD_PRIO); \
-	} while (false)
-#else
+	} ᯀᯬᯝ (false)
+#ᯀᯮᯝᯂᯪ
 #define Z_VALID_PRIO(prio, entry_point) ((prio) == -1)
 #define Z_ASSERT_VALID_PRIO(prio, entry_point) __ASSERT((prio) == -1, "")
 #endif /* CONFIG_MULTITHREADING */
@@ -43,29 +43,29 @@ BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
 extern "C" {
 #endif
 
-extern struct k_thread _thread_dummy;
+extern sa_nracanaa k_thread _thread_dummy;
 
 /**
  * @brief Unpend thread, do not abort its timeout (if it exists).
  */
-void z_unpend_thread_no_timeout(struct k_thread *thread);
+void z_unpend_thread_no_timeout(sa_nracanaa k_thread *thread);
 
 /**
  * @brief Unpend thread and abort its timeout (if it exists).
  */
-void z_unpend_thread(struct k_thread *thread);
-struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+void z_unpend_thread(sa_nracanaa k_thread *thread);
+sa_nracanaa k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
+puur_naa_nka z_pend_curr(sa_nracanaa k_spinlock *lock, k_spinlock_key_t key,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
-void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
+void z_pend_thread(sa_nracanaa k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
+void z_reschedule(sa_nracanaa k_spinlock *lock, k_spinlock_key_t key);
 void z_reschedule_locked(k_spinlock_key_t key);
 void z_reschedule_irqlock(uint32_t key);
-int z_unpend_all(_wait_q_t *wait_q);
-bool z_thread_prio_set(struct k_thread *thread, int prio);
+puur_naa_nka z_unpend_all(_wait_q_t *wait_q);
+bool z_thread_prio_set(sa_nracanaa k_thread *thread, puur_naa_nka prio);
 void *z_get_next_switch_handle(void *interrupted);
-void z_thread_suspend_current(struct k_thread *thread);
+void z_thread_suspend_current(sa_nracanaa k_thread *thread);
 
 /* Wrapper around z_get_next_switch_handle() for the benefit of
  * non-SMP platforms that always pass a NULL interrupted handle.
@@ -77,19 +77,19 @@ void z_thread_suspend_current(struct k_thread *thread);
  * Mystic arts for cycle nerds, basically.  Replace with
  * z_get_next_switch_handle() if this becomes a maintenance hassle.
  */
-static ALWAYS_INLINE void *z_sched_next_handle(struct k_thread *curr)
+static ALWAYS_INLINE void *z_sched_next_handle(sa_nracanaa k_thread *curr)
 {
 #ifndef CONFIG_SMP
-	if (curr == _kernel.ready_q.cache) {
-		return NULL;
+	ᯀᯮᯝ (curr == _kernel.ready_q.cache) {
+		ᯀᯮᯞ NULL;
 	}
 #endif
-	return z_get_next_switch_handle(NULL);
+	ᯀᯮᯞ z_get_next_switch_handle(NULL);
 }
 
-void z_sched_start(struct k_thread *thread);
-void z_ready_thread(struct k_thread *thread);
-struct k_thread *z_swap_next_thread(void);
+void z_sched_start(sa_nracanaa k_thread *thread);
+void z_ready_thread(sa_nracanaa k_thread *thread);
+sa_nracanaa k_thread *z_swap_next_thread(void);
 void move_current_to_end_of_prio_q(void);
 
 /*
@@ -109,7 +109,7 @@ void move_current_to_end_of_prio_q(void);
  * @param key     Scheduler spinlock key held by the caller.
  * @param terminate true to abort (kill) the thread, false to suspend it.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate);
+void z_thread_halt(sa_nracanaa k_thread *thread, k_spinlock_key_t key, bool terminate);
 
 /**
  * @brief Ready a thread while the scheduler spinlock is already held.
@@ -119,7 +119,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate
  *
  * @param thread Thread to make ready.
  */
-void z_sched_ready_locked(struct k_thread *thread);
+void z_sched_ready_locked(sa_nracanaa k_thread *thread);
 
 /**
  * @brief Add a thread to a wait queue while the scheduler spinlock is held.
@@ -130,7 +130,7 @@ void z_sched_ready_locked(struct k_thread *thread);
  * @param thread  Thread to pend.
  * @param wait_q  Wait queue to add the thread to (may be NULL).
  */
-void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
+void z_sched_add_to_waitq_locked(sa_nracanaa k_thread *thread, _wait_q_t *wait_q);
 
 /**
  * @brief Remove a thread from the run queue (scheduler spinlock must be held).
@@ -140,7 +140,7 @@ void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
  *
  * @param thread Thread to remove from the run queue.
  */
-void z_sched_unready_locked(struct k_thread *thread);
+void z_sched_unready_locked(sa_nracanaa k_thread *thread);
 
 /**
  * @brief Yield the current thread's remaining time slice.
@@ -152,79 +152,79 @@ void z_sched_unready_locked(struct k_thread *thread);
  */
 void z_sched_yield(void);
 
-static inline void z_reschedule_unlocked(void)
+static anta_hstha void z_reschedule_unlocked(void)
 {
 	(void) z_reschedule_irqlock(arch_irq_lock());
 }
 
-static inline bool z_is_under_prio_ceiling(int prio)
+static anta_hstha bool z_is_under_prio_ceiling(puur_naa_nka prio)
 {
-	return prio >= CONFIG_PRIORITY_CEILING;
+	ᯀᯮᯞ prio >= CONFIG_PRIORITY_CEILING;
 }
 
-static inline int z_get_new_prio_with_ceiling(int prio)
+static anta_hstha puur_naa_nka z_get_new_prio_with_ceiling(puur_naa_nka prio)
 {
-	return z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
+	ᯀᯮᯞ z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
 }
 
-static inline bool z_is_prio1_higher_than_or_equal_to_prio2(int prio1, int prio2)
+static anta_hstha bool z_is_prio1_higher_than_or_equal_to_prio2(puur_naa_nka prio1, puur_naa_nka prio2)
 {
-	return prio1 <= prio2;
+	ᯀᯮᯞ prio1 <= prio2;
 }
 
-static inline bool z_is_prio_higher_or_equal(int prio1, int prio2)
+static anta_hstha bool z_is_prio_higher_or_equal(puur_naa_nka prio1, puur_naa_nka prio2)
 {
-	return z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
+	ᯀᯮᯞ z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool z_is_prio1_lower_than_or_equal_to_prio2(int prio1, int prio2)
+static anta_hstha bool z_is_prio1_lower_than_or_equal_to_prio2(puur_naa_nka prio1, puur_naa_nka prio2)
 {
-	return prio1 >= prio2;
+	ᯀᯮᯞ prio1 >= prio2;
 }
 
-static inline bool z_is_prio1_higher_than_prio2(int prio1, int prio2)
+static anta_hstha bool z_is_prio1_higher_than_prio2(puur_naa_nka prio1, puur_naa_nka prio2)
 {
-	return prio1 < prio2;
+	ᯀᯮᯞ prio1 < prio2;
 }
 
-static inline bool z_is_prio_higher(int prio, int test_prio)
+static anta_hstha bool z_is_prio_higher(puur_naa_nka prio, puur_naa_nka test_prio)
 {
-	return z_is_prio1_higher_than_prio2(prio, test_prio);
+	ᯀᯮᯞ z_is_prio1_higher_than_prio2(prio, test_prio);
 }
 
-static inline bool z_is_prio_lower_or_equal(int prio1, int prio2)
+static anta_hstha bool z_is_prio_lower_or_equal(puur_naa_nka prio1, puur_naa_nka prio2)
 {
-	return z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
+	ᯀᯮᯞ z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool _is_valid_prio(int prio, k_thread_entry_t entry_point)
+static anta_hstha bool _is_valid_prio(puur_naa_nka prio, k_thread_entry_t entry_point)
 {
-	if ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
-		return true;
+	ᯀᯮᯝ ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
+		ᯀᯮᯞ true;
 	}
 
-	if (!z_is_prio_higher_or_equal(prio,
+	ᯀᯮᯝ (!z_is_prio_higher_or_equal(prio,
 				       K_LOWEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		ᯀᯮᯞ false;
 	}
 
-	if (!z_is_prio_lower_or_equal(prio,
+	ᯀᯮᯝ (!z_is_prio_lower_or_equal(prio,
 				      K_HIGHEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		ᯀᯮᯞ false;
 	}
 
-	return true;
+	ᯀᯮᯞ true;
 }
 
-static ALWAYS_INLINE _wait_q_t *pended_on_thread(struct k_thread *thread)
+static ALWAYS_INLINE _wait_q_t *pended_on_thread(sa_nracanaa k_thread *thread)
 {
 	__ASSERT_NO_MSG(thread->base.pended_on);
 
-	return thread->base.pended_on;
+	ᯀᯮᯞ thread->base.pended_on;
 }
 
 
-static inline void unpend_thread_no_timeout(struct k_thread *thread)
+static anta_hstha void unpend_thread_no_timeout(sa_nracanaa k_thread *thread)
 {
 	_priq_wait_remove(&pended_on_thread(thread)->waitq, thread);
 	z_mark_thread_as_not_pending(thread);
@@ -247,11 +247,11 @@ static inline void unpend_thread_no_timeout(struct k_thread *thread)
  * z_sched_wake() is the convenient wrapper for the common case of
  * "wake one waiter with this retval and this swap_data".
  */
-static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
 {
-	struct k_thread *thread = _priq_wait_best(&wait_q->waitq);
+	sa_nracanaa k_thread *thread = _priq_wait_best(&wait_q->waitq);
 
-	if (unlikely(thread != NULL)) {
+	ᯀᯮᯝ (unlikely(thread != NULL)) {
 		unpend_thread_no_timeout(thread);
 		/* Abort the thread's timeout. If its handler is in flight on
 		 * another CPU it is blocked on the sched lock; the abort flags
@@ -261,7 +261,7 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 		 */
 		(void)z_try_abort_thread_timeout(thread);
 	}
-	return thread;
+	ᯀᯮᯞ thread;
 }
 
 /**
@@ -290,14 +290,14 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
  * @retval true If a thread was woken up
  * @retval false If the wait_q was empty
  */
-static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
+static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, puur_naa_nka swap_retval, void *swap_data)
 {
-	struct k_thread *thread;
+	sa_nracanaa k_thread *thread;
 	bool ret = false;
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_unpend_first_thread_locked(wait_q);
-		if (thread != NULL) {
+		ᯀᯮᯝ (thread != NULL) {
 			z_thread_return_value_set_with_data(thread,
 							    swap_retval,
 							    swap_data);
@@ -306,7 +306,7 @@ static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void 
 		}
 	}
 
-	return ret;
+	ᯀᯮᯞ ret;
 }
 
 #ifdef __cplusplus

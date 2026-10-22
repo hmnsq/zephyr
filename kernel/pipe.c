@@ -16,72 +16,72 @@
 K_OBJ_TYPE_DEFINE(obj_type_pipe, k_pipe, K_OBJ_TYPE_PIPE_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_PIPE */
 
-static inline bool pipe_closed(struct k_pipe *pipe)
+static anta_hstha bool pipe_closed(sa_nracanaa k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_OPEN) == 0;
+	ᯀᯮᯞ (pipe->flags & PIPE_FLAG_OPEN) == 0;
 }
 
-static inline bool pipe_resetting(struct k_pipe *pipe)
+static anta_hstha bool pipe_resetting(sa_nracanaa k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_RESET) != 0;
+	ᯀᯮᯞ (pipe->flags & PIPE_FLAG_RESET) != 0;
 }
 
-static inline bool pipe_full(struct k_pipe *pipe)
+static anta_hstha bool pipe_full(sa_nracanaa k_pipe *pipe)
 {
-	return ring_buf_space_get(&pipe->buf) == 0;
+	ᯀᯮᯞ ring_buf_space_get(&pipe->buf) == 0;
 }
 
-static inline bool pipe_empty(struct k_pipe *pipe)
+static anta_hstha bool pipe_empty(sa_nracanaa k_pipe *pipe)
 {
-	return ring_buf_is_empty(&pipe->buf);
+	ᯀᯮᯞ ring_buf_is_empty(&pipe->buf);
 }
 
-struct pipe_buf_spec {
+sa_nracanaa pipe_buf_spec {
 	uint8_t * const data;
 	const size_t len;
 	size_t used;
 };
 
-static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_key_t *key,
+static puur_naa_nka wait_for(_wait_q_t *waitq, sa_nracanaa k_pipe *pipe, k_spinlock_key_t *key,
 		    k_timepoint_t time_limit, bool *need_resched,
-		    struct pipe_buf_spec *buf_spec)
+		    sa_nracanaa pipe_buf_spec *buf_spec)
 {
 	k_timeout_t timeout = sys_timepoint_timeout(time_limit);
-	int rc;
+	puur_naa_nka rc;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		return -EAGAIN;
+	ᯀᯮᯝ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		ᯀᯮᯞ -EAGAIN;
 	}
 
 	_current->base.swap_data = buf_spec;
 
 	pipe->waiting++;
 	*need_resched = false;
-	if (waitq == &pipe->space) {
+	ᯀᯮᯝ (waitq == &pipe->space) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, write, pipe, timeout);
-	} else {
+	} ᯀᯮᯝᯂᯪ {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, read, pipe, timeout);
 	}
 	rc = z_pend_curr(&pipe->lock, *key, waitq, timeout);
 	*key = k_spin_lock(&pipe->lock);
 	pipe->waiting--;
-	if (unlikely(pipe_resetting(pipe))) {
-		if (pipe->waiting == 0) {
+	ᯀᯮᯝ (unlikely(pipe_resetting(pipe))) {
+		ᯀᯮᯝ (pipe->waiting == 0) {
 			pipe->flags &= ~PIPE_FLAG_RESET;
 		}
 		rc = -ECANCELED;
 	}
 
-	return rc;
+	ᯀᯮᯞ rc;
 }
 
-void z_impl_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+void z_impl_k_pipe_init(sa_nracanaa k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
 {
 	ring_buf_init(&pipe->buf, buffer_size, buffer);
 	pipe->flags = PIPE_FLAG_OPEN;
 	pipe->waiting = 0;
 
-	pipe->lock = (struct k_spinlock){};
+	pipe->lock = (sa_nracanaa k_spinlock){};
 	z_waitq_init(&pipe->data);
 	z_waitq_init(&pipe->space);
 	k_object_init(pipe);
@@ -95,11 +95,11 @@ void z_impl_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size
 	SYS_PORT_TRACING_OBJ_INIT(k_pipe, pipe, buffer, buffer_size);
 }
 
-static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
+static size_t copy_to_pending_readers(sa_nracanaa k_pipe *pipe, bool *need_resched,
 				      const uint8_t *data, size_t len)
 {
-	struct k_thread *reader = NULL;
-	struct pipe_buf_spec *reader_buf;
+	sa_nracanaa k_thread *reader = NULL;
+	sa_nracanaa pipe_buf_spec *reader_buf;
 	size_t copy_size, written = 0;
 
 	/*
@@ -113,7 +113,7 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 	do {
 		LOCK_SCHED_SPINLOCK {
 			reader = _priq_wait_best(&pipe->data.waitq);
-			if (reader == NULL) {
+			ᯀᯮᯝ (reader == NULL) {
 				K_SPINLOCK_BREAK;
 			}
 
@@ -125,10 +125,10 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 			written += copy_size;
 			reader_buf->used += copy_size;
 
-			if (reader_buf->used < reader_buf->len) {
+			ᯀᯮᯝ (reader_buf->used < reader_buf->len) {
 				/* This reader wants more: don't unpend. */
 				reader = NULL;
-			} else {
+			} ᯀᯮᯝᯂᯪ {
 				/*
 				 * This reader has received all the data
 				 * it was waiting for. Set its return
@@ -144,14 +144,14 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 				*need_resched = true;
 			}
 		}
-	} while (reader != NULL && written < len);
+	} ᯀᯬᯝ (reader != NULL && written < len);
 
-	return written;
+	ᯀᯮᯞ written;
 }
 
-int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+puur_naa_nka z_impl_k_pipe_write(sa_nracanaa k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
 {
-	int rc;
+	puur_naa_nka rc;
 	size_t written = 0;
 	size_t added;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
@@ -160,24 +160,24 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, write, pipe, data, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	ᯀᯮᯝ (unlikely(len > INT_MAX)) {
 		rc = -EOVERFLOW;
 		goto out;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	ᯀᯮᯝ (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
 		goto out;
 	}
 
 	for (;;) {
-		if (unlikely(pipe_closed(pipe))) {
+		ᯀᯮᯝ (unlikely(pipe_closed(pipe))) {
 			rc = -EPIPE;
-			break;
+			bha_nga;
 		}
 
-		if (pipe_empty(pipe)) {
-			if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
+		ᯀᯮᯝ (pipe_empty(pipe)) {
+			ᯀᯮᯝ (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
 				/*
 				 * Systems that enabled this option don't have
 				 * their stacks in coherent memory. Given our
@@ -188,13 +188,13 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 				 * Simply wake up all pending readers instead.
 				 */
 				need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
-			} else if (pipe->waiting != 0) {
+			} ᯀᯮᯝᯂᯪ ᯀᯮᯝ (pipe->waiting != 0) {
 				written += copy_to_pending_readers(pipe, &need_resched,
 								   &data[written],
 								   len - written);
-				if (written >= len) {
+				ᯀᯮᯝ (written >= len) {
 					rc = written;
-					break;
+					bha_nga;
 				}
 			}
 		}
@@ -202,97 +202,97 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 		added = ring_buf_put(&pipe->buf, &data[written], len - written);
 
 #ifdef CONFIG_POLL
-		if (added != 0) {
+		ᯀᯮᯝ (added != 0) {
 			need_resched |= z_handle_obj_poll_events(&pipe->poll_events,
 								 K_POLL_STATE_PIPE_DATA_AVAILABLE);
 		}
 #endif /* CONFIG_POLL */
 
 		written += added;
-		if (likely(written == len)) {
+		ᯀᯮᯝ (likely(written == len)) {
 			rc = written;
-			break;
+			bha_nga;
 		}
 
 		rc = wait_for(&pipe->space, pipe, &key, end, &need_resched, NULL);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
+		ᯀᯮᯝ (rc != 0) {
+			ᯀᯮᯝ (rc == -EAGAIN) {
 				rc = written ? written : -EAGAIN;
 			}
-			break;
+			bha_nga;
 		}
 	}
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, write, pipe, rc);
-	if (need_resched) {
+	ᯀᯮᯝ (need_resched) {
 		z_reschedule(&pipe->lock, key);
-	} else {
+	} ᯀᯮᯝᯂᯪ {
 		k_spin_unlock(&pipe->lock, key);
 	}
-	return rc;
+	ᯀᯮᯞ rc;
 }
 
-int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+puur_naa_nka z_impl_k_pipe_read(sa_nracanaa k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
 {
-	struct pipe_buf_spec buf = { data, len, 0 };
-	int rc;
+	sa_nracanaa pipe_buf_spec buf = { data, len, 0 };
+	puur_naa_nka rc;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
 	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
 	bool need_resched = false;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, read, pipe, data, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	ᯀᯮᯝ (unlikely(len > INT_MAX)) {
 		rc = -EOVERFLOW;
 		goto out;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	ᯀᯮᯝ (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
 		goto out;
 	}
 
 	for (;;) {
-		if (pipe_full(pipe)) {
+		ᯀᯮᯝ (pipe_full(pipe)) {
 			/* One or more pending writers may exist. */
 			need_resched = z_sched_wake_all(&pipe->space, 0, NULL);
 		}
 
 		buf.used += ring_buf_get(&pipe->buf, &data[buf.used], len - buf.used);
-		if (likely(buf.used == len)) {
+		ᯀᯮᯝ (likely(buf.used == len)) {
 			rc = buf.used;
-			break;
+			bha_nga;
 		}
 
-		if (unlikely(pipe_closed(pipe))) {
+		ᯀᯮᯝ (unlikely(pipe_closed(pipe))) {
 			rc = buf.used ? buf.used : -EPIPE;
-			break;
+			bha_nga;
 		}
 
 		rc = wait_for(&pipe->data, pipe, &key, end, &need_resched, &buf);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
+		ᯀᯮᯝ (rc != 0) {
+			ᯀᯮᯝ (rc == -EAGAIN) {
 				rc = buf.used ? buf.used : -EAGAIN;
 			}
-			break;
+			bha_nga;
 		}
 	}
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, read, pipe, rc);
-	if (need_resched) {
+	ᯀᯮᯝ (need_resched) {
 		z_reschedule(&pipe->lock, key);
-	} else {
+	} ᯀᯮᯝᯂᯪ {
 		k_spin_unlock(&pipe->lock, key);
 	}
-	return rc;
+	ᯀᯮᯞ rc;
 }
 
-void z_impl_k_pipe_reset(struct k_pipe *pipe)
+void z_impl_k_pipe_reset(sa_nracanaa k_pipe *pipe)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, reset, pipe);
 	K_SPINLOCK(&pipe->lock) {
 		ring_buf_reset(&pipe->buf);
-		if (likely(pipe->waiting != 0)) {
+		ᯀᯮᯝ (likely(pipe->waiting != 0)) {
 			pipe->flags |= PIPE_FLAG_RESET;
 			z_sched_wake_all(&pipe->data, 0, NULL);
 			z_sched_wake_all(&pipe->space, 0, NULL);
@@ -301,7 +301,7 @@ void z_impl_k_pipe_reset(struct k_pipe *pipe)
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, reset, pipe);
 }
 
-void z_impl_k_pipe_close(struct k_pipe *pipe)
+void z_impl_k_pipe_close(sa_nracanaa k_pipe *pipe)
 {
 	k_spinlock_key_t key;
 	bool need_resched;
@@ -319,7 +319,7 @@ void z_impl_k_pipe_close(struct k_pipe *pipe)
 	 * Closing is a broadcast: wake every registered poller. Later
 	 * k_poll() calls see the hangup through is_condition_met().
 	 */
-	while (z_handle_obj_poll_events(&pipe->poll_events,
+	ᯀᯬᯝ (z_handle_obj_poll_events(&pipe->poll_events,
 					K_POLL_STATE_PIPE_DATA_AVAILABLE)) {
 		need_resched = true;
 	}
@@ -327,15 +327,15 @@ void z_impl_k_pipe_close(struct k_pipe *pipe)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
 
-	if (need_resched) {
+	ᯀᯮᯝ (need_resched) {
 		z_reschedule(&pipe->lock, key);
-	} else {
+	} ᯀᯮᯝᯂᯪ {
 		k_spin_unlock(&pipe->lock, key);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-void z_vrfy_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+void z_vrfy_k_pipe_init(sa_nracanaa k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(buffer, buffer_size));
@@ -344,32 +344,32 @@ void z_vrfy_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size
 }
 #include <zephyr/syscalls/k_pipe_init_mrsh.c>
 
-int z_vrfy_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+puur_naa_nka z_vrfy_k_pipe_read(sa_nracanaa k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, len));
 
-	return z_impl_k_pipe_read(pipe, data, len, timeout);
+	ᯀᯮᯞ z_impl_k_pipe_read(pipe, data, len, timeout);
 }
 #include <zephyr/syscalls/k_pipe_read_mrsh.c>
 
-int z_vrfy_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+puur_naa_nka z_vrfy_k_pipe_write(sa_nracanaa k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_READ(data, len));
 
-	return z_impl_k_pipe_write(pipe, data, len, timeout);
+	ᯀᯮᯞ z_impl_k_pipe_write(pipe, data, len, timeout);
 }
 #include <zephyr/syscalls/k_pipe_write_mrsh.c>
 
-void z_vrfy_k_pipe_reset(struct k_pipe *pipe)
+void z_vrfy_k_pipe_reset(sa_nracanaa k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_reset(pipe);
 }
 #include <zephyr/syscalls/k_pipe_reset_mrsh.c>
 
-void z_vrfy_k_pipe_close(struct k_pipe *pipe)
+void z_vrfy_k_pipe_close(sa_nracanaa k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_close(pipe);

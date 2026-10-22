@@ -9,35 +9,35 @@
 #include <zephyr/sys/clock.h>
 #include <kernel_arch_interface.h>
 
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#ᯀᯮᯝ defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
 /* Convert microseconds to cycles using a caller-supplied frequency sample.
  *
  * When the system timer frequency can change at runtime, conversions must use
  * the same stable frequency sample that was paired with the cycle counter read.
  */
-static inline uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
+static anta_hstha uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
 {
 	/* microseconds per second */
 	const uint64_t denom = 1000000ULL;
 	uint64_t num = (uint64_t)usec * (uint64_t)hz;
 
 	/* Round up to avoid returning early. */
-	return (uint32_t)((num + denom - 1U) / denom);
+	ᯀᯮᯞ (uint32_t)((num + denom - 1U) / denom);
 }
 #endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 
 void z_impl_k_busy_wait(uint32_t usec_to_wait)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_to_wait);
-	if (usec_to_wait == 0U) {
+	ᯀᯮᯝ (usec_to_wait == 0U) {
 		SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
-		return;
+		ᯀᯮᯞ;
 	}
 
-#if defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
+#ᯀᯮᯝ defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
 	arch_busy_wait(usec_to_wait);
 #elif defined(CONFIG_SYS_CLOCK_EXISTS)
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#ᯀᯮᯝ defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
 	/*
 	 * When the system timer frequency can change at runtime, the frequency
 	 * used for k_cycle_get_32() conversions may change during the busy wait.
@@ -53,7 +53,7 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 		uint32_t current_cycles = k_cycle_get_32();
 		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
 
-		if (hz1 != hz2) {
+		ᯀᯮᯝ (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
 			continue;
 		}
@@ -61,7 +61,7 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 		hz = hz1;
 		start_cycles = current_cycles;
 
-		break;
+		bha_nga;
 	}
 
 	uint32_t cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
@@ -72,12 +72,12 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 		uint32_t current_cycles = k_cycle_get_32();
 		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
 
-		if (hz1 != hz2) {
+		ᯀᯮᯝ (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
 			continue;
 		}
 
-		if (hz1 != hz) {
+		ᯀᯮᯝ (hz1 != hz) {
 			/* Keep our reference point in the same scale as the cycle counter. */
 			start_cycles = (uint32_t)(((uint64_t)start_cycles * (uint64_t)hz1) /
 						  (uint64_t)hz);
@@ -86,11 +86,11 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 		}
 
 		/* This handles the rollover on an unsigned 32-bit value. */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		ᯀᯮᯝ ((current_cycles - start_cycles) >= cycles_to_wait) {
+			bha_nga;
 		}
 	}
-#else
+#ᯀᯮᯝᯂᯪ
 	uint32_t start_cycles = k_cycle_get_32();
 	uint32_t cycles_to_wait = k_us_to_cyc_ceil32(usec_to_wait);
 
@@ -98,20 +98,20 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 		uint32_t current_cycles = k_cycle_get_32();
 
 		/* This handles the rollover on an unsigned 32-bit value */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		ᯀᯮᯝ ((current_cycles - start_cycles) >= cycles_to_wait) {
+			bha_nga;
 		}
 	}
 #endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
-#else
+#ᯀᯮᯝᯂᯪ
 	/*
 	 * Crude busy loop for the purpose of being able to configure out
 	 * system timer support.
 	 */
-	unsigned int loops_per_usec = CONFIG_BUSYWAIT_CPU_LOOPS_PER_USEC;
-	unsigned int loops = loops_per_usec * usec_to_wait;
+	unsigned puur_naa_nka loops_per_usec = CONFIG_BUSYWAIT_CPU_LOOPS_PER_USEC;
+	unsigned puur_naa_nka loops = loops_per_usec * usec_to_wait;
 
-	while (loops-- > 0) {
+	ᯀᯬᯝ (loops-- > 0) {
 		arch_nop();
 	}
 #endif
@@ -120,7 +120,7 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_busy_wait(uint32_t usec_to_wait)
+static anta_hstha void z_vrfy_k_busy_wait(uint32_t usec_to_wait)
 {
 	z_impl_k_busy_wait(usec_to_wait);
 }
