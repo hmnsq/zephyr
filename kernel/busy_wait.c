@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/sys/clock.h>
-#include <kernel_arch_interface.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/drivers/timer/system_timer.h>
+#ضمن <zephyr/sys/clock.h>
+#ضمن <kernel_arch_interface.h>
 
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#إذا defined(CONFIG_SYSTEM_CLOCK_HW_دورې_فی_SEC_RUNTIME_UPDATE)
 /* Convert microseconds to cycles using a caller-supplied frequency sample.
  *
  * When the system timer frequency can change at runtime, conversions must use
  * the same stable frequency sample that was paired with the cycle counter read.
  */
-static inline uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
+ساكن مضمن uint32_t busy_wait_us_منزل_cyc_ceil32(uint32_t usec, uint32_t hz)
 {
 	/* microseconds per second */
-	const uint64_t denom = 1000000ULL;
-	uint64_t num = (uint64_t)usec * (uint64_t)hz;
+	ثابت uint64_t denom = 1000000ULL;
+	uint64_t عدد = (uint64_t)usec * (uint64_t)hz;
 
 	/* Round up to avoid returning early. */
-	return (uint32_t)((num + denom - 1U) / denom);
+	أرجع (uint32_t)((عدد + denom - 1U) / denom);
 }
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#د_که_پای /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 
-void z_impl_k_busy_wait(uint32_t usec_to_wait)
+فراغ z_impl_k_busy_wait(uint32_t usec_منزل_wait)
 {
-	SYS_PORT_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_to_wait);
-	if (usec_to_wait == 0U) {
-		SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
-		return;
+	SYS_پورټ_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_منزل_wait);
+	إذا (usec_منزل_wait == 0U) {
+		SYS_پورټ_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_منزل_wait);
+		أرجع;
 	}
 
-#if defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
-	arch_busy_wait(usec_to_wait);
-#elif defined(CONFIG_SYS_CLOCK_EXISTS)
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#إذا defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
+	arch_busy_wait(usec_منزل_wait);
+#وإلاإذا defined(CONFIG_SYS_CLOCK_EXISTS)
+#إذا defined(CONFIG_SYSTEM_CLOCK_HW_دورې_فی_SEC_RUNTIME_UPDATE)
 	/*
 	 * When the system timer frequency can change at runtime, the frequency
 	 * used for k_cycle_get_32() conversions may change during the busy wait.
@@ -45,84 +45,84 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 	 * frequency changes.
 	 */
 	uint32_t hz;
-	uint32_t start_cycles;
+	uint32_t پیل_دورې;
 
 	/* Get a consistent sample of the current frequency and cycle count. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	لكل (;;) {
+		uint32_t hz1 = sys_clock_hw_دورې_فی_sec();
+		uint32_t current_دورې = k_دوره_get_32();
+		uint32_t hz2 = sys_clock_hw_دورې_فی_sec();
 
-		if (hz1 != hz2) {
+		إذا (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			استمر;
 		}
 
 		hz = hz1;
-		start_cycles = current_cycles;
+		پیل_دورې = current_دورې;
 
-		break;
+		اكسر;
 	}
 
-	uint32_t cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+	uint32_t دورې_منزل_wait = busy_wait_us_منزل_cyc_ceil32(usec_منزل_wait, hz);
 
 	/* Now busy wait, adjusting if the frequency changes. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	لكل (;;) {
+		uint32_t hz1 = sys_clock_hw_دورې_فی_sec();
+		uint32_t current_دورې = k_دوره_get_32();
+		uint32_t hz2 = sys_clock_hw_دورې_فی_sec();
 
-		if (hz1 != hz2) {
+		إذا (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			استمر;
 		}
 
-		if (hz1 != hz) {
+		إذا (hz1 != hz) {
 			/* Keep our reference point in the same scale as the cycle counter. */
-			start_cycles = (uint32_t)(((uint64_t)start_cycles * (uint64_t)hz1) /
+			پیل_دورې = (uint32_t)(((uint64_t)پیل_دورې * (uint64_t)hz1) /
 						  (uint64_t)hz);
 			hz = hz1;
-			cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+			دورې_منزل_wait = busy_wait_us_منزل_cyc_ceil32(usec_منزل_wait, hz);
 		}
 
 		/* This handles the rollover on an unsigned 32-bit value. */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		إذا ((current_دورې - پیل_دورې) >= دورې_منزل_wait) {
+			اكسر;
 		}
 	}
-#else
-	uint32_t start_cycles = k_cycle_get_32();
-	uint32_t cycles_to_wait = k_us_to_cyc_ceil32(usec_to_wait);
+#وإلا
+	uint32_t پیل_دورې = k_دوره_get_32();
+	uint32_t دورې_منزل_wait = k_us_منزل_cyc_ceil32(usec_منزل_wait);
 
-	for (;;) {
-		uint32_t current_cycles = k_cycle_get_32();
+	لكل (;;) {
+		uint32_t current_دورې = k_دوره_get_32();
 
 		/* This handles the rollover on an unsigned 32-bit value */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		إذا ((current_دورې - پیل_دورې) >= دورې_منزل_wait) {
+			اكسر;
 		}
 	}
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
-#else
+#د_که_پای /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#وإلا
 	/*
 	 * Crude busy loop for the purpose of being able to configure out
 	 * system timer support.
 	 */
-	unsigned int loops_per_usec = CONFIG_BUSYWAIT_CPU_LOOPS_PER_USEC;
-	unsigned int loops = loops_per_usec * usec_to_wait;
+	بینښه صحيح loops_فی_usec = CONFIG_BUSYWAIT_CPU_LOOPS_فی_USEC;
+	بینښه صحيح loops = loops_فی_usec * usec_منزل_wait;
 
-	while (loops-- > 0) {
+	طالما (loops-- > 0) {
 		arch_nop();
 	}
-#endif
+#د_که_پای
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
+	SYS_پورټ_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_منزل_wait);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_busy_wait(uint32_t usec_to_wait)
+#که_تعریف_شوی CONFIG_USERSPACE
+ساكن مضمن فراغ z_vrfy_k_busy_wait(uint32_t usec_منزل_wait)
 {
-	z_impl_k_busy_wait(usec_to_wait);
+	z_impl_k_busy_wait(usec_منزل_wait);
 }
-#include <zephyr/syscalls/k_busy_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_busy_wait_mrsh.c>
+#د_که_پای /* CONFIG_USERSPACE */

@@ -11,29 +11,29 @@
  * This file contains private kernel APIs that are not architecture-specific.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
+#که_نه_تعریف_شوی ZEPHYR_KERNEL_INCLUDE_KERNEL_دننی_H
+#تعریف_کړه ZEPHYR_KERNEL_INCLUDE_KERNEL_دننی_H
 
-#include <zephyr/kernel.h>
-#include <kernel_arch_interface.h>
-#include <kthread.h>
-#include <string.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kernel_arch_interface.h>
+#ضمن <kthread.h>
+#ضمن <string.h>
 
-#ifndef _ASMLANGUAGE
+#که_نه_تعریف_شوی _ASMLANGUAGE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#که_تعریف_شوی __cplusplus
+خارجي "C" {
+#د_که_پای
 
 /* Initialize per-CPU kernel data */
-void z_init_cpu(int id);
+فراغ z_init_cpu(صحيح id);
 
 /* Initialize a thread */
-void z_init_thread_base(struct _thread_base *thread_base, int priority,
-			uint32_t initial_state, unsigned int options);
+فراغ z_init_thread_بنسټ(بنية thread_بنسټ *thread_بنسټ_2, صحيح لومړیتوب,
+			uint32_t initial_state, بینښه صحيح options);
 
 
-FUNC_NORETURN void z_cstart(void);
+FUNC_NORETURN فراغ z_cstart(فراغ);
 
 /*
  * Lean kernel-internal init model.
@@ -46,19 +46,19 @@ FUNC_NORETURN void z_cstart(void);
  * provides. The entry holds a single function pointer (no device back-pointer
  * and no priority), so it is half the size of a SYS_INIT init_entry.
  */
-struct k_kernel_init_pre_entry {
-	void (*init_fn)(void);
+بنية k_kernel_init_pre_ثبت {
+	فراغ (*init_fn)(فراغ);
 };
 
-struct k_kernel_init_post_entry {
-	void (*init_fn)(void);
+بنية k_kernel_init_post_ثبت {
+	فراغ (*init_fn)(فراغ);
 };
 
 /* Register a kernel init function to run before multithreading starts (the
  * PRE_KERNEL phase), ahead of PRE_KERNEL device init.
  */
-#define K_KERNEL_INIT_PRE(_fn)                                                 \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_pre_entry,          \
+#تعریف_کړه K_KERNEL_INIT_PRE(_fn)                                                 \
+	ساكن ثابت STRUCT_SECTION_ITERABLE(k_kernel_init_pre_ثبت,          \
 					     _kernel_init_pre_##_fn) = {       \
 		.init_fn = (_fn),                                              \
 	}
@@ -66,20 +66,20 @@ struct k_kernel_init_post_entry {
 /* Register a kernel init function to run after the kernel is up (the
  * POST_KERNEL phase), before POST_KERNEL device init.
  */
-#define K_KERNEL_INIT_POST(_fn)                                                \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_post_entry,         \
+#تعریف_کړه K_KERNEL_INIT_POST(_fn)                                                \
+	ساكن ثابت STRUCT_SECTION_ITERABLE(k_kernel_init_post_ثبت,         \
 					     _kernel_init_post_##_fn) = {      \
 		.init_fn = (_fn),                                              \
 	}
 
-extern FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-			  void *p1, void *p2, void *p3);
+خارجي FUNC_NORETURN فراغ z_thread_ثبت(k_thread_ثبت_t ثبت,
+			  فراغ *p1, فراغ *p2, فراغ *p3);
 
-extern char *z_setup_new_thread(struct k_thread *new_thread,
-				k_thread_stack_t *stack, size_t stack_size,
-				k_thread_entry_t entry,
-				void *p1, void *p2, void *p3,
-				int prio, uint32_t options, const char *name);
+خارجي حرف *z_تیاری_new_thread(بنية k_thread *new_thread,
+				k_thread_ډېری_t *ډېری, size_t ډېری_اندازه,
+				k_thread_ثبت_t ثبت,
+				فراغ *p1, فراغ *p2, فراغ *p3,
+				صحيح prio, uint32_t options, ثابت حرف *name);
 
 /**
  * @brief Allocate aligned memory from the current thread's resource pool
@@ -95,7 +95,7 @@ extern char *z_setup_new_thread(struct k_thread *new_thread,
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_aligned_alloc(size_t align, size_t size);
+فراغ *z_thread_aligned_alloc(size_t align, size_t اندازه);
 
 /**
  * @brief Allocate some memory from the current thread's resource pool
@@ -110,66 +110,66 @@ void *z_thread_aligned_alloc(size_t align, size_t size);
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_malloc(size_t size);
+فراغ *z_thread_malloc(size_t اندازه);
 
 
-#ifdef CONFIG_USE_SWITCH
+#که_تعریف_شوی CONFIG_USE_SWITCH
 /* This is a arch function traditionally, but when the switch-based
  * z_swap() is in use it's a simple inline provided by the kernel.
  */
-static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
+ساكن ALWAYS_INLINE فراغ
+arch_thread_return_ارزښت_سېټ(بنية k_thread *thread, بینښه صحيح ارزښت)
 {
-	thread->swap_retval = value;
+	thread->بدلون_retval = ارزښت;
 }
-#endif
+#د_که_پای
 
-static ALWAYS_INLINE void
-z_thread_return_value_set_with_data(struct k_thread *thread,
-				   unsigned int value,
-				   void *data)
+ساكن ALWAYS_INLINE فراغ
+z_thread_return_ارزښت_سېټ_with_معلومات(بنية k_thread *thread,
+				   بینښه صحيح ارزښت,
+				   فراغ *معلومات)
 {
-	arch_thread_return_value_set(thread, value);
-	thread->base.swap_data = data;
+	arch_thread_return_ارزښت_سېټ(thread, ارزښت);
+	thread->بنسټ.بدلون_معلومات = معلومات;
 }
 
-#ifdef CONFIG_SMP
-extern void z_smp_init(void);
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-extern void smp_timer_init(void);
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
-#endif /* CONFIG_SMP */
+#که_تعریف_شوی CONFIG_SMP
+خارجي فراغ z_smp_init(فراغ);
+#که_تعریف_شوی CONFIG_SYS_CLOCK_EXISTS
+خارجي فراغ smp_timer_init(فراغ);
+#د_که_پای /* CONFIG_SYS_CLOCK_EXISTS */
+#د_که_پای /* CONFIG_SMP */
 
-extern void z_early_rand_get(uint8_t *buf, size_t length);
+خارجي فراغ z_early_rand_get(uint8_t *buf, size_t اوږدتیا);
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-extern int z_stack_adjust_initialized;
-#endif /* CONFIG_STACK_POINTER_RANDOM */
+#إذا defined(CONFIG_ډېری_اشاره_ګر_RANDOM) && (CONFIG_ډېری_اشاره_ګر_RANDOM != 0)
+خارجي صحيح z_ډېری_adjust_initialized;
+#د_که_پای /* CONFIG_STACK_POINTER_RANDOM */
 
-#ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_main_thread;
-#endif /* CONFIG_MULTITHREADING */
+#که_تعریف_شوی CONFIG_MULTITHREADING
+خارجي بنية k_thread z_main_thread;
+#د_که_پای /* CONFIG_MULTITHREADING */
 
 
-K_KERNEL_STACK_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_NUM_CPUS,
-				    CONFIG_ISR_STACK_SIZE);
-K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_KERNEL_ډېری_ARRAY_DECLARE(z_مداخله_stacks, CONFIG_MP_MAX_عدد_CPUS,
+				    CONFIG_ISR_ډېری_اندازه);
+K_THREAD_ډېری_DECLARE(z_main_ډېری, CONFIG_MAIN_ډېری_اندازه);
 
-#ifdef CONFIG_GEN_PRIV_STACKS
-extern uint8_t *z_priv_stack_find(k_thread_stack_t *stack);
-#endif /* CONFIG_GEN_PRIV_STACKS */
+#که_تعریف_شوی CONFIG_GEN_PRIV_STACKS
+خارجي uint8_t *z_priv_ډېری_پیدا_کړه(k_thread_ډېری_t *ډېری);
+#د_که_پای /* CONFIG_GEN_PRIV_STACKS */
 
 /* Calculate stack usage. */
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
+صحيح z_ډېری_space_get(ثابت uint8_t *ډېری_پیل, size_t اندازه, size_t *ناکارول_شوی_ptr);
 
-#ifdef CONFIG_USERSPACE
-bool z_stack_is_user_capable(k_thread_stack_t *stack);
+#که_تعریف_شوی CONFIG_USERSPACE
+bool z_ډېری_is_user_capable(k_thread_ډېری_t *ډېری);
 
 /* Memory domain setup hook, called from z_setup_new_thread() */
-void z_mem_domain_init_thread(struct k_thread *thread);
+فراغ z_mem_domain_init_thread(بنية k_thread *thread);
 
 /* Memory domain teardown hook, called from z_thread_abort() */
-void z_mem_domain_exit_thread(struct k_thread *thread);
+فراغ z_mem_domain_exit_thread(بنية k_thread *thread);
 
 /* This spinlock:
  *
@@ -181,50 +181,50 @@ void z_mem_domain_exit_thread(struct k_thread *thread);
  * Uniprocessor systems can get away with just locking interrupts but this is
  * not recommended.
  */
-extern struct k_spinlock z_mem_domain_lock;
-#endif /* CONFIG_USERSPACE */
+خارجي بنية k_spinlock z_mem_domain_قلف;
+#د_که_پای /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_GDBSTUB
-struct gdb_ctx;
+#که_تعریف_شوی CONFIG_GDBSTUB
+بنية gdb_ctx;
 
 /* Should be called by the arch layer. This is the gdbstub main loop
  * and synchronously communicate with gdb on host.
  */
-extern int z_gdb_main_loop(struct gdb_ctx *ctx);
-#endif /* CONFIG_GDBSTUB */
+خارجي صحيح z_gdb_main_loop(بنية gdb_ctx *ctx);
+#د_که_پای /* CONFIG_GDBSTUB */
 
-#ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
-void z_thread_mark_switched_in(void);
-void z_thread_mark_switched_out(void);
-#else
+#که_تعریف_شوی CONFIG_INSTRUMENT_THREAD_SWITCHING
+فراغ z_thread_mark_switched_دننه(فراغ);
+فراغ z_thread_mark_switched_بهر(فراغ);
+#وإلا
 
 /**
  * @brief Called after a thread has been selected to run
  */
-#define z_thread_mark_switched_in()
+#تعریف_کړه z_thread_mark_switched_دننه()
 
 /**
  * @brief Called before a thread has been selected to run
  */
 
-#define z_thread_mark_switched_out()
+#تعریف_کړه z_thread_mark_switched_بهر()
 
-#endif /* CONFIG_INSTRUMENT_THREAD_SWITCHING */
+#د_که_پای /* CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
 /* Init hook for page frame management, invoked immediately upon entry of
  * main thread, before POST_KERNEL tasks
  */
-void z_mem_manage_init(void);
+فراغ z_mem_manage_init(فراغ);
 
 /**
  * @brief Finalize page frame management at the end of boot process.
  */
-void z_mem_manage_boot_finish(void);
+فراغ z_mem_manage_boot_پای(فراغ);
 
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state);
 
-#ifdef CONFIG_PM
+#که_تعریف_شوی CONFIG_PM
 
 /* When the kernel is about to go idle, it calls this function to notify the
  * power management subsystem, that the kernel is ready to enter the idle state.
@@ -248,13 +248,13 @@ bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state);
  */
 bool pm_system_suspend(int32_t ticks);
 
-#endif /* CONFIG_PM */
+#د_که_پای /* CONFIG_PM */
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#که_تعریف_شوی CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
 /**
  * Initialize the timing histograms for demand paging.
  */
-void z_paging_histogram_init(void);
+فراغ z_paging_histogram_init(فراغ);
 
 /**
  * Increment the counter in the timing histogram.
@@ -262,27 +262,27 @@ void z_paging_histogram_init(void);
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
-			    uint32_t cycles);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+فراغ z_paging_histogram_inc(بنية k_mem_paging_histogram_t *hist,
+			    uint32_t دورې);
+#د_که_پای /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-#ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_reset(struct k_obj_core *obj_core);
-int z_thread_stats_disable(struct k_obj_core *obj_core);
-int z_thread_stats_enable(struct k_obj_core *obj_core);
-#endif /* CONFIG_OBJ_CORE_STATS_THREAD */
+#که_تعریف_شوی CONFIG_OBJ_CORE_STATS_THREAD
+صحيح z_thread_stats_raw(بنية k_obj_core *obj_core, فراغ *stats);
+صحيح z_thread_stats_query(بنية k_obj_core *obj_core, فراغ *stats);
+صحيح z_thread_stats_reset(بنية k_obj_core *obj_core);
+صحيح z_thread_stats_disable(بنية k_obj_core *obj_core);
+صحيح z_thread_stats_enable(بنية k_obj_core *obj_core);
+#د_که_پای /* CONFIG_OBJ_CORE_STATS_THREAD */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats);
+#که_تعریف_شوی CONFIG_OBJ_CORE_STATS_SYSTEM
+صحيح z_cpu_stats_raw(بنية k_obj_core *obj_core, فراغ *stats);
+صحيح z_cpu_stats_query(بنية k_obj_core *obj_core, فراغ *stats);
 
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+صحيح z_kernel_stats_raw(بنية k_obj_core *obj_core, فراغ *stats);
+صحيح z_kernel_stats_query(بنية k_obj_core *obj_core, فراغ *stats);
+#د_که_پای /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#if defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
+#إذا defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
 /**
  * Perform cleanup at the end of k_thread_abort().
  *
@@ -296,7 +296,7 @@ int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
  *
  * @param thread Pointer to thread to be cleaned up.
  */
-void k_thread_abort_cleanup(struct k_thread *thread);
+فراغ k_thread_abort_cleanup(بنية k_thread *thread);
 
 /**
  * Check if thread is the same as the one waiting for cleanup.
@@ -308,13 +308,13 @@ void k_thread_abort_cleanup(struct k_thread *thread);
  *
  * @param thread Pointer to thread to be checked.
  */
-void k_thread_abort_cleanup_check_reuse(struct k_thread *thread);
-#endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
+فراغ k_thread_abort_cleanup_check_reuse(بنية k_thread *thread);
+#د_که_پای /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 
-#ifdef __cplusplus
+#که_تعریف_شوی __cplusplus
 }
-#endif
+#د_که_پای
 
-#endif /* _ASMLANGUAGE */
+#د_که_پای /* _ASMLANGUAGE */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_ */
+#د_که_پای /* ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_ */

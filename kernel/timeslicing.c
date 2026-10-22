@@ -3,124 +3,124 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <zephyr/sys/atomic.h>
-#include <kspinlock.h>
-#include <kswap.h>
-#include <ksched.h>
-#include <ipi.h>
-#include <timeslicing.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/sys/atomic.h>
+#ضمن <kspinlock.h>
+#ضمن <kswap.h>
+#ضمن <ksched.h>
+#ضمن <ipi.h>
+#ضمن <timeslicing.h>
 
-static int slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
-static int slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
-static struct _timeout slice_timeouts[CONFIG_MP_MAX_NUM_CPUS];
+ساكن صحيح ټوټه_ticks = DIV_پړاو_پورته(CONFIG_TIMESLICE_اندازه * Z_HZ_ticks, Z_HZ_ms);
+ساكن صحيح ټوټه_max_prio = CONFIG_TIMESLICE_لومړیتوب;
+ساكن بنية _timeout ټوټه_timeouts[CONFIG_MP_MAX_عدد_CPUS];
 
 /* Timeouts can expire on another CPU, so each CPU's flag must be atomic. */
-static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
+ساكن atomic_t ټوټه_expired[CONFIG_MP_MAX_عدد_CPUS];
 
-#ifdef CONFIG_SWAP_NONATOMIC
+#که_تعریف_شوی CONFIG_بدلون_NONATOMIC
 /* If z_swap() isn't atomic, then it's possible for a timer interrupt
  * to try to timeslice away _current after it has already pended
  * itself but before the corresponding context switch.  Treat that as
  * a noop condition in z_time_slice().
  */
-struct k_thread *pending_current;
-#endif
+بنية k_thread *pending_current;
+#د_که_پای
 
-static inline int slice_time(struct k_thread *thread)
+ساكن مضمن صحيح ټوټه_وخت(بنية k_thread *thread)
 {
-	int ret = slice_ticks;
+	صحيح ret = ټوټه_ticks;
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		ret = thread->base.slice_ticks;
+#که_تعریف_شوی CONFIG_TIMESLICE_فی_THREAD
+	إذا (thread->بنسټ.ټوټه_ticks != 0) {
+		ret = thread->بنسټ.ټوټه_ticks;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif
-	return ret;
+#وإلا
+	ARG_ناکارول_شوی(thread);
+#د_که_پای
+	أرجع ret;
 }
 
-static int z_time_slice_size(struct k_thread *thread)
+ساكن صحيح z_وخت_ټوټه_اندازه(بنية k_thread *thread)
 {
-	if (z_is_thread_prevented_from_running(thread) ||
+	إذا (z_is_thread_prevented_from_running(thread) ||
 	    z_is_idle_thread_object(thread) ||
-	    (slice_time(thread) == 0)) {
-		return 0;
+	    (ټوټه_وخت(thread) == 0)) {
+		أرجع 0;
 	}
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		return thread->base.slice_ticks;
+#که_تعریف_شوی CONFIG_TIMESLICE_فی_THREAD
+	إذا (thread->بنسټ.ټوټه_ticks != 0) {
+		أرجع thread->بنسټ.ټوټه_ticks;
 	}
-#endif
+#د_که_پای
 
-	if (thread_is_preemptible(thread) &&
-	    !z_is_prio_higher(thread->base.prio, slice_max_prio)) {
-		return slice_ticks;
+	إذا (thread_is_preemptible(thread) &&
+	    !z_is_prio_higher(thread->بنسټ.prio, ټوټه_max_prio)) {
+		أرجع ټوټه_ticks;
 	}
 
-	return 0;
+	أرجع 0;
 }
 
-static void slice_timeout(struct _timeout *timeout)
+ساكن فراغ ټوټه_timeout(بنية _timeout *timeout)
 {
-	int cpu = ARRAY_INDEX(slice_timeouts, timeout);
+	صحيح cpu = ARRAY_شاخص(ټوټه_timeouts, timeout);
 
-	atomic_set(&slice_expired[cpu], 1);
+	atomic_سېټ(&ټوټه_expired[cpu], 1);
 
 	/* We need an IPI if we just handled a timeslice expiration
 	 * for a different CPU.
 	 */
-	if (cpu != _current_cpu->id) {
-		flag_ipi(IPI_CPU_MASK(cpu));
+	إذا (cpu != _current_cpu->id) {
+		flag_ipi(IPI_CPU_ماسک(cpu));
 	}
 }
 
-static void slice_reset(int slice_size)
+ساكن فراغ ټوټه_reset(صحيح ټوټه_اندازه)
 {
-	int cpu = _current_cpu->id;
+	صحيح cpu = _current_cpu->id;
 
 	/* Best-effort cancel: if the slice timeout is already in flight,
 	 * its handler only flips slice_expired[cpu] (which we clear below)
 	 * and possibly raises an IPI -- harmless either way.
 	 */
-	(void)z_try_abort_timeout(&slice_timeouts[cpu]);
-	if (slice_size != 0) {
+	(فراغ)z_try_abort_timeout(&ټوټه_timeouts[cpu]);
+	إذا (ټوټه_اندازه != 0) {
 		/* When invoked because the slicer just fired (this CPU or
 		 * via IPI from another), we're at a tick edge but past the
 		 * announce window, so subtract 1 to cancel z_add_timeout()'s
 		 * "+1" round-up and land at exactly slice_size ticks.
 		 */
-		int delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
+		صحيح delay = atomic_get(&ټوټه_expired[cpu]) ? ټوټه_اندازه - 1 : ټوټه_اندازه;
 
-		z_add_timeout(&slice_timeouts[cpu], slice_timeout,
+		z_جمع_کړه_timeout(&ټوټه_timeouts[cpu], ټوټه_timeout,
 			      K_TICKS(delay));
 	}
-	atomic_clear(&slice_expired[cpu]);
+	atomic_clear(&ټوټه_expired[cpu]);
 }
 
-void z_time_slice_reset(struct k_thread *thread)
+فراغ z_وخت_ټوټه_reset(بنية k_thread *thread)
 {
-	slice_reset(z_time_slice_size(thread));
+	ټوټه_reset(z_وخت_ټوټه_اندازه(thread));
 }
 
-static ALWAYS_INLINE bool thread_defines_time_slice_size(struct k_thread *thread)
+ساكن ALWAYS_INLINE bool thread_تعریفوي_وخت_ټوټه_اندازه(بنية k_thread *thread)
 {
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	return (thread->base.slice_ticks != 0);
-#else  /* !CONFIG_TIMESLICE_PER_THREAD */
-	ARG_UNUSED(thread);
-	return false;
-#endif /* !CONFIG_TIMESLICE_PER_THREAD */
+#که_تعریف_شوی CONFIG_TIMESLICE_فی_THREAD
+	أرجع (thread->بنسټ.ټوټه_ticks != 0);
+#وإلا  /* !CONFIG_TIMESLICE_PER_THREAD */
+	ARG_ناکارول_شوی(thread);
+	أرجع false;
+#د_که_پای /* !CONFIG_TIMESLICE_PER_THREAD */
 }
 
-void k_sched_time_slice_set(int32_t slice, int prio)
+فراغ k_sched_وخت_ټوټه_سېټ(int32_t ټوټه, صحيح prio)
 {
 	Z_SCHED_SPINLOCK {
 
-		slice_ticks = k_ms_to_ticks_ceil32(slice);
-		slice_max_prio = prio;
+		ټوټه_ticks = k_ms_منزل_ticks_ceil32(ټوټه);
+		ټوټه_max_prio = prio;
 
 		/*
 		 * Threads that define their own time slice size should not have
@@ -128,74 +128,74 @@ void k_sched_time_slice_set(int32_t slice, int prio)
 		 * take precedence over the global time slice size.
 		 */
 
-		if (!thread_defines_time_slice_size(_current)) {
-			z_time_slice_reset(_current);
+		إذا (!thread_تعریفوي_وخت_ټوټه_اندازه(_current)) {
+			z_وخت_ټوټه_reset(_current);
 		}
 	}
 }
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-void k_thread_time_slice_set(struct k_thread *thread, int32_t thread_slice_ticks,
-			     k_thread_timeslice_fn_t expired, void *data)
+#که_تعریف_شوی CONFIG_TIMESLICE_فی_THREAD
+فراغ k_thread_وخت_ټوټه_سېټ(بنية k_thread *thread, int32_t thread_ټوټه_ticks,
+			     k_thread_timeslice_fn_t expired, فراغ *معلومات)
 {
 	Z_SCHED_SPINLOCK {
-		thread->base.slice_ticks = thread_slice_ticks;
-		thread->base.slice_expired = expired;
-		thread->base.slice_data = data;
-		z_time_slice_reset(thread);
+		thread->بنسټ.ټوټه_ticks = thread_ټوټه_ticks;
+		thread->بنسټ.ټوټه_expired = expired;
+		thread->بنسټ.ټوټه_معلومات = معلومات;
+		z_وخت_ټوټه_reset(thread);
 	}
 }
-#endif
+#د_که_پای
 
 /* Called out of each timer and IPI interrupt */
-void z_time_slice(void)
+فراغ z_وخت_ټوټه(فراغ)
 {
 	/*
 	 * Atomic context switches need no scheduler work until this CPU's
 	 * time slice expires. Non-atomic context switches must still take
 	 * the scheduler lock to synchronize pending_current.
 	 */
-	if (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
-	    !atomic_get(&slice_expired[_current_cpu->id])) {
-		return;
+	إذا (!IS_ENABLED(CONFIG_بدلون_NONATOMIC) &&
+	    !atomic_get(&ټوټه_expired[_current_cpu->id])) {
+		أرجع;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
-	struct k_thread *curr = _current;
+	k_spinlock_کلی_t کلی = z_sched_spinlock_قلف();
+	بنية k_thread *curr = _current;
 
-#ifdef CONFIG_SWAP_NONATOMIC
-	if (pending_current == curr) {
-		z_time_slice_reset(curr);
-		z_sched_spinlock_unlock(key);
-		return;
+#که_تعریف_شوی CONFIG_بدلون_NONATOMIC
+	إذا (pending_current == curr) {
+		z_وخت_ټوټه_reset(curr);
+		z_sched_spinlock_unlock(کلی);
+		أرجع;
 	}
-	pending_current = NULL;
-#endif
+	pending_current = عدم;
+#د_که_پای
 
-	int slice_size = 0;
+	صحيح ټوټه_اندازه = 0;
 
-	if (atomic_get(&slice_expired[_current_cpu->id])) {
-		slice_size = z_time_slice_size(curr);
+	إذا (atomic_get(&ټوټه_expired[_current_cpu->id])) {
+		ټوټه_اندازه = z_وخت_ټوټه_اندازه(curr);
 	}
 
-	if (slice_size != 0) {
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-		k_thread_timeslice_fn_t handler = curr->base.slice_expired;
+	إذا (ټوټه_اندازه != 0) {
+#که_تعریف_شوی CONFIG_TIMESLICE_فی_THREAD
+		k_thread_timeslice_fn_t handler = curr->بنسټ.ټوټه_expired;
 
-		if (handler != NULL) {
-			z_sched_spinlock_unlock(key);
-			handler(curr, curr->base.slice_data);
-			key = z_sched_spinlock_lock();
+		إذا (handler != عدم) {
+			z_sched_spinlock_unlock(کلی);
+			handler(curr, curr->بنسټ.ټوټه_معلومات);
+			کلی = z_sched_spinlock_قلف();
 
 			/* The handler ran with the lock dropped and may have
 			 * changed this thread's slice configuration, so the
 			 * cached size is stale; recompute before rearming.
 			 */
-			slice_size = z_time_slice_size(curr);
+			ټوټه_اندازه = z_وخت_ټوټه_اندازه(curr);
 		}
-#endif
-		if (!z_is_thread_prevented_from_running(curr)) {
-			move_current_to_end_of_prio_q();
+#د_که_پای
+		إذا (!z_is_thread_prevented_from_running(curr)) {
+			move_current_منزل_پای_ټکی_د_prio_q();
 			/* If the rotation kept curr at the front (no other
 			 * runnable thread of equal-or-higher priority is
 			 * waiting), no swap will happen and we must rearm
@@ -203,18 +203,18 @@ void z_time_slice(void)
 			 * the new thread with slice_expired still set,
 			 * picking up the tick-aligned delay.
 			 */
-#ifdef CONFIG_SMP
-			struct k_thread *next = runq_best();
+#که_تعریف_شوی CONFIG_SMP
+			بنية k_thread *بل = runq_غوره();
 
-			if (next == NULL || z_is_idle_thread_object(next)) {
-				slice_reset(slice_size);
+			إذا (بل == عدم || z_is_idle_thread_object(بل)) {
+				ټوټه_reset(ټوټه_اندازه);
 			}
-#else
-			if (_kernel.ready_q.cache == curr) {
-				slice_reset(slice_size);
+#وإلا
+			إذا (_kernel.ready_q.cache == curr) {
+				ټوټه_reset(ټوټه_اندازه);
 			}
-#endif
+#د_که_پای
 		}
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(کلی);
 }

@@ -4,100 +4,100 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/arch/cpu.h>
-#include <zephyr/arch/exception.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/fatal.h>
-#include <zephyr/debug/coredump.h>
-#include <zephyr/sys/reboot.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/sys/__assert.h>
+#ضمن <zephyr/arch/cpu.h>
+#ضمن <zephyr/arch/exception.h>
+#ضمن <zephyr/logging/log_ctrl.h>
+#ضمن <zephyr/logging/log.h>
+#ضمن <zephyr/fatal.h>
+#ضمن <zephyr/debug/coredump.h>
+#ضمن <zephyr/sys/reboot.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
+FUNC_NORETURN __weak فراغ arch_system_halt(بینښه صحيح reason)
 {
-	ARG_UNUSED(reason);
+	ARG_ناکارول_شوی(reason);
 
 	/* TODO: What's the best way to totally halt the system if SMP
 	 * is enabled?
 	 */
 
-	(void)arch_irq_lock();
-	for (;;) {
+	(فراغ)arch_irq_قلف();
+	لكل (;;) {
 		/* Spin endlessly */
 	}
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-__weak void k_sys_fatal_error_handler(unsigned int reason,
-				      const struct arch_esf *esf)
+__weak فراغ k_sys_fatal_error_handler(بینښه صحيح reason,
+				      ثابت بنية arch_esf *esf)
 {
-	ARG_UNUSED(esf);
+	ARG_ناکارول_شوی(esf);
 	LOG_PANIC();
 
-#if CONFIG_RESET_ON_FATAL_ERROR
+#إذا CONFIG_RESET_ON_FATAL_ERROR
 	EXCEPTION_DUMP("Resetting system");
 	sys_reboot(SYS_REBOOT_WARM);
-#else
+#وإلا
 	EXCEPTION_DUMP("Halting system");
 	arch_system_halt(reason);
-#endif /* CONFIG_RESET_ON_FATAL_ERROR */
+#د_که_پای /* CONFIG_RESET_ON_FATAL_ERROR */
 
-	CODE_UNREACHABLE;
+	کوډ_UNREACHABLE;
 }
 /* LCOV_EXCL_STOP */
 
-static const char *thread_name_get(struct k_thread *thread)
+ساكن ثابت حرف *thread_name_get(بنية k_thread *thread)
 {
-	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
+	ثابت حرف *thread_name = (thread != عدم) ? k_thread_name_get(thread) : عدم;
 
-	if ((thread_name == NULL) || (thread_name[0] == '\0')) {
+	إذا ((thread_name == عدم) || (thread_name[0] == '\0')) {
 		thread_name = "unknown";
 	}
 
-	return thread_name;
+	أرجع thread_name;
 }
 
-static const char *reason_to_str(unsigned int reason)
+ساكن ثابت حرف *reason_منزل_str(بینښه صحيح reason)
 {
-	switch (reason) {
-	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
-	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
-	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
-	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
-	default:
-		return "Unknown error";
+	بدل (reason) {
+	حالة K_ERR_CPU_EXCEPTION:
+		أرجع "CPU exception";
+	حالة K_ERR_SPURIOUS_IRQ:
+		أرجع "Unhandled interrupt";
+	حالة K_ERR_ډېری_CHK_FAIL:
+		أرجع "Stack overflow";
+	حالة K_ERR_KERNEL_OOPS:
+		أرجع "Kernel oops";
+	حالة K_ERR_KERNEL_PANIC:
+		أرجع "Kernel panic";
+	افتراضي:
+		أرجع "Unknown error";
 	}
 }
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN void k_fatal_halt(unsigned int reason)
+FUNC_NORETURN فراغ k_fatal_halt(بینښه صحيح reason)
 {
 	arch_system_halt(reason);
 }
 /* LCOV_EXCL_STOP */
 
-void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
+فراغ z_fatal_error(بینښه صحيح reason, ثابت بنية arch_esf *esf)
 {
 	/* We can't allow this code to be preempted, but don't need to
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
-			_current : NULL;
+	بینښه صحيح کلی = arch_irq_قلف();
+	بنية k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
+			_current : عدم;
 
 	/* The printk lock is not trustworthy from here on: this context may
 	 * have failed while holding it, or a CPU that is never coming back
@@ -108,7 +108,7 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	/* twister looks for the "ZEPHYR FATAL ERROR" string, don't
 	 * change it without also updating twister
 	 */
-	EXCEPTION_DUMP(">>> ZEPHYR FATAL ERROR %d: %s on CPU %d", reason, reason_to_str(reason),
+	EXCEPTION_DUMP(">>> ZEPHYR FATAL ERROR %d: %s on CPU %d", reason, reason_منزل_str(reason),
 		       _current_cpu->id);
 
 	/* FIXME: This doesn't seem to work as expected on all arches.
@@ -117,13 +117,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 *
 	 * See #17656
 	 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-	if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#إذا defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+	إذا ((esf != عدم) && arch_is_دننه_nested_exception(esf)) {
 		EXCEPTION_DUMP("Fault during interrupt handling");
 	}
-#endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+#د_که_پای /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	إذا (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		EXCEPTION_DUMP("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
@@ -133,15 +133,15 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * set (kernel_arch_interface.h). IS_ENABLED still parses both branches,
 	 * which breaks builds when the option is off (implicit declaration).
 	 */
-#ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
-	unsigned int coredump_irq_cookie;
+#که_تعریف_شوی CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
+	بینښه صحيح coredump_irq_cookie;
 
-	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
+	arch_coredump_fatal_irq_unlock(کلی, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
-	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
-#else
+	کلی = arch_coredump_fatal_irq_قلف(&coredump_irq_cookie);
+#وإلا
 	coredump(reason, esf, thread);
-#endif
+#د_که_پای
 
 	k_sys_fatal_error_handler(reason, esf);
 
@@ -158,49 +158,49 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * Note that k_thread_abort() returns on some architectures but
 	 * not others; e.g. on ARC, x86_64, Xtensa with ASM2, ARM
 	 */
-	if (!IS_ENABLED(CONFIG_TEST)) {
+	إذا (!IS_ENABLED(CONFIG_TEST)) {
 		__ASSERT(reason != K_ERR_KERNEL_PANIC,
 			 "Attempted to recover from a kernel panic condition");
 		/* FIXME: #17656 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#إذا defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		إذا ((esf != عدم) && arch_is_دننه_nested_exception(esf)) {
+#إذا defined(CONFIG_ډېری_SENTINEL)
+			إذا (reason != K_ERR_ډېری_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
-#endif /* CONFIG_STACK_SENTINEL */
+#د_که_پای /* CONFIG_STACK_SENTINEL */
 		}
-#endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
-	} else {
+#د_که_پای /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+	} وإلا {
 		/* Test mode */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#إذا defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		إذا ((esf != عدم) && arch_is_دننه_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
-				arch_irq_unlock(key);
-				return;
+#إذا defined(CONFIG_ډېری_SENTINEL)
+			إذا (reason != K_ERR_ډېری_CHK_FAIL) {
+				arch_irq_unlock(کلی);
+				أرجع;
 			}
-#else
-			arch_irq_unlock(key);
-			return;
-#endif /* CONFIG_STACK_SENTINEL */
-		} else {
+#وإلا
+			arch_irq_unlock(کلی);
+			أرجع;
+#د_که_پای /* CONFIG_STACK_SENTINEL */
+		} وإلا {
 			/* Abort the thread only if the fault is not due to
 			 * a spurious ISR handler triggered.
 			 */
-			if (reason == K_ERR_SPURIOUS_IRQ) {
-				arch_irq_unlock(key);
-				return;
+			إذا (reason == K_ERR_SPURIOUS_IRQ) {
+				arch_irq_unlock(کلی);
+				أرجع;
 			}
 		}
-#endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+#د_که_پای /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(کلی);
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	إذا (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);
 	}
 }

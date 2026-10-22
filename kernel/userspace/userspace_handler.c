@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+ساكن بنية k_object *validate_kernel_object(ثابت فراغ *obj,
+					       تعداد k_objects otype,
+					       تعداد _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	بنية k_object *ko;
+	صحيح ret;
 
-	ko = k_object_find(obj);
+	ko = k_object_پیدا_کړه(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
-#ifdef CONFIG_LOG
+	إذا (ret != 0) {
+#که_تعریف_شوی CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
-#endif /* CONFIG_LOG */
-		return NULL;
+#د_که_پای /* CONFIG_LOG */
+		أرجع عدم;
 	}
 
-	return ko;
+	أرجع ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+ساكن ALWAYS_INLINE بنية k_object *validate_any_object(ثابت فراغ *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	أرجع validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(ثابت فراغ *obj, تعداد k_objects otype)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	أرجع (ko != عدم);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,47 +49,47 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+ساكن مضمن فراغ z_vrfy_k_object_access_grant(ثابت فراغ *object,
+						بنية k_thread *thread)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied",
+	K_OOPS(K_SYSCALL_VERIFY_پیغام(ko != عدم, "object %p access denied",
 				    object));
-	k_thread_perms_set(ko, thread);
+	k_thread_perms_سېټ(ko, thread);
 }
-#include <zephyr/syscalls/k_object_access_grant_mrsh.c>
+#ضمن <zephyr/syscalls/k_object_access_grant_mrsh.c>
 
 /*
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+ساكن مضمن صحيح z_vrfy_k_object_access_check(ثابت فراغ *object)
 {
-	return z_impl_k_object_access_check(object);
+	أرجع z_impl_k_object_access_check(object);
 }
-#include <zephyr/syscalls/k_object_access_check_mrsh.c>
+#ضمن <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+ساكن مضمن فراغ z_vrfy_k_object_release(ثابت فراغ *object)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
+	K_OOPS(K_SYSCALL_VERIFY_پیغام(ko != عدم, "object %p access denied", object));
 	k_thread_perms_clear(ko, _current);
 }
-#include <zephyr/syscalls/k_object_release_mrsh.c>
+#ضمن <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+ساكن مضمن فراغ *z_vrfy_k_object_alloc(تعداد k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	أرجع z_impl_k_object_alloc(otype);
 }
-#include <zephyr/syscalls/k_object_alloc_mrsh.c>
+#ضمن <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+ساكن مضمن فراغ *z_vrfy_k_object_alloc_اندازه(تعداد k_objects otype, size_t اندازه)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	أرجع z_impl_k_object_alloc_اندازه(otype, اندازه);
 }
-#include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
+#ضمن <zephyr/syscalls/k_object_alloc_size_mrsh.c>

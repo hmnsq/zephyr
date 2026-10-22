@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
+#که_نه_تعریف_شوی ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
+#تعریف_کړه ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
 
 /**
  * @file
  * @brief timeout queue for threads on kernel objects
  */
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <stdbool.h>
+#ضمن <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#که_تعریف_شوی __cplusplus
+خارجي "C" {
+#د_که_پای
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#که_تعریف_شوی CONFIG_SYS_CLOCK_EXISTS
 
 /*
  * Per-node timeout helpers (Kconfig choice TIMEOUT_BACKEND).
@@ -32,72 +32,72 @@ extern "C" {
  * operations and the backend instance) is private to kernel/timeout.c, which
  * includes the matching backend implementation header directly.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#إذا defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 
-static inline void z_init_timeout(struct _timeout *to)
+ساكن مضمن فراغ z_init_timeout(بنية _timeout *منزل)
 {
-	to->heap_handle.idx = 0U;
-	to->abs_ticks = 0;
+	منزل->ډېرۍ_handle.idx = 0U;
+	منزل->abs_ticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ساكن مضمن bool z_is_inactive_timeout(ثابت بنية _timeout *منزل)
 {
-	return to->heap_handle.idx == 0U;
+	أرجع منزل->ډېرۍ_handle.idx == 0U;
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
+#وإلاإذا defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
 
-static inline void z_init_timeout(struct _timeout *to)
+ساكن مضمن فراغ z_init_timeout(بنية _timeout *منزل)
 {
-	sys_dnode_init(&to->node);
-	to->flags = 0U;
-	to->dticks = 0;
+	sys_dnode_init(&منزل->غوټه);
+	منزل->flags = 0U;
+	منزل->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ساكن مضمن bool z_is_inactive_timeout(ثابت بنية _timeout *منزل)
 {
-	return !sys_dnode_is_linked(&to->node);
+	أرجع !sys_dnode_is_linked(&منزل->غوټه);
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
+#وإلاإذا defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
 
-static inline void z_init_timeout(struct _timeout *to)
+ساكن مضمن فراغ z_init_timeout(بنية _timeout *منزل)
 {
 	uint8_t i;
 
-	to->height = 0;
-	to->abs_ticks = 0;
+	منزل->لوړوالی = 0;
+	منزل->abs_ticks = 0;
 
-	for (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
-		to->forward[i] = NULL;
+	لكل (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
+		منزل->forward[i] = عدم;
 	}
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ساكن مضمن bool z_is_inactive_timeout(ثابت بنية _timeout *منزل)
 {
-	return to->height == 0;
+	أرجع منزل->لوړوالی == 0;
 }
 
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
+#وإلا /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
 
-static inline void z_init_timeout(struct _timeout *to)
+ساكن مضمن فراغ z_init_timeout(بنية _timeout *منزل)
 {
-	sys_dnode_init(&to->node);
-	to->dticks = 0;
+	sys_dnode_init(&منزل->غوټه);
+	منزل->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ساكن مضمن bool z_is_inactive_timeout(ثابت بنية _timeout *منزل)
 {
-	return !sys_dnode_is_linked(&to->node);
+	أرجع !sys_dnode_is_linked(&منزل->غوټه);
 }
 
-#endif
+#د_که_پای
 
 /* Adds the timeout to the queue.
  *
  * @return Absolute tick value when timeout will expire.
  */
-k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
+k_ticks_t z_جمع_کړه_timeout(بنية _timeout *منزل, _timeout_func_t fn, k_timeout_t timeout);
 
 /* Attempt to abort a timeout. Safe to use for callers that need to be
  * certain the handler is not in flight (e.g. when about to free the
@@ -118,56 +118,56 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
  * On -EAGAIN, the only correct response is to drop outer locks and call again.
  * After a non-EAGAIN return, the handler is guaranteed not to be in flight.
  */
-int z_try_abort_timeout(struct _timeout *to);
+صحيح z_try_abort_timeout(بنية _timeout *منزل);
 
 /* True if @to is the currently in-flight timeout and a same-CPU aborter
  * has marked the slot as superseded. Handlers with non-idempotent side
  * effects (e.g. k_timer's expiry_fn) should call this at entry, after
  * taking their own lock, and bail if it returns true.
  */
-bool z_timeout_inflight_superseded(const struct _timeout *to);
+bool z_timeout_inflight_superseded(ثابت بنية _timeout *منزل);
 
-static inline void z_init_thread_timeout(struct _thread_base *thread_base)
+ساكن مضمن فراغ z_init_thread_timeout(بنية thread_بنسټ *thread_بنسټ_2)
 {
-	z_init_timeout(&thread_base->timeout);
+	z_init_timeout(&thread_بنسټ_2->timeout);
 }
 
-extern void z_thread_timeout(struct _timeout *timeout);
+خارجي فراغ z_thread_timeout(بنية _timeout *timeout);
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+ساكن مضمن k_ticks_t z_جمع_کړه_thread_timeout(بنية k_thread *thread, k_timeout_t ticks)
 {
-	return z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
+	أرجع z_جمع_کړه_timeout(&thread->بنسټ.timeout, z_thread_timeout, ticks);
 }
 
-static inline int z_try_abort_thread_timeout(struct k_thread *thread)
+ساكن مضمن صحيح z_try_abort_thread_timeout(بنية k_thread *thread)
 {
-	return z_try_abort_timeout(&thread->base.timeout);
+	أرجع z_try_abort_timeout(&thread->بنسټ.timeout);
 }
 
-uint32_t z_get_next_timeout_expiry(void);
+uint32_t z_get_بل_timeout_expiry(فراغ);
 
-k_ticks_t z_timeout_remaining(const struct _timeout *timeout);
+k_ticks_t z_timeout_پاتې_شوی(ثابت بنية _timeout *timeout);
 
-#else
+#وإلا
 
 /* Stubs when !CONFIG_SYS_CLOCK_EXISTS */
-#define z_init_thread_timeout(thread_base) do {} while (false)
-#define z_try_abort_thread_timeout(to) 0
-#define z_is_inactive_timeout(to) 1
-#define z_get_next_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
-#define z_set_timeout_expiry(ticks, is_idle) do {} while (false)
+#تعریف_کړه z_init_thread_timeout(thread_بنسټ_2) افعل {} طالما (false)
+#تعریف_کړه z_try_abort_thread_timeout(منزل) 0
+#تعریف_کړه z_is_inactive_timeout(منزل) 1
+#تعریف_کړه z_get_بل_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
+#تعریف_کړه z_سېټ_timeout_expiry(ticks, is_idle) افعل {} طالما (false)
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+ساكن مضمن k_ticks_t z_جمع_کړه_thread_timeout(بنية k_thread *thread, k_timeout_t ticks)
 {
-	ARG_UNUSED(thread);
-	ARG_UNUSED(ticks);
-	return 0;
+	ARG_ناکارول_شوی(thread);
+	ARG_ناکارول_شوی(ticks);
+	أرجع 0;
 }
 
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#د_که_پای /* CONFIG_SYS_CLOCK_EXISTS */
 
-#ifdef __cplusplus
+#که_تعریف_شوی __cplusplus
 }
-#endif
+#د_که_پای
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_ */
+#د_که_پای /* ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_ */

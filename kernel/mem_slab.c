@@ -4,98 +4,98 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/minmax.h>
-#include <string.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/linker/sections.h>
+#ضمن <zephyr/sys/dlist.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/sys/check.h>
+#ضمن <zephyr/sys/iterable_sections.h>
+#ضمن <zephyr/sys/minmax.h>
+#ضمن <string.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kernel_internal.h>
-#include <scheduler.h>
-#include <wait_q.h>
+#ضمن <ksched.h>
+#ضمن <kernel_internal.h>
+#ضمن <scheduler.h>
+#ضمن <wait_q.h>
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
+#که_تعریف_شوی CONFIG_OBJ_CORE_MEM_SLAB
+#که_تعریف_شوی CONFIG_OBJ_CORE_STATS_MEM_SLAB
 
-static int k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
+ساكن صحيح k_mem_slab_stats_raw(بنية k_obj_core *obj_core, فراغ *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != عدم) && (stats != عدم), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	بنية k_mem_slab *slab;
+	k_spinlock_کلی_t   کلی;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	memcpy(stats, &slab->info, sizeof(slab->info));
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_د(obj_core, بنية k_mem_slab, obj_core);
+	کلی = k_spin_قلف(&slab->قلف);
+	حافظه_نقل(stats, &slab->info, حجم(slab->info));
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return 0;
+	أرجع 0;
 }
 
-static int k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
+ساكن صحيح k_mem_slab_stats_query(بنية k_obj_core *obj_core, فراغ *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != عدم) && (stats != عدم), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
-	struct sys_memory_stats *ptr = stats;
+	بنية k_mem_slab *slab;
+	k_spinlock_کلی_t   کلی;
+	بنية sys_حافظه_stats *ptr = stats;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	ptr->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			  slab->info.block_size;
-	ptr->allocated_bytes = slab->info.num_used * slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	ptr->max_allocated_bytes = slab->info.max_used * slab->info.block_size;
-#else
-	ptr->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_د(obj_core, بنية k_mem_slab, obj_core);
+	کلی = k_spin_قلف(&slab->قلف);
+	ptr->free_بایټونه = (slab->info.عدد_بلاکونه - slab->info.عدد_کارول_شوی) *
+			  slab->info.بلاک_اندازه;
+	ptr->allocated_بایټونه = slab->info.عدد_کارول_شوی * slab->info.بلاک_اندازه;
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	ptr->max_allocated_بایټونه = slab->info.max_کارول_شوی * slab->info.بلاک_اندازه;
+#وإلا
+	ptr->max_allocated_بایټونه = 0;
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return 0;
+	أرجع 0;
 }
 
-static int k_mem_slab_stats_reset(struct k_obj_core *obj_core)
+ساكن صحيح k_mem_slab_stats_reset(بنية k_obj_core *obj_core)
 {
-	__ASSERT(obj_core != NULL, "NULL parameter");
+	__ASSERT(obj_core != عدم, "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	بنية k_mem_slab *slab;
+	k_spinlock_کلی_t   کلی;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
+	slab = CONTAINER_د(obj_core, بنية k_mem_slab, obj_core);
+	کلی = k_spin_قلف(&slab->قلف);
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = slab->info.num_used;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_کارول_شوی = slab->info.عدد_کارول_شوی;
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return 0;
+	أرجع 0;
 }
 
-static struct k_obj_core_stats_desc mem_slab_stats_desc = {
-	.raw_size = sizeof(struct k_mem_slab_info),
-	.query_size = sizeof(struct sys_memory_stats),
+ساكن بنية k_obj_core_stats_desc mem_slab_stats_desc = {
+	.raw_اندازه = حجم(بنية k_mem_slab_info),
+	.query_اندازه = حجم(بنية sys_حافظه_stats),
 	.raw   = k_mem_slab_stats_raw,
 	.query = k_mem_slab_stats_query,
 	.reset = k_mem_slab_stats_reset,
-	.disable = NULL,
-	.enable = NULL,
+	.disable = عدم,
+	.enable = عدم,
 };
 
 K_OBJ_TYPE_DEFINE_STATS(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID,
 			&mem_slab_stats_desc, info);
-#else
-K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
+#وإلا
+K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, عدم);
+#د_که_پای /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#د_که_پای /* CONFIG_OBJ_CORE_MEM_SLAB */
 
 /**
  * @brief Initialize kernel memory slab subsystem.
@@ -106,38 +106,38 @@ K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
  * @retval 0 on success.
  * @retval -EINVAL if @p slab contains invalid configuration and/or values.
  */
-static int create_free_list(struct k_mem_slab *slab)
+ساكن صحيح create_free_list(بنية k_mem_slab *slab)
 {
-	char *p;
-	size_t total_size;
+	حرف *p;
+	size_t ټول_اندازه;
 
-	CHECKIF(slab->info.block_size == 0U) {
-		return -EINVAL;
+	CHECKIF(slab->info.بلاک_اندازه == 0U) {
+		أرجع -EINVAL;
 	}
 
 	/* blocks must be word aligned */
-	CHECKIF(((slab->info.block_size | (uintptr_t)slab->buffer) &
-				(sizeof(void *) - 1)) != 0U) {
-		return -EINVAL;
+	CHECKIF(((slab->info.بلاک_اندازه | (uintptr_t)slab->بفر) &
+				(حجم(فراغ *) - 1)) != 0U) {
+		أرجع -EINVAL;
 	}
 
-	if (size_mul_overflow(slab->info.block_size, slab->info.num_blocks, &total_size)) {
-		return -EINVAL;
+	إذا (اندازه_mul_ډکېدنه(slab->info.بلاک_اندازه, slab->info.عدد_بلاکونه, &ټول_اندازه)) {
+		أرجع -EINVAL;
 	}
-	if (size_add_overflow((size_t)(uintptr_t)slab->buffer, total_size, &total_size)) {
-		return -EINVAL;
+	إذا (اندازه_جمع_کړه_ډکېدنه((size_t)(uintptr_t)slab->بفر, ټول_اندازه, &ټول_اندازه)) {
+		أرجع -EINVAL;
 	}
 
-	slab->free_list = NULL;
-	p = (char *)(total_size - slab->info.block_size);
+	slab->free_list = عدم;
+	p = (حرف *)(ټول_اندازه - slab->info.بلاک_اندازه);
 
-	for (uint32_t i = 0; i < slab->info.num_blocks; i++) {
-		*(char **)p = slab->free_list;
+	لكل (uint32_t i = 0; i < slab->info.عدد_بلاکونه; i++) {
+		*(حرف **)p = slab->free_list;
 		slab->free_list = p;
-		p -= slab->info.block_size;
+		p -= slab->info.بلاک_اندازه;
 	}
 
-	return 0;
+	أرجع 0;
 }
 
 /**
@@ -153,11 +153,11 @@ static int create_free_list(struct k_mem_slab *slab)
  * (create_free_list() fails), matching the previous SYS_INIT behavior whose
  * return value was discarded by the init runner.
  */
-static void init_mem_slab_module(void)
+ساكن فراغ init_mem_slab_module(فراغ)
 {
 	STRUCT_SECTION_FOREACH(k_mem_slab, slab) {
-		if (create_free_list(slab) < 0) {
-			return;
+		إذا (create_free_list(slab) < 0) {
+			أرجع;
 		}
 		k_object_init(slab);
 	}
@@ -165,172 +165,172 @@ static void init_mem_slab_module(void)
 
 K_KERNEL_INIT_PRE(init_mem_slab_module);
 
-int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
-		    size_t block_size, uint32_t num_blocks)
+صحيح k_mem_slab_init(بنية k_mem_slab *slab, فراغ *بفر,
+		    size_t بلاک_اندازه, uint32_t عدد_بلاکونه)
 {
-	int rc;
+	صحيح rc;
 
-	slab->info.num_blocks = num_blocks;
-	slab->info.block_size = block_size;
-	slab->buffer = buffer;
-	slab->info.num_used = 0U;
-	slab->lock = (struct k_spinlock) {};
+	slab->info.عدد_بلاکونه = عدد_بلاکونه;
+	slab->info.بلاک_اندازه = بلاک_اندازه;
+	slab->بفر = بفر;
+	slab->info.عدد_کارول_شوی = 0U;
+	slab->قلف = (بنية k_spinlock) {};
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = 0U;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_کارول_شوی = 0U;
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 	rc = create_free_list(slab);
-	if (rc < 0) {
-		goto out;
+	إذا (rc < 0) {
+		اذهب بهر;
 	}
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
+#که_تعریف_شوی CONFIG_OBJ_CORE_MEM_SLAB
 	k_obj_core_init_and_link(K_OBJ_CORE(slab), &obj_type_mem_slab);
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
-	k_obj_core_stats_register(K_OBJ_CORE(slab), &slab->info,
-				  sizeof(struct k_mem_slab_info));
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#د_که_پای /* CONFIG_OBJ_CORE_MEM_SLAB */
+#که_تعریف_شوی CONFIG_OBJ_CORE_STATS_MEM_SLAB
+	k_obj_core_stats_ثبتوونکی(K_OBJ_CORE(slab), &slab->info,
+				  حجم(بنية k_mem_slab_info));
+#د_که_پای /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
 
 	z_waitq_init(&slab->wait_q);
 	k_object_init(slab);
-out:
-	SYS_PORT_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
+بهر:
+	SYS_پورټ_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
 
-	return rc;
+	أرجع rc;
 }
 
-static bool slab_ptr_is_good(struct k_mem_slab *slab, const void *ptr)
+ساكن bool slab_ptr_is_good(بنية k_mem_slab *slab, ثابت فراغ *ptr)
 {
-	if (!IS_ENABLED(CONFIG_MEM_SLAB_POINTER_VALIDATE)) {
-		return true;
+	إذا (!IS_ENABLED(CONFIG_MEM_SLAB_اشاره_ګر_VALIDATE)) {
+		أرجع true;
 	}
 
-	const char *p = ptr;
-	ptrdiff_t offset = p - slab->buffer;
+	ثابت حرف *p = ptr;
+	ptrdiff_t دننه_واټن = p - slab->بفر;
 
-	return (offset >= 0) &&
-	       (offset < (slab->info.block_size * slab->info.num_blocks)) &&
-	       ((offset % slab->info.block_size) == 0);
+	أرجع (دننه_واټن >= 0) &&
+	       (دننه_واټن < (slab->info.بلاک_اندازه * slab->info.عدد_بلاکونه)) &&
+	       ((دننه_واټن % slab->info.بلاک_اندازه) == 0);
 }
 
-int k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
+صحيح k_mem_slab_alloc(بنية k_mem_slab *slab, فراغ **mem, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
-	int result;
+	k_spinlock_کلی_t کلی = k_spin_قلف(&slab->قلف);
+	صحيح پایله;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
+	SYS_پورټ_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
 
-	if (slab->free_list != NULL) {
+	إذا (slab->free_list != عدم) {
 		/* take a free block */
 		*mem = slab->free_list;
-		slab->free_list = *(char **)(slab->free_list);
-		slab->info.num_used++;
-		__ASSERT((slab->free_list == NULL &&
-			  slab->info.num_used == slab->info.num_blocks) ||
+		slab->free_list = *(حرف **)(slab->free_list);
+		slab->info.عدد_کارول_شوی++;
+		__ASSERT((slab->free_list == عدم &&
+			  slab->info.عدد_کارول_شوی == slab->info.عدد_بلاکونه) ||
 			 slab_ptr_is_good(slab, slab->free_list),
 			 "slab corruption detected");
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-		slab->info.max_used = max(slab->info.num_used,
-					  slab->info.max_used);
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+		slab->info.max_کارول_شوی = max(slab->info.عدد_کارول_شوی,
+					  slab->info.max_کارول_شوی);
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
+		پایله = 0;
+	} وإلا إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
 		   !IS_ENABLED(CONFIG_MULTITHREADING)) {
 		/* don't wait for a free block to become available */
-		*mem = NULL;
-		result = -ENOMEM;
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
+		*mem = عدم;
+		پایله = -ENOMEM;
+	} وإلا {
+		SYS_پورټ_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
 
 		/* wait for a free block or timeout */
-		result = z_pend_curr(&slab->lock, key, &slab->wait_q, timeout);
-		if (result == 0) {
-			*mem = _current->base.swap_data;
+		پایله = z_pend_curr(&slab->قلف, کلی, &slab->wait_q, timeout);
+		إذا (پایله == 0) {
+			*mem = _current->بنسټ.بدلون_معلومات;
 		}
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+		SYS_پورټ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, پایله);
 
-		return result;
+		أرجع پایله;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+	SYS_پورټ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, پایله);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return result;
+	أرجع پایله;
 }
 
-void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
+فراغ k_mem_slab_free(بنية k_mem_slab *slab, فراغ *mem)
 {
-	if (!slab_ptr_is_good(slab, mem)) {
+	إذا (!slab_ptr_is_good(slab, mem)) {
 		__ASSERT(false, "Invalid memory pointer provided");
 		k_panic();
-		return;
+		أرجع;
 	}
 
-#ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
-	k_obj_core_evict_range(mem, slab->info.block_size);
-#endif /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
+#که_تعریف_شوی CONFIG_OBJ_CORE_EVICT_ON_FREE
+	k_obj_core_evict_range(mem, slab->info.بلاک_اندازه);
+#د_که_پای /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_کلی_t کلی = k_spin_قلف(&slab->قلف);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, free, slab);
-	if (unlikely(slab->free_list == NULL) && IS_ENABLED(CONFIG_MULTITHREADING)) {
-		if (z_sched_wake(&slab->wait_q, 0, mem)) {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
-			z_reschedule(&slab->lock, key);
-			return;
+	SYS_پورټ_TRACING_OBJ_FUNC_ENTER(k_mem_slab, حرر, slab);
+	إذا (unlikely(slab->free_list == عدم) && IS_ENABLED(CONFIG_MULTITHREADING)) {
+		إذا (z_sched_wake(&slab->wait_q, 0, mem)) {
+			SYS_پورټ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, حرر, slab);
+			z_reschedule(&slab->قلف, کلی);
+			أرجع;
 		}
 	}
-	*(char **) mem = slab->free_list;
-	slab->free_list = (char *) mem;
-	slab->info.num_used--;
+	*(حرف **) mem = slab->free_list;
+	slab->free_list = (حرف *) mem;
+	slab->info.عدد_کارول_شوی--;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
+	SYS_پورټ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, حرر, slab);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->قلف, کلی);
 }
 
-int k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stats *stats)
+صحيح k_mem_slab_runtime_stats_get(بنية k_mem_slab *slab, بنية sys_حافظه_stats *stats)
 {
-	if ((slab == NULL) || (stats == NULL)) {
-		return -EINVAL;
+	إذا ((slab == عدم) || (stats == عدم)) {
+		أرجع -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_کلی_t کلی = k_spin_قلف(&slab->قلف);
 
-	stats->allocated_bytes = slab->info.num_used * slab->info.block_size;
-	stats->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			    slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	stats->max_allocated_bytes = slab->info.max_used *
-				     slab->info.block_size;
-#else
-	stats->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	stats->allocated_بایټونه = slab->info.عدد_کارول_شوی * slab->info.بلاک_اندازه;
+	stats->free_بایټونه = (slab->info.عدد_بلاکونه - slab->info.عدد_کارول_شوی) *
+			    slab->info.بلاک_اندازه;
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	stats->max_allocated_بایټونه = slab->info.max_کارول_شوی *
+				     slab->info.بلاک_اندازه;
+#وإلا
+	stats->max_allocated_بایټونه = 0;
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return 0;
+	أرجع 0;
 }
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-int k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
+#که_تعریف_شوی CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+صحيح k_mem_slab_runtime_stats_reset_max(بنية k_mem_slab *slab)
 {
-	if (slab == NULL) {
-		return -EINVAL;
+	إذا (slab == عدم) {
+		أرجع -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_کلی_t کلی = k_spin_قلف(&slab->قلف);
 
-	slab->info.max_used = slab->info.num_used;
+	slab->info.max_کارول_شوی = slab->info.عدد_کارول_شوی;
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->قلف, کلی);
 
-	return 0;
+	أرجع 0;
 }
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#د_که_پای /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */

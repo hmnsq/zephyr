@@ -11,10 +11,10 @@
  * Kernel APIs related to thread local storage.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#که_نه_تعریف_شوی ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#تعریف_کړه ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 
-#include <zephyr/linker/linker-defs.h>
+#ضمن <zephyr/linker/linker-defs.h>
 
 /**
  * @brief Return the total size of TLS data/bss areas
@@ -26,14 +26,14 @@
  *
  * @return Total size of TLS data/bss areas
  */
-static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
+ساكن مضمن FUNC_NO_ډېری_PROTECTOR size_t z_tls_معلومات_اندازه(فراغ)
 {
-	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
+	size_t اندازه = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
-	size += (size_t)(uintptr_t)__stack_chk_size;
-#endif
-	return size;
+#إذا defined(CONFIG_ډېری_CANARIES_TLS_PREPEND)
+	اندازه += (size_t)(uintptr_t)__stack_chk_size;
+#د_که_پای
+	أرجع اندازه;
 }
 
 /**
@@ -44,24 +44,24 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  *
  * @param dest Pointer to destination
  */
-static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
+ساكن مضمن FUNC_NO_ډېری_PROTECTOR فراغ z_tls_copy(حرف *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#إذا defined(CONFIG_ډېری_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
-	memcpy(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
+	حافظه_نقل(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
 	dest += (size_t)(uintptr_t)__stack_chk_size;
 
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	حافظه_نقل(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+#وإلا
 	/* Copy initialized data (tdata) */
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	حافظه_نقل(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#endif
+#د_که_پای
 	/* Clear BSS data (tbss) */
 	memset(dest, 0, (size_t)(uintptr_t)__tbss_size);
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */
+#د_که_پای /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */
