@@ -16,14 +16,14 @@ static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value < minimum) {
+		nếu (old_value < minimum) {
 			break;
 		}
 
 		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+	} trong_khi (atomic_cas(val, old_value, new_value) == 0);
 
-	return old_value;
+	trả_về old_value;
 }
 
 static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
@@ -33,73 +33,73 @@ static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value >= maximum) {
+		nếu (old_value >= maximum) {
 			break;
 		}
 
 		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+	} trong_khi (atomic_cas(val, old_value, new_value) == 0U);
 
-	return old_value;
+	trả_về old_value;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+số_nguyên sys_sem_init(struct sys_sem *sem, unsigned số_nguyên initial_count,
+		 unsigned số_nguyên limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
+	nếu ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
 	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+		trả_về -EINVAL;
 	}
 
 	(void)atomic_set(&sem->futex.val, initial_count);
 	sem->limit = limit;
 
-	return 0;
+	trả_về 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+số_nguyên sys_sem_give(struct sys_sem *sem)
 {
-	int ret = 0;
+	số_nguyên ret = 0;
 	atomic_t old_value;
 
 	old_value = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	nếu (old_value < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		nếu (ret > 0) {
+			trả_về 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} không_thì nếu (old_value >= sem->limit) {
+		trả_về -EAGAIN;
+	} không_thì {
 		;
 	}
-	return ret;
+	trả_về ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+số_nguyên sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
+	số_nguyên ret = 0;
 	atomic_t old_value;
 
 	do {
 		old_value = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		nếu (old_value > 0) {
+			trả_về 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} trong_khi (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	trả_về ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned số_nguyên sys_sem_count_get(struct sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	số_nguyên value = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	trả_về (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
 }

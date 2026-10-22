@@ -13,11 +13,11 @@ static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
 	struct k_object *obj;
 
 	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	nếu ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		trả_về NULL;
 	}
 
-	return obj->data.mutex;
+	trả_về obj->data.mutex;
 }
 
 static bool check_sys_mutex_addr(struct sys_mutex *addr)
@@ -26,48 +26,48 @@ static bool check_sys_mutex_addr(struct sys_mutex *addr)
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	trả_về K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+số_nguyên z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
 {
 	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	nếu (kernel_mutex == NULL) {
+		trả_về -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	trả_về k_mutex_lock(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+static inline số_nguyên z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	nếu (check_sys_mutex_addr(mutex)) {
+		trả_về -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	trả_về z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+số_nguyên z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
 {
 	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	nếu ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
+		trả_về -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	trả_về k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+static inline số_nguyên z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	nếu (check_sys_mutex_addr(mutex)) {
+		trả_về -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	trả_về z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>

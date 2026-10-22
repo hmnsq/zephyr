@@ -51,22 +51,22 @@ int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	nếu (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
 		ret = -ENOMEM;
-	} else {
+	} không_thì {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
+		nếu (buffer != NULL) {
 			k_stack_init(stack, buffer, num_entries);
 			stack->flags = K_STACK_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} không_thì {
 			ret = -ENOMEM;
 		}
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
 
-	return ret;
+	trả_về ret;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -79,30 +79,30 @@ static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
 	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
 	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
 					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	trả_về z_impl_k_stack_alloc_init(stack, num_entries);
 }
 #include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+số_nguyên z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
 
-	int ret = 0;
+	số_nguyên ret = 0;
 	bool freed = false;
 	k_spinlock_key_t key = k_spin_lock(&stack->lock);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	nếu (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
 		ret = -EAGAIN;
 		goto out;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	nếu (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
 		ret = -EAGAIN;
 		goto out;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
+	nếu ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
 		k_free(stack->base);
 		stack->base = NULL;
 		stack->flags &= ~K_STACK_FLAG_ALLOC;
@@ -113,36 +113,36 @@ out:
 	k_spin_unlock(&stack->lock, key);
 
 #ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
+	nếu (freed) {
 		k_obj_core_unlink(K_OBJ_CORE(stack));
 	}
 #endif /* CONFIG_OBJ_CORE_STACK */
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
 
-	return ret;
+	trả_về ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+số_nguyên k_stack_cleanup(struct k_stack *stack)
 {
-	return z_stack_cleanup(stack, false);
+	trả_về z_stack_cleanup(stack, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+số_nguyên z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
 {
-	int ret = 0;
+	số_nguyên ret = 0;
 	k_spinlock_key_t key = k_spin_lock(&stack->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
 
-	if (stack->next == stack->top) {
+	nếu (stack->next == stack->top) {
 		ret = -ENOMEM;
 		goto out;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
+	nếu (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
 		z_reschedule(&stack->lock, key);
 		goto end;
-	} else {
+	} không_thì {
 		*(stack->next) = data;
 		stack->next++;
 		goto out;
@@ -154,70 +154,70 @@ out:
 end:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
 
-	return ret;
+	trả_về ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+static inline số_nguyên z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
 {
 	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
 
-	return z_impl_k_stack_push(stack, data);
+	trả_về z_impl_k_stack_push(stack, data);
 }
 #include <zephyr/syscalls/k_stack_push_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+số_nguyên z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
 		       k_timeout_t timeout)
 {
 	k_spinlock_key_t key;
-	int result;
+	số_nguyên result;
 
 	key = k_spin_lock(&stack->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
 
-	if (likely(stack->next > stack->base)) {
+	nếu (likely(stack->next > stack->base)) {
 		stack->next--;
 		*data = *(stack->next);
 		k_spin_unlock(&stack->lock, key);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
 
-		return 0;
+		trả_về 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	nếu (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		k_spin_unlock(&stack->lock, key);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
 
-		return -EBUSY;
+		trả_về -EBUSY;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
 
 	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
+	nếu (result != 0) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
 
-		return result;
+		trả_về result;
 	}
 
 	*data = (stack_data_t)_current->base.swap_data;
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
 
-	return 0;
+	trả_về 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
+static inline số_nguyên z_vrfy_k_stack_pop(struct k_stack *stack,
 				     stack_data_t *data, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	trả_về z_impl_k_stack_pop(stack, data, timeout);
 }
 #include <zephyr/syscalls/k_stack_pop_mrsh.c>
 #endif /* CONFIG_USERSPACE */

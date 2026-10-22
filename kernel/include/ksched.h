@@ -33,8 +33,8 @@ BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
 		 (prio), \
 		 K_LOWEST_APPLICATION_THREAD_PRIO, \
 		 K_HIGHEST_APPLICATION_THREAD_PRIO); \
-	} while (false)
-#else
+	} trong_khi (false)
+#không_thì
 #define Z_VALID_PRIO(prio, entry_point) ((prio) == -1)
 #define Z_ASSERT_VALID_PRIO(prio, entry_point) __ASSERT((prio) == -1, "")
 #endif /* CONFIG_MULTITHREADING */
@@ -55,15 +55,15 @@ void z_unpend_thread_no_timeout(struct k_thread *thread);
  */
 void z_unpend_thread(struct k_thread *thread);
 struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+số_nguyên z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
 void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
 void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
 void z_reschedule_locked(k_spinlock_key_t key);
 void z_reschedule_irqlock(uint32_t key);
-int z_unpend_all(_wait_q_t *wait_q);
-bool z_thread_prio_set(struct k_thread *thread, int prio);
+số_nguyên z_unpend_all(_wait_q_t *wait_q);
+bool z_thread_prio_set(struct k_thread *thread, số_nguyên prio);
 void *z_get_next_switch_handle(void *interrupted);
 void z_thread_suspend_current(struct k_thread *thread);
 
@@ -80,11 +80,11 @@ void z_thread_suspend_current(struct k_thread *thread);
 static ALWAYS_INLINE void *z_sched_next_handle(struct k_thread *curr)
 {
 #ifndef CONFIG_SMP
-	if (curr == _kernel.ready_q.cache) {
-		return NULL;
+	nếu (curr == _kernel.ready_q.cache) {
+		trả_về NULL;
 	}
 #endif
-	return z_get_next_switch_handle(NULL);
+	trả_về z_get_next_switch_handle(NULL);
 }
 
 void z_sched_start(struct k_thread *thread);
@@ -157,70 +157,70 @@ static inline void z_reschedule_unlocked(void)
 	(void) z_reschedule_irqlock(arch_irq_lock());
 }
 
-static inline bool z_is_under_prio_ceiling(int prio)
+static inline bool z_is_under_prio_ceiling(số_nguyên prio)
 {
-	return prio >= CONFIG_PRIORITY_CEILING;
+	trả_về prio >= CONFIG_PRIORITY_CEILING;
 }
 
-static inline int z_get_new_prio_with_ceiling(int prio)
+static inline số_nguyên z_get_new_prio_with_ceiling(số_nguyên prio)
 {
-	return z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
+	trả_về z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
 }
 
-static inline bool z_is_prio1_higher_than_or_equal_to_prio2(int prio1, int prio2)
+static inline bool z_is_prio1_higher_than_or_equal_to_prio2(số_nguyên prio1, số_nguyên prio2)
 {
-	return prio1 <= prio2;
+	trả_về prio1 <= prio2;
 }
 
-static inline bool z_is_prio_higher_or_equal(int prio1, int prio2)
+static inline bool z_is_prio_higher_or_equal(số_nguyên prio1, số_nguyên prio2)
 {
-	return z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
+	trả_về z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool z_is_prio1_lower_than_or_equal_to_prio2(int prio1, int prio2)
+static inline bool z_is_prio1_lower_than_or_equal_to_prio2(số_nguyên prio1, số_nguyên prio2)
 {
-	return prio1 >= prio2;
+	trả_về prio1 >= prio2;
 }
 
-static inline bool z_is_prio1_higher_than_prio2(int prio1, int prio2)
+static inline bool z_is_prio1_higher_than_prio2(số_nguyên prio1, số_nguyên prio2)
 {
-	return prio1 < prio2;
+	trả_về prio1 < prio2;
 }
 
-static inline bool z_is_prio_higher(int prio, int test_prio)
+static inline bool z_is_prio_higher(số_nguyên prio, số_nguyên test_prio)
 {
-	return z_is_prio1_higher_than_prio2(prio, test_prio);
+	trả_về z_is_prio1_higher_than_prio2(prio, test_prio);
 }
 
-static inline bool z_is_prio_lower_or_equal(int prio1, int prio2)
+static inline bool z_is_prio_lower_or_equal(số_nguyên prio1, số_nguyên prio2)
 {
-	return z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
+	trả_về z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool _is_valid_prio(int prio, k_thread_entry_t entry_point)
+static inline bool _is_valid_prio(số_nguyên prio, k_thread_entry_t entry_point)
 {
-	if ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
-		return true;
+	nếu ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
+		trả_về true;
 	}
 
-	if (!z_is_prio_higher_or_equal(prio,
+	nếu (!z_is_prio_higher_or_equal(prio,
 				       K_LOWEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		trả_về false;
 	}
 
-	if (!z_is_prio_lower_or_equal(prio,
+	nếu (!z_is_prio_lower_or_equal(prio,
 				      K_HIGHEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		trả_về false;
 	}
 
-	return true;
+	trả_về true;
 }
 
 static ALWAYS_INLINE _wait_q_t *pended_on_thread(struct k_thread *thread)
 {
 	__ASSERT_NO_MSG(thread->base.pended_on);
 
-	return thread->base.pended_on;
+	trả_về thread->base.pended_on;
 }
 
 
@@ -251,7 +251,7 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 {
 	struct k_thread *thread = _priq_wait_best(&wait_q->waitq);
 
-	if (unlikely(thread != NULL)) {
+	nếu (unlikely(thread != NULL)) {
 		unpend_thread_no_timeout(thread);
 		/* Abort the thread's timeout. If its handler is in flight on
 		 * another CPU it is blocked on the sched lock; the abort flags
@@ -261,7 +261,7 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 		 */
 		(void)z_try_abort_thread_timeout(thread);
 	}
-	return thread;
+	trả_về thread;
 }
 
 /**
@@ -290,14 +290,14 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
  * @retval true If a thread was woken up
  * @retval false If the wait_q was empty
  */
-static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
+static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, số_nguyên swap_retval, void *swap_data)
 {
 	struct k_thread *thread;
 	bool ret = false;
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_unpend_first_thread_locked(wait_q);
-		if (thread != NULL) {
+		nếu (thread != NULL) {
 			z_thread_return_value_set_with_data(thread,
 							    swap_retval,
 							    swap_data);
@@ -306,7 +306,7 @@ static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void 
 		}
 	}
 
-	return ret;
+	trả_về ret;
 }
 
 #ifdef __cplusplus

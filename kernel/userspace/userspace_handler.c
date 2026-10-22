@@ -13,24 +13,24 @@ static struct k_object *validate_kernel_object(const void *obj,
 					       enum _obj_init_check init)
 {
 	struct k_object *ko;
-	int ret;
+	số_nguyên ret;
 
 	ko = k_object_find(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
+	nếu (ret != 0) {
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
 #endif /* CONFIG_LOG */
-		return NULL;
+		trả_về NULL;
 	}
 
-	return ko;
+	trả_về ko;
 }
 
 static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	trả_về validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
 bool k_object_is_valid(const void *obj, enum k_objects otype)
@@ -39,7 +39,7 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	trả_về (ko != NULL);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -66,9 +66,9 @@ static inline void z_vrfy_k_object_access_grant(const void *object,
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+static inline số_nguyên z_vrfy_k_object_access_check(const void *object)
 {
-	return z_impl_k_object_access_check(object);
+	trả_về z_impl_k_object_access_check(object);
 }
 #include <zephyr/syscalls/k_object_access_check_mrsh.c>
 
@@ -84,12 +84,12 @@ static inline void z_vrfy_k_object_release(const void *object)
 
 static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	trả_về z_impl_k_object_alloc(otype);
 }
 #include <zephyr/syscalls/k_object_alloc_mrsh.c>
 
 static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	trả_về z_impl_k_object_alloc_size(otype, size);
 }
 #include <zephyr/syscalls/k_object_alloc_size_mrsh.c>

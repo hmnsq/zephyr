@@ -23,7 +23,7 @@
 #ifdef CONFIG_OBJ_CORE_MEM_SLAB
 #ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
 
-static int k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
+static số_nguyên k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
 {
 	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
 
@@ -35,10 +35,10 @@ static int k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
 	memcpy(stats, &slab->info, sizeof(slab->info));
 	k_spin_unlock(&slab->lock, key);
 
-	return 0;
+	trả_về 0;
 }
 
-static int k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
+static số_nguyên k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
 {
 	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
 
@@ -53,15 +53,15 @@ static int k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
 	ptr->allocated_bytes = slab->info.num_used * slab->info.block_size;
 #ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
 	ptr->max_allocated_bytes = slab->info.max_used * slab->info.block_size;
-#else
+#không_thì
 	ptr->max_allocated_bytes = 0;
 #endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 	k_spin_unlock(&slab->lock, key);
 
-	return 0;
+	trả_về 0;
 }
 
-static int k_mem_slab_stats_reset(struct k_obj_core *obj_core)
+static số_nguyên k_mem_slab_stats_reset(struct k_obj_core *obj_core)
 {
 	__ASSERT(obj_core != NULL, "NULL parameter");
 
@@ -77,7 +77,7 @@ static int k_mem_slab_stats_reset(struct k_obj_core *obj_core)
 
 	k_spin_unlock(&slab->lock, key);
 
-	return 0;
+	trả_về 0;
 }
 
 static struct k_obj_core_stats_desc mem_slab_stats_desc = {
@@ -92,7 +92,7 @@ static struct k_obj_core_stats_desc mem_slab_stats_desc = {
 
 K_OBJ_TYPE_DEFINE_STATS(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID,
 			&mem_slab_stats_desc, info);
-#else
+#không_thì
 K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
 #endif /* CONFIG_OBJ_CORE_MEM_SLAB */
@@ -106,38 +106,38 @@ K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
  * @retval 0 on success.
  * @retval -EINVAL if @p slab contains invalid configuration and/or values.
  */
-static int create_free_list(struct k_mem_slab *slab)
+static số_nguyên create_free_list(struct k_mem_slab *slab)
 {
 	char *p;
 	size_t total_size;
 
 	CHECKIF(slab->info.block_size == 0U) {
-		return -EINVAL;
+		trả_về -EINVAL;
 	}
 
 	/* blocks must be word aligned */
 	CHECKIF(((slab->info.block_size | (uintptr_t)slab->buffer) &
 				(sizeof(void *) - 1)) != 0U) {
-		return -EINVAL;
+		trả_về -EINVAL;
 	}
 
-	if (size_mul_overflow(slab->info.block_size, slab->info.num_blocks, &total_size)) {
-		return -EINVAL;
+	nếu (size_mul_overflow(slab->info.block_size, slab->info.num_blocks, &total_size)) {
+		trả_về -EINVAL;
 	}
-	if (size_add_overflow((size_t)(uintptr_t)slab->buffer, total_size, &total_size)) {
-		return -EINVAL;
+	nếu (size_add_overflow((size_t)(uintptr_t)slab->buffer, total_size, &total_size)) {
+		trả_về -EINVAL;
 	}
 
 	slab->free_list = NULL;
 	p = (char *)(total_size - slab->info.block_size);
 
-	for (uint32_t i = 0; i < slab->info.num_blocks; i++) {
+	cho (uint32_t i = 0; i < slab->info.num_blocks; i++) {
 		*(char **)p = slab->free_list;
 		slab->free_list = p;
 		p -= slab->info.block_size;
 	}
 
-	return 0;
+	trả_về 0;
 }
 
 /**
@@ -156,8 +156,8 @@ static int create_free_list(struct k_mem_slab *slab)
 static void init_mem_slab_module(void)
 {
 	STRUCT_SECTION_FOREACH(k_mem_slab, slab) {
-		if (create_free_list(slab) < 0) {
-			return;
+		nếu (create_free_list(slab) < 0) {
+			trả_về;
 		}
 		k_object_init(slab);
 	}
@@ -165,10 +165,10 @@ static void init_mem_slab_module(void)
 
 K_KERNEL_INIT_PRE(init_mem_slab_module);
 
-int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
+số_nguyên k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
 		    size_t block_size, uint32_t num_blocks)
 {
-	int rc;
+	số_nguyên rc;
 
 	slab->info.num_blocks = num_blocks;
 	slab->info.block_size = block_size;
@@ -181,7 +181,7 @@ int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
 #endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 	rc = create_free_list(slab);
-	if (rc < 0) {
+	nếu (rc < 0) {
 		goto out;
 	}
 
@@ -198,31 +198,31 @@ int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
 out:
 	SYS_PORT_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
 
-	return rc;
+	trả_về rc;
 }
 
 static bool slab_ptr_is_good(struct k_mem_slab *slab, const void *ptr)
 {
-	if (!IS_ENABLED(CONFIG_MEM_SLAB_POINTER_VALIDATE)) {
-		return true;
+	nếu (!IS_ENABLED(CONFIG_MEM_SLAB_POINTER_VALIDATE)) {
+		trả_về true;
 	}
 
 	const char *p = ptr;
 	ptrdiff_t offset = p - slab->buffer;
 
-	return (offset >= 0) &&
+	trả_về (offset >= 0) &&
 	       (offset < (slab->info.block_size * slab->info.num_blocks)) &&
 	       ((offset % slab->info.block_size) == 0);
 }
 
-int k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
+số_nguyên k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
 {
 	k_spinlock_key_t key = k_spin_lock(&slab->lock);
-	int result;
+	số_nguyên result;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
 
-	if (slab->free_list != NULL) {
+	nếu (slab->free_list != NULL) {
 		/* take a free block */
 		*mem = slab->free_list;
 		slab->free_list = *(char **)(slab->free_list);
@@ -238,38 +238,38 @@ int k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
 #endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
+	} không_thì nếu (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
 		   !IS_ENABLED(CONFIG_MULTITHREADING)) {
 		/* don't wait for a free block to become available */
 		*mem = NULL;
 		result = -ENOMEM;
-	} else {
+	} không_thì {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
 
 		/* wait for a free block or timeout */
 		result = z_pend_curr(&slab->lock, key, &slab->wait_q, timeout);
-		if (result == 0) {
+		nếu (result == 0) {
 			*mem = _current->base.swap_data;
 		}
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
 
-		return result;
+		trả_về result;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
 
 	k_spin_unlock(&slab->lock, key);
 
-	return result;
+	trả_về result;
 }
 
 void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
 {
-	if (!slab_ptr_is_good(slab, mem)) {
+	nếu (!slab_ptr_is_good(slab, mem)) {
 		__ASSERT(false, "Invalid memory pointer provided");
 		k_panic();
-		return;
+		trả_về;
 	}
 
 #ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
@@ -279,11 +279,11 @@ void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
 	k_spinlock_key_t key = k_spin_lock(&slab->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, free, slab);
-	if (unlikely(slab->free_list == NULL) && IS_ENABLED(CONFIG_MULTITHREADING)) {
-		if (z_sched_wake(&slab->wait_q, 0, mem)) {
+	nếu (unlikely(slab->free_list == NULL) && IS_ENABLED(CONFIG_MULTITHREADING)) {
+		nếu (z_sched_wake(&slab->wait_q, 0, mem)) {
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
 			z_reschedule(&slab->lock, key);
-			return;
+			trả_về;
 		}
 	}
 	*(char **) mem = slab->free_list;
@@ -295,10 +295,10 @@ void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
 	k_spin_unlock(&slab->lock, key);
 }
 
-int k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stats *stats)
+số_nguyên k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stats *stats)
 {
-	if ((slab == NULL) || (stats == NULL)) {
-		return -EINVAL;
+	nếu ((slab == NULL) || (stats == NULL)) {
+		trả_về -EINVAL;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&slab->lock);
@@ -309,20 +309,20 @@ int k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stat
 #ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
 	stats->max_allocated_bytes = slab->info.max_used *
 				     slab->info.block_size;
-#else
+#không_thì
 	stats->max_allocated_bytes = 0;
 #endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 	k_spin_unlock(&slab->lock, key);
 
-	return 0;
+	trả_về 0;
 }
 
 #ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-int k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
+số_nguyên k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
 {
-	if (slab == NULL) {
-		return -EINVAL;
+	nếu (slab == NULL) {
+		trả_về -EINVAL;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&slab->lock);
@@ -331,6 +331,6 @@ int k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
 
 	k_spin_unlock(&slab->lock, key);
 
-	return 0;
+	trả_về 0;
 }
 #endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */

@@ -19,12 +19,12 @@ bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b)
 
 	cmp = z_sched_prio_cmp(thread_a, thread_b);
 
-	if (cmp > 0) {
-		return true;
-	} else if (cmp < 0) {
-		return false;
-	} else {
-		return thread_a->base.order_key < thread_b->base.order_key
+	nếu (cmp > 0) {
+		trả_về true;
+	} không_thì nếu (cmp < 0) {
+		trả_về false;
+	} không_thì {
+		trả_về thread_a->base.order_key < thread_b->base.order_key
 			? 1 : 0;
 	}
 }
