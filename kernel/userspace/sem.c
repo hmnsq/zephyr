@@ -4,102 +4,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/sem.h>
-#include <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/sys/sem.h>
+#ضمن <zephyr/internal/syscall_handler.h>
 
 #define SYS_SEM_MINIMUM      0
 #define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+ساكن مضمن atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_قىممەت, new_قىممەت;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+	افعل {
+		old_قىممەت = atomic_get(val);
+		إذا (old_قىممەت < minimum) {
+			اكسر;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_قىممەت = old_قىممەت - 1;
+	} طالما (atomic_cas(val, old_قىممەت, new_قىممەت) == 0);
 
-	return old_value;
+	أرجع old_قىممەت;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+ساكن مضمن atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_قىممەت, new_قىممەت;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+	افعل {
+		old_قىممەت = atomic_get(val);
+		إذا (old_قىممەت >= maximum) {
+			اكسر;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_قىممەت = ((old_قىممەت < minimum) ? minimum : old_قىممەت) + 1;
+	} طالما (atomic_cas(val, old_قىممەت, new_قىممەت) == 0U);
 
-	return old_value;
+	أرجع old_قىممەت;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+صحيح sys_sem_init(بنية sys_sem *sem, unsigned صحيح initial_سانى,
+		 unsigned صحيح limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+	إذا ((sem == عدم) || (limit == SYS_SEM_MINIMUM) ||
+	    (initial_سانى > limit) || (limit > INT_MAX)) {
+		أرجع -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
+	(فراغ)atomic_set(&sem->futex.val, initial_سانى);
 	sem->limit = limit;
 
-	return 0;
+	أرجع 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+صحيح sys_sem_give(بنية sys_sem *sem)
 {
-	int ret = 0;
-	atomic_t old_value;
+	صحيح ret = 0;
+	atomic_t old_قىممەت;
 
-	old_value = bounded_inc(&sem->futex.val,
+	old_قىممەت = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	إذا (old_قىممەت < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		إذا (ret > 0) {
+			أرجع 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} وإلا إذا (old_قىممەت >= sem->limit) {
+		أرجع -EAGAIN;
+	} وإلا {
 		;
 	}
-	return ret;
+	أرجع ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+صحيح sys_sem_take(بنية sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
-	atomic_t old_value;
+	صحيح ret = 0;
+	atomic_t old_قىممەت;
 
-	do {
-		old_value = bounded_dec(&sem->futex.val,
+	افعل {
+		old_قىممەت = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		إذا (old_قىممەت > 0) {
+			أرجع 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} طالما (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	أرجع ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned صحيح sys_sem_سانى_get(بنية sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	صحيح قىممەت = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	أرجع (قىممەت > SYS_SEM_MINIMUM) ? قىممەت : SYS_SEM_MINIMUM;
 }

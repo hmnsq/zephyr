@@ -7,14 +7,14 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
 #define ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
 
-#include <zephyr/kernel_structs.h>
-#include <kspinlock.h>
-#include <kernel_internal.h>
-#include <timeout_q.h>
-#include <kthread.h>
-#include <zephyr/tracing/tracing.h>
-#include <stdbool.h>
-#include <priority_q.h>
+#ضمن <zephyr/kernel_structs.h>
+#ضمن <kspinlock.h>
+#ضمن <kernel_internal.h>
+#ضمن <timeout_q.h>
+#ضمن <kthread.h>
+#ضمن <zephyr/tracing/tracing.h>
+#ضمن <stdbool.h>
+#ضمن <priority_q.h>
 
 BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
 	     >= K_HIGHEST_APPLICATION_THREAD_PRIO);
@@ -27,45 +27,45 @@ BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
 	  && (prio) >= K_HIGHEST_APPLICATION_THREAD_PRIO	     \
 	  && (prio) <= K_LOWEST_APPLICATION_THREAD_PRIO))
 
-#define Z_ASSERT_VALID_PRIO(prio, entry_point) do { \
+#define Z_ASSERT_VALID_PRIO(prio, entry_point) افعل { \
 	__ASSERT(Z_VALID_PRIO((prio), (entry_point)), \
 		 "invalid priority (%d); allowed range: %d to %d", \
 		 (prio), \
 		 K_LOWEST_APPLICATION_THREAD_PRIO, \
 		 K_HIGHEST_APPLICATION_THREAD_PRIO); \
-	} while (false)
-#else
+	} طالما (false)
+#وإلا
 #define Z_VALID_PRIO(prio, entry_point) ((prio) == -1)
 #define Z_ASSERT_VALID_PRIO(prio, entry_point) __ASSERT((prio) == -1, "")
 #endif /* CONFIG_MULTITHREADING */
 
 #ifdef __cplusplus
-extern "C" {
+خارجي "C" {
 #endif
 
-extern struct k_thread _thread_dummy;
+خارجي بنية k_thread _thread_dummy;
 
 /**
  * @brief Unpend thread, do not abort its timeout (if it exists).
  */
-void z_unpend_thread_no_timeout(struct k_thread *thread);
+فراغ z_unpend_thread_no_timeout(بنية k_thread *thread);
 
 /**
  * @brief Unpend thread and abort its timeout (if it exists).
  */
-void z_unpend_thread(struct k_thread *thread);
-struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+فراغ z_unpend_thread(بنية k_thread *thread);
+بنية k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
+صحيح z_pend_curr(بنية k_spinlock *lock, k_spinlock_ئاچقۇچ_t ئاچقۇچ,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
-void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
+فراغ z_pend_thread(بنية k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
-void z_reschedule_locked(k_spinlock_key_t key);
-void z_reschedule_irqlock(uint32_t key);
-int z_unpend_all(_wait_q_t *wait_q);
-bool z_thread_prio_set(struct k_thread *thread, int prio);
-void *z_get_next_switch_handle(void *interrupted);
-void z_thread_suspend_current(struct k_thread *thread);
+فراغ z_reschedule(بنية k_spinlock *lock, k_spinlock_ئاچقۇچ_t ئاچقۇچ);
+فراغ z_reschedule_locked(k_spinlock_ئاچقۇچ_t ئاچقۇچ);
+فراغ z_reschedule_irqlock(uint32_t ئاچقۇچ);
+صحيح z_unpend_all(_wait_q_t *wait_q);
+bool z_thread_prio_set(بنية k_thread *thread, صحيح prio);
+فراغ *z_get_next_switch_handle(فراغ *interrupted);
+فراغ z_thread_suspend_current(بنية k_thread *thread);
 
 /* Wrapper around z_get_next_switch_handle() for the benefit of
  * non-SMP platforms that always pass a NULL interrupted handle.
@@ -77,20 +77,20 @@ void z_thread_suspend_current(struct k_thread *thread);
  * Mystic arts for cycle nerds, basically.  Replace with
  * z_get_next_switch_handle() if this becomes a maintenance hassle.
  */
-static ALWAYS_INLINE void *z_sched_next_handle(struct k_thread *curr)
+ساكن ALWAYS_INLINE فراغ *z_sched_next_handle(بنية k_thread *curr)
 {
 #ifndef CONFIG_SMP
-	if (curr == _kernel.ready_q.cache) {
-		return NULL;
+	إذا (curr == _kernel.ready_q.cache) {
+		أرجع عدم;
 	}
 #endif
-	return z_get_next_switch_handle(NULL);
+	أرجع z_get_next_switch_handle(عدم);
 }
 
-void z_sched_start(struct k_thread *thread);
-void z_ready_thread(struct k_thread *thread);
-struct k_thread *z_swap_next_thread(void);
-void move_current_to_end_of_prio_q(void);
+فراغ z_sched_start(بنية k_thread *thread);
+فراغ z_ready_thread(بنية k_thread *thread);
+بنية k_thread *z_swap_next_thread(فراغ);
+فراغ move_current_to_end_of_prio_q(فراغ);
 
 /*
  * Internal scheduler functions exposed for use by thread lifecycle code
@@ -109,7 +109,7 @@ void move_current_to_end_of_prio_q(void);
  * @param key     Scheduler spinlock key held by the caller.
  * @param terminate true to abort (kill) the thread, false to suspend it.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate);
+فراغ z_thread_halt(بنية k_thread *thread, k_spinlock_ئاچقۇچ_t ئاچقۇچ, bool terminate);
 
 /**
  * @brief Ready a thread while the scheduler spinlock is already held.
@@ -119,7 +119,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate
  *
  * @param thread Thread to make ready.
  */
-void z_sched_ready_locked(struct k_thread *thread);
+فراغ z_sched_ready_locked(بنية k_thread *thread);
 
 /**
  * @brief Add a thread to a wait queue while the scheduler spinlock is held.
@@ -130,7 +130,7 @@ void z_sched_ready_locked(struct k_thread *thread);
  * @param thread  Thread to pend.
  * @param wait_q  Wait queue to add the thread to (may be NULL).
  */
-void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
+فراغ z_sched_add_to_waitq_locked(بنية k_thread *thread, _wait_q_t *wait_q);
 
 /**
  * @brief Remove a thread from the run queue (scheduler spinlock must be held).
@@ -140,7 +140,7 @@ void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
  *
  * @param thread Thread to remove from the run queue.
  */
-void z_sched_unready_locked(struct k_thread *thread);
+فراغ z_sched_unready_locked(بنية k_thread *thread);
 
 /**
  * @brief Yield the current thread's remaining time slice.
@@ -150,85 +150,85 @@ void z_sched_unready_locked(struct k_thread *thread);
  * of k_yield(); exposed so that thread.c can implement k_yield() without
  * depending on sched.c internals.
  */
-void z_sched_yield(void);
+فراغ z_sched_yield(فراغ);
 
-static inline void z_reschedule_unlocked(void)
+ساكن مضمن فراغ z_reschedule_unlocked(فراغ)
 {
-	(void) z_reschedule_irqlock(arch_irq_lock());
+	(فراغ) z_reschedule_irqlock(arch_irq_lock());
 }
 
-static inline bool z_is_under_prio_ceiling(int prio)
+ساكن مضمن bool z_is_under_prio_ceiling(صحيح prio)
 {
-	return prio >= CONFIG_PRIORITY_CEILING;
+	أرجع prio >= CONFIG_PRIORITY_CEILING;
 }
 
-static inline int z_get_new_prio_with_ceiling(int prio)
+ساكن مضمن صحيح z_get_new_prio_with_ceiling(صحيح prio)
 {
-	return z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
+	أرجع z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
 }
 
-static inline bool z_is_prio1_higher_than_or_equal_to_prio2(int prio1, int prio2)
+ساكن مضمن bool z_is_prio1_higher_than_or_equal_to_prio2(صحيح prio1, صحيح prio2)
 {
-	return prio1 <= prio2;
+	أرجع prio1 <= prio2;
 }
 
-static inline bool z_is_prio_higher_or_equal(int prio1, int prio2)
+ساكن مضمن bool z_is_prio_higher_or_equal(صحيح prio1, صحيح prio2)
 {
-	return z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
+	أرجع z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool z_is_prio1_lower_than_or_equal_to_prio2(int prio1, int prio2)
+ساكن مضمن bool z_is_prio1_lower_than_or_equal_to_prio2(صحيح prio1, صحيح prio2)
 {
-	return prio1 >= prio2;
+	أرجع prio1 >= prio2;
 }
 
-static inline bool z_is_prio1_higher_than_prio2(int prio1, int prio2)
+ساكن مضمن bool z_is_prio1_higher_than_prio2(صحيح prio1, صحيح prio2)
 {
-	return prio1 < prio2;
+	أرجع prio1 < prio2;
 }
 
-static inline bool z_is_prio_higher(int prio, int test_prio)
+ساكن مضمن bool z_is_prio_higher(صحيح prio, صحيح test_prio)
 {
-	return z_is_prio1_higher_than_prio2(prio, test_prio);
+	أرجع z_is_prio1_higher_than_prio2(prio, test_prio);
 }
 
-static inline bool z_is_prio_lower_or_equal(int prio1, int prio2)
+ساكن مضمن bool z_is_prio_lower_or_equal(صحيح prio1, صحيح prio2)
 {
-	return z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
+	أرجع z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
 }
 
-static inline bool _is_valid_prio(int prio, k_thread_entry_t entry_point)
+ساكن مضمن bool _is_valid_prio(صحيح prio, k_thread_entry_t entry_point)
 {
-	if ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
-		return true;
+	إذا ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
+		أرجع true;
 	}
 
-	if (!z_is_prio_higher_or_equal(prio,
+	إذا (!z_is_prio_higher_or_equal(prio,
 				       K_LOWEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		أرجع false;
 	}
 
-	if (!z_is_prio_lower_or_equal(prio,
+	إذا (!z_is_prio_lower_or_equal(prio,
 				      K_HIGHEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		أرجع false;
 	}
 
-	return true;
+	أرجع true;
 }
 
-static ALWAYS_INLINE _wait_q_t *pended_on_thread(struct k_thread *thread)
+ساكن ALWAYS_INLINE _wait_q_t *pended_on_thread(بنية k_thread *thread)
 {
 	__ASSERT_NO_MSG(thread->base.pended_on);
 
-	return thread->base.pended_on;
+	أرجع thread->base.pended_on;
 }
 
 
-static inline void unpend_thread_no_timeout(struct k_thread *thread)
+ساكن مضمن فراغ unpend_thread_no_timeout(بنية k_thread *thread)
 {
 	_priq_wait_remove(&pended_on_thread(thread)->waitq, thread);
 	z_mark_thread_as_not_pending(thread);
-	thread->base.pended_on = NULL;
+	thread->base.pended_on = عدم;
 }
 
 /*
@@ -247,11 +247,11 @@ static inline void unpend_thread_no_timeout(struct k_thread *thread)
  * z_sched_wake() is the convenient wrapper for the common case of
  * "wake one waiter with this retval and this swap_data".
  */
-static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
+ساكن ALWAYS_INLINE بنية k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
 {
-	struct k_thread *thread = _priq_wait_best(&wait_q->waitq);
+	بنية k_thread *thread = _priq_wait_best(&wait_q->waitq);
 
-	if (unlikely(thread != NULL)) {
+	إذا (unlikely(thread != عدم)) {
 		unpend_thread_no_timeout(thread);
 		/* Abort the thread's timeout. If its handler is in flight on
 		 * another CPU it is blocked on the sched lock; the abort flags
@@ -259,9 +259,9 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 		 * it finally runs -- so it won't wake the thread from whatever
 		 * it has since re-pended on. We don't wait for it here.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
+		(فراغ)z_try_abort_thread_timeout(thread);
 	}
-	return thread;
+	أرجع thread;
 }
 
 /**
@@ -290,15 +290,15 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
  * @retval true If a thread was woken up
  * @retval false If the wait_q was empty
  */
-static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
+ساكن ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, صحيح swap_retval, فراغ *swap_data)
 {
-	struct k_thread *thread;
+	بنية k_thread *thread;
 	bool ret = false;
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_unpend_first_thread_locked(wait_q);
-		if (thread != NULL) {
-			z_thread_return_value_set_with_data(thread,
+		إذا (thread != عدم) {
+			z_thread_return_قىممەت_set_with_data(thread,
 							    swap_retval,
 							    swap_data);
 			z_sched_ready_locked(thread);
@@ -306,7 +306,7 @@ static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void 
 		}
 	}
 
-	return ret;
+	أرجع ret;
 }
 
 #ifdef __cplusplus
