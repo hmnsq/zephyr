@@ -24,9 +24,9 @@ void z_sched_ipi(void);
 void flag_ipi(uint32_t ipi_mask);
 void signal_pending_ipi(void);
 atomic_val_t ipi_mask_create(struct k_thread *thread);
-#else
-#define flag_ipi(ipi_mask) do { } while (false)
-#define signal_pending_ipi() do { } while (false)
+#инако
+#define flag_ipi(ipi_mask) do { } док (false)
+#define signal_pending_ipi() do { } док (false)
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_IPI_OPTIMIZE_IDLE
@@ -55,11 +55,11 @@ void ipi_idle_thread_unreserve(struct k_thread *thread);
  */
 bool ipi_idle_thread_rebind(struct k_thread *old_thread,
 			    struct k_thread *new_thread);
-#else
+#инако
 #define ipi_idle_reserved_take() NULL
 #define ipi_idle_thread_unreserve(thread) do { \
 	ARG_UNUSED(thread); \
-} while (false)
+} док (false)
 #define ipi_idle_thread_rebind(old_thread, new_thread) false
 #endif /* CONFIG_IPI_OPTIMIZE_IDLE */
 

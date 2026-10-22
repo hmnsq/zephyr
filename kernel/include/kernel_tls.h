@@ -30,10 +30,10 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
 {
 	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#ако defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
 	size += (size_t)(uintptr_t)__stack_chk_size;
 #endif
-	return size;
+	врати size;
 }
 
 /**
@@ -46,7 +46,7 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  */
 static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#ако defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
@@ -55,7 +55,7 @@ static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
 
 	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+#инако
 	/* Copy initialized data (tdata) */
 	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;

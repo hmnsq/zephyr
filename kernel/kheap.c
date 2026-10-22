@@ -12,15 +12,15 @@
 #include <ksched.h>
 #include <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+цео k_heap_array_get(struct k_heap **heap)
 {
-	int num;
+	цео num;
 
 	/* Pointer to the start of the heap array */
 	STRUCT_SECTION_GET(k_heap, 0, heap);
 	/* Number of statically defined heaps */
 	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	врати num;
 }
 
 void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
@@ -32,12 +32,12 @@ void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
 	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
 }
 
-static int statics_init(void)
+static цео statics_init(void)
 {
 	STRUCT_SECTION_FOREACH(k_heap, heap) {
 		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
 	}
-	return 0;
+	врати 0;
 }
 
 /*
@@ -63,19 +63,19 @@ static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
+	док (ret == NULL) {
 		ret = sys_heap_allocator(&heap->heap, align, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		ако (!IS_ENABLED(CONFIG_MULTITHREADING) ||
 		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 			break;
 		}
 
-		if (!blocked_alloc) {
+		ако (!blocked_alloc) {
 			blocked_alloc = true;
 
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+		} инако {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
@@ -87,7 +87,7 @@ static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes
 	}
 
 	k_spin_unlock(&heap->lock, key);
-	return ret;
+	врати ret;
 }
 
 void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
@@ -99,7 +99,7 @@ void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
 
-	return ret;
+	врати ret;
 }
 
 void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
@@ -125,7 +125,7 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
 
-	return ret;
+	врати ret;
 }
 
 void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
@@ -135,16 +135,16 @@ void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t ti
 	void *ret = NULL;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
+	ако (!size_mul_overflow(num, size, &bounds)) {
 		ret = k_heap_alloc(heap, bounds, timeout);
 	}
-	if (ret != NULL) {
+	ако (ret != NULL) {
 		(void)memset(ret, 0, bounds);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
 
-	return ret;
+	врати ret;
 }
 
 void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
@@ -158,10 +158,10 @@ void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t t
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
+	док (ret == NULL) {
 		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		ако (!IS_ENABLED(CONFIG_MULTITHREADING) ||
 		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 			break;
 		}
@@ -175,7 +175,7 @@ void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t t
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
 
-	return ret;
+	врати ret;
 }
 
 void k_heap_free(struct k_heap *heap, void *mem)
@@ -185,9 +185,9 @@ void k_heap_free(struct k_heap *heap, void *mem)
 	sys_heap_free(&heap->heap, mem);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
+	ако (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
 		z_reschedule(&heap->lock, key);
-	} else {
+	} инако {
 		k_spin_unlock(&heap->lock, key);
 	}
 }
