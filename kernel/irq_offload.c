@@ -3,19 +3,19 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <zephyr/irq_offload.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/irq_offload.h>
 
 /* Make offload_sem visible outside testing, in order to release
  * it outside when error happened.
  */
 K_SEM_DEFINE(offload_sem, 1, 1);
 
-void irq_offload(irq_offload_routine_t routine, const void *parameter)
+शून्य irq_offload(irq_offload_routine_t routine, स्थिरांक शून्य *parameter)
 {
 #ifdef CONFIG_IRQ_OFFLOAD_NESTED
 	arch_irq_offload(routine, parameter);
-#else
+#अन्यथा
 	k_sem_take(&offload_sem, K_FOREVER);
 	arch_irq_offload(routine, parameter);
 	k_sem_give(&offload_sem);

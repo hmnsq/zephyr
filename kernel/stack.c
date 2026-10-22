@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/sys/math_extras.h>
+#अन्तर्भाव <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#अन्तर्भाव <zephyr/toolchain.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <scheduler.h>
+#अन्तर्भाव <wait_q.h>
+#अन्तर्भाव <zephyr/init.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <kernel_internal.h>
+#अन्तर्भाव <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
+#ifdef CONFIG_OBJ_CORE_चळत
+K_OBJ_TYPE_DEFINE(obj_type_चळत, k_चळत, K_OBJ_TYPE_चळत_ID, रिक्त);
 #endif /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+शून्य k_चळत_init(संरचना k_चळत *चळत, चळत_data_t *buffer,
+		  uint32_t अंक_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&चळत->wait_q);
+	चळत->lock = (संरचना k_spinlock) {};
+	चळत->next = buffer;
+	चळत->base = buffer;
+	चळत->शीर्ष = चळत->base + अंक_entries;
+	चळत->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_PORT_TRACING_OBJ_INIT(k_चळत, चळत);
+	k_object_init(चळत);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
+#ifdef CONFIG_OBJ_CORE_चळत
+	k_obj_core_init_and_link(K_OBJ_CORE(चळत), &obj_type_चळत);
 #endif /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_चळत_alloc_init(संरचना k_चळत *चळत, uint32_t अंक_entries)
 {
-	void *buffer;
-	size_t total_size;
+	शून्य *buffer;
+	माप_प्रकार total_size;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_चळत, alloc_init, चळत);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	जर (size_mul_overflow(अंक_entries, आकार(चळत_data_t), &total_size)) {
 		ret = -ENOMEM;
-	} else {
+	} अन्यथा {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+		जर (buffer != रिक्त) {
+			k_चळत_init(चळत, buffer, अंक_entries);
+			चळत->flags = K_चळत_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} अन्यथा {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, alloc_init, चळत, ret);
 
-	return ret;
+	परत ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+स्थिर ओळीत int32_t z_vrfy_k_चळत_alloc_init(संरचना k_चळत *चळत,
+					      uint32_t अंक_entries)
 {
-	size_t total_size;
+	माप_प्रकार total_size;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(चळत, K_OBJ_चळत));
+	K_OOPS(K_SYSCALL_VERIFY(अंक_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(अंक_entries, आकार(चळत_data_t),
 					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	परत z_impl_k_चळत_alloc_init(चळत, अंक_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+पूर्णांक z_चळत_cleanup(संरचना k_चळत *चळत, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_चळत, cleanup, चळत);
 
-	int ret = 0;
+	पूर्णांक ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_किल्ली_t किल्ली = k_spin_lock(&चळत->lock);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	जर (locked && (z_waitq_head_locked(&चळत->wait_q) != रिक्त)) {
 		ret = -EAGAIN;
-		goto out;
+		जा out;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	जर (!locked && (z_waitq_head(&चळत->wait_q) != रिक्त)) {
 		ret = -EAGAIN;
-		goto out;
+		जा out;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	जर ((चळत->flags & K_चळत_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(चळत->base);
+		चळत->base = रिक्त;
+		चळत->flags &= ~K_चळत_FLAG_ALLOC;
 		freed = true;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&चळत->lock, किल्ली);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#ifdef CONFIG_OBJ_CORE_चळत
+	जर (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(चळत));
 	}
 #endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, cleanup, चळत, ret);
 
-	return ret;
+	परत ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+पूर्णांक k_चळत_cleanup(संरचना k_चळत *चळत)
 {
-	return z_stack_cleanup(stack, false);
+	परत z_चळत_cleanup(चळत, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+पूर्णांक z_impl_k_चळत_ढकला(संरचना k_चळत *चळत, चळत_data_t data)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	पूर्णांक ret = 0;
+	k_spinlock_किल्ली_t किल्ली = k_spin_lock(&चळत->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_चळत, ढकला, चळत);
 
-	if (stack->next == stack->top) {
+	जर (चळत->next == चळत->शीर्ष) {
 		ret = -ENOMEM;
-		goto out;
+		जा out;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	जर (z_sched_wake(&चळत->wait_q, 0, (शून्य *)data)) {
+		z_reschedule(&चळत->lock, किल्ली);
+		जा end;
+	} अन्यथा {
+		*(चळत->next) = data;
+		चळत->next++;
+		जा out;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&चळत->lock, किल्ली);
 
 end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, ढकला, चळत, ret);
 
-	return ret;
+	परत ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+स्थिर ओळीत पूर्णांक z_vrfy_k_चळत_ढकला(संरचना k_चळत *चळत, चळत_data_t data)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(चळत, K_OBJ_चळत));
 
-	return z_impl_k_stack_push(stack, data);
+	परत z_impl_k_चळत_ढकला(चळत, data);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_stack_push_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+पूर्णांक z_impl_k_चळत_काढा(संरचना k_चळत *चळत, चळत_data_t *data,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_किल्ली_t किल्ली;
+	पूर्णांक result;
 
-	key = k_spin_lock(&stack->lock);
+	किल्ली = k_spin_lock(&चळत->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_चळत, काढा, चळत, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	जर (likely(चळत->next > चळत->base)) {
+		चळत->next--;
+		*data = *(चळत->next);
+		k_spin_unlock(&चळत->lock, किल्ली);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, काढा, चळत, timeout, 0);
 
-		return 0;
+		परत 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	जर (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&चळत->lock, किल्ली);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, काढा, चळत, timeout, -EBUSY);
 
-		return -EBUSY;
+		परत -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_चळत, काढा, चळत, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	result = z_pend_curr(&चळत->lock, किल्ली, &चळत->wait_q, timeout);
+	जर (result != 0) {
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, काढा, चळत, timeout, result);
 
-		return result;
+		परत result;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*data = (चळत_data_t)_current->base.swap_data;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_चळत, काढा, चळत, timeout, 0);
 
-	return 0;
+	परत 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+स्थिर ओळीत पूर्णांक z_vrfy_k_चळत_काढा(संरचना k_चळत *चळत,
+				     चळत_data_t *data, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(चळत, K_OBJ_चळत));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, आकार(चळत_data_t)));
+	परत z_impl_k_चळत_काढा(चळत, data, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_stack_pop_mrsh.c>
 #endif /* CONFIG_USERSPACE */

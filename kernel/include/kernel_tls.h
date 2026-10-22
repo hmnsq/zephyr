@@ -14,7 +14,7 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 #define ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 
-#include <zephyr/linker/linker-defs.h>
+#अन्तर्भाव <zephyr/linker/linker-defs.h>
 
 /**
  * @brief Return the total size of TLS data/bss areas
@@ -26,14 +26,14 @@
  *
  * @return Total size of TLS data/bss areas
  */
-static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
+स्थिर ओळीत FUNC_NO_चळत_PROTECTOR माप_प्रकार z_tls_data_size(शून्य)
 {
-	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
+	माप_प्रकार size = (माप_प्रकार)(uintptr_t)__tdata_size + (माप_प्रकार)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
-	size += (size_t)(uintptr_t)__stack_chk_size;
+#जर defined(CONFIG_चळत_CANARIES_TLS_PREPEND)
+	size += (माप_प्रकार)(uintptr_t)__stack_chk_size;
 #endif
-	return size;
+	परत size;
 }
 
 /**
@@ -44,24 +44,24 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  *
  * @param dest Pointer to destination
  */
-static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
+स्थिर ओळीत FUNC_NO_चळत_PROTECTOR शून्य z_tls_copy(अक्षर *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#जर defined(CONFIG_चळत_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
-	memcpy(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
-	dest += (size_t)(uintptr_t)__stack_chk_size;
+	स_नकल(dest, __stack_chk_start, (माप_प्रकार)(uintptr_t)__stack_chk_size);
+	dest += (माप_प्रकार)(uintptr_t)__stack_chk_size;
 
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
-	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+	स_नकल(dest, __tdata_start, (माप_प्रकार)(uintptr_t)__tdata_size);
+	dest += (माप_प्रकार)(uintptr_t)__tdata_size;
+#अन्यथा
 	/* Copy initialized data (tdata) */
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
-	dest += (size_t)(uintptr_t)__tdata_size;
+	स_नकल(dest, __tdata_start, (माप_प्रकार)(uintptr_t)__tdata_size);
+	dest += (माप_प्रकार)(uintptr_t)__tdata_size;
 #endif
 	/* Clear BSS data (tbss) */
-	memset(dest, 0, (size_t)(uintptr_t)__tbss_size);
+	स_रखो(dest, 0, (माप_प्रकार)(uintptr_t)__tbss_size);
 }
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */

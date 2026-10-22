@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/kernel.h>
 
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/arch/cpu.h>
-#include <zephyr/arch/exception.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/fatal.h>
-#include <zephyr/debug/coredump.h>
-#include <zephyr/sys/reboot.h>
+#अन्तर्भाव <kernel_internal.h>
+#अन्तर्भाव <zephyr/sys/__assert.h>
+#अन्तर्भाव <zephyr/arch/cpu.h>
+#अन्तर्भाव <zephyr/arch/exception.h>
+#अन्तर्भाव <zephyr/logging/log_ctrl.h>
+#अन्तर्भाव <zephyr/logging/log.h>
+#अन्तर्भाव <zephyr/fatal.h>
+#अन्तर्भाव <zephyr/debug/coredump.h>
+#अन्तर्भाव <zephyr/sys/reboot.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
+FUNC_NORETURN __weak शून्य arch_system_halt(अचिन्हित पूर्णांक reason)
 {
 	ARG_UNUSED(reason);
 
@@ -27,24 +27,24 @@ FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
 	 * is enabled?
 	 */
 
-	(void)arch_irq_lock();
-	for (;;) {
+	(शून्य)arch_irq_lock();
+	साठी (;;) {
 		/* Spin endlessly */
 	}
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-__weak void k_sys_fatal_error_handler(unsigned int reason,
-				      const struct arch_esf *esf)
+__weak शून्य k_sys_fatal_error_handler(अचिन्हित पूर्णांक reason,
+				      स्थिरांक संरचना arch_esf *esf)
 {
 	ARG_UNUSED(esf);
 	LOG_PANIC();
 
-#if CONFIG_RESET_ON_FATAL_ERROR
+#जर CONFIG_RESET_ON_FATAL_ERROR
 	EXCEPTION_DUMP("Resetting system");
 	sys_reboot(SYS_REBOOT_WARM);
-#else
+#अन्यथा
 	EXCEPTION_DUMP("Halting system");
 	arch_system_halt(reason);
 #endif /* CONFIG_RESET_ON_FATAL_ERROR */
@@ -53,51 +53,51 @@ __weak void k_sys_fatal_error_handler(unsigned int reason,
 }
 /* LCOV_EXCL_STOP */
 
-static const char *thread_name_get(struct k_thread *thread)
+स्थिर स्थिरांक अक्षर *thread_name_get(संरचना k_thread *thread)
 {
-	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
+	स्थिरांक अक्षर *thread_name = (thread != रिक्त) ? k_thread_name_get(thread) : रिक्त;
 
-	if ((thread_name == NULL) || (thread_name[0] == '\0')) {
+	जर ((thread_name == रिक्त) || (thread_name[0] == '\0')) {
 		thread_name = "unknown";
 	}
 
-	return thread_name;
+	परत thread_name;
 }
 
-static const char *reason_to_str(unsigned int reason)
+स्थिर स्थिरांक अक्षर *reason_to_str(अचिन्हित पूर्णांक reason)
 {
-	switch (reason) {
-	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
-	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
-	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
-	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
-	default:
-		return "Unknown error";
+	निवड (reason) {
+	स्थिती K_ERR_CPU_EXCEPTION:
+		परत "CPU exception";
+	स्थिती K_ERR_SPURIOUS_IRQ:
+		परत "Unhandled interrupt";
+	स्थिती K_ERR_चळत_CHK_FAIL:
+		परत "Stack overflow";
+	स्थिती K_ERR_KERNEL_OOPS:
+		परत "Kernel oops";
+	स्थिती K_ERR_KERNEL_PANIC:
+		परत "Kernel panic";
+	पूर्वनिर्धारित:
+		परत "Unknown error";
 	}
 }
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN void k_fatal_halt(unsigned int reason)
+FUNC_NORETURN शून्य k_fatal_halt(अचिन्हित पूर्णांक reason)
 {
 	arch_system_halt(reason);
 }
 /* LCOV_EXCL_STOP */
 
-void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
+शून्य z_fatal_error(अचिन्हित पूर्णांक reason, स्थिरांक संरचना arch_esf *esf)
 {
 	/* We can't allow this code to be preempted, but don't need to
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
-			_current : NULL;
+	अचिन्हित पूर्णांक किल्ली = arch_irq_lock();
+	संरचना k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
+			_current : रिक्त;
 
 	/* The printk lock is not trustworthy from here on: this context may
 	 * have failed while holding it, or a CPU that is never coming back
@@ -117,13 +117,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 *
 	 * See #17656
 	 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-	if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#जर defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+	जर ((esf != रिक्त) && arch_is_in_nested_exception(esf)) {
 		EXCEPTION_DUMP("Fault during interrupt handling");
 	}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	जर (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		EXCEPTION_DUMP("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
@@ -134,12 +134,12 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * which breaks builds when the option is off (implicit declaration).
 	 */
 #ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
-	unsigned int coredump_irq_cookie;
+	अचिन्हित पूर्णांक coredump_irq_cookie;
 
-	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
+	arch_coredump_fatal_irq_unlock(किल्ली, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
-	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
-#else
+	किल्ली = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
+#अन्यथा
 	coredump(reason, esf, thread);
 #endif
 
@@ -158,49 +158,49 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * Note that k_thread_abort() returns on some architectures but
 	 * not others; e.g. on ARC, x86_64, Xtensa with ASM2, ARM
 	 */
-	if (!IS_ENABLED(CONFIG_TEST)) {
+	जर (!IS_ENABLED(CONFIG_TEST)) {
 		__ASSERT(reason != K_ERR_KERNEL_PANIC,
 			 "Attempted to recover from a kernel panic condition");
 		/* FIXME: #17656 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#जर defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		जर ((esf != रिक्त) && arch_is_in_nested_exception(esf)) {
+#जर defined(CONFIG_चळत_SENTINEL)
+			जर (reason != K_ERR_चळत_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
 #endif /* CONFIG_STACK_SENTINEL */
 		}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
-	} else {
+	} अन्यथा {
 		/* Test mode */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#जर defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		जर ((esf != रिक्त) && arch_is_in_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
-				arch_irq_unlock(key);
-				return;
+#जर defined(CONFIG_चळत_SENTINEL)
+			जर (reason != K_ERR_चळत_CHK_FAIL) {
+				arch_irq_unlock(किल्ली);
+				परत;
 			}
-#else
-			arch_irq_unlock(key);
-			return;
+#अन्यथा
+			arch_irq_unlock(किल्ली);
+			परत;
 #endif /* CONFIG_STACK_SENTINEL */
-		} else {
+		} अन्यथा {
 			/* Abort the thread only if the fault is not due to
 			 * a spurious ISR handler triggered.
 			 */
-			if (reason == K_ERR_SPURIOUS_IRQ) {
-				arch_irq_unlock(key);
-				return;
+			जर (reason == K_ERR_SPURIOUS_IRQ) {
+				arch_irq_unlock(किल्ली);
+				परत;
 			}
 		}
 #endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(किल्ली);
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	जर (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);
 	}
 }
