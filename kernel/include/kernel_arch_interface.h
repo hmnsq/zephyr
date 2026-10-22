@@ -131,8 +131,8 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
 static inline void arch_switch(void *switch_to, void **switched_from);
 #endif /* CONFIG_USE_SWITCH */
 
-#if !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
-#if defined(__DOXYGEN__)
+#если !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
+#если defined(__DOXYGEN__)
 /**
  * Cooperatively context switch
  *
@@ -145,7 +145,7 @@ static inline void arch_switch(void *switch_to, void **switched_from);
  * @return If woken from blocking on some kernel object, the result of that
  *         blocking operation.
  */
-int arch_swap(unsigned int key);
+целое arch_swap(unsigned целое key);
 #endif /* __DOXYGEN__ */
 
 /**
@@ -157,7 +157,7 @@ int arch_swap(unsigned int key);
  * @param value value to set as return value
  */
 static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
+arch_thread_return_value_set(struct k_thread *thread, unsigned целое value);
 #endif /* !CONFIG_USE_SWITCH || __DOXYGEN__ */
 
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
@@ -184,7 +184,7 @@ void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
  */
 void arch_ipi_lazy_coprocessors_save(void);
 
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
+#если defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
 /**
  * @brief Disable floating point context preservation
  *
@@ -198,7 +198,7 @@ void arch_ipi_lazy_coprocessors_save(void);
  * @retval -EINVAL  If the floating point disabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_disable(struct k_thread *thread);
+целое arch_float_disable(struct k_thread *thread);
 
 /**
  * @brief Enable floating point context preservation
@@ -218,7 +218,7 @@ int arch_float_disable(struct k_thread *thread);
  * @retval -EINVAL  If the floating point enabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_enable(struct k_thread *thread, unsigned int options);
+целое arch_float_enable(struct k_thread *thread, unsigned целое options);
 #endif /* CONFIG_FPU && CONFIG_FPU_SHARING */
 
 /**
@@ -227,9 +227,9 @@ int arch_float_enable(struct k_thread *thread, unsigned int options);
  * This function serves as a catchall for disabling the preservation of
  * coprocessor context information when aborting a thread.
  */
-int arch_coprocessors_disable(struct k_thread *thread);
+целое arch_coprocessors_disable(struct k_thread *thread);
 
-#if defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
+#если defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
 /**
  * @brief Obtain privileged stack usage information for the specified thread
  *
@@ -253,7 +253,7 @@ int arch_coprocessors_disable(struct k_thread *thread);
  * @return -EINVAL Thread is uninitialized or exited or not a user thread
  * @return -EFAULT Bad memory address for unused_ptr
  */
-int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stack_size,
+целое arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stack_size,
 				     size_t *unused_ptr);
 #endif /* CONFIG_USERSPACE && CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET */
 
@@ -265,7 +265,7 @@ int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stac
  * @{
  */
 /** Halt the system, optionally propagating a reason code */
-FUNC_NORETURN void arch_system_halt(unsigned int reason);
+FUNC_NORETURN void arch_system_halt(unsigned целое reason);
 
 /** @} */
 
@@ -338,7 +338,7 @@ static inline bool arch_is_in_isr(void);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
+целое arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
 
 /**
  * Remove mappings for a provided virtual address range
@@ -371,7 +371,7 @@ int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_unmap(void *addr, size_t size);
+целое arch_mem_unmap(void *addr, size_t size);
 
 /**
  * Update page frame database with reserved pages
@@ -606,7 +606,7 @@ uintptr_t arch_page_info_get(void *addr, uintptr_t *location,
  * @param c Character to print
  * @return The character printed
  */
-int arch_printk_char_out(int c);
+целое arch_printk_char_out(целое c);
 
 #ifdef CONFIG_ARCH_HAS_THREAD_NAME_HOOK
 /**
@@ -621,7 +621,7 @@ int arch_printk_char_out(int c);
  * @retval 0        On success.
  * @retval -EAGAIN  If the operation could not be performed.
  */
-int arch_thread_name_set(struct k_thread *thread, const char *str);
+целое arch_thread_name_set(struct k_thread *thread, const char *str);
 #endif /* CONFIG_ARCH_HAS_THREAD_NAME_HOOK */
 
 /**
@@ -662,7 +662,7 @@ uint16_t arch_coredump_tgt_code_get(void);
  */
 uintptr_t arch_coredump_stack_ptr_get(const struct k_thread *thread);
 
-#if defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
+#если defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
 
 /**
  * @brief Freeze every other online CPU and capture its live register state
@@ -691,11 +691,11 @@ void arch_coredump_thaw_other_cpus(void);
  *
  * @param cpu CPU index (0..CONFIG_MP_MAX_NUM_CPUS-1)
  */
-void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
+void arch_coredump_cpu_snapshot_dump(unsigned целое cpu);
 
 #endif /* CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS */
 
-#if defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
+#если defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
 
 /**
  * @brief Architecture-specific handling of dumping privileged stack
@@ -725,7 +725,7 @@ void arch_coredump_priv_stack_dump(struct k_thread *thread);
  * @param key IRQ lock key from the enclosing z_fatal_error()
  * @param cookie Arch-specific storage (unsigned int); ignored on the weak default
  */
-void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
+void arch_coredump_fatal_irq_unlock(unsigned целое key, void *cookie);
 
 /**
  * @brief Restore interrupt masking after coredump on the fatal path
@@ -737,7 +737,7 @@ void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
  *
  * @return Fresh IRQ lock key from arch_irq_lock() after restoring masks
  */
-unsigned int arch_coredump_fatal_irq_lock(void *cookie);
+unsigned целое arch_coredump_fatal_irq_lock(void *cookie);
 
 #endif /* CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS */
 

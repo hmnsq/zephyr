@@ -21,7 +21,7 @@ static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
 
 	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	unsigned целое cpu = (unsigned целое)u32_count_trailing_zeros(cpu_mask);
 
 	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",
@@ -30,21 +30,21 @@ static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
 	/* Clamp so static-analysis tools that cannot see the assert
 	 * above do not flag the array access as out-of-bounds.
 	 */
-	cpu = MIN(cpu, (unsigned int)(ARRAY_SIZE(_kernel.cpus) - 1U));
+	cpu = MIN(cpu, (unsigned целое)(ARRAY_SIZE(_kernel.cpus) - 1U));
 
-	return &_kernel.cpus[cpu].ready_q.runq;
-#else
+	вернуть &_kernel.cpus[cpu].ready_q.runq;
+#иначе
 	ARG_UNUSED(thread);
-	return &_kernel.ready_q.runq;
+	вернуть &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
 static ALWAYS_INLINE void *curr_cpu_runq(void)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	return &arch_curr_cpu()->ready_q.runq;
-#else
-	return &_kernel.ready_q.runq;
+	вернуть &arch_curr_cpu()->ready_q.runq;
+#иначе
+	вернуть &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
@@ -71,7 +71,7 @@ static ALWAYS_INLINE void runq_yield(void)
 
 static ALWAYS_INLINE struct k_thread *runq_best(void)
 {
-	return _priq_run_best(curr_cpu_runq());
+	вернуть _priq_run_best(curr_cpu_runq());
 }
 
 /*
@@ -80,17 +80,17 @@ static ALWAYS_INLINE struct k_thread *runq_best(void)
  */
 static inline bool should_queue_thread(struct k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	вернуть !IS_ENABLED(CONFIG_SMP) || (thread != _current);
 }
 
 static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
 {
 	z_mark_thread_as_queued(thread);
-	if (should_queue_thread(thread)) {
+	если (should_queue_thread(thread)) {
 		runq_add(thread);
 	}
 #ifdef CONFIG_SMP
-	if (thread == _current) {
+	если (thread == _current) {
 		/* add current to end of queue means "yield" */
 		_current_cpu->swap_ok = true;
 	}
@@ -100,7 +100,7 @@ static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
 static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
 {
 	z_mark_thread_as_not_queued(thread);
-	if (should_queue_thread(thread)) {
+	если (should_queue_thread(thread)) {
 		runq_remove(thread);
 	}
 }

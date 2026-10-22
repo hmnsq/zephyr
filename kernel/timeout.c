@@ -36,16 +36,16 @@ static uint32_t announce_remaining;
  * within a tick (any other context, including running on a CPU while a
  * different CPU is the announcer).
  */
-static int announcing_cpu = -1;
+static целое announcing_cpu = -1;
 
 static inline bool this_cpu_announcing(void)
 {
-	return announcing_cpu == CPU_ID;
+	вернуть announcing_cpu == CPU_ID;
 }
 
 static inline bool any_cpu_announcing(void)
 {
-	return announcing_cpu != -1;
+	вернуть announcing_cpu != -1;
 }
 
 /* Timeout whose handler is currently being dispatched, or NULL when no
@@ -60,7 +60,7 @@ static struct _timeout *inflight_timeout;
 
 static inline struct _timeout *inflight_ptr(void)
 {
-	return (struct _timeout *)((uintptr_t)inflight_timeout & ~INFLIGHT_SUPERSEDED_BIT);
+	вернуть (struct _timeout *)((uintptr_t)inflight_timeout & ~INFLIGHT_SUPERSEDED_BIT);
 }
 
 static inline void inflight_mark_superseded(void)
@@ -90,10 +90,10 @@ static uint32_t elapsed(void)
 	 * sys_clock_elapsed() to get the real-time delta from curr_tick. This
 	 * keeps sys_clock_tick_get() monotonic across the announce window.
 	 */
-	if (this_cpu_announcing()) {
-		return 0U;
+	если (this_cpu_announcing()) {
+		вернуть 0U;
 	}
-	return sys_clock_elapsed() +
+	вернуть sys_clock_elapsed() +
 	       (IS_ENABLED(CONFIG_SMP) ? announce_remaining : 0);
 }
 
@@ -105,7 +105,7 @@ static uint32_t elapsed(void)
  * directly. The per-node helpers (z_init_timeout / z_is_inactive_timeout) are
  * tree-wide and live in timeout_q.h.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#если defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 #include "timeout/minheap.h"
 #elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
 #include "timeout/wheel.h"
@@ -113,7 +113,7 @@ static uint32_t elapsed(void)
 #include "timeout/bucket.h"
 #elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
 #include "timeout/skiplist.h"
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST */
+#иначе /* CONFIG_TIMEOUT_BACKEND_DLIST */
 #include "timeout/list.h"
 #endif
 
@@ -135,8 +135,8 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
 	 * from now on is SYS_CLOCK_MAX_WAIT - ticks_elapsed; if it is already
 	 * spent ask for an announce right away.
 	 */
-	if (ticks_elapsed >= SYS_CLOCK_MAX_WAIT) {
-		return 0;
+	если (ticks_elapsed >= SYS_CLOCK_MAX_WAIT) {
+		вернуть 0;
 	}
 
 	/*
@@ -146,14 +146,14 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
 	 * remaining arithmetic in 32 bits. The empty case still returns the
 	 * budget so a driver keeps waking to maintain uptime.
 	 */
-	if (next == K_TICKS_FOREVER || next >= SYS_CLOCK_MAX_WAIT) {
-		return SYS_CLOCK_MAX_WAIT - ticks_elapsed;
+	если (next == K_TICKS_FOREVER || next >= SYS_CLOCK_MAX_WAIT) {
+		вернуть SYS_CLOCK_MAX_WAIT - ticks_elapsed;
 	}
 
 	/* Otherwise wait until the timeout, relative to now (0 if due). */
 	dticks = (uint32_t)next;
 
-	return (dticks > ticks_elapsed) ? (dticks - ticks_elapsed) : 0;
+	вернуть (dticks > ticks_elapsed) ? (dticks - ticks_elapsed) : 0;
 }
 
 /*
@@ -165,10 +165,10 @@ static uint32_t next_timeout(uint32_t ticks_elapsed)
  */
 static void reprogram_next(uint32_t ticks_elapsed)
 {
-	if (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
+	если (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
 	    z_timeout_q_next_expiry() == K_TICKS_FOREVER) {
 		sys_clock_no_timeout();
-	} else {
+	} иначе {
 		sys_clock_set_timeout(next_timeout(ticks_elapsed), false);
 	}
 }
@@ -177,8 +177,8 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 {
 	k_ticks_t ticks = 0;
 
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
-		return 0;
+	если (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+		вернуть 0;
 	}
 
 #ifdef CONFIG_KERNEL_COHERENCE
@@ -193,7 +193,7 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 		bool has_elapsed = false;
 		k_ticks_t dticks;
 
-		if (Z_IS_TIMEOUT_RELATIVE(timeout)) {
+		если (Z_IS_TIMEOUT_RELATIVE(timeout)) {
 			ticks_elapsed = elapsed();
 			has_elapsed = true;
 			/*
@@ -216,14 +216,14 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 			dticks = timeout.ticks + ticks_elapsed +
 				 (this_cpu_announcing() ? 0 : 1);
 			ticks = curr_tick + dticks;
-		} else {
+		} иначе {
 			dticks = Z_TICK_ABS(timeout.ticks) - curr_tick;
 			dticks = max(1, dticks);
 			ticks = timeout.ticks;
 		}
 
-		if (z_timeout_q_insert(to, dticks) && !any_cpu_announcing()) {
-			if (!has_elapsed) {
+		если (z_timeout_q_insert(to, dticks) && !any_cpu_announcing()) {
+			если (!has_elapsed) {
 				/* In case of absolute timeout that is first to expire
 				 * elapsed need to be read from the system clock.
 				 */
@@ -233,22 +233,22 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
 		}
 	}
 
-	return ticks;
+	вернуть ticks;
 }
 
-int z_try_abort_timeout(struct _timeout *to)
+целое z_try_abort_timeout(struct _timeout *to)
 {
-	int ret = -EINVAL;
+	целое ret = -EINVAL;
 
 	K_SPINLOCK(&timeout_lock) {
-		if (!z_is_inactive_timeout(to)) {
+		если (!z_is_inactive_timeout(to)) {
 			bool was_first = z_timeout_q_remove(to);
 
 			ret = 0;
-			if (was_first) {
+			если (was_first) {
 				reprogram_next(elapsed());
 			}
-		} else if (IS_ENABLED(CONFIG_SMP) && inflight_ptr() == to &&
+		} иначе если (IS_ENABLED(CONFIG_SMP) && inflight_ptr() == to &&
 			   !this_cpu_announcing()) {
 			/* Handler in flight on another CPU. Free-safety
 			 * callers retry on -EAGAIN to wait it out; others
@@ -261,16 +261,16 @@ int z_try_abort_timeout(struct _timeout *to)
 		 * handler that checks (z_timeout_inflight_superseded) can
 		 * tell its dispatch was overtaken.
 		 */
-		if (inflight_ptr() == to) {
+		если (inflight_ptr() == to) {
 			inflight_mark_superseded();
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_SMP) && ret == -EAGAIN) {
+	если (IS_ENABLED(CONFIG_SMP) && ret == -EAGAIN) {
 		arch_spin_relax();
 	}
 
-	return ret;
+	вернуть ret;
 }
 
 bool z_timeout_inflight_superseded(const struct _timeout *to)
@@ -282,7 +282,7 @@ bool z_timeout_inflight_superseded(const struct _timeout *to)
 			     (struct _timeout *)((uintptr_t)to | INFLIGHT_SUPERSEDED_BIT);
 	}
 
-	return superseded;
+	вернуть superseded;
 }
 
 k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
@@ -290,7 +290,7 @@ k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
 	k_ticks_t ticks = 0;
 
 	K_SPINLOCK(&timeout_lock) {
-		if (!z_is_inactive_timeout(timeout)) {
+		если (!z_is_inactive_timeout(timeout)) {
 			k_ticks_t rem = z_timeout_q_remainder(timeout);
 			uint32_t el = elapsed();
 
@@ -299,7 +299,7 @@ k_ticks_t z_timeout_remaining(const struct _timeout *timeout)
 		}
 	}
 
-	return ticks;
+	вернуть ticks;
 }
 EXPORT_SYMBOL(z_timeout_remaining);
 
@@ -309,12 +309,12 @@ k_ticks_t z_timeout_expires(const struct _timeout *timeout)
 
 	K_SPINLOCK(&timeout_lock) {
 		ticks = curr_tick;
-		if (!z_is_inactive_timeout(timeout)) {
+		если (!z_is_inactive_timeout(timeout)) {
 			ticks += z_timeout_q_remainder(timeout);
 		}
 	}
 
-	return ticks;
+	вернуть ticks;
 }
 EXPORT_SYMBOL(z_timeout_expires);
 
@@ -330,14 +330,14 @@ uint32_t z_get_next_timeout_expiry(void)
 		 * answer is a wait: either a real deadline, or the synthetic
 		 * one that keeps the announce range covered.
 		 */
-		if (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
+		если (IS_ENABLED(CONFIG_SYSTEM_CLOCK_SLOPPY_IDLE) &&
 		    z_timeout_q_next_expiry() == K_TICKS_FOREVER) {
 			ret = (uint32_t)K_TICKS_FOREVER;
-		} else {
+		} иначе {
 			ret = next_timeout(elapsed());
 		}
 	}
-	return ret;
+	вернуть ret;
 }
 
 void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
@@ -348,10 +348,10 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 * timeouts and confuse apps), just increment the tick count
 	 * and return.
 	 */
-	if (IS_ENABLED(CONFIG_SMP) && any_cpu_announcing()) {
+	если (IS_ENABLED(CONFIG_SMP) && any_cpu_announcing()) {
 		announce_remaining += ticks;
 		k_spin_unlock(&timeout_lock, key);
-		return;
+		вернуть;
 	}
 
 	announce_remaining = ticks;
@@ -365,12 +365,12 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 	 * the same inflight_timeout dance as below.
 	 */
 	key = z_timeout_q_announce(key);
-#else
-	while (announce_remaining > 0) {
+#иначе
+	пока (announce_remaining > 0) {
 		struct _timeout *t;
 		int32_t dt = z_timeout_q_next_gap();
 
-		if ((uint32_t)dt > announce_remaining) {
+		если ((uint32_t)dt > announce_remaining) {
 			/* Next event is past this announce window: advance the
 			 * backend by the residual ticks without firing anything.
 			 */
@@ -392,7 +392,7 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 		announce_remaining -= dt;
 
 		/* Drain everything due at the new curr_tick. */
-		while ((t = z_timeout_q_pop_due()) != NULL) {
+		пока ((t = z_timeout_q_pop_due()) != NULL) {
 			_timeout_func_t handler = t->fn;
 
 			inflight_timeout = t;
@@ -416,10 +416,10 @@ void sys_clock_announce_locked(uint32_t ticks, k_spinlock_key_t key)
 #endif /* CONFIG_TIMESLICING */
 }
 
-#if defined(CONFIG_SMP) || defined(CONFIG_SPIN_VALIDATE)
+#если defined(CONFIG_SMP) || defined(CONFIG_SPIN_VALIDATE)
 k_spinlock_key_t sys_clock_lock(void)
 {
-	return k_spin_lock(&timeout_lock);
+	вернуть k_spin_lock(&timeout_lock);
 }
 
 void sys_clock_unlock(k_spinlock_key_t key)
@@ -428,10 +428,10 @@ void sys_clock_unlock(k_spinlock_key_t key)
 }
 #endif
 
-#if defined(CONFIG_TEST) || defined(CONFIG_ASSERT)
+#если defined(CONFIG_TEST) || defined(CONFIG_ASSERT)
 bool sys_clock_is_locked(void)
 {
-	return z_spin_is_locked(&timeout_lock);
+	вернуть z_spin_is_locked(&timeout_lock);
 }
 #endif
 
@@ -442,27 +442,27 @@ int64_t sys_clock_tick_get(void)
 	K_SPINLOCK(&timeout_lock) {
 		t = curr_tick + elapsed();
 	}
-	return t;
+	вернуть t;
 }
 
 uint32_t sys_clock_tick_get_32(void)
 {
 #ifdef CONFIG_TICKLESS_KERNEL
-	return (uint32_t)sys_clock_tick_get();
-#else
-	return (uint32_t)curr_tick;
+	вернуть (uint32_t)sys_clock_tick_get();
+#иначе
+	вернуть (uint32_t)curr_tick;
 #endif /* CONFIG_TICKLESS_KERNEL */
 }
 
 int64_t z_impl_k_uptime_ticks(void)
 {
-	return sys_clock_tick_get();
+	вернуть sys_clock_tick_get();
 }
 
 #ifdef CONFIG_USERSPACE
 static inline int64_t z_vrfy_k_uptime_ticks(void)
 {
-	return z_impl_k_uptime_ticks();
+	вернуть z_impl_k_uptime_ticks();
 }
 #include <zephyr/syscalls/k_uptime_ticks_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -471,37 +471,37 @@ k_timepoint_t sys_timepoint_calc(k_timeout_t timeout)
 {
 	k_timepoint_t timepoint;
 
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+	если (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
 		timepoint.tick = UINT64_MAX;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	} иначе если (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		timepoint.tick = 0;
-	} else {
+	} иначе {
 		k_ticks_t dt = timeout.ticks;
 
-		if (Z_IS_TIMEOUT_RELATIVE(timeout)) {
+		если (Z_IS_TIMEOUT_RELATIVE(timeout)) {
 			timepoint.tick = sys_clock_tick_get() + max(1, dt);
-		} else {
+		} иначе {
 			timepoint.tick = Z_TICK_ABS(dt);
 		}
 	}
 
-	return timepoint;
+	вернуть timepoint;
 }
 
 k_timeout_t sys_timepoint_timeout(k_timepoint_t timepoint)
 {
 	uint64_t now, remaining;
 
-	if (timepoint.tick == UINT64_MAX) {
-		return K_FOREVER;
+	если (timepoint.tick == UINT64_MAX) {
+		вернуть K_FOREVER;
 	}
-	if (timepoint.tick == 0) {
-		return K_NO_WAIT;
+	если (timepoint.tick == 0) {
+		вернуть K_NO_WAIT;
 	}
 
 	now = sys_clock_tick_get();
 	remaining = (timepoint.tick > now) ? (timepoint.tick - now) : 0;
-	return K_TICKS(remaining);
+	вернуть K_TICKS(remaining);
 }
 
 #ifdef CONFIG_ZTEST

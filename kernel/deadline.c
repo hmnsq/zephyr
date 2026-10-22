@@ -36,20 +36,20 @@
  * @param thread   Thread whose deadline is being updated.
  * @param deadline New absolute deadline value (raw cycle counter).
  */
-void z_sched_prio_deadline_set(struct k_thread *thread, int deadline)
+void z_sched_prio_deadline_set(struct k_thread *thread, целое deadline)
 {
 	Z_SCHED_SPINLOCK {
-		if (z_is_thread_queued(thread)) {
+		если (z_is_thread_queued(thread)) {
 			dequeue_thread(thread);
 			thread->base.prio_deadline = deadline;
 			queue_thread(thread);
-		} else {
+		} иначе {
 			thread->base.prio_deadline = deadline;
 		}
 	}
 }
 
-void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, целое deadline)
 {
 	struct k_thread *thread = tid;
 
@@ -63,7 +63,7 @@ void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
 	z_sched_prio_deadline_set(thread, deadline);
 }
 
-void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
+void z_impl_k_thread_deadline_set(k_tid_t tid, целое deadline)
 {
 	/*
 	 * Clamp the relative deadline to INT32_MAX / 2 (2^30 cycles) to
@@ -76,11 +76,11 @@ void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
 	/* Use uint32_t arithmetic to avoid implementation-defined signed conversion. */
 	uint32_t newdl = k_cycle_get_32() + (uint32_t)deadline;
 
-	z_impl_k_thread_absolute_deadline_set(tid, (int)newdl);
+	z_impl_k_thread_absolute_deadline_set(tid, (целое)newdl);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, целое deadline)
 {
 	struct k_thread *thread = tid;
 
@@ -90,14 +90,14 @@ static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, int deadli
 }
 #include <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
 
-static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int deadline)
+static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, целое deadline)
 {
 	struct k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 	K_OOPS(K_SYSCALL_VERIFY_MSG(deadline > 0,
 				    "invalid thread deadline %d",
-				    (int)deadline));
+				    (целое)deadline));
 
 	z_impl_k_thread_deadline_set((k_tid_t)thread, deadline);
 }
