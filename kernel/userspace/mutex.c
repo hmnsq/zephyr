@@ -4,70 +4,70 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/sys/mutex.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
 
-static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
+स्थिर संरचना k_mutex *get_k_mutex(संरचना sys_mutex *mutex)
 {
-	struct k_object *obj;
+	संरचना k_object *obj;
 
 	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	यदि ((obj == रिक्त) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		प्रत्यागम रिक्त;
 	}
 
-	return obj->data.mutex;
+	प्रत्यागम obj->data.mutex;
 }
 
-static bool check_sys_mutex_addr(struct sys_mutex *addr)
+स्थिर bool check_sys_mutex_addr(संरचना sys_mutex *addr)
 {
 	/* sys_mutex memory is never touched, just used to lookup the
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	प्रत्यागम K_SYSCALL_MEMORY_WRITE(addr, परिमाण(संरचना sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+पूर्णाङ्क z_impl_z_sys_mutex_kernel_lock(संरचना sys_mutex *mutex, k_timeout_t timeout)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	संरचना k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	यदि (kernel_mutex == रिक्त) {
+		प्रत्यागम -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	प्रत्यागम k_mutex_lock(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+स्थिर अन्तःस्थ पूर्णाङ्क z_vrfy_z_sys_mutex_kernel_lock(संरचना sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	यदि (check_sys_mutex_addr(mutex)) {
+		प्रत्यागम -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	प्रत्यागम z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+पूर्णाङ्क z_impl_z_sys_mutex_kernel_unlock(संरचना sys_mutex *mutex)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	संरचना k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	यदि ((kernel_mutex == रिक्त) || (kernel_mutex->lock_मोजणी == 0)) {
+		प्रत्यागम -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	प्रत्यागम k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+स्थिर अन्तःस्थ पूर्णाङ्क z_vrfy_z_sys_mutex_kernel_unlock(संरचना sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	यदि (check_sys_mutex_addr(mutex)) {
+		प्रत्यागम -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	प्रत्यागम z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
