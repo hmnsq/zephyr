@@ -8,50 +8,50 @@
  * @brief Mailboxes.
  */
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <string.h>
-#include <zephyr/sys/dlist.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/linker/sections.h>
+#ضمن <string.h>
+#ضمن <zephyr/sys/dlist.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kthread.h>
-#include <scheduler.h>
-#include <kernel_internal.h>
-#include <wait_q.h>
+#ضمن <ksched.h>
+#ضمن <kthread.h>
+#ضمن <scheduler.h>
+#ضمن <kernel_internal.h>
+#ضمن <wait_q.h>
 
 #define SYNCHRONOUS_MATCH_FOUND  1
 #define ASYNCHRONOUS_MATCH_FOUND 2
 
-struct mbox_walk_data {
-	struct k_thread *thread;
-	struct k_mbox_msg *msg;
+بنية mbox_walk_data {
+	بنية k_thread *thread;
+	بنية k_mbox_msg *msg;
 };
 
 #ifdef CONFIG_OBJ_CORE_MAILBOX
-K_OBJ_TYPE_DEFINE(obj_type_mailbox, k_mbox, K_OBJ_TYPE_MBOX_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_mailbox, k_mbox, K_OBJ_TYPE_MBOX_ID, عدم);
 #endif /* CONFIG_OBJ_CORE_MAILBOX */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 
 /* asynchronous message descriptor type */
-struct k_mbox_async {
-	struct _thread_base thread;		/* dummy thread object */
-	struct k_mbox_msg tx_msg;	/* transmit message descriptor */
+بنية k_mbox_async {
+	بنية _thread_base thread;		/* dummy thread object */
+	بنية k_mbox_msg tx_msg;	/* transmit message descriptor */
 };
 
 /* stack of unused asynchronous message descriptors */
 K_STACK_DEFINE(async_msg_free, CONFIG_NUM_MBOX_ASYNC_MSGS);
 
 /* allocate an asynchronous message descriptor */
-static inline void mbox_async_alloc(struct k_mbox_async **async)
+ساكن مضمن فراغ mbox_async_alloc(بنية k_mbox_async **async)
 {
-	(void)k_stack_pop(&async_msg_free, (stack_data_t *)async, K_FOREVER);
+	(فراغ)k_stack_pop(&async_msg_free, (stack_data_t *)async, K_FOREVER);
 }
 
 /* free an asynchronous message descriptor */
-static inline void mbox_async_free(struct k_mbox_async *async)
+ساكن مضمن فراغ mbox_async_free(بنية k_mbox_async *async)
 {
 	k_stack_push(&async_msg_free, (stack_data_t)async);
 }
@@ -59,10 +59,10 @@ static inline void mbox_async_free(struct k_mbox_async *async)
 /*
  * Do run-time initialization of mailbox object subsystem.
  */
-static void init_mbox_module(void)
+ساكن فراغ init_mbox_module(فراغ)
 {
 	/* array of asynchronous message descriptors */
-	static struct k_mbox_async __noinit async_msg[CONFIG_NUM_MBOX_ASYNC_MSGS];
+	ساكن بنية k_mbox_async __noinit async_msg[CONFIG_NUM_MBOX_ASYNC_MSGS];
 
 	/*
 	 * Create pool of asynchronous message descriptors.
@@ -76,9 +76,9 @@ static void init_mbox_module(void)
 	 * that governs access to them.
 	 */
 
-	int i;
+	صحيح i;
 
-	for (i = 0; i < CONFIG_NUM_MBOX_ASYNC_MSGS; i++) {
+	لكل (i = 0; i < CONFIG_NUM_MBOX_ASYNC_MSGS; i++) {
 		z_init_thread_base(&async_msg[i].thread, 0, _THREAD_DUMMY, 0);
 		k_stack_push(&async_msg_free, (stack_data_t)&async_msg[i]);
 	}
@@ -90,11 +90,11 @@ K_KERNEL_INIT_PRE(init_mbox_module);
 
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS > 0 */
 
-void k_mbox_init(struct k_mbox *mbox)
+فراغ k_mbox_init(بنية k_mbox *mbox)
 {
 	z_waitq_init(&mbox->tx_msg_queue);
 	z_waitq_init(&mbox->rx_msg_queue);
-	mbox->lock = (struct k_spinlock) {};
+	mbox->lock = (بنية k_spinlock) {};
 
 #ifdef CONFIG_OBJ_CORE_MAILBOX
 	k_obj_core_init_and_link(K_OBJ_CORE(mbox), &obj_type_mailbox);
@@ -116,12 +116,12 @@ void k_mbox_init(struct k_mbox *mbox)
  * @retval 0 Success.
  * @retval -1 Not matched.
  */
-static int mbox_message_match(struct k_mbox_msg *tx_msg,
-			       struct k_mbox_msg *rx_msg)
+ساكن صحيح mbox_message_match(بنية k_mbox_msg *tx_msg,
+			       بنية k_mbox_msg *rx_msg)
 {
 	uint32_t temp_info;
 
-	if (((tx_msg->tx_target_thread == (k_tid_t)K_ANY) ||
+	ܐܢ (((tx_msg->tx_target_thread == (k_tid_t)K_ANY) ||
 	     (tx_msg->tx_target_thread == rx_msg->tx_target_thread)) &&
 	    ((rx_msg->rx_source_thread == (k_tid_t)K_ANY) ||
 	     (rx_msg->rx_source_thread == tx_msg->rx_source_thread))) {
@@ -136,7 +136,7 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
 		tx_msg->info = temp_info;
 
 		/* update data size field for receiver only */
-		if (rx_msg->size > tx_msg->size) {
+		ܐܢ (rx_msg->size > tx_msg->size) {
 			rx_msg->size = tx_msg->size;
 		}
 
@@ -146,10 +146,10 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
 		/* update syncing thread field for receiver only */
 		rx_msg->_syncing_thread = tx_msg->_syncing_thread;
 
-		return 0;
+		ܦܢܐ 0;
 	}
 
-	return -1;
+	ܦܢܐ -1;
 }
 
 /**
@@ -159,37 +159,37 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
  *
  * @param rx_msg Pointer to receive message descriptor.
  */
-static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
+ساكن فراغ mbox_message_dispose(بنية k_mbox_msg *rx_msg)
 {
-	struct k_thread *sending_thread;
-	struct k_mbox_msg *tx_msg;
+	بنية k_thread *sending_thread;
+	بنية k_mbox_msg *tx_msg;
 
 	/* do nothing if message was disposed of when it was received */
-	if (rx_msg->_syncing_thread == NULL) {
-		return;
+	ܐܢ (rx_msg->_syncing_thread == عدم) {
+		ܦܢܐ;
 	}
 
 	/* recover sender info */
 	sending_thread = rx_msg->_syncing_thread;
-	rx_msg->_syncing_thread = NULL;
-	tx_msg = (struct k_mbox_msg *)sending_thread->base.swap_data;
+	rx_msg->_syncing_thread = عدم;
+	tx_msg = (بنية k_mbox_msg *)sending_thread->base.swap_data;
 
 	/* update data size field for sender */
 	tx_msg->size = rx_msg->size;
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 	/*
 	 * asynchronous send: free asynchronous message descriptor +
 	 * dummy thread pair, then give semaphore (if needed)
 	 */
-	if (is_thread_dummy(sending_thread)) {
-		struct k_sem *async_sem = tx_msg->_async_sem;
+	ܐܢ (is_thread_dummy(sending_thread)) {
+		بنية k_sem *async_sem = tx_msg->_async_sem;
 
-		mbox_async_free((struct k_mbox_async *)sending_thread);
-		if (async_sem != NULL) {
+		mbox_async_free((بنية k_mbox_async *)sending_thread);
+		ܐܢ (async_sem != عدم) {
 			k_sem_give(async_sem);
 		}
-		return;
+		ܦܢܐ;
 	}
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 
@@ -207,32 +207,32 @@ static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
 	z_reschedule(&_sched_spinlock, key);
 }
 
-static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
+ساكن صحيح mbox_message_put_walk_op(بنية k_thread *thread, فراغ *data)
 {
-	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
-	struct k_mbox_msg *rx_msg;
+	بنية mbox_walk_data *walk_data = (بنية mbox_walk_data *)data;
+	بنية k_mbox_msg *rx_msg;
 
-	rx_msg = (struct k_mbox_msg *)thread->base.swap_data;
+	rx_msg = (بنية k_mbox_msg *)thread->base.swap_data;
 
-	if (mbox_message_match(walk_data->msg, rx_msg) != 0) {
+	ܐܢ (mbox_message_match(walk_data->msg, rx_msg) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		ܦܢܐ 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
 
 	unpend_thread_no_timeout(thread);
-	(void)z_try_abort_thread_timeout(thread);
+	(فراغ)z_try_abort_thread_timeout(thread);
 	arch_thread_return_value_set(thread, 0);
 	z_sched_ready_locked(thread);
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (is_thread_dummy(walk_data->thread)) {
-		return ASYNCHRONOUS_MATCH_FOUND;
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+	ܐܢ (is_thread_dummy(walk_data->thread)) {
+		ܦܢܐ ASYNCHRONOUS_MATCH_FOUND;
 	}
 #endif
 
-	return SYNCHRONOUS_MATCH_FOUND;
+	ܦܢܐ SYNCHRONOUS_MATCH_FOUND;
 }
 
 /**
@@ -251,10 +251,10 @@ static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
  * @retval -ENOMSG Failed immediately.
  * @retval -EAGAIN Timed out.
  */
-static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+ساكن صحيح mbox_message_put(بنية k_mbox *mbox, بنية k_mbox_msg *tx_msg,
 			     k_timeout_t timeout)
 {
-	struct k_thread *sending_thread;
+	بنية k_thread *sending_thread;
 	k_spinlock_key_t key;
 
 	/* save sender id so it can be used during message matching */
@@ -269,8 +269,8 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, message_put, mbox, timeout);
 
-	struct mbox_walk_data walk_data;
-	int status;
+	بنية mbox_walk_data walk_data;
+	صحيح status;
 
 	walk_data.thread = sending_thread;
 	walk_data.msg = tx_msg;
@@ -278,7 +278,7 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	/* Search the wait queue for the first matching receiver */
 
 	status = z_sched_waitq_walk(&mbox->rx_msg_queue,
-				    mbox_message_put_walk_op, NULL,
+				    mbox_message_put_walk_op, عدم,
 				    &walk_data);
 
 	/*
@@ -288,8 +288,8 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	 *   0                        - no match found
 	 */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (status == ASYNCHRONOUS_MATCH_FOUND) {
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+	ܐܢ (status == ASYNCHRONOUS_MATCH_FOUND) {
 		/*
 		 * Swap out current thread if receiver has priority, otherwise
 		 * let it continue. Note that the dummy sending thread sits
@@ -299,11 +299,11 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 		z_reschedule(&mbox->lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
 					       timeout, 0);
-		return 0;
+		ܦܢܐ 0;
 	}
 #endif
 
-	if (status == SYNCHRONOUS_MATCH_FOUND) {
+	ܐܢ (status == SYNCHRONOUS_MATCH_FOUND) {
 		/*
 		 * Pend current thread until the receiver
 		 * consumes the message.
@@ -312,41 +312,41 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox,
 						   timeout);
 
-		int ret = z_pend_curr(&mbox->lock, key, NULL, K_FOREVER);
+		صحيح ret = z_pend_curr(&mbox->lock, key, عدم, K_FOREVER);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
 					       timeout, ret);
 
-		return ret;
+		ܦܢܐ ret;
 	}
 
 	/* didn't find a matching receiver: don't wait for one */
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ܐܢ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, -ENOMSG);
 
 		k_spin_unlock(&mbox->lock, key);
-		return -ENOMSG;
+		ܦܢܐ -ENOMSG;
 	}
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 	/* asynchronous send: dummy thread waits on tx queue for receiver */
-	if (is_thread_dummy(sending_thread)) {
+	ܐܢ (is_thread_dummy(sending_thread)) {
 		z_pend_thread(sending_thread, &mbox->tx_msg_queue, K_FOREVER);
 		k_spin_unlock(&mbox->lock, key);
-		return 0;
+		ܦܢܐ 0;
 	}
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox, timeout);
 
 	/* synchronous send: sender waits on tx queue for receiver or timeout */
-	int ret = z_pend_curr(&mbox->lock, key, &mbox->tx_msg_queue, timeout);
+	صحيح ret = z_pend_curr(&mbox->lock, key, &mbox->tx_msg_queue, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, ret);
 
-	return ret;
+	ܦܢܐ ret;
 }
 
-int k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+صحيح k_mbox_put(بنية k_mbox *mbox, بنية k_mbox_msg *tx_msg,
 	       k_timeout_t timeout)
 {
 	/* configure things for a synchronous send, then send the message */
@@ -354,18 +354,18 @@ int k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, put, mbox, timeout);
 
-	int ret = mbox_message_put(mbox, tx_msg, timeout);
+	صحيح ret = mbox_message_put(mbox, tx_msg, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, put, mbox, timeout, ret);
 
-	return ret;
+	ܦܢܐ ret;
 }
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
-		      struct k_sem *sem)
+#ܐܢ (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+فراغ k_mbox_async_put(بنية k_mbox *mbox, بنية k_mbox_msg *tx_msg,
+		      بنية k_sem *sem)
 {
-	struct k_mbox_async *async;
+	بنية k_mbox_async *async;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, async_put, mbox, sem);
 
@@ -378,26 +378,26 @@ void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	async->thread.prio = _current->base.prio;
 
 	async->tx_msg = *tx_msg;
-	async->tx_msg._syncing_thread = (struct k_thread *)&async->thread;
+	async->tx_msg._syncing_thread = (بنية k_thread *)&async->thread;
 	async->tx_msg._async_sem = sem;
 
-	(void)mbox_message_put(mbox, &async->tx_msg, K_FOREVER);
+	(فراغ)mbox_message_put(mbox, &async->tx_msg, K_FOREVER);
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, async_put, mbox, sem);
 }
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 
-void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
+فراغ k_mbox_data_get(بنية k_mbox_msg *rx_msg, فراغ *buffer)
 {
 	/* handle case where data is to be discarded */
-	if (buffer == NULL) {
+	ܐܢ (buffer == عدم) {
 		rx_msg->size = 0;
 		mbox_message_dispose(rx_msg);
-		return;
+		ܦܢܐ;
 	}
 
 	/* copy message data to buffer, then dispose of message */
-	if ((rx_msg->tx_data != NULL) && (rx_msg->size > 0U)) {
-		(void)memcpy(buffer, rx_msg->tx_data, rx_msg->size);
+	ܐܢ ((rx_msg->tx_data != عدم) && (rx_msg->size > 0U)) {
+		(فراغ)memcpy(buffer, rx_msg->tx_data, rx_msg->size);
 	}
 	mbox_message_dispose(rx_msg);
 }
@@ -418,47 +418,47 @@ void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
  *
  * @retval 0 Always returns 0.
  */
-static int mbox_message_data_check(struct k_mbox_msg *rx_msg, void *buffer)
+ساكن صحيح mbox_message_data_check(بنية k_mbox_msg *rx_msg, فراغ *buffer)
 {
-	if (buffer != NULL) {
+	ܐܢ (buffer != عدم) {
 		/* retrieve data now, then dispose of message */
 		k_mbox_data_get(rx_msg, buffer);
-	} else if (rx_msg->size == 0U) {
+	} ܐܚܪܢܐ ܐܢ (rx_msg->size == 0U) {
 		/* there is no data to get, so just dispose of message */
 		mbox_message_dispose(rx_msg);
-	} else {
+	} ܐܚܪܢܐ {
 		/* keep message around for later data retrieval */
 	}
 
-	return 0;
+	ܦܢܐ 0;
 }
 
-static int mbox_get_walk_op(struct k_thread *thread, void *data)
+ساكن صحيح mbox_get_walk_op(بنية k_thread *thread, فراغ *data)
 {
-	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
-	struct k_mbox_msg *tx_msg;
+	بنية mbox_walk_data *walk_data = (بنية mbox_walk_data *)data;
+	بنية k_mbox_msg *tx_msg;
 
-	tx_msg = (struct k_mbox_msg *)thread->base.swap_data;
+	tx_msg = (بنية k_mbox_msg *)thread->base.swap_data;
 
-	if (mbox_message_match(tx_msg, walk_data->msg) != 0) {
+	ܐܢ (mbox_message_match(tx_msg, walk_data->msg) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		ܦܢܐ 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
 
 	unpend_thread_no_timeout(thread);
 
-	(void)z_try_abort_thread_timeout(thread);
+	(فراغ)z_try_abort_thread_timeout(thread);
 
-	return 1;
+	ܦܢܐ 1;
 }
 
-int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
+صحيح k_mbox_get(بنية k_mbox *mbox, بنية k_mbox_msg *rx_msg, فراغ *buffer,
 	       k_timeout_t timeout)
 {
 	k_spinlock_key_t key;
-	int result;
+	صحيح result;
 
 	/* save receiver id so it can be used during message matching */
 	rx_msg->tx_target_thread = _current;
@@ -468,33 +468,33 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, get, mbox, timeout);
 
-	struct mbox_walk_data walk_data;
-	int status;
+	بنية mbox_walk_data walk_data;
+	صحيح status;
 
-	walk_data.thread = NULL;   /* Unused by walk operation */
+	walk_data.thread = عدم;   /* Unused by walk operation */
 	walk_data.msg = rx_msg;
 
 	/* Search the wait queue for the first matching sender */
 
 	status = z_sched_waitq_walk(&mbox->tx_msg_queue,
-				    mbox_get_walk_op, NULL, &walk_data);
+				    mbox_get_walk_op, عدم, &walk_data);
 
-	if (status != 0) {
+	ܐܢ (status != 0) {
 		/* Matching sender found */
 		k_spin_unlock(&mbox->lock, key);
 		result = 0;
 
-		goto out;
+		اذهب out;
 	}
 
 	/* didn't find a matching sender */
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ܐܢ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a matching sender to appear */
 		k_spin_unlock(&mbox->lock, key);
 
 		result = -ENOMSG;
-		goto out;
+		اذهب out;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, get, mbox, timeout);
@@ -505,11 +505,11 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 
 out:
 	/* consume message data immediately, if needed */
-	if (result == 0) {
+	ܐܢ (result == 0) {
 		result = mbox_message_data_check(rx_msg, buffer);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, get, mbox, timeout, result);
 
-	return result;
+	ܦܢܐ result;
 }
