@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_USAGE_H_
-#define ZEPHYR_KERNEL_INCLUDE_USAGE_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_INCLUDE_USAGE_H_
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_INCLUDE_USAGE_H_
 
-#include <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
+ਬਾਹਰੀ "C" {
+#ਜੇ_ਅੰਤ
 
 
 /** @brief Halt thread cycle usage accounting.
@@ -30,33 +30,33 @@ extern "C" {
  * requires no other synchronization.  Architecture layers don't need
  * to do anything more.
  */
-void z_sched_usage_stop(void);
+ਖਾਲੀ z_sched_usage_stop(ਖਾਲੀ);
 
-void z_sched_usage_start(struct k_thread *thread);
+ਖਾਲੀ z_sched_usage_ਸ਼ੁਰੂ(ਬਣਤਰ k_thread *thread);
 
 /**
  * @brief Retrieves CPU cycle usage data for specified core
  */
-void z_sched_cpu_usage(uint8_t core_id, struct k_thread_runtime_stats *stats);
+ਖਾਲੀ z_sched_cpu_usage(uint8_t core_id, ਬਣਤਰ k_thread_runtime_stats *stats);
 
 /**
  * @brief Retrieves thread cycle usage data for specified thread
  */
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats);
+ਖਾਲੀ z_sched_thread_usage(ਬਣਤਰ k_thread *thread,
+			  ਬਣਤਰ k_thread_runtime_stats *stats);
 
-static inline void z_sched_usage_switch(struct k_thread *thread)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_sched_usage_switch(ਬਣਤਰ k_thread *thread)
 {
-	ARG_UNUSED(thread);
-#ifdef CONFIG_SCHED_THREAD_USAGE
+	ARG_ਅਣਵਰਤਿਆ(thread);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SCHED_THREAD_USAGE
 	z_sched_usage_stop();
-	z_sched_usage_start(thread);
-#endif /* CONFIG_SCHED_THREAD_USAGE */
+	z_sched_usage_ਸ਼ੁਰੂ(thread);
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_THREAD_USAGE */
 }
 
-#ifdef __cplusplus
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
 }
-#endif
+#ਜੇ_ਅੰਤ
 
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_USAGE_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_INCLUDE_USAGE_H_ */

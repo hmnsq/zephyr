@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_
 
 /**
  * @file
  * @brief timeout queue for threads on kernel objects
  */
 
-#include <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
 
-#include <stdbool.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
+ਬਾਹਰੀ "C" {
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SYS_CLOCK_EXISTS
 
 /*
  * Per-node timeout helpers (Kconfig choice TIMEOUT_BACKEND).
@@ -32,72 +32,72 @@ extern "C" {
  * operations and the backend instance) is private to kernel/timeout.c, which
  * includes the matching backend implementation header directly.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#ਜੇ defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 
-static inline void z_init_timeout(struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_init_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	to->heap_handle.idx = 0U;
-	to->abs_ticks = 0;
+	ਮੰਜ਼ਿਲ->ਢੇਰ_handle.idx = 0U;
+	ਮੰਜ਼ਿਲ->abs_ticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool z_is_inactive_timeout(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	return to->heap_handle.idx == 0U;
+	ਵਾਪਸ ਮੰਜ਼ਿਲ->ਢੇਰ_handle.idx == 0U;
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
+#ਜਾਂਜੇ defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
 
-static inline void z_init_timeout(struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_init_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	sys_dnode_init(&to->node);
-	to->flags = 0U;
-	to->dticks = 0;
+	sys_dnode_init(&ਮੰਜ਼ਿਲ->ਗੰਢ);
+	ਮੰਜ਼ਿਲ->flags = 0U;
+	ਮੰਜ਼ਿਲ->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool z_is_inactive_timeout(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	return !sys_dnode_is_linked(&to->node);
+	ਵਾਪਸ !sys_dnode_is_linked(&ਮੰਜ਼ਿਲ->ਗੰਢ);
 }
 
-#elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
+#ਜਾਂਜੇ defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
 
-static inline void z_init_timeout(struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_init_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
 	uint8_t i;
 
-	to->height = 0;
-	to->abs_ticks = 0;
+	ਮੰਜ਼ਿਲ->ਉਚਾਈ = 0;
+	ਮੰਜ਼ਿਲ->abs_ticks = 0;
 
-	for (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
-		to->forward[i] = NULL;
+	ਲਈ (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
+		ਮੰਜ਼ਿਲ->forward[i] = ਨਿਰਾ;
 	}
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool z_is_inactive_timeout(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	return to->height == 0;
+	ਵਾਪਸ ਮੰਜ਼ਿਲ->ਉਚਾਈ == 0;
 }
 
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
+#ਨਹੀਂਤਾਂ /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
 
-static inline void z_init_timeout(struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_init_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	sys_dnode_init(&to->node);
-	to->dticks = 0;
+	sys_dnode_init(&ਮੰਜ਼ਿਲ->ਗੰਢ);
+	ਮੰਜ਼ਿਲ->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+ਸਥਿਰ ਸਤਰਅੰਦਰ bool z_is_inactive_timeout(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	return !sys_dnode_is_linked(&to->node);
+	ਵਾਪਸ !sys_dnode_is_linked(&ਮੰਜ਼ਿਲ->ਗੰਢ);
 }
 
-#endif
+#ਜੇ_ਅੰਤ
 
 /* Adds the timeout to the queue.
  *
  * @return Absolute tick value when timeout will expire.
  */
-k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
+k_ticks_t z_ਜੋੜੋ_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ, _timeout_func_t fn, k_timeout_t timeout);
 
 /* Attempt to abort a timeout. Safe to use for callers that need to be
  * certain the handler is not in flight (e.g. when about to free the
@@ -118,56 +118,56 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
  * On -EAGAIN, the only correct response is to drop outer locks and call again.
  * After a non-EAGAIN return, the handler is guaranteed not to be in flight.
  */
-int z_try_abort_timeout(struct _timeout *to);
+ਪੂਰਨ z_try_abort_timeout(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ);
 
 /* True if @to is the currently in-flight timeout and a same-CPU aborter
  * has marked the slot as superseded. Handlers with non-idempotent side
  * effects (e.g. k_timer's expiry_fn) should call this at entry, after
  * taking their own lock, and bail if it returns true.
  */
-bool z_timeout_inflight_superseded(const struct _timeout *to);
+bool z_timeout_inflight_superseded(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ);
 
-static inline void z_init_thread_timeout(struct _thread_base *thread_base)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_init_thread_timeout(ਬਣਤਰ thread_ਅਧਾਰ *thread_ਅਧਾਰ_2)
 {
-	z_init_timeout(&thread_base->timeout);
+	z_init_timeout(&thread_ਅਧਾਰ_2->timeout);
 }
 
-extern void z_thread_timeout(struct _timeout *timeout);
+ਬਾਹਰੀ ਖਾਲੀ z_thread_timeout(ਬਣਤਰ _timeout *timeout);
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+ਸਥਿਰ ਸਤਰਅੰਦਰ k_ticks_t z_ਜੋੜੋ_thread_timeout(ਬਣਤਰ k_thread *thread, k_timeout_t ticks)
 {
-	return z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
+	ਵਾਪਸ z_ਜੋੜੋ_timeout(&thread->ਅਧਾਰ.timeout, z_thread_timeout, ticks);
 }
 
-static inline int z_try_abort_thread_timeout(struct k_thread *thread)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਪੂਰਨ z_try_abort_thread_timeout(ਬਣਤਰ k_thread *thread)
 {
-	return z_try_abort_timeout(&thread->base.timeout);
+	ਵਾਪਸ z_try_abort_timeout(&thread->ਅਧਾਰ.timeout);
 }
 
-uint32_t z_get_next_timeout_expiry(void);
+uint32_t z_get_ਅਗਲਾ_timeout_expiry(ਖਾਲੀ);
 
-k_ticks_t z_timeout_remaining(const struct _timeout *timeout);
+k_ticks_t z_timeout_ਬਚਿਆ(ਅਚਲ ਬਣਤਰ _timeout *timeout);
 
-#else
+#ਨਹੀਂਤਾਂ
 
 /* Stubs when !CONFIG_SYS_CLOCK_EXISTS */
-#define z_init_thread_timeout(thread_base) do {} while (false)
-#define z_try_abort_thread_timeout(to) 0
-#define z_is_inactive_timeout(to) 1
-#define z_get_next_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
-#define z_set_timeout_expiry(ticks, is_idle) do {} while (false)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ z_init_thread_timeout(thread_ਅਧਾਰ_2) ਕਰੋ {} ਜਦੋਂ (false)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ z_try_abort_thread_timeout(ਮੰਜ਼ਿਲ) 0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ z_is_inactive_timeout(ਮੰਜ਼ਿਲ) 1
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ z_get_ਅਗਲਾ_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ z_ਸੈੱਟ_timeout_expiry(ticks, is_idle) ਕਰੋ {} ਜਦੋਂ (false)
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+ਸਥਿਰ ਸਤਰਅੰਦਰ k_ticks_t z_ਜੋੜੋ_thread_timeout(ਬਣਤਰ k_thread *thread, k_timeout_t ticks)
 {
-	ARG_UNUSED(thread);
-	ARG_UNUSED(ticks);
-	return 0;
+	ARG_ਅਣਵਰਤਿਆ(thread);
+	ARG_ਅਣਵਰਤਿਆ(ticks);
+	ਵਾਪਸ 0;
 }
 
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#ਜੇ_ਅੰਤ /* CONFIG_SYS_CLOCK_EXISTS */
 
-#ifdef __cplusplus
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_INCLUDE_TIMEOUT_Q_H_ */

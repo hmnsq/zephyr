@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <string.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/util.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <string.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/math_extras.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/util.h>
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਖਾਲੀ * (sys_ਢੇਰ_allocator_t)(ਬਣਤਰ sys_ਢੇਰ *ਢੇਰ_2, size_t align, size_t ਬਾਈਟਾਂ);
 
-static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
-			    sys_heap_allocator_t sys_heap_allocator)
+ਸਥਿਰ ਖਾਲੀ *z_alloc_helper(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, size_t align, size_t ਮਾਪ,
+			    sys_ਢੇਰ_allocator_t sys_ਢੇਰ_allocator)
 {
-	void *mem;
-	struct k_heap **heap_ref;
+	ਖਾਲੀ *mem;
+	ਬਣਤਰ k_ਢੇਰ **ਢੇਰ_ref;
 	size_t __align;
-	k_spinlock_key_t key;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
@@ -29,192 +29,192 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	 * This allows for storing the heap pointer right below the aligned
 	 * boundary without wasting any memory.
 	 */
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		return NULL;
+	ਜੇ (ਮਾਪ_ਜੋੜੋ_ਉਛਾਲ(ਮਾਪ, ਆਕਾਰ(ਢੇਰ_ref), &ਮਾਪ)) {
+		ਵਾਪਸ ਨਿਰਾ;
 	}
-	__align = align | sizeof(heap_ref);
+	__align = align | ਆਕਾਰ(ਢੇਰ_ref);
 
 	/*
 	 * No point calling k_heap_malloc/k_heap_aligned_alloc with K_NO_WAIT.
 	 * Better bypass them and go directly to sys_heap_*() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	mem = sys_heap_allocator(&heap->heap, __align, size);
-	k_spin_unlock(&heap->lock, key);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
+	mem = sys_ਢੇਰ_allocator(&ਢੇਰ_2->ਢੇਰ_2, __align, ਮਾਪ);
+	k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	if (mem == NULL) {
-		return NULL;
+	ਜੇ (mem == ਨਿਰਾ) {
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
-	heap_ref = mem;
-	*heap_ref = heap;
-	mem = ++heap_ref;
+	ਢੇਰ_ref = mem;
+	*ਢੇਰ_ref = ਢੇਰ_2;
+	mem = ++ਢੇਰ_ref;
 	__ASSERT(align == 0 || ((uintptr_t)mem & (align - 1)) == 0,
 		 "misaligned memory at %p (align = %zu)", mem, align);
 
-	return mem;
+	ਵਾਪਸ mem;
 }
 
-void k_free(void *ptr)
+ਖਾਲੀ k_free(ਖਾਲੀ *ptr)
 {
-	struct k_heap **heap_ref;
+	ਬਣਤਰ k_ਢੇਰ **ਢੇਰ_ref;
 
-	if (ptr != NULL) {
-		heap_ref = ptr;
-		--heap_ref;
-		ptr = heap_ref;
+	ਜੇ (ptr != ਨਿਰਾ) {
+		ਢੇਰ_ref = ptr;
+		--ਢੇਰ_ref;
+		ptr = ਢੇਰ_ref;
 
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_free, *heap_ref, heap_ref);
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ_sys, k_free, *ਢੇਰ_ref, ਢੇਰ_ref);
 
 		/*
 		 * Bypass k_heap_free() as z_unpend_all() and its scheduler
 		 * locking is unnecessary here, similar to z_alloc_helper()
 		 * bypassing k_heap_alloc() to go directly to sys_heap_*().
 		 */
-		struct k_heap *heap = *heap_ref;
-		k_spinlock_key_t key = k_spin_lock(&heap->lock);
+		ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2 = *ਢੇਰ_ref;
+		k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 
-		sys_heap_free(&heap->heap, ptr);
-		k_spin_unlock(&heap->lock, key);
+		sys_ਢੇਰ_free(&ਢੇਰ_2->ਢੇਰ_2, ptr);
+		k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_free, heap, ptr);
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_free, ਢੇਰ_2, ptr);
 	}
 }
 
-#if (K_HEAP_MEM_POOL_SIZE > 0)
+#ਜੇ (K_ਢੇਰ_MEM_POOL_ਮਾਪ > 0)
 
-K_HEAP_DEFINE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#define _SYSTEM_HEAP (&_system_heap)
+K_ਢੇਰ_DEFINE_2(system_ਢੇਰ, Z_ਢੇਰ_MIN_ਮਾਪ_FOR(K_ਢੇਰ_MEM_POOL_ਮਾਪ));
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ SYSTEM_ਢੇਰ (&system_ਢੇਰ)
 
-#if defined(CONFIG_SYS_HEAP_KASAN_SYSTEM)
-#include <zephyr/sys/heap_kasan.h>
-K_HEAP_KASAN_ENABLE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#endif
+#ਜੇ defined(CONFIG_SYS_ਢੇਰ_KASAN_SYSTEM)
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/heap_kasan.h>
+K_ਢੇਰ_KASAN_ENABLE(system_ਢੇਰ, Z_ਢੇਰ_MIN_ਮਾਪ_FOR(K_ਢੇਰ_MEM_POOL_ਮਾਪ));
+#ਜੇ_ਅੰਤ
 
-void *k_aligned_alloc(size_t align, size_t size)
+ਖਾਲੀ *k_aligned_alloc(size_t align, size_t ਮਾਪ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ_sys, k_aligned_alloc, SYSTEM_ਢੇਰ);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, align, size, sys_heap_aligned_alloc);
+	ਖਾਲੀ *ret = z_alloc_helper(SYSTEM_ਢੇਰ, align, ਮਾਪ, sys_ਢੇਰ_aligned_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_aligned_alloc, SYSTEM_ਢੇਰ, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_malloc(size_t size)
+ਖਾਲੀ *k_malloc(size_t ਮਾਪ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_malloc, _SYSTEM_HEAP);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ_sys, k_malloc, SYSTEM_ਢੇਰ);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, 0, size, sys_heap_noalign_alloc);
+	ਖਾਲੀ *ret = z_alloc_helper(SYSTEM_ਢੇਰ, 0, ਮਾਪ, sys_ਢੇਰ_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_malloc, _SYSTEM_HEAP, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_malloc, SYSTEM_ਢੇਰ, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_calloc(size_t nmemb, size_t size)
+ਖਾਲੀ *k_calloc(size_t nmemb, size_t ਮਾਪ)
 {
-	void *ret;
+	ਖਾਲੀ *ret;
 	size_t bounds;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_calloc, _SYSTEM_HEAP);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ_sys, k_calloc, SYSTEM_ਢੇਰ);
 
-	if (size_mul_overflow(nmemb, size, &bounds)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, NULL);
+	ਜੇ (ਮਾਪ_mul_ਉਛਾਲ(nmemb, ਮਾਪ, &bounds)) {
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_calloc, SYSTEM_ਢੇਰ, ਨਿਰਾ);
 
-		return NULL;
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
 	ret = k_malloc(bounds);
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	ਜੇ (ret != ਨਿਰਾ) {
+		(ਖਾਲੀ)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_calloc, SYSTEM_ਢੇਰ, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_realloc(void *ptr, size_t size)
+ਖਾਲੀ *k_realloc(ਖਾਲੀ *ptr, size_t ਮਾਪ)
 {
-	struct k_heap *heap, **heap_ref;
-	k_spinlock_key_t key;
-	void *ret;
+	ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, **ਢੇਰ_ref;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	ਖਾਲੀ *ret;
 
-	if (size == 0) {
+	ਜੇ (ਮਾਪ == 0) {
 		k_free(ptr);
-		return NULL;
+		ਵਾਪਸ ਨਿਰਾ;
 	}
-	if (ptr == NULL) {
-		return k_malloc(size);
+	ਜੇ (ptr == ਨਿਰਾ) {
+		ਵਾਪਸ k_malloc(ਮਾਪ);
 	}
-	heap_ref = ptr;
-	ptr = --heap_ref;
-	heap = *heap_ref;
+	ਢੇਰ_ref = ptr;
+	ptr = --ਢੇਰ_ref;
+	ਢੇਰ_2 = *ਢੇਰ_ref;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_realloc, heap, ptr);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ_sys, k_realloc, ਢੇਰ_2, ptr);
 
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, NULL);
-		return NULL;
+	ਜੇ (ਮਾਪ_ਜੋੜੋ_ਉਛਾਲ(ਮਾਪ, ਆਕਾਰ(ਢੇਰ_ref), &ਮਾਪ)) {
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_realloc, ਢੇਰ_2, ptr, ਨਿਰਾ);
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
 	/*
 	 * No point calling k_heap_realloc() with K_NO_WAIT here.
 	 * Better bypass it and go directly to sys_heap_realloc() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	ret = sys_heap_realloc(&heap->heap, ptr, size);
-	k_spin_unlock(&heap->lock, key);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
+	ret = sys_ਢੇਰ_realloc(&ਢੇਰ_2->ਢੇਰ_2, ptr, ਮਾਪ);
+	k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	if (ret != NULL) {
-		heap_ref = ret;
-		ret = ++heap_ref;
+	ਜੇ (ret != ਨਿਰਾ) {
+		ਢੇਰ_ref = ret;
+		ret = ++ਢੇਰ_ref;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ_sys, k_realloc, ਢੇਰ_2, ptr, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void k_thread_system_pool_assign(struct k_thread *thread)
+ਖਾਲੀ k_thread_system_pool_ਸੌਂਪੋ(ਬਣਤਰ k_thread *thread)
 {
-	thread->resource_pool = _SYSTEM_HEAP;
+	thread->resource_pool = SYSTEM_ਢੇਰ;
 }
-#else
-#define _SYSTEM_HEAP	NULL
-#endif /* K_HEAP_MEM_POOL_SIZE */
+#ਨਹੀਂਤਾਂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ SYSTEM_ਢੇਰ	ਨਿਰਾ
+#ਜੇ_ਅੰਤ /* K_HEAP_MEM_POOL_SIZE */
 
-static void *z_thread_alloc_helper(size_t align, size_t size,
-				   sys_heap_allocator_t sys_heap_allocator)
+ਸਥਿਰ ਖਾਲੀ *z_thread_alloc_helper(size_t align, size_t ਮਾਪ,
+				   sys_ਢੇਰ_allocator_t sys_ਢੇਰ_allocator)
 {
-	void *ret;
-	struct k_heap *heap;
+	ਖਾਲੀ *ret;
+	ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2;
 
-	if (k_is_in_isr()) {
-		heap = _SYSTEM_HEAP;
-	} else {
-		heap = _current->resource_pool;
+	ਜੇ (k_is_ਵਿੱਚ_isr()) {
+		ਢੇਰ_2 = SYSTEM_ਢੇਰ;
+	} ਨਹੀਂਤਾਂ {
+		ਢੇਰ_2 = _current->resource_pool;
 	}
 
-	if (heap != NULL) {
-		ret = z_alloc_helper(heap, align, size, sys_heap_allocator);
-	} else {
-		ret = NULL;
+	ਜੇ (ਢੇਰ_2 != ਨਿਰਾ) {
+		ret = z_alloc_helper(ਢੇਰ_2, align, ਮਾਪ, sys_ਢੇਰ_allocator);
+	} ਨਹੀਂਤਾਂ {
+		ret = ਨਿਰਾ;
 	}
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *z_thread_aligned_alloc(size_t align, size_t size)
+ਖਾਲੀ *z_thread_aligned_alloc(size_t align, size_t ਮਾਪ)
 {
-	return z_thread_alloc_helper(align, size, sys_heap_aligned_alloc);
+	ਵਾਪਸ z_thread_alloc_helper(align, ਮਾਪ, sys_ਢੇਰ_aligned_alloc);
 }
 
-void *z_thread_malloc(size_t size)
+ਖਾਲੀ *z_thread_malloc(size_t ਮਾਪ)
 {
-	return z_thread_alloc_helper(0, size, sys_heap_noalign_alloc);
+	ਵਾਪਸ z_thread_alloc_helper(0, ਮਾਪ, sys_ਢੇਰ_noalign_alloc);
 }
 
 /*
@@ -223,4 +223,4 @@ void *z_thread_malloc(size_t size)
  * static heaps to be initialized and that is done in that file.
  * Make sure it is pulled in at least for that; the rest will be GC'd.
  */
-static void *const __used kheap_ref = k_heap_init;
+ਸਥਿਰ ਖਾਲੀ *ਅਚਲ __used kheap_ref = k_ਢੇਰ_init;

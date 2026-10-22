@@ -4,68 +4,68 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_PRIORITY_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_PRIORITY_Q_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_INCLUDE_ਤਰਜੀਹ_Q_H
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_INCLUDE_ਤਰਜੀਹ_Q_H
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/dlist.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/math_extras.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/dlist.h>
 
 /* Simple Scheduling */
-#if defined(CONFIG_SCHED_SIMPLE)
-#define _priq_run_init		z_priq_simple_init
-#define _priq_run_add		z_priq_simple_add
-#define _priq_run_remove	z_priq_simple_remove
-#define _priq_run_yield         z_priq_simple_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
-#  define _priq_run_best	z_priq_simple_mask_best
-# else
-#  define _priq_run_best	z_priq_simple_best
+#ਜੇ defined(CONFIG_SCHED_SIMPLE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_init		z_priq_simple_init
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_ਜੋੜੋ		z_priq_simple_ਜੋੜੋ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_remove	z_priq_simple_remove
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_yield         z_priq_simple_yield
+# ਜੇ defined(CONFIG_SCHED_CPU_ਨਕਾਬ) && !defined(CONFIG_SCHED_CPU_ਨਕਾਬ_PIN_ONLY)
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_simple_ਨਕਾਬ_ਉੱਤਮ
+# ਨਹੀਂਤਾਂ
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_simple_ਉੱਤਮ
 # endif /* CONFIG_SCHED_CPU_MASK */
 /* Scalable Scheduling */
-#elif defined(CONFIG_SCHED_SCALABLE)
-#define _priq_run_init		z_priq_rb_init
-#define _priq_run_add		z_priq_rb_add
-#define _priq_run_remove	z_priq_rb_remove
-#define _priq_run_yield         z_priq_rb_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
-#  define _priq_run_best	z_priq_rb_mask_best
-# else
-#  define _priq_run_best	z_priq_rb_best
+#ਜਾਂਜੇ defined(CONFIG_SCHED_SCALABLE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_init		z_priq_rb_init
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_ਜੋੜੋ		z_priq_rb_ਜੋੜੋ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_remove	z_priq_rb_remove
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_yield         z_priq_rb_yield
+# ਜੇ defined(CONFIG_SCHED_CPU_ਨਕਾਬ) && !defined(CONFIG_SCHED_CPU_ਨਕਾਬ_PIN_ONLY)
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_rb_ਨਕਾਬ_ਉੱਤਮ
+# ਨਹੀਂਤਾਂ
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_rb_ਉੱਤਮ
 # endif /* CONFIG_SCHED_CPU_MASK */
  /* Multi Queue Scheduling */
-#elif defined(CONFIG_SCHED_MULTIQ)
-#define _priq_run_init		z_priq_mq_init
-#define _priq_run_add		z_priq_mq_add
-#define _priq_run_remove	z_priq_mq_remove
-#define _priq_run_yield         z_priq_mq_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
-#  define _priq_run_best	z_priq_mq_mask_best
-# else
-#  define _priq_run_best	z_priq_mq_best
+#ਜਾਂਜੇ defined(CONFIG_SCHED_MULTIQ)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_init		z_priq_mq_init
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_ਜੋੜੋ		z_priq_mq_ਜੋੜੋ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_remove	z_priq_mq_remove
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_ਲੜੀਵਾਰ_yield         z_priq_mq_yield
+# ਜੇ defined(CONFIG_SCHED_CPU_ਨਕਾਬ) && !defined(CONFIG_SCHED_CPU_ਨਕਾਬ_PIN_ONLY)
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_mq_ਨਕਾਬ_ਉੱਤਮ
+# ਨਹੀਂਤਾਂ
+#  define priq_ਲੜੀਵਾਰ_ਉੱਤਮ	z_priq_mq_ਉੱਤਮ
 # endif /* CONFIG_SCHED_CPU_MASK */
-#endif
+#ਜੇ_ਅੰਤ
 
 /* Scalable Wait Queue */
-#if defined(CONFIG_WAITQ_SCALABLE)
-#define _priq_wait_add		z_priq_rb_add
-#define _priq_wait_remove	z_priq_rb_remove
-#define _priq_wait_best		z_priq_rb_best
+#ਜੇ defined(CONFIG_WAITQ_SCALABLE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_wait_ਜੋੜੋ		z_priq_rb_ਜੋੜੋ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ _priq_wait_remove	z_priq_rb_remove
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_wait_ਉੱਤਮ		z_priq_rb_ਉੱਤਮ
 /* Simple Wait Queue */
-#elif defined(CONFIG_WAITQ_SIMPLE)
-#define _priq_wait_add		z_priq_simple_add
-#define _priq_wait_remove	z_priq_simple_remove
-#define _priq_wait_best		z_priq_simple_best
-#endif
+#ਜਾਂਜੇ defined(CONFIG_WAITQ_SIMPLE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_wait_ਜੋੜੋ		z_priq_simple_ਜੋੜੋ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ _priq_wait_remove	z_priq_simple_remove
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ priq_wait_ਉੱਤਮ		z_priq_simple_ਉੱਤਮ
+#ਜੇ_ਅੰਤ
 
-#if defined(CONFIG_64BIT)
-#define NBITS          64
-#define TRAILING_ZEROS u64_count_trailing_zeros
-#else
-#define NBITS          32
-#define TRAILING_ZEROS u32_count_trailing_zeros
-#endif /* CONFIG_64BIT */
+#ਜੇ defined(CONFIG_64_ਦੋਆਧਾਰੀ_ਅੰਕ)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ NBITS          64
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TRAILING_ZEROS u64_ਗਿਣਤੀ_trailing_zeros
+#ਨਹੀਂਤਾਂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ NBITS          32
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ TRAILING_ZEROS u32_ਗਿਣਤੀ_trailing_zeros
+#ਜੇ_ਅੰਤ /* CONFIG_64BIT */
 
-static ALWAYS_INLINE void z_priq_simple_init(sys_dlist_t *pq)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_simple_init(sys_dlist_t *pq)
 {
 	sys_dlist_init(pq);
 }
@@ -78,17 +78,17 @@ static ALWAYS_INLINE void z_priq_simple_init(sys_dlist_t *pq)
  * Do not rely on the actual value returned aside from the above.
  * (Again, like memcmp.)
  */
-static ALWAYS_INLINE int32_t z_sched_prio_cmp(struct k_thread *thread_1, struct k_thread *thread_2)
+ਸਥਿਰ ALWAYS_INLINE int32_t z_sched_prio_cmp(ਬਣਤਰ k_thread *thread_1, ਬਣਤਰ k_thread *thread_2)
 {
 	/* `prio` is <32b, so the below cannot overflow. */
-	int32_t b1 = thread_1->base.prio;
-	int32_t b2 = thread_2->base.prio;
+	int32_t b1 = thread_1->ਅਧਾਰ.prio;
+	int32_t b2 = thread_2->ਅਧਾਰ.prio;
 
-	if (b1 != b2) {
-		return b2 - b1;
+	ਜੇ (b1 != b2) {
+		ਵਾਪਸ b2 - b1;
 	}
 
-#ifdef CONFIG_SCHED_DEADLINE
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SCHED_DEADLINE
 	/* If we assume all deadlines live within the same "half" of
 	 * the 32 bit modulus space (this is a documented API rule),
 	 * then the latest deadline in the queue minus the earliest is
@@ -96,52 +96,52 @@ static ALWAYS_INLINE int32_t z_sched_prio_cmp(struct k_thread *thread_1, struct 
 	 * leverage that to compare the values without having to check
 	 * the current time.
 	 */
-	uint32_t d1 = thread_1->base.prio_deadline;
-	uint32_t d2 = thread_2->base.prio_deadline;
+	uint32_t d1 = thread_1->ਅਧਾਰ.prio_deadline;
+	uint32_t d2 = thread_2->ਅਧਾਰ.prio_deadline;
 
-	if (d1 != d2) {
+	ਜੇ (d1 != d2) {
 		/* Sooner deadline means higher effective priority.
 		 * Doing the calculation with unsigned types and casting
 		 * to signed isn't perfect, but at least reduces this
 		 * from UB on overflow to impdef.
 		 */
-		return (int32_t)(d2 - d1);
+		ਵਾਪਸ (int32_t)(d2 - d1);
 	}
-#endif /* CONFIG_SCHED_DEADLINE */
-	return 0;
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_DEADLINE */
+	ਵਾਪਸ 0;
 }
 
-static ALWAYS_INLINE void z_priq_simple_add(sys_dlist_t *pq, struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_simple_ਜੋੜੋ(sys_dlist_t *pq, ਬਣਤਰ k_thread *thread)
 {
-	struct k_thread *t;
+	ਬਣਤਰ k_thread *t;
 
-	SYS_DLIST_FOR_EACH_CONTAINER(pq, t, base.qnode_dlist) {
-		if (z_sched_prio_cmp(thread, t) > 0) {
-			sys_dlist_insert(&t->base.qnode_dlist, &thread->base.qnode_dlist);
-			return;
+	SYS_DLIST_FOR_EACH_CONTAINER(pq, t, ਅਧਾਰ.qnode_dlist) {
+		ਜੇ (z_sched_prio_cmp(thread, t) > 0) {
+			sys_dlist_ਪਾਓ(&t->ਅਧਾਰ.qnode_dlist, &thread->ਅਧਾਰ.qnode_dlist);
+			ਵਾਪਸ;
 		}
 	}
 
-	sys_dlist_append(pq, &thread->base.qnode_dlist);
+	sys_dlist_append(pq, &thread->ਅਧਾਰ.qnode_dlist);
 }
 
-static ALWAYS_INLINE void z_priq_simple_remove(sys_dlist_t *pq, struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_simple_remove(sys_dlist_t *pq, ਬਣਤਰ k_thread *thread)
 {
-	ARG_UNUSED(pq);
+	ARG_ਅਣਵਰਤਿਆ(pq);
 
-	sys_dlist_remove(&thread->base.qnode_dlist);
+	sys_dlist_remove(&thread->ਅਧਾਰ.qnode_dlist);
 }
 
-static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_simple_yield(sys_dlist_t *pq)
 {
-#ifndef CONFIG_SMP
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
 	sys_dnode_t *n;
 
-	n = sys_dlist_peek_next_no_check(pq, &_current->base.qnode_dlist);
+	n = sys_dlist_peek_ਅਗਲਾ_no_check(pq, &_current->ਅਧਾਰ.qnode_dlist);
 
-	sys_dlist_dequeue(&_current->base.qnode_dlist);
+	sys_dlist_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(&_current->ਅਧਾਰ.qnode_dlist);
 
-	struct k_thread *t;
+	ਬਣਤਰ k_thread *t;
 
 	/*
 	 * As it is possible that the current thread was not at the head of
@@ -149,67 +149,67 @@ static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
 	 * to re-insert it.
 	 */
 
-	while (n != NULL) {
-		t = CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
-		if (z_sched_prio_cmp(_current, t) > 0) {
-			sys_dlist_insert(&t->base.qnode_dlist,
-					 &_current->base.qnode_dlist);
-			return;
+	ਜਦੋਂ (n != ਨਿਰਾ) {
+		t = CONTAINER_ਦਾ(n, ਬਣਤਰ k_thread, ਅਧਾਰ.qnode_dlist);
+		ਜੇ (z_sched_prio_cmp(_current, t) > 0) {
+			sys_dlist_ਪਾਓ(&t->ਅਧਾਰ.qnode_dlist,
+					 &_current->ਅਧਾਰ.qnode_dlist);
+			ਵਾਪਸ;
 		}
-		n = sys_dlist_peek_next_no_check(pq, n);
+		n = sys_dlist_peek_ਅਗਲਾ_no_check(pq, n);
 	}
 
-	sys_dlist_append(pq, &_current->base.qnode_dlist);
-#endif
+	sys_dlist_append(pq, &_current->ਅਧਾਰ.qnode_dlist);
+#ਜੇ_ਅੰਤ
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_simple_best(sys_dlist_t *pq)
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_simple_ਉੱਤਮ(sys_dlist_t *pq)
 {
-	struct k_thread *thread = NULL;
-	sys_dnode_t *n = sys_dlist_peek_head(pq);
+	ਬਣਤਰ k_thread *thread = ਨਿਰਾ;
+	sys_dnode_t *n = sys_dlist_peek_ਸਿਰ(pq);
 
-	if (n != NULL) {
-		thread = CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
+	ਜੇ (n != ਨਿਰਾ) {
+		thread = CONTAINER_ਦਾ(n, ਬਣਤਰ k_thread, ਅਧਾਰ.qnode_dlist);
 	}
-	return thread;
+	ਵਾਪਸ thread;
 }
 
-#ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_simple_mask_best(sys_dlist_t *pq)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SCHED_CPU_ਨਕਾਬ
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_simple_ਨਕਾਬ_ਉੱਤਮ(sys_dlist_t *pq)
 {
 	/* With masks enabled we need to be prepared to walk the list
 	 * looking for one we can run
 	 */
-	unsigned long current_cpu_bit = BIT(_current_cpu->id);
-	struct k_thread *thread;
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ = ਦੋਆਧਾਰੀ_ਅੰਕ(_current_cpu->id);
+	ਬਣਤਰ k_thread *thread;
 
-	SYS_DLIST_FOR_EACH_CONTAINER(pq, thread, base.qnode_dlist) {
-		if ((thread->base.cpu_mask & current_cpu_bit) != 0) {
-			return thread;
+	SYS_DLIST_FOR_EACH_CONTAINER(pq, thread, ਅਧਾਰ.qnode_dlist) {
+		ਜੇ ((thread->ਅਧਾਰ.cpu_ਨਕਾਬ & current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ) != 0) {
+			ਵਾਪਸ thread;
 		}
 	}
-	return NULL;
+	ਵਾਪਸ ਨਿਰਾ;
 }
-#endif /* CONFIG_SCHED_CPU_MASK */
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_CPU_MASK */
 
-#if defined(CONFIG_SCHED_SCALABLE) || defined(CONFIG_WAITQ_SCALABLE)
-static ALWAYS_INLINE void z_priq_rb_init(struct _priq_rb *pq)
+#ਜੇ defined(CONFIG_SCHED_SCALABLE) || defined(CONFIG_WAITQ_SCALABLE)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_rb_init(ਬਣਤਰ _priq_rb *pq)
 {
-	bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b);
+	bool z_priq_rb_lessthan(ਬਣਤਰ rbnode *a, ਬਣਤਰ rbnode *b);
 
-	*pq = (struct _priq_rb) {
-		.tree = {
+	*pq = (ਬਣਤਰ _priq_rb) {
+		.ਰੁੱਖ = {
 			.lessthan_fn = z_priq_rb_lessthan,
 		}
 	};
 }
 
-static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_rb_ਜੋੜੋ(ਬਣਤਰ _priq_rb *pq, ਬਣਤਰ k_thread *thread)
 {
-	struct k_thread *t;
+	ਬਣਤਰ k_thread *t;
 
-	thread->base.order_key = pq->next_order_key;
-	++pq->next_order_key;
+	thread->ਅਧਾਰ.ਕ੍ਰਮ_ਕੁੰਜੀ = pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ;
+	++pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ;
 
 	/* Renumber at wraparound.  This is tiny code, and in practice
 	 * will almost never be hit on real systems.  BUT on very
@@ -217,188 +217,188 @@ static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *th
 	 * AND that contains very large numbers of threads, it can be
 	 * a latency glitch to loop over all the threads like this.
 	 */
-	if (!pq->next_order_key) {
-		RB_FOR_EACH_CONTAINER(&pq->tree, t, base.qnode_rb) {
-			t->base.order_key = pq->next_order_key;
-			++pq->next_order_key;
+	ਜੇ (!pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ) {
+		RB_FOR_EACH_CONTAINER(&pq->ਰੁੱਖ, t, ਅਧਾਰ.qnode_rb) {
+			t->ਅਧਾਰ.ਕ੍ਰਮ_ਕੁੰਜੀ = pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ;
+			++pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ;
 		}
 	}
 
-	rb_insert(&pq->tree, &thread->base.qnode_rb);
+	rb_ਪਾਓ(&pq->ਰੁੱਖ, &thread->ਅਧਾਰ.qnode_rb);
 }
 
-static ALWAYS_INLINE void z_priq_rb_remove(struct _priq_rb *pq, struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_rb_remove(ਬਣਤਰ _priq_rb *pq, ਬਣਤਰ k_thread *thread)
 {
-	rb_remove(&pq->tree, &thread->base.qnode_rb);
+	rb_remove(&pq->ਰੁੱਖ, &thread->ਅਧਾਰ.qnode_rb);
 
-	if (!pq->tree.root) {
-		pq->next_order_key = 0;
+	ਜੇ (!pq->ਰੁੱਖ.ਜੜ੍ਹ) {
+		pq->ਅਗਲਾ_ਕ੍ਰਮ_ਕੁੰਜੀ = 0;
 	}
 }
 
-static ALWAYS_INLINE void z_priq_rb_yield(struct _priq_rb *pq)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_rb_yield(ਬਣਤਰ _priq_rb *pq)
 {
-#ifndef CONFIG_SMP
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
 	z_priq_rb_remove(pq, _current);
-	z_priq_rb_add(pq, _current);
-#endif
+	z_priq_rb_ਜੋੜੋ(pq, _current);
+#ਜੇ_ਅੰਤ
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_rb_best(struct _priq_rb *pq)
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_rb_ਉੱਤਮ(ਬਣਤਰ _priq_rb *pq)
 {
-	struct k_thread *thread = NULL;
-	struct rbnode *n = rb_get_min(&pq->tree);
+	ਬਣਤਰ k_thread *thread = ਨਿਰਾ;
+	ਬਣਤਰ rbnode *n = rb_get_min(&pq->ਰੁੱਖ);
 
-	if (n != NULL) {
-		thread = CONTAINER_OF(n, struct k_thread, base.qnode_rb);
+	ਜੇ (n != ਨਿਰਾ) {
+		thread = CONTAINER_ਦਾ(n, ਬਣਤਰ k_thread, ਅਧਾਰ.qnode_rb);
 	}
-	return thread;
+	ਵਾਪਸ thread;
 }
 
-#ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_rb_mask_best(struct _priq_rb *pq)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SCHED_CPU_ਨਕਾਬ
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_rb_ਨਕਾਬ_ਉੱਤਮ(ਬਣਤਰ _priq_rb *pq)
 {
-	unsigned long current_cpu_bit = BIT(_current_cpu->id);
-	struct k_thread *thread;
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ = ਦੋਆਧਾਰੀ_ਅੰਕ(_current_cpu->id);
+	ਬਣਤਰ k_thread *thread;
 
-	RB_FOR_EACH_CONTAINER(&pq->tree, thread, base.qnode_rb) {
-		if ((thread->base.cpu_mask & current_cpu_bit) != 0) {
-			return thread;
+	RB_FOR_EACH_CONTAINER(&pq->ਰੁੱਖ, thread, ਅਧਾਰ.qnode_rb) {
+		ਜੇ ((thread->ਅਧਾਰ.cpu_ਨਕਾਬ & current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ) != 0) {
+			ਵਾਪਸ thread;
 		}
 	}
-	return NULL;
+	ਵਾਪਸ ਨਿਰਾ;
 }
-#endif /* CONFIG_SCHED_CPU_MASK */
-#endif /* CONFIG_SCHED_SCALABLE || CONFIG_WAITQ_SCALABLE */
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_CPU_MASK */
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_SCALABLE || CONFIG_WAITQ_SCALABLE */
 
-struct prio_info {
-	uint8_t offset_prio;
+ਬਣਤਰ prio_info {
+	uint8_t ਵਿੱਥ_prio;
 	uint8_t idx;
-	uint8_t bit;
+	uint8_t ਦੋਆਧਾਰੀ_ਅੰਕ_2;
 };
 
-static ALWAYS_INLINE struct prio_info get_prio_info(int8_t old_prio)
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ prio_info get_prio_info(int8_t old_prio)
 {
-	struct prio_info ret;
+	ਬਣਤਰ prio_info ret;
 
-	ret.offset_prio = old_prio - K_HIGHEST_THREAD_PRIO;
-	ret.idx = ret.offset_prio / NBITS;
-	ret.bit = ret.offset_prio % NBITS;
+	ret.ਵਿੱਥ_prio = old_prio - K_HIGHEST_THREAD_PRIO;
+	ret.idx = ret.ਵਿੱਥ_prio / NBITS;
+	ret.ਦੋਆਧਾਰੀ_ਅੰਕ_2 = ret.ਵਿੱਥ_prio % NBITS;
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-static ALWAYS_INLINE unsigned int z_priq_mq_best_queue_index(struct _priq_mq *pq)
+ਸਥਿਰ ALWAYS_INLINE ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ z_priq_mq_ਉੱਤਮ_ਕਤਾਰ_ਸੂਚਕਾਂਕ(ਬਣਤਰ _priq_mq *pq)
 {
-	unsigned int i = 0;
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ i = 0;
 
-	do {
-		if (likely(pq->bitmask[i])) {
-			return i * NBITS + TRAILING_ZEROS(pq->bitmask[i]);
+	ਕਰੋ {
+		ਜੇ (likely(pq->bitmask[i])) {
+			ਵਾਪਸ i * NBITS + TRAILING_ZEROS(pq->bitmask[i]);
 		}
 		i++;
-	} while (i < PRIQ_BITMAP_SIZE);
+	} ਜਦੋਂ (i < PRIQ_BITMAP_ਮਾਪ);
 
-	return K_NUM_THREAD_PRIO - 1;
+	ਵਾਪਸ K_ਅੰਕ_THREAD_PRIO - 1;
 }
 
-static ALWAYS_INLINE void z_priq_mq_init(struct _priq_mq *q)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_mq_init(ਬਣਤਰ _priq_mq *q)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(q->queues); i++) {
+	ਲਈ (size_t i = 0; i < ARRAY_ਮਾਪ(q->queues); i++) {
 		sys_dlist_init(&q->queues[i]);
 	}
 
-#ifndef CONFIG_SMP
-	q->cached_queue_index = K_NUM_THREAD_PRIO - 1;
-#endif
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	q->cached_ਕਤਾਰ_ਸੂਚਕਾਂਕ = K_ਅੰਕ_THREAD_PRIO - 1;
+#ਜੇ_ਅੰਤ
 }
 
-static ALWAYS_INLINE void z_priq_mq_add(struct _priq_mq *pq,
-					struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_mq_ਜੋੜੋ(ਬਣਤਰ _priq_mq *pq,
+					ਬਣਤਰ k_thread *thread)
 {
-	struct prio_info pos = get_prio_info(thread->base.prio);
+	ਬਣਤਰ prio_info pos = get_prio_info(thread->ਅਧਾਰ.prio);
 
-	sys_dlist_append(&pq->queues[pos.offset_prio], &thread->base.qnode_dlist);
-	pq->bitmask[pos.idx] |= BIT(pos.bit);
+	sys_dlist_append(&pq->queues[pos.ਵਿੱਥ_prio], &thread->ਅਧਾਰ.qnode_dlist);
+	pq->bitmask[pos.idx] |= ਦੋਆਧਾਰੀ_ਅੰਕ(pos.ਦੋਆਧਾਰੀ_ਅੰਕ_2);
 
-#ifndef CONFIG_SMP
-	if (pos.offset_prio < pq->cached_queue_index) {
-		pq->cached_queue_index = pos.offset_prio;
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	ਜੇ (pos.ਵਿੱਥ_prio < pq->cached_ਕਤਾਰ_ਸੂਚਕਾਂਕ) {
+		pq->cached_ਕਤਾਰ_ਸੂਚਕਾਂਕ = pos.ਵਿੱਥ_prio;
 	}
-#endif
+#ਜੇ_ਅੰਤ
 }
 
-static ALWAYS_INLINE void z_priq_mq_remove(struct _priq_mq *pq,
-					   struct k_thread *thread)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_mq_remove(ਬਣਤਰ _priq_mq *pq,
+					   ਬਣਤਰ k_thread *thread)
 {
-	struct prio_info pos = get_prio_info(thread->base.prio);
+	ਬਣਤਰ prio_info pos = get_prio_info(thread->ਅਧਾਰ.prio);
 
-	sys_dlist_dequeue(&thread->base.qnode_dlist);
-	if (unlikely(sys_dlist_is_empty(&pq->queues[pos.offset_prio]))) {
-		pq->bitmask[pos.idx] &= ~BIT(pos.bit);
-#ifndef CONFIG_SMP
-		pq->cached_queue_index = z_priq_mq_best_queue_index(pq);
-#endif
+	sys_dlist_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(&thread->ਅਧਾਰ.qnode_dlist);
+	ਜੇ (unlikely(sys_dlist_is_ਖਾਲੀ_ਥਾਵਾਂ(&pq->queues[pos.ਵਿੱਥ_prio]))) {
+		pq->bitmask[pos.idx] &= ~ਦੋਆਧਾਰੀ_ਅੰਕ(pos.ਦੋਆਧਾਰੀ_ਅੰਕ_2);
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+		pq->cached_ਕਤਾਰ_ਸੂਚਕਾਂਕ = z_priq_mq_ਉੱਤਮ_ਕਤਾਰ_ਸੂਚਕਾਂਕ(pq);
+#ਜੇ_ਅੰਤ
 	}
 }
 
-static ALWAYS_INLINE void z_priq_mq_yield(struct _priq_mq *pq)
+ਸਥਿਰ ALWAYS_INLINE ਖਾਲੀ z_priq_mq_yield(ਬਣਤਰ _priq_mq *pq)
 {
-#ifndef CONFIG_SMP
-	struct prio_info pos = get_prio_info(_current->base.prio);
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	ਬਣਤਰ prio_info pos = get_prio_info(_current->ਅਧਾਰ.prio);
 
-	sys_dlist_dequeue(&_current->base.qnode_dlist);
-	sys_dlist_append(&pq->queues[pos.offset_prio],
-			 &_current->base.qnode_dlist);
-#endif
+	sys_dlist_ਕਤਾਰ_ਤੋਂ_ਕੱਢੋ(&_current->ਅਧਾਰ.qnode_dlist);
+	sys_dlist_append(&pq->queues[pos.ਵਿੱਥ_prio],
+			 &_current->ਅਧਾਰ.qnode_dlist);
+#ਜੇ_ਅੰਤ
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_mq_best(struct _priq_mq *pq)
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_mq_ਉੱਤਮ(ਬਣਤਰ _priq_mq *pq)
 {
-#ifdef CONFIG_SMP
-	unsigned int index = z_priq_mq_best_queue_index(pq);
-#else
-	unsigned int index = pq->cached_queue_index;
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਸੂਚਕਾਂਕ = z_priq_mq_ਉੱਤਮ_ਕਤਾਰ_ਸੂਚਕਾਂਕ(pq);
+#ਨਹੀਂਤਾਂ
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਸੂਚਕਾਂਕ = pq->cached_ਕਤਾਰ_ਸੂਚਕਾਂਕ;
+#ਜੇ_ਅੰਤ
 
-	sys_dnode_t *n = sys_dlist_peek_head(&pq->queues[index]);
+	sys_dnode_t *n = sys_dlist_peek_ਸਿਰ(&pq->queues[ਸੂਚਕਾਂਕ]);
 
-	if (likely(n != NULL)) {
-		return CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
+	ਜੇ (likely(n != ਨਿਰਾ)) {
+		ਵਾਪਸ CONTAINER_ਦਾ(n, ਬਣਤਰ k_thread, ਅਧਾਰ.qnode_dlist);
 	}
 
-	return NULL;
+	ਵਾਪਸ ਨਿਰਾ;
 }
 
-#ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_mq_mask_best(struct _priq_mq *pq)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SCHED_CPU_ਨਕਾਬ
+ਸਥਿਰ ALWAYS_INLINE ਬਣਤਰ k_thread *z_priq_mq_ਨਕਾਬ_ਉੱਤਮ(ਬਣਤਰ _priq_mq *pq)
 {
-	unsigned long current_cpu_bit = BIT(_current_cpu->id);
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ = ਦੋਆਧਾਰੀ_ਅੰਕ(_current_cpu->id);
 
 	/* Walk priority levels from highest to lowest, and within each
 	 * level walk the thread list to find the first thread runnable
 	 * on the current CPU.
 	 */
-	for (unsigned int i = 0U; i < PRIQ_BITMAP_SIZE; i++) {
-		unsigned long bitmask = pq->bitmask[i];
+	ਲਈ (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ i = 0U; i < PRIQ_BITMAP_ਮਾਪ; i++) {
+		ਬਿਨਾਨਿਸ਼ਾਨੀ ਲੰਮਾ bitmask = pq->bitmask[i];
 
-		while (bitmask != 0UL) {
-			unsigned int bit = TRAILING_ZEROS(bitmask);
-			unsigned int index = i * NBITS + bit;
-			struct k_thread *thread;
+		ਜਦੋਂ (bitmask != 0UL) {
+			ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਦੋਆਧਾਰੀ_ਅੰਕ_2 = TRAILING_ZEROS(bitmask);
+			ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਸੂਚਕਾਂਕ = i * NBITS + ਦੋਆਧਾਰੀ_ਅੰਕ_2;
+			ਬਣਤਰ k_thread *thread;
 
-			SYS_DLIST_FOR_EACH_CONTAINER(&pq->queues[index],
-						     thread, base.qnode_dlist) {
-				if ((thread->base.cpu_mask &
-				     current_cpu_bit) != 0) {
-					return thread;
+			SYS_DLIST_FOR_EACH_CONTAINER(&pq->queues[ਸੂਚਕਾਂਕ],
+						     thread, ਅਧਾਰ.qnode_dlist) {
+				ਜੇ ((thread->ਅਧਾਰ.cpu_ਨਕਾਬ &
+				     current_cpu_ਦੋਆਧਾਰੀ_ਅੰਕ) != 0) {
+					ਵਾਪਸ thread;
 				}
 			}
 			bitmask &= (bitmask - 1UL);
 		}
 	}
-	return NULL;
+	ਵਾਪਸ ਨਿਰਾ;
 }
-#endif /* CONFIG_SCHED_CPU_MASK */
+#ਜੇ_ਅੰਤ /* CONFIG_SCHED_CPU_MASK */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_PRIORITY_Q_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_INCLUDE_PRIORITY_Q_H_ */

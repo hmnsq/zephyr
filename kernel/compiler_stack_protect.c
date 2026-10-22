@@ -17,12 +17,12 @@
  * function __stack_chk_fail and global variable __stack_chk_guard.
  */
 
-#include <zephyr/toolchain.h> /* compiler specific configurations */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/toolchain.h> /* compiler specific configurations */
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/kernel.h>
-#include <zephyr/app_memory/app_memdomain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/toolchain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/linker/sections.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/app_memory/app_memdomain.h>
 
 /**
  *
@@ -32,12 +32,12 @@
  *
  * @note This function does not return.
  */
-void _StackCheckHandler(void)
+ਖਾਲੀ ਢੇਰ_Check_Handler(ਖਾਲੀ)
 {
 	/* Stack canary error is a software fatal condition; treat it as such.
 	 */
-	z_except_reason(K_ERR_STACK_CHK_FAIL);
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	z_except_reason(K_ERR_ਢੇਰ_CHK_FAIL);
+	ਕੋਡ_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
 /* Global variable */
@@ -46,17 +46,17 @@ void _StackCheckHandler(void)
  * Symbol referenced by GCC compiler generated code for canary value.
  * The canary value gets initialized in z_cstart().
  */
-#ifdef CONFIG_STACK_CANARIES_TLS
-#ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
-__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#endif
-#elif CONFIG_USERSPACE
-K_APP_DMEM(z_libc_partition) volatile uintptr_t __stack_chk_guard;
-#else
-__noinit volatile uintptr_t __stack_chk_guard;
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ਢੇਰ_CANARIES_TLS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ਢੇਰ_CANARIES_TLS_PREPEND
+__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL ਅਸਥਿਰ uintptr_t __stack_chk_guard;
+#ਨਹੀਂਤਾਂ
+Z_THREAD_LOCAL ਅਸਥਿਰ uintptr_t __stack_chk_guard;
+#ਜੇ_ਅੰਤ
+#ਜਾਂਜੇ CONFIG_USERSPACE
+K_APP_DMEM(z_libc_ਹਿੱਸੇ_ਕਰੋ) ਅਸਥਿਰ uintptr_t __stack_chk_guard;
+#ਨਹੀਂਤਾਂ
+__noinit ਅਸਥਿਰ uintptr_t __stack_chk_guard;
+#ਜੇ_ਅੰਤ
 
 /**
  *
@@ -65,4 +65,4 @@ __noinit volatile uintptr_t __stack_chk_guard;
  * This routine is invoked when a stack canary error is detected, indicating
  * a buffer overflow or stack corruption problem.
  */
-FUNC_ALIAS(_StackCheckHandler, __stack_chk_fail, void);
+FUNC_ALIAS(ਢੇਰ_Check_Handler, __stack_chk_fail, ਖਾਲੀ);

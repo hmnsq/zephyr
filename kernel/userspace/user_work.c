@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+ਸਥਿਰ ਖਾਲੀ z_work_user_q_main(ਖਾਲੀ *work_q_ptr, ਖਾਲੀ *p2, ਖਾਲੀ *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	ਬਣਤਰ k_work_user_q *work_q = work_q_ptr;
 
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_ਅਣਵਰਤਿਆ(p2);
+	ARG_ਅਣਵਰਤਿਆ(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	ਜਦੋਂ (true) {
+		ਬਣਤਰ k_work_user *work;
 		k_work_user_handler_t handler;
 
-		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		work = k_ਕਤਾਰ_get(&work_q->ਕਤਾਰ, K_FOREVER);
+		ਜੇ (work == ਨਿਰਾ) {
+			ਜਾਰੀ;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != ਨਿਰਾ, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		ਜੇ (atomic_test_and_clear_ਦੋਆਧਾਰੀ_ਅੰਕ(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,21 +39,21 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+ਖਾਲੀ k_work_user_ਕਤਾਰ_ਸ਼ੁਰੂ(ਬਣਤਰ k_work_user_q *work_q, k_thread_ਢੇਰ_t *ਢੇਰ,
+			     size_t ਢੇਰ_ਮਾਪ, ਪੂਰਨ prio, ਅਚਲ ਅੱਖਰ *name)
 {
-	k_queue_init(&work_q->queue);
+	k_ਕਤਾਰ_init(&work_q->ਕਤਾਰ);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, ਢੇਰ, ਢੇਰ_ਮਾਪ, z_work_user_q_main,
+			work_q, ਨਿਰਾ, ਨਿਰਾ, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
-	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
-		k_thread_name_set(&work_q->thread, name);
+	k_object_access_grant(&work_q->ਕਤਾਰ, &work_q->thread);
+	ਜੇ (name != ਨਿਰਾ) {
+		k_thread_name_ਸੈੱਟ(&work_q->thread, name);
 	}
 
-	k_thread_start(&work_q->thread);
+	k_thread_ਸ਼ੁਰੂ(&work_q->thread);
 }

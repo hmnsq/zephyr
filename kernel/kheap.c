@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/iterable_sections.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/linker/linker-defs.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/iterable_sections.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <wait_q.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <ksched.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+ਪੂਰਨ k_ਢੇਰ_array_get(ਬਣਤਰ k_ਢੇਰ **ਢੇਰ_2)
 {
-	int num;
+	ਪੂਰਨ ਅੰਕ;
 
 	/* Pointer to the start of the heap array */
-	STRUCT_SECTION_GET(k_heap, 0, heap);
+	STRUCT_SECTION_GET(k_ਢੇਰ, 0, ਢੇਰ_2);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_ਗਿਣਤੀ(k_ਢੇਰ, &ਅੰਕ);
+	ਵਾਪਸ ਅੰਕ;
 }
 
-void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
+ਖਾਲੀ k_ਢੇਰ_init(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, ਖਾਲੀ *mem, size_t ਬਾਈਟਾਂ)
 {
-	z_waitq_init(&heap->wait_q);
-	heap->lock = (struct k_spinlock) {};
-	sys_heap_init(&heap->heap, mem, bytes);
+	z_waitq_init(&ਢੇਰ_2->wait_q);
+	ਢੇਰ_2->ਤਾਲਾ = (ਬਣਤਰ k_spinlock) {};
+	sys_ਢੇਰ_init(&ਢੇਰ_2->ਢੇਰ_2, mem, ਬਾਈਟਾਂ);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
+	SYS_ਪੋਰਟ_TRACING_OBJ_INIT(k_ਢੇਰ, ਢੇਰ_2);
 }
 
-static int statics_init(void)
+ਸਥਿਰ ਪੂਰਨ statics_init(ਖਾਲੀ)
 {
-	STRUCT_SECTION_FOREACH(k_heap, heap) {
-		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
+	STRUCT_SECTION_FOREACH(k_ਢੇਰ, ਢੇਰ_2) {
+		k_ਢੇਰ_init(ਢੇਰ_2, ਢੇਰ_2->ਢੇਰ_2.init_mem, ਢੇਰ_2->ਢੇਰ_2.init_ਬਾਈਟਾਂ);
 	}
-	return 0;
+	ਵਾਪਸ 0;
 }
 
 /*
@@ -46,73 +46,73 @@ static int statics_init(void)
  * sys_heap_init(). A K_KERNEL_INIT_PRE() hook would run ahead of that, leaving
  * the shadow unregistered and KASAN tracking disabled.
  */
-SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_OBJECTS);
+SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_ਤਰਜੀਹ_OBJECTS);
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ ਖਾਲੀ * (sys_ਢੇਰ_allocator_t)(ਬਣਤਰ sys_ਢੇਰ *ਢੇਰ_2, size_t align, size_t ਬਾਈਟਾਂ);
 
-static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes,
+ਸਥਿਰ ਖਾਲੀ *z_ਢੇਰ_alloc_helper(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, size_t align, size_t ਬਾਈਟਾਂ,
 				 k_timeout_t timeout,
-				 sys_heap_allocator_t *sys_heap_allocator)
+				 sys_ਢੇਰ_allocator_t *sys_ਢੇਰ_allocator)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t ਸਿਰਾ = sys_timepoint_calc(timeout);
+	ਖਾਲੀ *ret = ਨਿਰਾ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_ਵਿੱਚ_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
-		ret = sys_heap_allocator(&heap->heap, align, bytes);
+	ਜਦੋਂ (ret == ਨਿਰਾ) {
+		ret = sys_ਢੇਰ_allocator(&ਢੇਰ_2->ਢੇਰ_2, align, ਬਾਈਟਾਂ);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		ਜੇ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ਨਿਰਾ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			ਰੋਕੋ;
 		}
 
-		if (!blocked_alloc) {
+		ਜੇ (!blocked_alloc) {
 			blocked_alloc = true;
 
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+			SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_BLOCKING(k_ਢੇਰ, alloc_helper, ਢੇਰ_2, timeout);
+		} ਨਹੀਂਤਾਂ {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(ਸਿਰਾ);
+		(ਖਾਲੀ) z_pend_curr(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ, &ਢੇਰ_2->wait_q, timeout);
+		ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 	}
 
-	k_spin_unlock(&heap->lock, key);
-	return ret;
+	k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
+	ਵਾਪਸ ret;
 }
 
-void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
+ਖਾਲੀ *k_ਢੇਰ_alloc(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, size_t ਬਾਈਟਾਂ, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, alloc, heap, timeout);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ, alloc, ਢੇਰ_2, timeout);
 
-	void *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
-					sys_heap_noalign_alloc);
+	ਖਾਲੀ *ret = z_ਢੇਰ_alloc_helper(ਢੇਰ_2, 0, ਬਾਈਟਾਂ, timeout,
+					sys_ਢੇਰ_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ, alloc, ਢੇਰ_2, timeout, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
+ਖਾਲੀ *k_ਢੇਰ_aligned_alloc(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, size_t align, size_t ਬਾਈਟਾਂ,
 			k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, aligned_alloc, heap, timeout);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ, aligned_alloc, ਢੇਰ_2, timeout);
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
 		 "align must be a power of 2");
 
-	void *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
-					sys_heap_aligned_alloc);
+	ਖਾਲੀ *ret = z_ਢੇਰ_alloc_helper(ਢੇਰ_2, align, ਬਾਈਟਾਂ, timeout,
+					sys_ਢੇਰ_aligned_alloc);
 
 	/*
 	 * modules/debug/percepio/TraceRecorder/kernelports/Zephyr/include/tracing_tracerecorder.h
@@ -121,73 +121,73 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	 * that is no longer in scope. Provide a dummy stub for compilation
 	 * to still succeed until that module's layering violation is fixed.
 	 */
-	bool blocked_alloc = false; ARG_UNUSED(blocked_alloc);
+	bool blocked_alloc = false; ARG_ਅਣਵਰਤਿਆ(blocked_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ, aligned_alloc, ਢੇਰ_2, timeout, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+ਖਾਲੀ *k_ਢੇਰ_calloc(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, size_t ਅੰਕ, size_t ਮਾਪ, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ, ਸਿਫਰ_ਸਮ੍ਰਿਤੀ_ਦਿਓ, ਢੇਰ_2, timeout);
 
-	void *ret = NULL;
+	ਖਾਲੀ *ret = ਨਿਰਾ;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
-		ret = k_heap_alloc(heap, bounds, timeout);
+	ਜੇ (!ਮਾਪ_mul_ਉਛਾਲ(ਅੰਕ, ਮਾਪ, &bounds)) {
+		ret = k_ਢੇਰ_alloc(ਢੇਰ_2, bounds, timeout);
 	}
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	ਜੇ (ret != ਨਿਰਾ) {
+		(ਖਾਲੀ)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ, ਸਿਫਰ_ਸਮ੍ਰਿਤੀ_ਦਿਓ, ਢੇਰ_2, timeout, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
+ਖਾਲੀ *k_ਢੇਰ_realloc(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, ਖਾਲੀ *ptr, size_t ਬਾਈਟਾਂ, k_timeout_t timeout)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t ਸਿਰਾ = sys_timepoint_calc(timeout);
+	ਖਾਲੀ *ret = ਨਿਰਾ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_ਢੇਰ, realloc, ਢੇਰ_2, ptr, ਬਾਈਟਾਂ, timeout);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_ਵਿੱਚ_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
-		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
+	ਜਦੋਂ (ret == ਨਿਰਾ) {
+		ret = sys_ਢੇਰ_realloc(&ਢੇਰ_2->ਢੇਰ_2, ptr, ਬਾਈਟਾਂ);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		ਜੇ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ਨਿਰਾ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			ਰੋਕੋ;
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(ਸਿਰਾ);
+		(ਖਾਲੀ) z_pend_curr(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ, &ਢੇਰ_2->wait_q, timeout);
+		ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_ਢੇਰ, realloc, ਢੇਰ_2, ptr, ਬਾਈਟਾਂ, timeout, ret);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-void k_heap_free(struct k_heap *heap, void *mem)
+ਖਾਲੀ k_ਢੇਰ_free(ਬਣਤਰ k_ਢੇਰ *ਢੇਰ_2, ਖਾਲੀ *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&ਢੇਰ_2->ਤਾਲਾ);
 
-	sys_heap_free(&heap->heap, mem);
+	sys_ਢੇਰ_free(&ਢੇਰ_2->ਢੇਰ_2, mem);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
-	} else {
-		k_spin_unlock(&heap->lock, key);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC(k_ਢੇਰ, ਮੁਕਤ, ਢੇਰ_2);
+	ਜੇ (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&ਢੇਰ_2->wait_q) != 0)) {
+		z_reschedule(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
+	} ਨਹੀਂਤਾਂ {
+		k_spin_unlock(&ਢੇਰ_2->ਤਾਲਾ, ਕੁੰਜੀ);
 	}
 }

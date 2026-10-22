@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel/thread_stack.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_ਢੇਰ_t *z_impl_k_thread_ਢੇਰ_alloc(size_t ਮਾਪ, ਪੂਰਨ flags)
 {
-	ARG_UNUSED(size);
-	ARG_UNUSED(flags);
+	ARG_ਅਣਵਰਤਿਆ(ਮਾਪ);
+	ARG_ਅਣਵਰਤਿਆ(flags);
 
-	return NULL;
+	ਵਾਪਸ ਨਿਰਾ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+ਸਥਿਰ ਸਤਰਅੰਦਰ k_thread_ਢੇਰ_t *z_vrfy_k_thread_ਢੇਰ_alloc(size_t ਮਾਪ, ਪੂਰਨ flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	ਵਾਪਸ z_impl_k_thread_ਢੇਰ_alloc(ਮਾਪ, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+ਪੂਰਨ z_impl_k_thread_ਢੇਰ_free(k_thread_ਢੇਰ_t *ਢੇਰ)
 {
-	ARG_UNUSED(stack);
+	ARG_ਅਣਵਰਤਿਆ(ਢੇਰ);
 
-	return -ENOSYS;
+	ਵਾਪਸ -ENOSYS;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਪੂਰਨ z_vrfy_k_thread_ਢੇਰ_free(k_thread_ਢੇਰ_t *ਢੇਰ)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	ਵਾਪਸ z_impl_k_thread_ਢੇਰ_free(ਢੇਰ);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */

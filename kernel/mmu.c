@@ -6,27 +6,27 @@
  * Routines for managing virtual address spaces
  */
 
-#include <stdint.h>
-#include <kernel_arch_interface.h>
-#include <zephyr/spinlock.h>
-#include <mmu.h>
-#include <zephyr/init.h>
-#include <kernel_internal.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/bitarray.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/arch/common/init.h>
-#include <zephyr/logging/log.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <stdint.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel_arch_interface.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/spinlock.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <mmu.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel_internal.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/internal/syscall_handler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/toolchain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/linker/linker-defs.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/bitarray.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/check.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/math_extras.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/minmax.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/timing/timing.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/arch/common/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#ifdef CONFIG_DEMAND_PAGING
-#include <zephyr/kernel/mm/demand_paging.h>
-#endif /* CONFIG_DEMAND_PAGING */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel/mm/demand_paging.h>
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */
 
 /*
  * General terminology:
@@ -46,101 +46,101 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 /* Spinlock to protect any globals in this file and serialize page table
  * updates in arch code
  */
-struct k_spinlock z_mm_lock;
+ਬਣਤਰ k_spinlock z_mm_ਤਾਲਾ;
 
 /*
  * General page frame management
  */
 
 /* Database of all RAM page frames */
-struct k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
+ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ k_mem_ਪੰਨਾ_ਚੌਖਟੇ[K_MEM_ਅੰਕ_ਪੰਨਾ_ਚੌਖਟੇ];
 
-#ifdef CONFIG_ASSERT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ASSERT
 /* Indicator that k_mem_page_frames has been initialized, many of these APIs do
  * not work before POST_KERNEL
  */
-static bool page_frames_initialized;
-#endif /* CONFIG_ASSERT */
+ਸਥਿਰ bool ਪੰਨਾ_ਚੌਖਟੇ_initialized;
+#ਜੇ_ਅੰਤ /* CONFIG_ASSERT */
 
 /* Add colors to page table dumps to indicate mapping type */
-#define COLOR_PAGE_FRAMES	1
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ COLOR_ਪੰਨਾ_ਚੌਖਟੇ	1
 
-#if COLOR_PAGE_FRAMES
-#define ANSI_DEFAULT "\x1B" "[0m"
-#define ANSI_RED     "\x1B" "[1;31m"
-#define ANSI_GREEN   "\x1B" "[1;32m"
-#define ANSI_YELLOW  "\x1B" "[1;33m"
-#define ANSI_BLUE    "\x1B" "[1;34m"
-#define ANSI_MAGENTA "\x1B" "[1;35m"
-#define ANSI_CYAN    "\x1B" "[1;36m"
-#define ANSI_GREY    "\x1B" "[1;90m"
+#ਜੇ COLOR_ਪੰਨਾ_ਚੌਖਟੇ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_DEFAULT "\x1B" "[0m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_RED     "\x1B" "[1;31m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_GREEN   "\x1B" "[1;32m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_YELLOW  "\x1B" "[1;33m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_BLUE    "\x1B" "[1;34m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_MAGENTA "\x1B" "[1;35m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_CYAN    "\x1B" "[1;36m"
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ANSI_GREY    "\x1B" "[1;90m"
 
-#define COLOR(x)	printk(_CONCAT(ANSI_, x))
-#else
-#define COLOR(x)	do { } while (false)
-#endif /* COLOR_PAGE_FRAMES */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ COLOR(x)	printk(_CONCAT(ANSI_, x))
+#ਨਹੀਂਤਾਂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ COLOR(x)	ਕਰੋ { } ਜਦੋਂ (false)
+#ਜੇ_ਅੰਤ /* COLOR_PAGE_FRAMES */
 
 /* LCOV_EXCL_START */
-static void page_frame_dump(struct k_mem_page_frame *pf)
+ਸਥਿਰ ਖਾਲੀ ਪੰਨਾ_ਚੌਖਟਾ_dump(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf)
 {
-	if (k_mem_page_frame_is_free(pf)) {
+	ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_free(pf)) {
 		COLOR(GREY);
 		printk("-");
-	} else if (k_mem_page_frame_is_reserved(pf)) {
+	} ਨਹੀਂਤਾਂ ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_reserved(pf)) {
 		COLOR(CYAN);
 		printk("R");
-	} else if (k_mem_page_frame_is_busy(pf)) {
+	} ਨਹੀਂਤਾਂ ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_busy(pf)) {
 		COLOR(MAGENTA);
 		printk("B");
-	} else if (k_mem_page_frame_is_pinned(pf)) {
+	} ਨਹੀਂਤਾਂ ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf)) {
 		COLOR(YELLOW);
 		printk("P");
-	} else if (k_mem_page_frame_is_available(pf)) {
+	} ਨਹੀਂਤਾਂ ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_ਉਪਲਬਧ(pf)) {
 		COLOR(GREY);
 		printk(".");
-	} else if (k_mem_page_frame_is_mapped(pf)) {
+	} ਨਹੀਂਤਾਂ ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
 		COLOR(DEFAULT);
 		printk("M");
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		COLOR(RED);
 		printk("?");
 	}
 }
 
-void k_mem_page_frames_dump(void)
+ਖਾਲੀ k_mem_ਪੰਨਾ_ਚੌਖਟੇ_dump(ਖਾਲੀ)
 {
-	int column = 0;
+	ਪੂਰਨ ਕਾਲਮ = 0;
 
-	__ASSERT(page_frames_initialized, "%s called too early", __func__);
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "%s called too early", __func__);
 	printk("Physical memory from 0x%lx to 0x%lx\n",
-	       K_MEM_PHYS_RAM_START, K_MEM_PHYS_RAM_END);
+	       K_MEM_PHYS_RAM_ਸ਼ੁਰੂ, K_MEM_PHYS_RAM_ਸਿਰਾ);
 
-	for (int i = 0; i < K_MEM_NUM_PAGE_FRAMES; i++) {
-		struct k_mem_page_frame *pf = &k_mem_page_frames[i];
+	ਲਈ (ਪੂਰਨ i = 0; i < K_MEM_ਅੰਕ_ਪੰਨਾ_ਚੌਖਟੇ; i++) {
+		ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf = &k_mem_ਪੰਨਾ_ਚੌਖਟੇ[i];
 
-		page_frame_dump(pf);
+		ਪੰਨਾ_ਚੌਖਟਾ_dump(pf);
 
-		column++;
-		if (column == 64) {
-			column = 0;
+		ਕਾਲਮ++;
+		ਜੇ (ਕਾਲਮ == 64) {
+			ਕਾਲਮ = 0;
 			printk("\n");
 		}
 	}
 
 	COLOR(DEFAULT);
-	if (column != 0) {
+	ਜੇ (ਕਾਲਮ != 0) {
 		printk("\n");
 	}
 }
 /* LCOV_EXCL_STOP */
 
-#define VIRT_FOREACH(_base, _size, _pos) \
-	for ((_pos) = (_base); \
-	     (_pos) < ((uint8_t *)(_base) + (_size)); (_pos) += CONFIG_MMU_PAGE_SIZE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ VIRT_FOREACH(ਅਧਾਰ_2, ਮਾਪ_2, _pos) \
+	ਲਈ ((_pos) = (ਅਧਾਰ_2); \
+	     (_pos) < ((uint8_t *)(ਅਧਾਰ_2) + (ਮਾਪ_2)); (_pos) += CONFIG_MMU_ਪੰਨਾ_ਮਾਪ)
 
-#define PHYS_FOREACH(_base, _size, _pos) \
-	for ((_pos) = (_base); \
-	     (_pos) < ((uintptr_t)(_base) + (_size)); (_pos) += CONFIG_MMU_PAGE_SIZE)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PHYS_FOREACH(ਅਧਾਰ_2, ਮਾਪ_2, _pos) \
+	ਲਈ ((_pos) = (ਅਧਾਰ_2); \
+	     (_pos) < ((uintptr_t)(ਅਧਾਰ_2) + (ਮਾਪ_2)); (_pos) += CONFIG_MMU_ਪੰਨਾ_ਮਾਪ)
 
 
 /*
@@ -193,130 +193,130 @@ void k_mem_page_frames_dump(void)
  * done in reverse from highest address.
  */
 SYS_BITARRAY_DEFINE_STATIC(virt_region_bitmap,
-			   CONFIG_KERNEL_VM_SIZE / CONFIG_MMU_PAGE_SIZE);
+			   CONFIG_KERNEL_VM_ਮਾਪ / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 
-static bool virt_region_inited;
+ਸਥਿਰ bool virt_region_inited;
 
-#define Z_VIRT_REGION_START_ADDR	K_MEM_VM_FREE_START
-#define Z_VIRT_REGION_END_ADDR		(K_MEM_VIRT_RAM_END - K_MEM_VM_RESERVED)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR	K_MEM_VM_FREE_ਸ਼ੁਰੂ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ Z_VIRT_REGION_ਸਿਰਾ_ADDR		(K_MEM_VIRT_RAM_ਸਿਰਾ - K_MEM_VM_RESERVED)
 
-static inline uintptr_t virt_from_bitmap_offset(size_t offset, size_t size)
+ਸਥਿਰ ਸਤਰਅੰਦਰ uintptr_t virt_from_bitmap_ਵਿੱਥ(size_t ਵਿੱਥ, size_t ਮਾਪ)
 {
-	return POINTER_TO_UINT(K_MEM_VIRT_RAM_END)
-	       - (offset * CONFIG_MMU_PAGE_SIZE) - size;
+	ਵਾਪਸ ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(K_MEM_VIRT_RAM_ਸਿਰਾ)
+	       - (ਵਿੱਥ * CONFIG_MMU_ਪੰਨਾ_ਮਾਪ) - ਮਾਪ;
 }
 
-static inline size_t virt_to_bitmap_offset(void *vaddr, size_t size)
+ਸਥਿਰ ਸਤਰਅੰਦਰ size_t virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(ਖਾਲੀ *vaddr, size_t ਮਾਪ)
 {
-	return (POINTER_TO_UINT(K_MEM_VIRT_RAM_END)
-		- POINTER_TO_UINT(vaddr) - size) / CONFIG_MMU_PAGE_SIZE;
+	ਵਾਪਸ (ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(K_MEM_VIRT_RAM_ਸਿਰਾ)
+		- ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(vaddr) - ਮਾਪ) / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
 }
 
-static void virt_region_init(void)
+ਸਥਿਰ ਖਾਲੀ virt_region_init(ਖਾਲੀ)
 {
-	size_t offset, num_bits;
+	size_t ਵਿੱਥ, ਅੰਕ_ਬਿੱਟ;
 
 	/* There are regions where we should never map via
 	 * k_mem_map() and k_mem_map_phys_bare(). Mark them as
 	 * already allocated so they will never be used.
 	 */
 
-	if (K_MEM_VM_RESERVED > 0) {
+	ਜੇ (K_MEM_VM_RESERVED > 0) {
 		/* Mark reserved region at end of virtual address space */
-		num_bits = K_MEM_VM_RESERVED / CONFIG_MMU_PAGE_SIZE;
-		(void)sys_bitarray_set_region(&virt_region_bitmap,
-					      num_bits, 0);
+		ਅੰਕ_ਬਿੱਟ = K_MEM_VM_RESERVED / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+		(ਖਾਲੀ)sys_bitarray_ਸੈੱਟ_region(&virt_region_bitmap,
+					      ਅੰਕ_ਬਿੱਟ, 0);
 	}
 
 	/* Mark all bits up to Z_FREE_VM_START as allocated */
-	num_bits = POINTER_TO_UINT(K_MEM_VM_FREE_START)
-		   - POINTER_TO_UINT(K_MEM_VIRT_RAM_START);
-	offset = virt_to_bitmap_offset(K_MEM_VIRT_RAM_START, num_bits);
-	num_bits /= CONFIG_MMU_PAGE_SIZE;
-	(void)sys_bitarray_set_region(&virt_region_bitmap,
-				      num_bits, offset);
+	ਅੰਕ_ਬਿੱਟ = ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(K_MEM_VM_FREE_ਸ਼ੁਰੂ)
+		   - ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(K_MEM_VIRT_RAM_ਸ਼ੁਰੂ);
+	ਵਿੱਥ = virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(K_MEM_VIRT_RAM_ਸ਼ੁਰੂ, ਅੰਕ_ਬਿੱਟ);
+	ਅੰਕ_ਬਿੱਟ /= CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	(ਖਾਲੀ)sys_bitarray_ਸੈੱਟ_region(&virt_region_bitmap,
+				      ਅੰਕ_ਬਿੱਟ, ਵਿੱਥ);
 
 	virt_region_inited = true;
 }
 
-static void virt_region_free(void *vaddr, size_t size)
+ਸਥਿਰ ਖਾਲੀ virt_region_free(ਖਾਲੀ *vaddr, size_t ਮਾਪ)
 {
-	size_t offset, num_bits;
+	size_t ਵਿੱਥ, ਅੰਕ_ਬਿੱਟ;
 	uint8_t *vaddr_u8 = (uint8_t *)vaddr;
 
-	if (unlikely(!virt_region_inited)) {
+	ਜੇ (unlikely(!virt_region_inited)) {
 		virt_region_init();
 	}
 
-#ifndef CONFIG_KERNEL_DIRECT_MAP
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_ਸਿੱਧਾ_MAP
 	/* Without the need to support K_MEM_DIRECT_MAP, the region must be
 	 * able to be represented in the bitmap. So this case is
 	 * simple.
 	 */
 
-	__ASSERT((vaddr_u8 >= Z_VIRT_REGION_START_ADDR)
-		 && ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR),
-		 "invalid virtual address region %p (%zu)", vaddr_u8, size);
-	if (!((vaddr_u8 >= Z_VIRT_REGION_START_ADDR)
-	      && ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR))) {
-		return;
+	__ASSERT((vaddr_u8 >= Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR)
+		 && ((vaddr_u8 + ਮਾਪ - 1) < Z_VIRT_REGION_ਸਿਰਾ_ADDR),
+		 "invalid virtual address region %p (%zu)", vaddr_u8, ਮਾਪ);
+	ਜੇ (!((vaddr_u8 >= Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR)
+	      && ((vaddr_u8 + ਮਾਪ - 1) < Z_VIRT_REGION_ਸਿਰਾ_ADDR))) {
+		ਵਾਪਸ;
 	}
 
-	offset = virt_to_bitmap_offset(vaddr, size);
-	num_bits = size / CONFIG_MMU_PAGE_SIZE;
-	(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
-#else /* !CONFIG_KERNEL_DIRECT_MAP */
+	ਵਿੱਥ = virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(vaddr, ਮਾਪ);
+	ਅੰਕ_ਬਿੱਟ = ਮਾਪ / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	(ਖਾਲੀ)sys_bitarray_free(&virt_region_bitmap, ਅੰਕ_ਬਿੱਟ, ਵਿੱਥ);
+#ਨਹੀਂਤਾਂ /* !CONFIG_KERNEL_DIRECT_MAP */
 	/* With K_MEM_DIRECT_MAP, the region can be outside of the virtual
 	 * memory space, wholly within it, or overlap partially.
 	 * So additional processing is needed to make sure we only
 	 * mark the pages within the bitmap.
 	 */
-	if (((vaddr_u8 >= Z_VIRT_REGION_START_ADDR) &&
-	     (vaddr_u8 < Z_VIRT_REGION_END_ADDR)) ||
-	    (((vaddr_u8 + size - 1) >= Z_VIRT_REGION_START_ADDR) &&
-	     ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR))) {
-		uint8_t *adjusted_start = max(vaddr_u8, Z_VIRT_REGION_START_ADDR);
-		uint8_t *adjusted_end = min(vaddr_u8 + size,
-					    Z_VIRT_REGION_END_ADDR);
-		size_t adjusted_sz = adjusted_end - adjusted_start;
+	ਜੇ (((vaddr_u8 >= Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR) &&
+	     (vaddr_u8 < Z_VIRT_REGION_ਸਿਰਾ_ADDR)) ||
+	    (((vaddr_u8 + ਮਾਪ - 1) >= Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR) &&
+	     ((vaddr_u8 + ਮਾਪ - 1) < Z_VIRT_REGION_ਸਿਰਾ_ADDR))) {
+		uint8_t *adjusted_ਸ਼ੁਰੂ = max(vaddr_u8, Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR);
+		uint8_t *adjusted_ਸਿਰਾ = min(vaddr_u8 + ਮਾਪ,
+					    Z_VIRT_REGION_ਸਿਰਾ_ADDR);
+		size_t adjusted_sz = adjusted_ਸਿਰਾ - adjusted_ਸ਼ੁਰੂ;
 
-		offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
-		num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
+		ਵਿੱਥ = virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(adjusted_ਸ਼ੁਰੂ, adjusted_sz);
+		ਅੰਕ_ਬਿੱਟ = adjusted_sz / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+		(ਖਾਲੀ)sys_bitarray_free(&virt_region_bitmap, ਅੰਕ_ਬਿੱਟ, ਵਿੱਥ);
 	}
-#endif /* !CONFIG_KERNEL_DIRECT_MAP */
+#ਜੇ_ਅੰਤ /* !CONFIG_KERNEL_DIRECT_MAP */
 }
 
-static void *virt_region_alloc(size_t size, size_t align)
+ਸਥਿਰ ਖਾਲੀ *virt_region_alloc(size_t ਮਾਪ, size_t align)
 {
 	uintptr_t dest_addr;
-	size_t alloc_size;
-	size_t offset;
-	size_t num_bits;
-	int ret;
+	size_t alloc_ਮਾਪ;
+	size_t ਵਿੱਥ;
+	size_t ਅੰਕ_ਬਿੱਟ;
+	ਪੂਰਨ ret;
 
-	if (unlikely(!virt_region_inited)) {
+	ਜੇ (unlikely(!virt_region_inited)) {
 		virt_region_init();
 	}
 
 	/* Possibly request more pages to ensure we can get an aligned virtual address */
-	num_bits = (size + align - CONFIG_MMU_PAGE_SIZE) / CONFIG_MMU_PAGE_SIZE;
-	alloc_size = num_bits * CONFIG_MMU_PAGE_SIZE;
-	ret = sys_bitarray_alloc(&virt_region_bitmap, num_bits, &offset);
-	if (ret != 0) {
+	ਅੰਕ_ਬਿੱਟ = (ਮਾਪ + align - CONFIG_MMU_ਪੰਨਾ_ਮਾਪ) / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	alloc_ਮਾਪ = ਅੰਕ_ਬਿੱਟ * CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	ret = sys_bitarray_alloc(&virt_region_bitmap, ਅੰਕ_ਬਿੱਟ, &ਵਿੱਥ);
+	ਜੇ (ret != 0) {
 		LOG_ERR("insufficient virtual address space (requested %zu)",
-			size);
-		return NULL;
+			ਮਾਪ);
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
 	/* Remember that bit #0 in bitmap corresponds to the highest
 	 * virtual address. So here we need to go downwards (backwards?)
 	 * to get the starting address of the allocated region.
 	 */
-	dest_addr = virt_from_bitmap_offset(offset, alloc_size);
+	dest_addr = virt_from_bitmap_ਵਿੱਥ(ਵਿੱਥ, alloc_ਮਾਪ);
 
-	if (alloc_size > size) {
-		uintptr_t aligned_dest_addr = ROUND_UP(dest_addr, align);
+	ਜੇ (alloc_ਮਾਪ > ਮਾਪ) {
+		uintptr_t aligned_dest_addr = ਗੇੜਾ_ਉੱਪਰ(dest_addr, align);
 
 		/* Here is the memory organization when trying to get an aligned
 		 * virtual address:
@@ -350,23 +350,23 @@ static void *virt_region_alloc(size_t size, size_t align)
 		 */
 
 		/* Free the two unused regions */
-		virt_region_free(UINT_TO_POINTER(dest_addr),
+		virt_region_free(UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(dest_addr),
 				 aligned_dest_addr - dest_addr);
-		if (((dest_addr + alloc_size) - (aligned_dest_addr + size)) > 0) {
-			virt_region_free(UINT_TO_POINTER(aligned_dest_addr + size),
-					 (dest_addr + alloc_size) - (aligned_dest_addr + size));
+		ਜੇ (((dest_addr + alloc_ਮਾਪ) - (aligned_dest_addr + ਮਾਪ)) > 0) {
+			virt_region_free(UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(aligned_dest_addr + ਮਾਪ),
+					 (dest_addr + alloc_ਮਾਪ) - (aligned_dest_addr + ਮਾਪ));
 		}
 
 		dest_addr = aligned_dest_addr;
 	}
 
 	/* Need to make sure this does not step into kernel memory */
-	if (dest_addr < POINTER_TO_UINT(Z_VIRT_REGION_START_ADDR)) {
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
-		return NULL;
+	ਜੇ (dest_addr < ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(Z_VIRT_REGION_ਸ਼ੁਰੂ_ADDR)) {
+		(ਖਾਲੀ)sys_bitarray_free(&virt_region_bitmap, ਅੰਕ_ਬਿੱਟ, ਵਿੱਥ);
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
-	return UINT_TO_POINTER(dest_addr);
+	ਵਾਪਸ UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(dest_addr);
 }
 
 /*
@@ -386,57 +386,57 @@ static void *virt_region_alloc(size_t size, size_t align)
  * This implies in the future there may be multiple slists managing physical
  * pages. Each page frame will still just have one snode link.
  */
-BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "MMU free-page list needs one sflist flag bit");
+BUILD_ASSERT(SYS_SFLIST_FLAG_ਬਿੱਟ >= 1, "MMU free-page list needs one sflist flag bit");
 
-static sys_sflist_t free_page_frame_list;
+ਸਥਿਰ sys_sflist_t free_ਪੰਨਾ_ਚੌਖਟਾ_list;
 
 /* Number of unused and available free page frames.
  * This information may go stale immediately.
  */
-static size_t z_free_page_count;
+ਸਥਿਰ size_t z_free_ਪੰਨਾ_ਗਿਣਤੀ;
 
-#define PF_ASSERT(pf, expr, fmt, ...) \
-	__ASSERT(expr, "page frame 0x%lx: " fmt, k_mem_page_frame_to_phys(pf), \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ PF_ASSERT(pf, ਵਿਅੰਜਕ, fmt, ...) \
+	__ASSERT(ਵਿਅੰਜਕ, "page frame 0x%lx: " fmt, k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf), \
 		 ##__VA_ARGS__)
 
 /* Get an unused page frame. don't care which one, or NULL if there are none */
-static struct k_mem_page_frame *free_page_frame_list_get(void)
+ਸਥਿਰ ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *free_ਪੰਨਾ_ਚੌਖਟਾ_list_get(ਖਾਲੀ)
 {
-	sys_sfnode_t *node;
-	struct k_mem_page_frame *pf = NULL;
+	sys_sfnode_t *ਗੰਢ;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf = ਨਿਰਾ;
 
-	node = sys_sflist_get(&free_page_frame_list);
-	if (node != NULL) {
-		z_free_page_count--;
-		pf = CONTAINER_OF(node, struct k_mem_page_frame, node);
-		PF_ASSERT(pf, k_mem_page_frame_is_free(pf),
+	ਗੰਢ = sys_sflist_get(&free_ਪੰਨਾ_ਚੌਖਟਾ_list);
+	ਜੇ (ਗੰਢ != ਨਿਰਾ) {
+		z_free_ਪੰਨਾ_ਗਿਣਤੀ--;
+		pf = CONTAINER_ਦਾ(ਗੰਢ, ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ, ਗੰਢ);
+		PF_ASSERT(pf, k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_free(pf),
 			 "on free list but not free");
 		pf->va_and_flags = 0;
 	}
 
-	return pf;
+	ਵਾਪਸ pf;
 }
 
 /* Release a page frame back into the list of free pages */
-static void free_page_frame_list_put(struct k_mem_page_frame *pf)
+ਸਥਿਰ ਖਾਲੀ free_ਪੰਨਾ_ਚੌਖਟਾ_list_put(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf)
 {
-	PF_ASSERT(pf, k_mem_page_frame_is_available(pf),
+	PF_ASSERT(pf, k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_ਉਪਲਬਧ(pf),
 		 "unavailable page put on free list");
 
-	sys_sfnode_init(&pf->node, K_MEM_PAGE_FRAME_FREE);
-	sys_sflist_append(&free_page_frame_list, &pf->node);
-	z_free_page_count++;
+	sys_sfnode_init(&pf->ਗੰਢ, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_FREE);
+	sys_sflist_append(&free_ਪੰਨਾ_ਚੌਖਟਾ_list, &pf->ਗੰਢ);
+	z_free_ਪੰਨਾ_ਗਿਣਤੀ++;
 }
 
-static void free_page_frame_list_init(void)
+ਸਥਿਰ ਖਾਲੀ free_ਪੰਨਾ_ਚੌਖਟਾ_list_init(ਖਾਲੀ)
 {
-	sys_sflist_init(&free_page_frame_list);
+	sys_sflist_init(&free_ਪੰਨਾ_ਚੌਖਟਾ_list);
 }
 
-static void page_frame_free_locked(struct k_mem_page_frame *pf)
+ਸਥਿਰ ਖਾਲੀ ਪੰਨਾ_ਚੌਖਟਾ_free_locked(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf)
 {
 	pf->va_and_flags = 0;
-	free_page_frame_list_put(pf);
+	free_ਪੰਨਾ_ਚੌਖਟਾ_list_put(pf);
 }
 
 /*
@@ -446,11 +446,11 @@ static void page_frame_free_locked(struct k_mem_page_frame *pf)
 /* Called after the frame is mapped in the arch layer, to update our
  * local ontology (and do some assertions while we're at it)
  */
-static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
+ਸਥਿਰ ਖਾਲੀ ਚੌਖਟਾ_mapped_ਸੈੱਟ(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf, ਖਾਲੀ *addr)
 {
-	PF_ASSERT(pf, !k_mem_page_frame_is_free(pf),
+	PF_ASSERT(pf, !k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_free(pf),
 		  "attempted to map a page frame on the free list");
-	PF_ASSERT(pf, !k_mem_page_frame_is_reserved(pf),
+	PF_ASSERT(pf, !k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_reserved(pf),
 		  "attempted to map a reserved page frame");
 
 	/* We do allow multiple mappings for pinned page frames
@@ -458,15 +458,15 @@ static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
 	 * This is uncommon, use-cases are for things like the
 	 * Zephyr equivalent of VSDOs
 	 */
-	PF_ASSERT(pf, !k_mem_page_frame_is_mapped(pf) || k_mem_page_frame_is_pinned(pf),
+	PF_ASSERT(pf, !k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf) || k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf),
 		 "non-pinned and already mapped to %p",
-		 k_mem_page_frame_to_virt(pf));
+		 k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf));
 
-	uintptr_t flags_mask = CONFIG_MMU_PAGE_SIZE - 1;
-	uintptr_t va = (uintptr_t)addr & ~flags_mask;
+	uintptr_t flags_ਨਕਾਬ = CONFIG_MMU_ਪੰਨਾ_ਮਾਪ - 1;
+	uintptr_t va = (uintptr_t)addr & ~flags_ਨਕਾਬ;
 
-	pf->va_and_flags &= flags_mask;
-	pf->va_and_flags |= va | K_MEM_PAGE_FRAME_MAPPED;
+	pf->va_and_flags &= flags_ਨਕਾਬ;
+	pf->va_and_flags |= va | K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_MAPPED;
 }
 
 /* LCOV_EXCL_START */
@@ -480,37 +480,37 @@ static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
  * @retval 0 if mapping is found and valid
  * @retval -EFAULT if virtual address is not mapped
  */
-static int virt_to_page_frame(void *virt, uintptr_t *phys)
+ਸਥਿਰ ਪੂਰਨ virt_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(ਖਾਲੀ *virt, uintptr_t *phys)
 {
 	uintptr_t paddr;
-	struct k_mem_page_frame *pf;
-	int ret = -EFAULT;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
+	ਪੂਰਨ ret = -EFAULT;
 
-	K_MEM_PAGE_FRAME_FOREACH(paddr, pf) {
-		if (k_mem_page_frame_is_mapped(pf)) {
-			if (virt == k_mem_page_frame_to_virt(pf)) {
+	K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_FOREACH(paddr, pf) {
+		ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
+			ਜੇ (virt == k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf)) {
 				ret = 0;
-				if (phys != NULL) {
-					*phys = k_mem_page_frame_to_phys(pf);
+				ਜੇ (phys != ਨਿਰਾ) {
+					*phys = k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf);
 				}
-				break;
+				ਰੋਕੋ;
 			}
 		}
 	}
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 /* LCOV_EXCL_STOP */
 
-__weak FUNC_ALIAS(virt_to_page_frame, arch_page_phys_get, int);
+__weak FUNC_ALIAS(virt_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ, arch_ਪੰਨਾ_phys_get, ਪੂਰਨ);
 
-#ifdef CONFIG_DEMAND_PAGING
-static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_ptr,
-				     bool page_in, uintptr_t *location_ptr);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+ਸਥਿਰ ਪੂਰਨ ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf, bool *dirty_ptr,
+				     bool ਪੰਨਾ_ਵਿੱਚ, uintptr_t *location_ptr);
 
-static inline void do_backing_store_page_in(uintptr_t location);
-static inline void do_backing_store_page_out(uintptr_t location);
-#endif /* CONFIG_DEMAND_PAGING */
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ do_backing_store_ਪੰਨਾ_ਵਿੱਚ(uintptr_t location);
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(uintptr_t location);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */
 
 /* Allocate a free page frame, and map it to a specified virtual address
  *
@@ -530,85 +530,85 @@ static inline void do_backing_store_page_out(uintptr_t location);
  * @retval 0 On success
  * @retval -errno On failure
  */
-static int map_anon_page(void *addr, uint32_t flags, bool *recovered)
+ਸਥਿਰ ਪੂਰਨ map_anon_ਪੰਨਾ(ਖਾਲੀ *addr, uint32_t flags, bool *recovered)
 {
-	struct k_mem_page_frame *pf;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
 	uintptr_t phys;
-	bool lock = (flags & K_MEM_MAP_LOCK) != 0U;
-	int ret;
+	bool ਤਾਲਾ = (flags & K_MEM_MAP_ਤਾਲਾ) != 0U;
+	ਪੂਰਨ ret;
 
 	*recovered = true;
 
-	pf = free_page_frame_list_get();
-	if (pf == NULL) {
-#ifdef CONFIG_DEMAND_PAGING
+	pf = free_ਪੰਨਾ_ਚੌਖਟਾ_list_get();
+	ਜੇ (pf == ਨਿਰਾ) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
 		uintptr_t location;
 		bool dirty;
 
 		pf = k_mem_paging_eviction_select(&dirty);
-		if (pf == NULL) {
+		ਜੇ (pf == ਨਿਰਾ) {
 			/* Every evictable page frame is pinned or busy */
-			return -ENOMEM;
+			ਵਾਪਸ -ENOMEM;
 		}
 		LOG_DBG("evicting %p at 0x%lx",
-			k_mem_page_frame_to_virt(pf),
-			k_mem_page_frame_to_phys(pf));
-		ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-		if (ret != 0) {
-			return -ENOMEM;
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf),
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf));
+		ret = ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(pf, &dirty, false, &location);
+		ਜੇ (ret != 0) {
+			ਵਾਪਸ -ENOMEM;
 		}
-		if (dirty) {
-			do_backing_store_page_out(location);
+		ਜੇ (dirty) {
+			do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(location);
 		}
 		pf->va_and_flags = 0;
-#else
-		return -ENOMEM;
-#endif /* CONFIG_DEMAND_PAGING */
+#ਨਹੀਂਤਾਂ
+		ਵਾਪਸ -ENOMEM;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */
 	}
 
-	phys = k_mem_page_frame_to_phys(pf);
-	ret = arch_mem_map(addr, phys, CONFIG_MMU_PAGE_SIZE, flags);
+	phys = k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf);
+	ret = arch_mem_map(addr, phys, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-	if (ret != 0) {
-#ifdef CONFIG_USERSPACE
+	ਜੇ (ret != 0) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
 		/* The mapping above may have already succeeded in some
 		 * memory domains but failing in the middle. So we need to
 		 * unmap those first before returning the page frame back
 		 * to the list.
 		 */
-		int unmap_ret = arch_mem_unmap(addr, CONFIG_MMU_PAGE_SIZE);
+		ਪੂਰਨ unmap_ret = arch_mem_unmap(addr, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 
 		__ASSERT(unmap_ret == 0, "%s: cannot undo failed mapping %d\n", __func__,
 			 unmap_ret);
 
-		if (unmap_ret != 0) {
+		ਜੇ (unmap_ret != 0) {
 			/* The page may still be mapped in some memory domains,
 			 * so the page frame cannot be given back to the free
 			 * list for reuse.
 			 */
 			*recovered = false;
-			return ret;
+			ਵਾਪਸ ret;
 		}
-#endif
+#ਜੇ_ਅੰਤ
 
 		/* Mapping failed: give the page frame back before bailing out. */
-		page_frame_free_locked(pf);
-		return ret;
+		ਪੰਨਾ_ਚੌਖਟਾ_free_locked(pf);
+		ਵਾਪਸ ret;
 	}
 
-	if (lock) {
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+	ਜੇ (ਤਾਲਾ) {
+		k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
 	}
-	frame_mapped_set(pf, addr);
-#ifdef CONFIG_DEMAND_PAGING
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!lock)) {
-		k_mem_paging_eviction_add(pf);
+	ਚੌਖਟਾ_mapped_ਸੈੱਟ(pf, addr);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+	ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!ਤਾਲਾ)) {
+		k_mem_paging_eviction_ਜੋੜੋ(pf);
 	}
-#endif
+#ਜੇ_ਅੰਤ
 
 	LOG_DBG("memory mapping anon page %p -> 0x%lx", addr, phys);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
 /**
@@ -624,38 +624,38 @@ static int map_anon_page(void *addr, uint32_t flags, bool *recovered)
  * @retval 0 On success
  * @retval -errno On failure
  */
-static int unmap_anon_pages(void *virt, size_t sz)
+ਸਥਿਰ ਪੂਰਨ unmap_anon_ਪੰਨੇ(ਖਾਲੀ *virt, size_t sz)
 {
 	uint8_t *pos;
 	uintptr_t phys;
-	struct k_mem_page_frame *pf;
-	int ret = 0;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
+	ਪੂਰਨ ret = 0;
 
 	VIRT_FOREACH(virt, sz, pos) {
-#ifdef CONFIG_DEMAND_PAGING
-		enum arch_page_location status;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+		ਗਿਣਤੀ arch_ਪੰਨਾ_location ਸਥਿਤੀ;
 		uintptr_t location;
 
-		status = arch_page_location_get(pos, &location);
-		switch (status) {
-		case ARCH_PAGE_LOCATION_PAGED_OUT:
+		ਸਥਿਤੀ = arch_ਪੰਨਾ_location_get(pos, &location);
+		ਚੋਣ (ਸਥਿਤੀ) {
+		ਹਾਲਤ ARCH_ਪੰਨਾ_LOCATION_PAGED_ਬਾਹਰਲਾ:
 			/*
 			 * No pf is associated with this mapping.
 			 * Simply get rid of the MMU entry and free
 			 * corresponding backing store.
 			 */
-			ret = arch_mem_unmap(pos, CONFIG_MMU_PAGE_SIZE);
+			ret = arch_mem_unmap(pos, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 			__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__,
 				 ret);
 
 			k_mem_paging_backing_store_location_free(location);
 
-			if (ret != 0) {
-				goto unmap_anon_out;
+			ਜੇ (ret != 0) {
+				ਜਾਓ unmap_anon_ਬਾਹਰਲਾ;
 			}
 
-			continue;
-		case ARCH_PAGE_LOCATION_PAGED_IN:
+			ਜਾਰੀ;
+		ਹਾਲਤ ARCH_ਪੰਨਾ_LOCATION_PAGED_ਵਿੱਚ:
 			/*
 			 * The page is in memory but it may not be
 			 * accessible in order to manage tracking
@@ -665,67 +665,67 @@ static int unmap_anon_pages(void *virt, size_t sz)
 			 */
 			phys = location;
 			ret = 0;
-			break;
-		default:
-			ret = arch_page_phys_get(pos, &phys);
-			break;
+			ਰੋਕੋ;
+		ਮੂਲ:
+			ret = arch_ਪੰਨਾ_phys_get(pos, &phys);
+			ਰੋਕੋ;
 		}
-#else
-		ret = arch_page_phys_get(pos, &phys);
-#endif
+#ਨਹੀਂਤਾਂ
+		ret = arch_ਪੰਨਾ_phys_get(pos, &phys);
+#ਜੇ_ਅੰਤ
 		__ASSERT(ret == 0, "%s: cannot unmap an unmapped address %p", __func__, pos);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			/* Found an address not mapped. Do not continue. */
-			goto unmap_anon_out;
+			ਜਾਓ unmap_anon_ਬਾਹਰਲਾ;
 		}
 
-		__ASSERT(k_mem_is_page_frame(phys), "%s: 0x%lx is not a page frame", __func__,
+		__ASSERT(k_mem_is_ਪੰਨਾ_ਚੌਖਟਾ(phys), "%s: 0x%lx is not a page frame", __func__,
 			 phys);
-		if (!k_mem_is_page_frame(phys)) {
+		ਜੇ (!k_mem_is_ਪੰਨਾ_ਚੌਖਟਾ(phys)) {
 			/* Physical address has no corresponding page frame
 			 * description in the page frame array.
 			 * This should not happen. Do not continue.
 			 */
-			goto unmap_anon_out;
+			ਜਾਓ unmap_anon_ਬਾਹਰਲਾ;
 		}
 
 		/* Grab the corresponding page frame from physical address */
-		pf = k_mem_phys_to_page_frame(phys);
+		pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(phys);
 
-		__ASSERT(k_mem_page_frame_is_mapped(pf), "%s: 0x%lx is not a mapped page frame",
+		__ASSERT(k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf), "%s: 0x%lx is not a mapped page frame",
 			 __func__, phys);
-		if (!k_mem_page_frame_is_mapped(pf)) {
+		ਜੇ (!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
 			/* Page frame is not marked mapped.
 			 * This should not happen. Do not continue.
 			 */
-			goto unmap_anon_out;
+			ਜਾਓ unmap_anon_ਬਾਹਰਲਾ;
 		}
 
-		ret = arch_mem_unmap(pos, CONFIG_MMU_PAGE_SIZE);
+		ret = arch_mem_unmap(pos, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 		__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as the page is still mapped.
 			 */
-			goto unmap_anon_out;
+			ਜਾਓ unmap_anon_ਬਾਹਰਲਾ;
 		}
 
-#ifdef CONFIG_DEMAND_PAGING
-		if (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
-		    (!k_mem_page_frame_is_pinned(pf))) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+		ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
+		    (!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf))) {
 			k_mem_paging_eviction_remove(pf);
 		}
-#endif
+#ਜੇ_ਅੰਤ
 
 		/* Put the page frame back into free list */
-		page_frame_free_locked(pf);
+		ਪੰਨਾ_ਚੌਖਟਾ_free_locked(pf);
 	}
 
-unmap_anon_out:
-	return ret;
+unmap_anon_ਬਾਹਰਲਾ:
+	ਵਾਪਸ ret;
 }
 
-#ifdef CONFIG_DEMAND_MAPPING
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_MAPPING
 /**
  * Undo demand mapped pages previously established by map_anon_page().
  *
@@ -739,74 +739,74 @@ unmap_anon_out:
  * @retval true When able to unmap all pages.
  * @retval false When fails to unmap some pages.
  */
-static bool undo_demand_mapped_pages(void *virt, size_t sz)
+ਸਥਿਰ bool undo_demand_mapped_ਪੰਨੇ(ਖਾਲੀ *virt, size_t sz)
 {
 	uint8_t *undo_pos;
 	bool success = true;
-	int ret;
+	ਪੂਰਨ ret;
 
 	/* Undo the pages mapped before the failure. */
 	VIRT_FOREACH(virt, sz, undo_pos) {
-		ret = arch_mem_unmap(undo_pos, CONFIG_MMU_PAGE_SIZE);
+		ret = arch_mem_unmap(undo_pos, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 		__ASSERT(ret == 0, "%s: cannot undo mapped pages %d", __func__, ret);
 
 		/* Failed to undo one mapped page. Though we still
 		 * want to continue unmapping the remaining mapped
 		 * pages to reclaim them.
 		 */
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			success = false;
 		}
 	}
 
-	return success;
+	ਵਾਪਸ success;
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_anon)
+ਖਾਲੀ *k_mem_map_phys_guard(uintptr_t phys, size_t ਮਾਪ, uint32_t flags, bool is_anon)
 {
 	uint8_t *dst;
 	uint8_t *region;
-	size_t total_size;
-	int ret;
-	k_spinlock_key_t key;
+	size_t ਕੁੱਲ_ਮਾਪ;
+	ਪੂਰਨ ret;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 	uint8_t *pos;
 	bool uninit = (flags & K_MEM_MAP_UNINIT) != 0U;
 
-	__ASSERT(!is_anon || (is_anon && page_frames_initialized),
+	__ASSERT(!is_anon || (is_anon && ਪੰਨਾ_ਚੌਖਟੇ_initialized),
 		 "%s called too early", __func__);
-	__ASSERT((flags & K_MEM_CACHE_MASK) == 0U,
+	__ASSERT((flags & K_MEM_CACHE_ਨਕਾਬ) == 0U,
 		 "%s does not support explicit cache settings", __func__);
 
-	if (((flags & K_MEM_PERM_USER) != 0U) &&
+	ਜੇ (((flags & K_MEM_PERM_USER) != 0U) &&
 	    ((flags & K_MEM_MAP_UNINIT) != 0U)) {
 		LOG_ERR("user access to anonymous uninitialized pages is forbidden");
-		return NULL;
+		ਵਾਪਸ ਨਿਰਾ;
 	}
-	if ((size % CONFIG_MMU_PAGE_SIZE) != 0U) {
-		LOG_ERR("unaligned size %zu passed to %s", size, __func__);
-		return NULL;
+	ਜੇ ((ਮਾਪ % CONFIG_MMU_ਪੰਨਾ_ਮਾਪ) != 0U) {
+		LOG_ERR("unaligned size %zu passed to %s", ਮਾਪ, __func__);
+		ਵਾਪਸ ਨਿਰਾ;
 	}
-	if (size == 0) {
+	ਜੇ (ਮਾਪ == 0) {
 		LOG_ERR("zero sized memory mapping");
-		return NULL;
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
 	/* Need extra for the guard pages (before and after) which we
 	 * won't map.
 	 */
-	if (size_add_overflow(size, CONFIG_MMU_PAGE_SIZE * 2, &total_size)) {
-		LOG_ERR("too large size %zu passed to %s", size, __func__);
-		return NULL;
+	ਜੇ (ਮਾਪ_ਜੋੜੋ_ਉਛਾਲ(ਮਾਪ, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ * 2, &ਕੁੱਲ_ਮਾਪ)) {
+		LOG_ERR("too large size %zu passed to %s", ਮਾਪ, __func__);
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
-	region = virt_region_alloc(total_size, CONFIG_MMU_PAGE_SIZE);
-	if (region == NULL) {
+	region = virt_region_alloc(ਕੁੱਲ_ਮਾਪ, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
+	ਜੇ (region == ਨਿਰਾ) {
 		/* Address space has no free region */
-		dst = NULL;
-		goto out;
+		dst = ਨਿਰਾ;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
 	/* Unmap both guard pages to make sure accessing them
@@ -816,39 +816,39 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 	 * some memory domains, so the virtual region cannot be freed for
 	 * reuse.
 	 */
-	ret = arch_mem_unmap(region, CONFIG_MMU_PAGE_SIZE);
+	ret = arch_mem_unmap(region, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
-		dst = NULL;
-		goto out;
+	ਜੇ (ret != 0) {
+		dst = ਨਿਰਾ;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	ret = arch_mem_unmap(region + CONFIG_MMU_PAGE_SIZE + size, CONFIG_MMU_PAGE_SIZE);
+	ret = arch_mem_unmap(region + CONFIG_MMU_ਪੰਨਾ_ਮਾਪ + ਮਾਪ, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
-		dst = NULL;
-		goto out;
+	ਜੇ (ret != 0) {
+		dst = ਨਿਰਾ;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
 	/* Skip over the "before" guard page in returned address. */
-	dst = region + CONFIG_MMU_PAGE_SIZE;
+	dst = region + CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
 
-	if (is_anon) {
+	ਜੇ (is_anon) {
 		/* Mapping from anonymous memory */
 		flags |= K_MEM_CACHE_WB;
-#ifdef CONFIG_DEMAND_MAPPING
-		if ((flags & K_MEM_MAP_LOCK) == 0) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_MAPPING
+		ਜੇ ((flags & K_MEM_MAP_ਤਾਲਾ) == 0) {
 			flags |= K_MEM_MAP_UNPAGED;
-			VIRT_FOREACH(dst, size, pos) {
+			VIRT_FOREACH(dst, ਮਾਪ, pos) {
 				ret = arch_mem_map(pos,
 						   uninit ? ARCH_UNPAGED_ANON_UNINIT
 							  : ARCH_UNPAGED_ANON_ZERO,
-						   CONFIG_MMU_PAGE_SIZE, flags);
+						   CONFIG_MMU_ਪੰਨਾ_ਮਾਪ, flags);
 				__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-				if (ret != 0) {
+				ਜੇ (ret != 0) {
 					size_t unmap_sz = pos - dst;
 
-					if (IS_ENABLED(CONFIG_USERSPACE)) {
+					ਜੇ (IS_ENABLED(CONFIG_USERSPACE)) {
 						/* Note that it is unmapping an extra page due to
 						 * the possibility that the mapping above has
 						 * already updated some memory domains but fail in
@@ -856,145 +856,145 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 						 * page to unmap those that have been mapped so
 						 * far.
 						 */
-						unmap_sz += CONFIG_MMU_PAGE_SIZE;
+						unmap_sz += CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
 					}
 
-					bool success = undo_demand_mapped_pages(dst, unmap_sz);
+					bool success = undo_demand_mapped_ਪੰਨੇ(dst, unmap_sz);
 
-					dst = NULL;
+					dst = ਨਿਰਾ;
 
-					if (success) {
-						goto fail;
-					} else {
+					ਜੇ (success) {
+						ਜਾਓ fail;
+					} ਨਹੀਂਤਾਂ {
 						/* Cannot fully recover from mapping
 						 * failure. We cannot free the allocated
 						 * virtual memory region since some of
 						 * the page may still be mapped.
 						 */
-						goto out;
+						ਜਾਓ ਬਾਹਰਲਾ;
 					}
 				}
 			}
 			LOG_DBG("memory mapping anon pages %p to %p unpaged", dst, pos-1);
 			/* skip the memset() below */
 			uninit = true;
-		} else
-#endif
+		} ਨਹੀਂਤਾਂ
+#ਜੇ_ਅੰਤ
 		{
-			VIRT_FOREACH(dst, size, pos) {
+			VIRT_FOREACH(dst, ਮਾਪ, pos) {
 				bool recovered;
 
-				ret = map_anon_page(pos, flags, &recovered);
+				ret = map_anon_ਪੰਨਾ(pos, flags, &recovered);
 
-				if (ret != 0) {
-					int unmap_ret = unmap_anon_pages(dst, pos - dst);
+				ਜੇ (ret != 0) {
+					ਪੂਰਨ unmap_ret = unmap_anon_ਪੰਨੇ(dst, pos - dst);
 
-					dst = NULL;
+					dst = ਨਿਰਾ;
 
-					if ((unmap_ret == 0) && recovered) {
-						goto fail;
-					} else {
+					ਜੇ ((unmap_ret == 0) && recovered) {
+						ਜਾਓ fail;
+					} ਨਹੀਂਤਾਂ {
 						/* Cannot fully recover from mapping
 						 * failure. We cannot free the allocated
 						 * virtual memory region since some of
 						 * the page may still be mapped.
 						 */
-						goto out;
+						ਜਾਓ ਬਾਹਰਲਾ;
 					}
 				}
 			}
 		}
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		/* Mapping known physical memory. */
-		ret = arch_mem_map(dst, phys, size, flags);
+		ret = arch_mem_map(dst, phys, ਮਾਪ, flags);
 		__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			/* Clean up any partial mapping left behind. */
-			ret = arch_mem_unmap(dst, size);
+			ret = arch_mem_unmap(dst, ਮਾਪ);
 			__ASSERT(ret == 0, "%s: cannot undo mapped pages %d", __func__, ret);
 
-			dst = NULL;
+			dst = ਨਿਰਾ;
 
-			if (ret != 0) {
+			ਜੇ (ret != 0) {
 				/* Cannot fully undo all the mappings. There might still be pages
 				 * mapped. So we cannot free the allocated virtual memory region.
 				 */
-				goto out;
-			} else {
-				goto fail;
+				ਜਾਓ ਬਾਹਰਲਾ;
+			} ਨਹੀਂਤਾਂ {
+				ਜਾਓ fail;
 			}
 		}
 	}
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 
-	if (dst != NULL && !uninit) {
+	ਜੇ (dst != ਨਿਰਾ && !uninit) {
 		/* If we later implement mappings to a copy-on-write
 		 * zero page, won't need this step
 		 */
-		memset(dst, 0, size);
+		memset(dst, 0, ਮਾਪ);
 	}
 
-	return dst;
+	ਵਾਪਸ dst;
 
 fail:
 	/* Release the whole region, including the guard pages. */
-	virt_region_free(region, total_size);
+	virt_region_free(region, ਕੁੱਲ_ਮਾਪ);
 
-	goto out;
+	ਜਾਓ ਬਾਹਰਲਾ;
 }
 
-void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
+ਖਾਲੀ k_mem_unmap_phys_guard(ਖਾਲੀ *addr, size_t ਮਾਪ, bool is_anon)
 {
 	uint8_t *pos;
-	k_spinlock_key_t key;
-	size_t total_size;
-	int ret;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	size_t ਕੁੱਲ_ਮਾਪ;
+	ਪੂਰਨ ret;
 
 	/* Need space for the "before" guard page */
-	__ASSERT_NO_MSG(POINTER_TO_UINT(addr) >= CONFIG_MMU_PAGE_SIZE);
+	__ASSERT_NO_MSG(ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(addr) >= CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 
 	/* Make sure address range is still valid after accounting
 	 * for two guard pages.
 	 */
-	pos = (uint8_t *)addr - CONFIG_MMU_PAGE_SIZE;
-	k_mem_assert_virtual_region(pos, size + (CONFIG_MMU_PAGE_SIZE * 2));
+	pos = (uint8_t *)addr - CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	k_mem_assert_virtual_region(pos, ਮਾਪ + (CONFIG_MMU_ਪੰਨਾ_ਮਾਪ * 2));
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
 	/* Check if both guard pages are unmapped.
 	 * Bail if not, as this is probably a region not mapped
 	 * using k_mem_map().
 	 */
 	pos = addr;
-	ret = arch_page_phys_get(pos - CONFIG_MMU_PAGE_SIZE, NULL);
+	ret = arch_ਪੰਨਾ_phys_get(pos - CONFIG_MMU_ਪੰਨਾ_ਮਾਪ, ਨਿਰਾ);
 	__ASSERT(ret != 0,
 		 "%s: cannot find preceding guard page for (%p, %zu)",
-		 __func__, addr, size);
-	if (ret == 0) {
-		goto out;
+		 __func__, addr, ਮਾਪ);
+	ਜੇ (ret == 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	ret = arch_page_phys_get(pos + size, NULL);
+	ret = arch_ਪੰਨਾ_phys_get(pos + ਮਾਪ, ਨਿਰਾ);
 	__ASSERT(ret != 0,
 		 "%s: cannot find succeeding guard page for (%p, %zu)",
-		 __func__, addr, size);
-	if (ret == 0) {
-		goto out;
+		 __func__, addr, ਮਾਪ);
+	ਜੇ (ret == 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	if (is_anon) {
+	ਜੇ (is_anon) {
 		/* Unmapping anonymous memory */
-		ret = unmap_anon_pages(addr, size);
+		ret = unmap_anon_ਪੰਨੇ(addr, ਮਾਪ);
 		__ASSERT(ret == 0, "%s: unmap_anon_pages() returned %d", __func__, ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as some pages are still be mapped.
 			 */
-			goto out;
+			ਜਾਓ ਬਾਹਰਲਾ;
 		}
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		/*
 		 * Unmapping previous mapped memory with specific physical address.
 		 *
@@ -1002,83 +1002,83 @@ void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
 		 * have been unmapped. We just need to unmapped the in-between
 		 * region [addr, (addr + size)).
 		 */
-		ret = arch_mem_unmap(addr, size);
+		ret = arch_mem_unmap(addr, ਮਾਪ);
 		__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as some pages are still be mapped.
 			 */
-			goto out;
+			ਜਾਓ ਬਾਹਰਲਾ;
 		}
 	}
 
 	/* There are guard pages just before and after the mapped
 	 * region. So we also need to free them from the bitmap.
 	 */
-	pos = (uint8_t *)addr - CONFIG_MMU_PAGE_SIZE;
-	total_size = size + (CONFIG_MMU_PAGE_SIZE * 2);
-	virt_region_free(pos, total_size);
+	pos = (uint8_t *)addr - CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+	ਕੁੱਲ_ਮਾਪ = ਮਾਪ + (CONFIG_MMU_ਪੰਨਾ_ਮਾਪ * 2);
+	virt_region_free(pos, ਕੁੱਲ_ਮਾਪ);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 }
 
-int k_mem_update_flags(void *addr, size_t size, uint32_t flags)
+ਪੂਰਨ k_mem_update_flags(ਖਾਲੀ *addr, size_t ਮਾਪ, uint32_t flags)
 {
 	uintptr_t phys;
-	k_spinlock_key_t key;
-	int ret;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	ਪੂਰਨ ret;
 
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, ਮਾਪ);
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
 	/*
 	 * We can achieve desired result without explicit architecture support
 	 * by unmapping and remapping the same physical memory using new flags.
 	 */
 
-	ret = arch_page_phys_get(addr, &phys);
-	if (ret < 0) {
-		goto out;
+	ret = arch_ਪੰਨਾ_phys_get(addr, &phys);
+	ਜੇ (ret < 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
 	/* TODO: detect and handle paged-out memory as well */
 
-	ret = arch_mem_unmap(addr, size);
+	ret = arch_mem_unmap(addr, ਮਾਪ);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap failed %d\n", __func__, ret);
-	if (ret != 0) {
-		goto out;
+	ਜੇ (ret != 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	ret = arch_mem_map(addr, phys, size, flags);
+	ret = arch_mem_map(addr, phys, ਮਾਪ, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
-	return ret;
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+	ਵਾਪਸ ret;
 }
 
-size_t k_mem_free_get(void)
+size_t k_mem_free_get(ਖਾਲੀ)
 {
 	size_t ret;
-	k_spinlock_key_t key;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 
-	__ASSERT(page_frames_initialized, "%s called too early", __func__);
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "%s called too early", __func__);
 
-	key = k_spin_lock(&z_mm_lock);
-#ifdef CONFIG_DEMAND_PAGING
-	if (z_free_page_count > CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE) {
-		ret = z_free_page_count - CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE;
-	} else {
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+	ਜੇ (z_free_ਪੰਨਾ_ਗਿਣਤੀ > CONFIG_DEMAND_PAGING_ਪੰਨਾ_ਚੌਖਟੇ_RESERVE) {
+		ret = z_free_ਪੰਨਾ_ਗਿਣਤੀ - CONFIG_DEMAND_PAGING_ਪੰਨਾ_ਚੌਖਟੇ_RESERVE;
+	} ਨਹੀਂਤਾਂ {
 		ret = 0;
 	}
-#else
-	ret = z_free_page_count;
-#endif /* CONFIG_DEMAND_PAGING */
-	k_spin_unlock(&z_mm_lock, key);
+#ਨਹੀਂਤਾਂ
+	ret = z_free_ਪੰਨਾ_ਗਿਣਤੀ;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return ret * (size_t)CONFIG_MMU_PAGE_SIZE;
+	ਵਾਪਸ ret * (size_t)CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
 }
 
 /* Get the default virtual region alignment, here the default MMU page size
@@ -1088,12 +1088,12 @@ size_t k_mem_free_get(void)
  *
  * @return alignment to apply on the virtual address of this region
  */
-static size_t virt_region_align(uintptr_t phys, size_t size)
+ਸਥਿਰ size_t virt_region_align(uintptr_t phys, size_t ਮਾਪ)
 {
-	ARG_UNUSED(phys);
-	ARG_UNUSED(size);
+	ARG_ਅਣਵਰਤਿਆ(phys);
+	ARG_ਅਣਵਰਤਿਆ(ਮਾਪ);
 
-	return CONFIG_MMU_PAGE_SIZE;
+	ਵਾਪਸ CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
 }
 
 __weak FUNC_ALIAS(virt_region_align, arch_virt_region_align, size_t);
@@ -1102,33 +1102,33 @@ __weak FUNC_ALIAS(virt_region_align, arch_virt_region_align, size_t);
  * Data will be copied and BSS zeroed, but this must not rely on any
  * initialization functions being called prior to work correctly.
  */
-void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32_t flags)
+ਖਾਲੀ k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t ਮਾਪ, uint32_t flags)
 {
-	uintptr_t aligned_phys, addr_offset;
-	size_t aligned_size, align_boundary;
-	k_spinlock_key_t key;
+	uintptr_t aligned_phys, addr_ਵਿੱਥ;
+	size_t aligned_ਮਾਪ, align_boundary;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 	uint8_t *dest_addr;
-	size_t num_bits;
-	size_t offset;
-	int ret;
+	size_t ਅੰਕ_ਬਿੱਟ;
+	size_t ਵਿੱਥ;
+	ਪੂਰਨ ret;
 
-#ifndef CONFIG_KERNEL_DIRECT_MAP
-	__ASSERT(!(flags & K_MEM_DIRECT_MAP), "The direct-map is not enabled");
-#endif /* CONFIG_KERNEL_DIRECT_MAP */
-	addr_offset = k_mem_region_align(&aligned_phys, &aligned_size,
-					 phys, size,
-					 CONFIG_MMU_PAGE_SIZE);
-	__ASSERT(aligned_size != 0U, "0-length mapping at 0x%lx", aligned_phys);
-	__ASSERT(aligned_size - 1 <= (UINTPTR_MAX - aligned_phys),
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_KERNEL_ਸਿੱਧਾ_MAP
+	__ASSERT(!(flags & K_MEM_ਸਿੱਧਾ_MAP), "The direct-map is not enabled");
+#ਜੇ_ਅੰਤ /* CONFIG_KERNEL_DIRECT_MAP */
+	addr_ਵਿੱਥ = k_mem_region_align(&aligned_phys, &aligned_ਮਾਪ,
+					 phys, ਮਾਪ,
+					 CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
+	__ASSERT(aligned_ਮਾਪ != 0U, "0-length mapping at 0x%lx", aligned_phys);
+	__ASSERT(aligned_ਮਾਪ - 1 <= (UINTPTR_MAX - aligned_phys),
 		 "wraparound for physical address 0x%lx (size %zu)",
-		 aligned_phys, aligned_size);
+		 aligned_phys, aligned_ਮਾਪ);
 
-	align_boundary = arch_virt_region_align(aligned_phys, aligned_size);
+	align_boundary = arch_virt_region_align(aligned_phys, aligned_ਮਾਪ);
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
-	if (IS_ENABLED(CONFIG_KERNEL_DIRECT_MAP) &&
-	    (flags & K_MEM_DIRECT_MAP)) {
+	ਜੇ (IS_ENABLED(CONFIG_KERNEL_ਸਿੱਧਾ_MAP) &&
+	    (flags & K_MEM_ਸਿੱਧਾ_MAP)) {
 		dest_addr = (uint8_t *)aligned_phys;
 
 		/* Mark the region of virtual memory bitmap as used
@@ -1138,50 +1138,50 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 		 * virtual memory space, we need to mark the bits.
 		 */
 
-		if (IN_RANGE(aligned_phys,
-			      (uintptr_t)K_MEM_VIRT_RAM_START,
-			      (uintptr_t)(K_MEM_VIRT_RAM_END - 1)) ||
-		    IN_RANGE(aligned_phys + aligned_size - 1,
-			      (uintptr_t)K_MEM_VIRT_RAM_START,
-			      (uintptr_t)(K_MEM_VIRT_RAM_END - 1))) {
-			uint8_t *adjusted_start = max(dest_addr, K_MEM_VIRT_RAM_START);
-			uint8_t *adjusted_end = min(dest_addr + aligned_size,
-						    K_MEM_VIRT_RAM_END);
-			size_t adjusted_sz = adjusted_end - adjusted_start;
+		ਜੇ (ਵਿੱਚ_RANGE(aligned_phys,
+			      (uintptr_t)K_MEM_VIRT_RAM_ਸ਼ੁਰੂ,
+			      (uintptr_t)(K_MEM_VIRT_RAM_ਸਿਰਾ - 1)) ||
+		    ਵਿੱਚ_RANGE(aligned_phys + aligned_ਮਾਪ - 1,
+			      (uintptr_t)K_MEM_VIRT_RAM_ਸ਼ੁਰੂ,
+			      (uintptr_t)(K_MEM_VIRT_RAM_ਸਿਰਾ - 1))) {
+			uint8_t *adjusted_ਸ਼ੁਰੂ = max(dest_addr, K_MEM_VIRT_RAM_ਸ਼ੁਰੂ);
+			uint8_t *adjusted_ਸਿਰਾ = min(dest_addr + aligned_ਮਾਪ,
+						    K_MEM_VIRT_RAM_ਸਿਰਾ);
+			size_t adjusted_sz = adjusted_ਸਿਰਾ - adjusted_ਸ਼ੁਰੂ;
 
-			num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
-			offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
-			if (sys_bitarray_test_and_set_region(
-			    &virt_region_bitmap, num_bits, offset, true)) {
-				goto fail;
+			ਅੰਕ_ਬਿੱਟ = adjusted_sz / CONFIG_MMU_ਪੰਨਾ_ਮਾਪ;
+			ਵਿੱਥ = virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(adjusted_ਸ਼ੁਰੂ, adjusted_sz);
+			ਜੇ (sys_bitarray_test_and_ਸੈੱਟ_region(
+			    &virt_region_bitmap, ਅੰਕ_ਬਿੱਟ, ਵਿੱਥ, true)) {
+				ਜਾਓ fail;
 			}
 		}
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		/* Obtain an appropriately sized chunk of virtual memory */
-		dest_addr = virt_region_alloc(aligned_size, align_boundary);
-		if (!dest_addr) {
-			goto fail;
+		dest_addr = virt_region_alloc(aligned_ਮਾਪ, align_boundary);
+		ਜੇ (!dest_addr) {
+			ਜਾਓ fail;
 		}
 	}
 
 	/* If this fails there's something amiss with virt_region_get */
 	__ASSERT((uintptr_t)dest_addr <
-		 ((uintptr_t)dest_addr + (size - 1)),
+		 ((uintptr_t)dest_addr + (ਮਾਪ - 1)),
 		 "wraparound for virtual address %p (size %zu)",
-		 dest_addr, size);
+		 dest_addr, ਮਾਪ);
 
-	LOG_DBG("arch_mem_map(%p, 0x%lx, %zu, %x) offset %lu", (void *)dest_addr,
-		aligned_phys, aligned_size, flags, addr_offset);
+	LOG_DBG("arch_mem_map(%p, 0x%lx, %zu, %x) offset %lu", (ਖਾਲੀ *)dest_addr,
+		aligned_phys, aligned_ਮਾਪ, flags, addr_ਵਿੱਥ);
 
-	ret = arch_mem_map(dest_addr, aligned_phys, aligned_size, flags);
+	ret = arch_mem_map(dest_addr, aligned_phys, aligned_ਮਾਪ, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-	if (ret != 0) {
-		goto fail;
+	ਜੇ (ret != 0) {
+		ਜਾਓ fail;
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 
-	*virt_ptr = dest_addr + addr_offset;
-	return;
+	*virt_ptr = dest_addr + addr_ਵਿੱਥ;
+	ਵਾਪਸ;
 fail:
 	/* May re-visit this in the future, but for now running out of
 	 * virtual address space or failing the arch_mem_map() call is
@@ -1191,309 +1191,309 @@ fail:
 	 * assertions since they are clearly programming mistakes.
 	 */
 	LOG_ERR("memory mapping 0x%lx (size %zu, flags 0x%x) failed",
-		phys, size, flags);
+		phys, ਮਾਪ, flags);
 	k_panic();
 }
 
-void k_mem_unmap_phys_bare(uint8_t *virt, size_t size)
+ਖਾਲੀ k_mem_unmap_phys_bare(uint8_t *virt, size_t ਮਾਪ)
 {
-	uintptr_t aligned_virt, addr_offset;
-	size_t aligned_size;
-	k_spinlock_key_t key;
-	int ret;
+	uintptr_t aligned_virt, addr_ਵਿੱਥ;
+	size_t aligned_ਮਾਪ;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	ਪੂਰਨ ret;
 
-	addr_offset = k_mem_region_align(&aligned_virt, &aligned_size,
-					 POINTER_TO_UINT(virt), size,
-					 CONFIG_MMU_PAGE_SIZE);
-	__ASSERT(aligned_size != 0U, "0-length mapping at 0x%lx", aligned_virt);
-	__ASSERT(aligned_size - 1 <= (UINTPTR_MAX - aligned_virt),
+	addr_ਵਿੱਥ = k_mem_region_align(&aligned_virt, &aligned_ਮਾਪ,
+					 ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(virt), ਮਾਪ,
+					 CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
+	__ASSERT(aligned_ਮਾਪ != 0U, "0-length mapping at 0x%lx", aligned_virt);
+	__ASSERT(aligned_ਮਾਪ - 1 <= (UINTPTR_MAX - aligned_virt),
 		 "wraparound for virtual address 0x%lx (size %zu)",
-		 aligned_virt, aligned_size);
+		 aligned_virt, aligned_ਮਾਪ);
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
 	LOG_DBG("arch_mem_unmap(0x%lx, %zu) offset %lu",
-		aligned_virt, aligned_size, addr_offset);
+		aligned_virt, aligned_ਮਾਪ, addr_ਵਿੱਥ);
 
-	ret = arch_mem_unmap(UINT_TO_POINTER(aligned_virt), aligned_size);
+	ret = arch_mem_unmap(UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(aligned_virt), aligned_ਮਾਪ);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
+	ਜੇ (ret != 0) {
 		/* Fail to unmap. We cannot free the virtual memory region
 		 * as some pages are still be mapped.
 		 */
-		goto out;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	virt_region_free(UINT_TO_POINTER(aligned_virt), aligned_size);
+	virt_region_free(UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(aligned_virt), aligned_ਮਾਪ);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 }
 
 /*
  * Miscellaneous
  */
 
-size_t k_mem_region_align(uintptr_t *aligned_addr, size_t *aligned_size,
-			  uintptr_t addr, size_t size, size_t align)
+size_t k_mem_region_align(uintptr_t *aligned_addr, size_t *aligned_ਮਾਪ,
+			  uintptr_t addr, size_t ਮਾਪ, size_t align)
 {
-	size_t addr_offset;
+	size_t addr_ਵਿੱਥ;
 
 	/* The actual mapped region must be page-aligned. Round down the
 	 * physical address and pad the region size appropriately
 	 */
-	*aligned_addr = ROUND_DOWN(addr, align);
-	addr_offset = addr - *aligned_addr;
-	*aligned_size = ROUND_UP(size + addr_offset, align);
+	*aligned_addr = ਗੇੜਾ_ਥੱਲੇ(addr, align);
+	addr_ਵਿੱਥ = addr - *aligned_addr;
+	*aligned_ਮਾਪ = ਗੇੜਾ_ਉੱਪਰ(ਮਾਪ + addr_ਵਿੱਥ, align);
 
-	return addr_offset;
+	ਵਾਪਸ addr_ਵਿੱਥ;
 }
 
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
-static void mark_linker_section_pinned(void *start_addr, void *end_addr,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_LINKER_USE_BOOT_SECTION
+ਸਥਿਰ ਖਾਲੀ mark_linker_section_pinned(ਖਾਲੀ *ਸ਼ੁਰੂ_addr, ਖਾਲੀ *ਸਿਰਾ_addr,
 				       bool pin)
 {
-	struct k_mem_page_frame *pf;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
 	uint8_t *addr;
 
-	uintptr_t pinned_start = ROUND_DOWN(POINTER_TO_UINT(start_addr),
-					    CONFIG_MMU_PAGE_SIZE);
-	uintptr_t pinned_end = ROUND_UP(POINTER_TO_UINT(end_addr),
-					CONFIG_MMU_PAGE_SIZE);
-	size_t pinned_size = pinned_end - pinned_start;
+	uintptr_t pinned_ਸ਼ੁਰੂ = ਗੇੜਾ_ਥੱਲੇ(ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(ਸ਼ੁਰੂ_addr),
+					    CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
+	uintptr_t pinned_ਸਿਰਾ = ਗੇੜਾ_ਉੱਪਰ(ਸੂਚਕ_ਮੰਜ਼ਿਲ_UINT(ਸਿਰਾ_addr),
+					CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
+	size_t pinned_ਮਾਪ = pinned_ਸਿਰਾ - pinned_ਸ਼ੁਰੂ;
 
-	VIRT_FOREACH(UINT_TO_POINTER(pinned_start), pinned_size, addr)
+	VIRT_FOREACH(UINT_ਮੰਜ਼ਿਲ_ਸੂਚਕ(pinned_ਸ਼ੁਰੂ), pinned_ਮਾਪ, addr)
 	{
-		pf = k_mem_phys_to_page_frame(K_MEM_BOOT_VIRT_TO_PHYS(addr));
-		frame_mapped_set(pf, addr);
+		pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(K_MEM_BOOT_VIRT_ਮੰਜ਼ਿਲ_PHYS(addr));
+		ਚੌਖਟਾ_mapped_ਸੈੱਟ(pf, addr);
 
-		if (pin) {
-			k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
-		} else {
-			k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_PINNED);
-#ifdef CONFIG_DEMAND_PAGING
-			if (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
-			    k_mem_page_frame_is_evictable(pf)) {
-				k_mem_paging_eviction_add(pf);
+		ਜੇ (pin) {
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
+		} ਨਹੀਂਤਾਂ {
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_clear(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+			ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
+			    k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_evictable(pf)) {
+				k_mem_paging_eviction_ਜੋੜੋ(pf);
 			}
-#endif
+#ਜੇ_ਅੰਤ
 		}
 	}
 }
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+#ਜੇ_ਅੰਤ /* CONFIG_LINKER_USE_BOOT_SECTION */
 
-#ifdef CONFIG_LINKER_USE_ONDEMAND_SECTION
-static void z_paging_ondemand_section_map(void)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_LINKER_USE_ONDEMAND_SECTION
+ਸਥਿਰ ਖਾਲੀ z_paging_ondemand_section_map(ਖਾਲੀ)
 {
 	uint8_t *addr;
-	size_t size;
+	size_t ਮਾਪ;
 	uintptr_t location;
 	uint32_t flags;
-	int ret;
+	ਪੂਰਨ ret;
 
-	size = (uintptr_t)lnkr_ondemand_text_size;
+	ਮਾਪ = (uintptr_t)lnkr_ondemand_ਪਾਠ_ਮਾਪ;
 	flags = K_MEM_MAP_UNPAGED | K_MEM_PERM_EXEC | K_MEM_CACHE_WB;
-	VIRT_FOREACH(lnkr_ondemand_text_start, size, addr) {
+	VIRT_FOREACH(lnkr_ondemand_ਪਾਠ_ਸ਼ੁਰੂ, ਮਾਪ, addr) {
 		k_mem_paging_backing_store_location_query(addr, &location);
 
-		ret = arch_mem_map(addr, location, CONFIG_MMU_PAGE_SIZE, flags);
+		ret = arch_mem_map(addr, location, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ, flags);
 		__ASSERT(ret == 0, "arch_mem_map() returned %d", ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			k_panic();
 		}
 
-		sys_bitarray_set_region(&virt_region_bitmap, 1,
-					virt_to_bitmap_offset(addr, CONFIG_MMU_PAGE_SIZE));
+		sys_bitarray_ਸੈੱਟ_region(&virt_region_bitmap, 1,
+					virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(addr, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ));
 	}
 
-	size = (uintptr_t)lnkr_ondemand_rodata_size;
+	ਮਾਪ = (uintptr_t)lnkr_ondemand_rodata_ਮਾਪ;
 	flags = K_MEM_MAP_UNPAGED | K_MEM_CACHE_WB;
-	VIRT_FOREACH(lnkr_ondemand_rodata_start, size, addr) {
+	VIRT_FOREACH(lnkr_ondemand_rodata_ਸ਼ੁਰੂ, ਮਾਪ, addr) {
 		k_mem_paging_backing_store_location_query(addr, &location);
 
-		ret = arch_mem_map(addr, location, CONFIG_MMU_PAGE_SIZE, flags);
+		ret = arch_mem_map(addr, location, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ, flags);
 		__ASSERT(ret == 0, "arch_mem_map() returned %d", ret);
-		if (ret != 0) {
+		ਜੇ (ret != 0) {
 			k_panic();
 		}
 
-		sys_bitarray_set_region(&virt_region_bitmap, 1,
-					virt_to_bitmap_offset(addr, CONFIG_MMU_PAGE_SIZE));
+		sys_bitarray_ਸੈੱਟ_region(&virt_region_bitmap, 1,
+					virt_ਮੰਜ਼ਿਲ_bitmap_ਵਿੱਥ(addr, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ));
 	}
 }
-#endif /* CONFIG_LINKER_USE_ONDEMAND_SECTION */
+#ਜੇ_ਅੰਤ /* CONFIG_LINKER_USE_ONDEMAND_SECTION */
 
-void z_mem_manage_init(void)
+ਖਾਲੀ z_mem_manage_init(ਖਾਲੀ)
 {
 	uintptr_t phys;
 	uint8_t *addr;
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key = k_spin_lock(&z_mm_lock);
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 
-	free_page_frame_list_init();
+	free_ਪੰਨਾ_ਚੌਖਟਾ_list_init();
 
-	ARG_UNUSED(addr);
+	ARG_ਅਣਵਰਤਿਆ(addr);
 
-#ifdef CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ARCH_HAS_RESERVED_ਪੰਨਾ_ਚੌਖਟੇ
 	/* If some page frames are unavailable for use as memory, arch
 	 * code will mark K_MEM_PAGE_FRAME_RESERVED in their flags
 	 */
-	arch_reserved_pages_update();
-#endif /* CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES */
+	arch_reserved_ਪੰਨੇ_update();
+#ਜੇ_ਅੰਤ /* CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES */
 
 	/* The entire Zephyr image is mapped and pinned at boot. Demand
 	 * paging applies only to anonymous mappings created via k_mem_map()
 	 * and to memory placed in explicit __ondemand_* linker sections;
 	 * the kernel image itself is never a candidate for eviction.
 	 */
-	VIRT_FOREACH(K_MEM_KERNEL_VIRT_START, K_MEM_KERNEL_VIRT_SIZE, addr)
+	VIRT_FOREACH(K_MEM_KERNEL_VIRT_ਸ਼ੁਰੂ, K_MEM_KERNEL_VIRT_ਮਾਪ, addr)
 	{
-		pf = k_mem_phys_to_page_frame(K_MEM_BOOT_VIRT_TO_PHYS(addr));
-		frame_mapped_set(pf, addr);
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+		pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(K_MEM_BOOT_VIRT_ਮੰਜ਼ਿਲ_PHYS(addr));
+		ਚੌਖਟਾ_mapped_ਸੈੱਟ(pf, addr);
+		k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
 	}
 
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_LINKER_USE_BOOT_SECTION
 	/* Pin the boot section to prevent it from being swapped out during
 	 * boot process. Will be un-pinned once boot process completes.
 	 */
-	mark_linker_section_pinned(lnkr_boot_start, lnkr_boot_end, true);
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+	mark_linker_section_pinned(lnkr_boot_ਸ਼ੁਰੂ, lnkr_boot_ਸਿਰਾ, true);
+#ਜੇ_ਅੰਤ /* CONFIG_LINKER_USE_BOOT_SECTION */
 
 	/* Any remaining pages that aren't mapped, reserved, or pinned get
 	 * added to the free pages list
 	 */
-	K_MEM_PAGE_FRAME_FOREACH(phys, pf) {
-		if (k_mem_page_frame_is_available(pf)) {
-			free_page_frame_list_put(pf);
+	K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_FOREACH(phys, pf) {
+		ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_ਉਪਲਬਧ(pf)) {
+			free_ਪੰਨਾ_ਚੌਖਟਾ_list_put(pf);
 		}
 	}
-	LOG_DBG("free page frames: %zu", z_free_page_count);
+	LOG_DBG("free page frames: %zu", z_free_ਪੰਨਾ_ਗਿਣਤੀ);
 
-#ifdef CONFIG_DEMAND_PAGING
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
 	z_paging_histogram_init();
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 	k_mem_paging_backing_store_init();
 	k_mem_paging_eviction_init();
 
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+	ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 		/* start tracking evictable page installed above if any */
-		K_MEM_PAGE_FRAME_FOREACH(phys, pf) {
-			if (k_mem_page_frame_is_evictable(pf)) {
-				k_mem_paging_eviction_add(pf);
+		K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_FOREACH(phys, pf) {
+			ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_evictable(pf)) {
+				k_mem_paging_eviction_ਜੋੜੋ(pf);
 			}
 		}
 	}
-#endif /* CONFIG_DEMAND_PAGING */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */
 
-#ifdef CONFIG_LINKER_USE_ONDEMAND_SECTION
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_LINKER_USE_ONDEMAND_SECTION
 	z_paging_ondemand_section_map();
-#endif
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_ASSERT
-	page_frames_initialized = true;
-#endif /* CONFIG_ASSERT */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_ASSERT
+	ਪੰਨਾ_ਚੌਖਟੇ_initialized = true;
+#ਜੇ_ਅੰਤ /* CONFIG_ASSERT */
 
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 }
 
-void z_mem_manage_boot_finish(void)
+ਖਾਲੀ z_mem_manage_boot_ਅੰਤ(ਖਾਲੀ)
 {
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_LINKER_USE_BOOT_SECTION
 	/* At the end of boot process, unpin the boot sections
 	 * as they don't need to be in memory all the time anymore.
 	 */
-	mark_linker_section_pinned(lnkr_boot_start, lnkr_boot_end, false);
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+	mark_linker_section_pinned(lnkr_boot_ਸ਼ੁਰੂ, lnkr_boot_ਸਿਰਾ, false);
+#ਜੇ_ਅੰਤ /* CONFIG_LINKER_USE_BOOT_SECTION */
 }
 
-#ifdef CONFIG_DEMAND_PAGING
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING
 
-#ifdef CONFIG_DEMAND_PAGING_STATS
-struct k_mem_paging_stats_t paging_stats;
-extern struct k_mem_paging_histogram_t z_paging_histogram_eviction;
-extern struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
-extern struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS
+ਬਣਤਰ k_mem_paging_stats_t paging_stats;
+ਬਾਹਰੀ ਬਣਤਰ k_mem_paging_histogram_t z_paging_histogram_eviction;
+ਬਾਹਰੀ ਬਣਤਰ k_mem_paging_histogram_t z_paging_histogram_backing_store_ਪੰਨਾ_ਵਿੱਚ;
+ਬਾਹਰੀ ਬਣਤਰ k_mem_paging_histogram_t z_paging_histogram_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS */
 
-static inline void do_backing_store_page_in(uintptr_t location)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ do_backing_store_ਪੰਨਾ_ਵਿੱਚ(uintptr_t location)
 {
-#ifdef CONFIG_DEMAND_MAPPING
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_MAPPING
 	/* Check for special cases */
-	switch (location) {
-	case ARCH_UNPAGED_ANON_ZERO:
-		memset(K_MEM_SCRATCH_PAGE, 0, CONFIG_MMU_PAGE_SIZE);
+	ਚੋਣ (location) {
+	ਹਾਲਤ ARCH_UNPAGED_ANON_ZERO:
+		memset(K_MEM_SCRATCH_ਪੰਨਾ, 0, CONFIG_MMU_ਪੰਨਾ_ਮਾਪ);
 		__fallthrough;
-	case ARCH_UNPAGED_ANON_UNINIT:
+	ਹਾਲਤ ARCH_UNPAGED_ANON_UNINIT:
 		/* nothing else to do */
-		return;
-	default:
-		break;
+		ਵਾਪਸ;
+	ਮੂਲ:
+		ਰੋਕੋ;
 	}
-#endif /* CONFIG_DEMAND_MAPPING */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_MAPPING */
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t ਸਮਾਂ_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t ਸਮਾਂ_ਸ਼ੁਰੂ, ਸਮਾਂ_ਸਿਰਾ;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	ਸਮਾਂ_ਸ਼ੁਰੂ = timing_counter_get();
+#ਨਹੀਂਤਾਂ
+	uint32_t ਸਮਾਂ_ਸ਼ੁਰੂ;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	ਸਮਾਂ_ਸ਼ੁਰੂ = k_ਚੱਕਰ_get_32();
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	k_mem_paging_backing_store_page_in(location);
+	k_mem_paging_backing_store_ਪੰਨਾ_ਵਿੱਚ(location);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	ਸਮਾਂ_ਸਿਰਾ = timing_counter_get();
+	ਸਮਾਂ_diff = (uint32_t)timing_ਚੱਕਰਾਂ_get(&ਸਮਾਂ_ਸ਼ੁਰੂ, &ਸਮਾਂ_ਸਿਰਾ);
+#ਨਹੀਂਤਾਂ
+	ਸਮਾਂ_diff = k_ਚੱਕਰ_get_32() - ਸਮਾਂ_ਸ਼ੁਰੂ;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_backing_store_page_in,
-			       time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_backing_store_ਪੰਨਾ_ਵਿੱਚ,
+			       ਸਮਾਂ_diff);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 }
 
-static inline void do_backing_store_page_out(uintptr_t location)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(uintptr_t location)
 {
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t ਸਮਾਂ_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t ਸਮਾਂ_ਸ਼ੁਰੂ, ਸਮਾਂ_ਸਿਰਾ;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	ਸਮਾਂ_ਸ਼ੁਰੂ = timing_counter_get();
+#ਨਹੀਂਤਾਂ
+	uint32_t ਸਮਾਂ_ਸ਼ੁਰੂ;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	ਸਮਾਂ_ਸ਼ੁਰੂ = k_ਚੱਕਰ_get_32();
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	k_mem_paging_backing_store_page_out(location);
+	k_mem_paging_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(location);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	ਸਮਾਂ_ਸਿਰਾ = timing_counter_get();
+	ਸਮਾਂ_diff = (uint32_t)timing_ਚੱਕਰਾਂ_get(&ਸਮਾਂ_ਸ਼ੁਰੂ, &ਸਮਾਂ_ਸਿਰਾ);
+#ਨਹੀਂਤਾਂ
+	ਸਮਾਂ_diff = k_ਚੱਕਰ_get_32() - ਸਮਾਂ_ਸ਼ੁਰੂ;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_backing_store_page_out,
-			       time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ,
+			       ਸਮਾਂ_diff);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 }
 
-#if defined(CONFIG_SMP) && defined(CONFIG_DEMAND_PAGING_ALLOW_IRQ)
+#ਜੇ defined(CONFIG_SMP) && defined(CONFIG_DEMAND_PAGING_ALLOW_IRQ)
 /*
  * SMP support is very simple. Some resources such as the scratch page could
  * be made per CPU, backing store driver execution be confined to the faulting
@@ -1503,16 +1503,16 @@ static inline void do_backing_store_page_out(uintptr_t location)
  * So let's simply enforce global demand paging serialization across all CPUs
  * with a mutex as there is no real gain from added parallelism here.
  */
-static K_MUTEX_DEFINE(z_mm_paging_lock);
-#endif
+ਸਥਿਰ K_MUTEX_DEFINE(z_mm_paging_ਤਾਲਾ);
+#ਜੇ_ਅੰਤ
 
-static void virt_region_foreach(void *addr, size_t size,
-				void (*func)(void *vaddr))
+ਸਥਿਰ ਖਾਲੀ virt_region_foreach(ਖਾਲੀ *addr, size_t ਮਾਪ,
+				ਖਾਲੀ (*func)(ਖਾਲੀ *vaddr))
 {
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, ਮਾਪ);
 
-	for (size_t offset = 0; offset < size; offset += CONFIG_MMU_PAGE_SIZE) {
-		func((uint8_t *)addr + offset);
+	ਲਈ (size_t ਵਿੱਥ = 0; ਵਿੱਥ < ਮਾਪ; ਵਿੱਥ += CONFIG_MMU_ਪੰਨਾ_ਮਾਪ) {
+		func((uint8_t *)addr + ਵਿੱਥ);
 	}
 }
 
@@ -1532,15 +1532,15 @@ static void virt_region_foreach(void *addr, size_t size,
  *
  * Returns -ENOMEM if the backing store is full
  */
-static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_ptr,
-				     bool page_fault, uintptr_t *location_ptr)
+ਸਥਿਰ ਪੂਰਨ ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf, bool *dirty_ptr,
+				     bool ਪੰਨਾ_fault, uintptr_t *location_ptr)
 {
 	uintptr_t phys;
-	int ret;
+	ਪੂਰਨ ret;
 	bool dirty = *dirty_ptr;
 
-	phys = k_mem_page_frame_to_phys(pf);
-	__ASSERT(!k_mem_page_frame_is_pinned(pf), "page frame 0x%lx is pinned",
+	phys = k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf);
+	__ASSERT(!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf), "page frame 0x%lx is pinned",
 		 phys);
 
 	/* If the backing store doesn't have a copy of the page, even if it
@@ -1554,291 +1554,291 @@ static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_pt
 	 *    evicted from the backing store to make room for other evicted
 	 *    pages.
 	 */
-	if (k_mem_page_frame_is_mapped(pf)) {
-		dirty = dirty || !k_mem_page_frame_is_backed(pf);
+	ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
+		dirty = dirty || !k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_backed(pf);
 	}
 
-	if (dirty || page_fault) {
+	ਜੇ (dirty || ਪੰਨਾ_fault) {
 		arch_mem_scratch(phys);
 	}
 
-	if (k_mem_page_frame_is_mapped(pf)) {
+	ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
 		ret = k_mem_paging_backing_store_location_get(pf, location_ptr,
-							      page_fault);
-		if (ret != 0) {
+							      ਪੰਨਾ_fault);
+		ਜੇ (ret != 0) {
 			LOG_ERR("out of backing store memory");
-			return -ENOMEM;
+			ਵਾਪਸ -ENOMEM;
 		}
-		arch_mem_page_out(k_mem_page_frame_to_virt(pf), *location_ptr);
+		arch_mem_ਪੰਨਾ_ਬਾਹਰਲਾ(k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf), *location_ptr);
 
-		if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+		ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 			k_mem_paging_eviction_remove(pf);
 		}
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		/* Shouldn't happen unless this function is mis-used */
 		__ASSERT(!dirty, "un-mapped page determined to be dirty");
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
 	/* Mark as busy so that k_mem_page_frame_is_evictable() returns false */
-	__ASSERT(!k_mem_page_frame_is_busy(pf), "page frame 0x%lx is already busy",
+	__ASSERT(!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_busy(pf), "page frame 0x%lx is already busy",
 		 phys);
-	k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_BUSY);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_BUSY);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	/* Update dirty parameter, since we set to true if it wasn't backed
 	 * even if otherwise clean
 	 */
 	*dirty_ptr = dirty;
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-static int do_mem_evict(void *addr)
+ਸਥਿਰ ਪੂਰਨ do_mem_evict(ਖਾਲੀ *addr)
 {
 	bool dirty;
-	struct k_mem_page_frame *pf;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
 	uintptr_t location;
-	k_spinlock_key_t key;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 	uintptr_t flags, phys;
-	int ret;
+	ਪੂਰਨ ret;
 
-#if CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	__ASSERT(!k_is_in_isr(),
+#ਜੇ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	__ASSERT(!k_is_ਵਿੱਚ_isr(),
 		 "%s is unavailable in ISRs with CONFIG_DEMAND_PAGING_ALLOW_IRQ",
 		 __func__);
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
-	flags = arch_page_info_get(addr, &phys, false);
-	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_ਤਾਲਾ(&z_mm_paging_ਤਾਲਾ, K_FOREVER);
+#ਨਹੀਂਤਾਂ
+	k_sched_ਤਾਲਾ();
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+	flags = arch_ਪੰਨਾ_info_get(addr, &phys, false);
+	__ASSERT((flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_NOT_MAPPED) == 0,
 		 "address %p isn't mapped", addr);
-	if ((flags & ARCH_DATA_PAGE_LOADED) == 0) {
+	ਜੇ ((flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_LOADED) == 0) {
 		/* Un-mapped or already evicted. Nothing to do */
 		ret = 0;
-		goto out;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	dirty = (flags & ARCH_DATA_PAGE_DIRTY) != 0;
-	pf = k_mem_phys_to_page_frame(phys);
-	__ASSERT(k_mem_page_frame_to_virt(pf) == addr, "page frame address mismatch");
-	ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-	if (ret != 0) {
-		goto out;
+	dirty = (flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_DIRTY) != 0;
+	pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(phys);
+	__ASSERT(k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf) == addr, "page frame address mismatch");
+	ret = ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(pf, &dirty, false, &location);
+	ਜੇ (ret != 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(location);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਜੇ (dirty) {
+		do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(location);
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	page_frame_free_locked(pf);
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਪੰਨਾ_ਚੌਖਟਾ_free_locked(pf);
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_ਤਾਲਾ);
+#ਨਹੀਂਤਾਂ
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	return ret;
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਵਾਪਸ ret;
 }
 
-int k_mem_page_out(void *addr, size_t size)
+ਪੂਰਨ k_mem_ਪੰਨਾ_ਬਾਹਰਲਾ(ਖਾਲੀ *addr, size_t ਮਾਪ)
 {
-	__ASSERT(page_frames_initialized, "%s called on %p too early", __func__,
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "%s called on %p too early", __func__,
 		 addr);
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, ਮਾਪ);
 
-	for (size_t offset = 0; offset < size; offset += CONFIG_MMU_PAGE_SIZE) {
-		void *pos = (uint8_t *)addr + offset;
-		int ret;
+	ਲਈ (size_t ਵਿੱਥ = 0; ਵਿੱਥ < ਮਾਪ; ਵਿੱਥ += CONFIG_MMU_ਪੰਨਾ_ਮਾਪ) {
+		ਖਾਲੀ *pos = (uint8_t *)addr + ਵਿੱਥ;
+		ਪੂਰਨ ret;
 
 		ret = do_mem_evict(pos);
-		if (ret != 0) {
-			return ret;
+		ਜੇ (ret != 0) {
+			ਵਾਪਸ ret;
 		}
 	}
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-int k_mem_page_frame_evict(uintptr_t phys)
+ਪੂਰਨ k_mem_ਪੰਨਾ_ਚੌਖਟਾ_evict(uintptr_t phys)
 {
-	k_spinlock_key_t key;
-	struct k_mem_page_frame *pf;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
 	bool dirty;
 	uintptr_t flags;
 	uintptr_t location;
-	int ret;
+	ਪੂਰਨ ret;
 
-	__ASSERT(page_frames_initialized, "%s called on 0x%lx too early",
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "%s called on 0x%lx too early",
 		 __func__, phys);
 
 	/* Implementation is similar to do_page_fault() except there is no
 	 * data page to page-in, see comments in that function.
 	 */
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	__ASSERT(!k_is_in_isr(),
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	__ASSERT(!k_is_ਵਿੱਚ_isr(),
 		 "%s is unavailable in ISRs with CONFIG_DEMAND_PAGING_ALLOW_IRQ",
 		 __func__);
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
-	pf = k_mem_phys_to_page_frame(phys);
-	if (!k_mem_page_frame_is_mapped(pf)) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_ਤਾਲਾ(&z_mm_paging_ਤਾਲਾ, K_FOREVER);
+#ਨਹੀਂਤਾਂ
+	k_sched_ਤਾਲਾ();
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+	pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(phys);
+	ਜੇ (!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_mapped(pf)) {
 		/* Nothing to do, free page */
 		ret = 0;
-		goto out;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
-	flags = arch_page_info_get(k_mem_page_frame_to_virt(pf), NULL, false);
+	flags = arch_ਪੰਨਾ_info_get(k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf), ਨਿਰਾ, false);
 	/* Shouldn't ever happen */
-	__ASSERT((flags & ARCH_DATA_PAGE_LOADED) != 0, "data page not loaded");
-	dirty = (flags & ARCH_DATA_PAGE_DIRTY) != 0;
-	ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-	if (ret != 0) {
-		goto out;
+	__ASSERT((flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_LOADED) != 0, "data page not loaded");
+	dirty = (flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_DIRTY) != 0;
+	ret = ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(pf, &dirty, false, &location);
+	ਜੇ (ret != 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(location);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਜੇ (dirty) {
+		do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(location);
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	page_frame_free_locked(pf);
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਪੰਨਾ_ਚੌਖਟਾ_free_locked(pf);
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_ਤਾਲਾ);
+#ਨਹੀਂਤਾਂ
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	return ret;
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਵਾਪਸ ret;
 }
 
-static inline void paging_stats_faults_inc(struct k_thread *faulting_thread,
-					   int key)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ paging_stats_ਨੁਕਸ_inc(ਬਣਤਰ k_thread *faulting_thread,
+					   ਪੂਰਨ ਕੁੰਜੀ)
 {
-#ifdef CONFIG_DEMAND_PAGING_STATS
-	bool is_irq_unlocked = arch_irq_unlocked(key);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS
+	bool is_irq_unlocked = arch_irq_unlocked(ਕੁੰਜੀ);
 
 	paging_stats.pagefaults.cnt++;
 
-	if (is_irq_unlocked) {
+	ਜੇ (is_irq_unlocked) {
 		paging_stats.pagefaults.irq_unlocked++;
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		paging_stats.pagefaults.irq_locked++;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_THREAD_STATS
 	faulting_thread->paging_stats.pagefaults.cnt++;
 
-	if (is_irq_unlocked) {
+	ਜੇ (is_irq_unlocked) {
 		faulting_thread->paging_stats.pagefaults.irq_unlocked++;
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		faulting_thread->paging_stats.pagefaults.irq_locked++;
 	}
-#else
-	ARG_UNUSED(faulting_thread);
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#ਨਹੀਂਤਾਂ
+	ARG_ਅਣਵਰਤਿਆ(faulting_thread);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 
-#ifndef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	if (k_is_in_isr()) {
-		paging_stats.pagefaults.in_isr++;
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	ਜੇ (k_is_ਵਿੱਚ_isr()) {
+		paging_stats.pagefaults.ਵਿੱਚ_isr++;
 
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-		faulting_thread->paging_stats.pagefaults.in_isr++;
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_THREAD_STATS
+		faulting_thread->paging_stats.pagefaults.ਵਿੱਚ_isr++;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 	}
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS */
 }
 
-static inline void paging_stats_eviction_inc(struct k_thread *faulting_thread,
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ paging_stats_eviction_inc(ਬਣਤਰ k_thread *faulting_thread,
 					     bool dirty)
 {
-#ifdef CONFIG_DEMAND_PAGING_STATS
-	if (dirty) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS
+	ਜੇ (dirty) {
 		paging_stats.eviction.dirty++;
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		paging_stats.eviction.clean++;
 	}
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-	if (dirty) {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_THREAD_STATS
+	ਜੇ (dirty) {
 		faulting_thread->paging_stats.eviction.dirty++;
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		faulting_thread->paging_stats.eviction.clean++;
 	}
-#else
-	ARG_UNUSED(faulting_thread);
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#ਨਹੀਂਤਾਂ
+	ARG_ਅਣਵਰਤਿਆ(faulting_thread);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS */
 }
 
-static inline struct k_mem_page_frame *do_eviction_select(bool *dirty)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *do_eviction_select(bool *dirty)
 {
-	struct k_mem_page_frame *pf;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t ਸਮਾਂ_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t ਸਮਾਂ_ਸ਼ੁਰੂ, ਸਮਾਂ_ਸਿਰਾ;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	ਸਮਾਂ_ਸ਼ੁਰੂ = timing_counter_get();
+#ਨਹੀਂਤਾਂ
+	uint32_t ਸਮਾਂ_ਸ਼ੁਰੂ;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	ਸਮਾਂ_ਸ਼ੁਰੂ = k_ਚੱਕਰ_get_32();
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
 	pf = k_mem_paging_eviction_select(dirty);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	ਸਮਾਂ_ਸਿਰਾ = timing_counter_get();
+	ਸਮਾਂ_diff = (uint32_t)timing_ਚੱਕਰਾਂ_get(&ਸਮਾਂ_ਸ਼ੁਰੂ, &ਸਮਾਂ_ਸਿਰਾ);
+#ਨਹੀਂਤਾਂ
+	ਸਮਾਂ_diff = k_ਚੱਕਰ_get_32() - ਸਮਾਂ_ਸ਼ੁਰੂ;
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_eviction, time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_eviction, ਸਮਾਂ_diff);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	return pf;
+	ਵਾਪਸ pf;
 }
 
-static bool do_page_fault(void *addr, bool pin)
+ਸਥਿਰ bool do_ਪੰਨਾ_fault(ਖਾਲੀ *addr, bool pin)
 {
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
-	uintptr_t page_in_location, page_out_location;
-	enum arch_page_location status;
-	bool result;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
+	uintptr_t ਪੰਨਾ_ਵਿੱਚ_location, ਪੰਨਾ_ਬਾਹਰਲਾ_location;
+	ਗਿਣਤੀ arch_ਪੰਨਾ_location ਸਥਿਤੀ;
+	bool ਨਤੀਜਾ;
 	bool dirty = false;
-	struct k_thread *faulting_thread;
-	int ret;
+	ਬਣਤਰ k_thread *faulting_thread;
+	ਪੂਰਨ ret;
 
-	__ASSERT(page_frames_initialized, "page fault at %p happened too early",
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "page fault at %p happened too early",
 		 addr);
 
 	LOG_DBG("page fault at %p", addr);
@@ -1849,7 +1849,7 @@ static bool do_page_fault(void *addr, bool pin)
 	 *   * periodic timer execution time histogram (if implemented)
 	 */
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
 	/*
 	 * We do re-enable interrupts during the page-in/page-out operation
 	 * if and only if interrupts were enabled when the exception was
@@ -1882,36 +1882,36 @@ static bool do_page_fault(void *addr, bool pin)
 	 * and k_sched_lock()  is equivalent to a no-op on SMP anyway.
 	 * As a result, sleeping/rescheduling in the SMP case is fine.
 	 */
-	__ASSERT(!k_is_in_isr(), "ISR page faults are forbidden");
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	__ASSERT(!k_is_ਵਿੱਚ_isr(), "ISR page faults are forbidden");
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_ਤਾਲਾ(&z_mm_paging_ਤਾਲਾ, K_FOREVER);
+#ਨਹੀਂਤਾਂ
+	k_sched_ਤਾਲਾ();
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 
-	key = k_spin_lock(&z_mm_lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
 	faulting_thread = _current;
 
-	status = arch_page_location_get(addr, &page_in_location);
-	if (status == ARCH_PAGE_LOCATION_BAD) {
+	ਸਥਿਤੀ = arch_ਪੰਨਾ_location_get(addr, &ਪੰਨਾ_ਵਿੱਚ_location);
+	ਜੇ (ਸਥਿਤੀ == ARCH_ਪੰਨਾ_LOCATION_BAD) {
 		/* Return false to treat as a fatal error */
-		result = false;
-		goto out;
+		ਨਤੀਜਾ = false;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
-	result = true;
+	ਨਤੀਜਾ = true;
 
-	if (status == ARCH_PAGE_LOCATION_PAGED_IN) {
-		if (pin) {
+	ਜੇ (ਸਥਿਤੀ == ARCH_ਪੰਨਾ_LOCATION_PAGED_ਵਿੱਚ) {
+		ਜੇ (pin) {
 			/* It's a physical memory address */
-			uintptr_t phys = page_in_location;
+			uintptr_t phys = ਪੰਨਾ_ਵਿੱਚ_location;
 
-			pf = k_mem_phys_to_page_frame(phys);
-			if (!k_mem_page_frame_is_pinned(pf)) {
-				if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+			pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(phys);
+			ਜੇ (!k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf)) {
+				ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 					k_mem_paging_eviction_remove(pf);
 				}
-				k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+				k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
 			}
 		}
 
@@ -1920,85 +1920,85 @@ static bool do_page_fault(void *addr, bool pin)
 		 * no need to go through the following code to
 		 * pull in the data pages. So skip to the end.
 		 */
-		goto out;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
-	__ASSERT(status == ARCH_PAGE_LOCATION_PAGED_OUT,
-		 "unexpected status value %d", status);
+	__ASSERT(ਸਥਿਤੀ == ARCH_ਪੰਨਾ_LOCATION_PAGED_ਬਾਹਰਲਾ,
+		 "unexpected status value %d", ਸਥਿਤੀ);
 
-	paging_stats_faults_inc(faulting_thread, key.key);
+	paging_stats_ਨੁਕਸ_inc(faulting_thread, ਕੁੰਜੀ.ਕੁੰਜੀ);
 
-	pf = free_page_frame_list_get();
-	if (pf == NULL) {
+	pf = free_ਪੰਨਾ_ਚੌਖਟਾ_list_get();
+	ਜੇ (pf == ਨਿਰਾ) {
 		/* Need to evict a page frame */
 		pf = do_eviction_select(&dirty);
-		if (pf == NULL) {
+		ਜੇ (pf == ਨਿਰਾ) {
 			/* Every evictable page frame is pinned or busy.
 			 * Fail the fault so it is reported as fatal.
 			 */
-			result = false;
-			goto out;
+			ਨਤੀਜਾ = false;
+			ਜਾਓ ਬਾਹਰਲਾ;
 		}
 		LOG_DBG("evicting %p at 0x%lx",
-			k_mem_page_frame_to_virt(pf),
-			k_mem_page_frame_to_phys(pf));
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_virt(pf),
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf));
 
 		paging_stats_eviction_inc(faulting_thread, dirty);
 	}
-	ret = page_frame_prepare_locked(pf, &dirty, true, &page_out_location);
-	if (ret != 0) {
+	ret = ਪੰਨਾ_ਚੌਖਟਾ_prepare_locked(pf, &dirty, true, &ਪੰਨਾ_ਬਾਹਰਲਾ_location);
+	ਜੇ (ret != 0) {
 		/* Backing store is full. Fail the fault so it is
 		 * reported as fatal.
 		 */
-		result = false;
-		goto out;
+		ਨਤੀਜਾ = false;
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 	/* Interrupts are now unlocked if they were not locked when we entered
 	 * this function, and we may service ISRs. The scheduler is still
 	 * locked.
 	 */
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(page_out_location);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	ਜੇ (dirty) {
+		do_backing_store_ਪੰਨਾ_ਬਾਹਰਲਾ(ਪੰਨਾ_ਬਾਹਰਲਾ_location);
 	}
-	do_backing_store_page_in(page_in_location);
+	do_backing_store_ਪੰਨਾ_ਵਿੱਚ(ਪੰਨਾ_ਵਿੱਚ_location);
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_BUSY);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_MAPPED);
-	frame_mapped_set(pf, addr);
-	if (pin) {
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+	k_mem_ਪੰਨਾ_ਚੌਖਟਾ_clear(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_BUSY);
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	k_mem_ਪੰਨਾ_ਚੌਖਟਾ_clear(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_MAPPED);
+	ਚੌਖਟਾ_mapped_ਸੈੱਟ(pf, addr);
+	ਜੇ (pin) {
+		k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਸੈੱਟ(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
 	}
 
-	arch_mem_page_in(addr, k_mem_page_frame_to_phys(pf));
-	k_mem_paging_backing_store_page_finalize(pf, page_in_location);
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!pin)) {
-		k_mem_paging_eviction_add(pf);
+	arch_mem_ਪੰਨਾ_ਵਿੱਚ(addr, k_mem_ਪੰਨਾ_ਚੌਖਟਾ_ਮੰਜ਼ਿਲ_phys(pf));
+	k_mem_paging_backing_store_ਪੰਨਾ_finalize(pf, ਪੰਨਾ_ਵਿੱਚ_location);
+	ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!pin)) {
+		k_mem_paging_eviction_ਜੋੜੋ(pf);
 	}
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+ਬਾਹਰਲਾ:
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_ਤਾਲਾ);
+#ਨਹੀਂਤਾਂ
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+#ਜੇ_ਅੰਤ
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 
-	return result;
+	ਵਾਪਸ ਨਤੀਜਾ;
 }
 
-static void do_page_in(void *addr)
+ਸਥਿਰ ਖਾਲੀ do_ਪੰਨਾ_ਵਿੱਚ(ਖਾਲੀ *addr)
 {
 	bool ret;
 
-	ret = do_page_fault(addr, false);
-	if (!ret) {
+	ret = do_ਪੰਨਾ_fault(addr, false);
+	ਜੇ (!ret) {
 		/* There is no error reporting channel to the caller, and
 		 * continuing would defer the failure to an arbitrary later
 		 * access.
@@ -2008,20 +2008,20 @@ static void do_page_in(void *addr)
 	}
 }
 
-void k_mem_page_in(void *addr, size_t size)
+ਖਾਲੀ k_mem_ਪੰਨਾ_ਵਿੱਚ(ਖਾਲੀ *addr, size_t ਮਾਪ)
 {
-	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_in_isr(),
+	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_ਵਿੱਚ_isr(),
 		 "%s may not be called in ISRs if CONFIG_DEMAND_PAGING_ALLOW_IRQ is enabled",
 		 __func__);
-	virt_region_foreach(addr, size, do_page_in);
+	virt_region_foreach(addr, ਮਾਪ, do_ਪੰਨਾ_ਵਿੱਚ);
 }
 
-static void do_mem_pin(void *addr)
+ਸਥਿਰ ਖਾਲੀ do_mem_pin(ਖਾਲੀ *addr)
 {
 	bool ret;
 
-	ret = do_page_fault(addr, true);
-	if (!ret) {
+	ret = do_ਪੰਨਾ_fault(addr, true);
+	ਜੇ (!ret) {
 		/* There is no error reporting channel to the caller, and
 		 * continuing with the memory not actually pinned would
 		 * defer the failure to an arbitrary later access, possibly
@@ -2032,47 +2032,47 @@ static void do_mem_pin(void *addr)
 	}
 }
 
-void k_mem_pin(void *addr, size_t size)
+ਖਾਲੀ k_mem_pin(ਖਾਲੀ *addr, size_t ਮਾਪ)
 {
-	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_in_isr(),
+	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_ਵਿੱਚ_isr(),
 		 "%s may not be called in ISRs if CONFIG_DEMAND_PAGING_ALLOW_IRQ is enabled",
 		 __func__);
-	virt_region_foreach(addr, size, do_mem_pin);
+	virt_region_foreach(addr, ਮਾਪ, do_mem_pin);
 }
 
-bool k_mem_page_fault(void *addr)
+bool k_mem_ਪੰਨਾ_fault(ਖਾਲੀ *addr)
 {
-	return do_page_fault(addr, false);
+	ਵਾਪਸ do_ਪੰਨਾ_fault(addr, false);
 }
 
-static void do_mem_unpin(void *addr)
+ਸਥਿਰ ਖਾਲੀ do_mem_unpin(ਖਾਲੀ *addr)
 {
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
+	ਬਣਤਰ k_mem_ਪੰਨਾ_ਚੌਖਟਾ *pf;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ;
 	uintptr_t flags, phys;
 
-	key = k_spin_lock(&z_mm_lock);
-	flags = arch_page_info_get(addr, &phys, false);
-	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&z_mm_ਤਾਲਾ);
+	flags = arch_ਪੰਨਾ_info_get(addr, &phys, false);
+	__ASSERT((flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_NOT_MAPPED) == 0,
 		 "invalid data page at %p", addr);
-	if ((flags & ARCH_DATA_PAGE_LOADED) != 0) {
-		pf = k_mem_phys_to_page_frame(phys);
-		if (k_mem_page_frame_is_pinned(pf)) {
-			k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_PINNED);
+	ਜੇ ((flags & ARCH_ਅੰਕੜੇ_ਪੰਨਾ_LOADED) != 0) {
+		pf = k_mem_phys_ਮੰਜ਼ਿਲ_ਪੰਨਾ_ਚੌਖਟਾ(phys);
+		ਜੇ (k_mem_ਪੰਨਾ_ਚੌਖਟਾ_is_pinned(pf)) {
+			k_mem_ਪੰਨਾ_ਚੌਖਟਾ_clear(pf, K_MEM_ਪੰਨਾ_ਚੌਖਟਾ_PINNED);
 
-			if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
-				k_mem_paging_eviction_add(pf);
+			ਜੇ (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+				k_mem_paging_eviction_ਜੋੜੋ(pf);
 			}
 		}
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_ਤਾਲਾ, ਕੁੰਜੀ);
 }
 
-void k_mem_unpin(void *addr, size_t size)
+ਖਾਲੀ k_mem_unpin(ਖਾਲੀ *addr, size_t ਮਾਪ)
 {
-	__ASSERT(page_frames_initialized, "%s called on %p too early", __func__,
+	__ASSERT(ਪੰਨਾ_ਚੌਖਟੇ_initialized, "%s called on %p too early", __func__,
 		 addr);
-	virt_region_foreach(addr, size, do_mem_unpin);
+	virt_region_foreach(addr, ਮਾਪ, do_mem_unpin);
 }
 
-#endif /* CONFIG_DEMAND_PAGING */
+#ਜੇ_ਅੰਤ /* CONFIG_DEMAND_PAGING */

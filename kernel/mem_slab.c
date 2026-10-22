@@ -4,98 +4,98 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/minmax.h>
-#include <string.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/toolchain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/linker/sections.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/dlist.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/check.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/iterable_sections.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/minmax.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <string.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kernel_internal.h>
-#include <scheduler.h>
-#include <wait_q.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <ksched.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel_internal.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <scheduler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <wait_q.h>
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_MEM_SLAB
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_STATS_MEM_SLAB
 
-static int k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
+ਸਥਿਰ ਪੂਰਨ k_mem_slab_stats_raw(ਬਣਤਰ k_obj_core *obj_core, ਖਾਲੀ *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != ਨਿਰਾ) && (stats != ਨਿਰਾ), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	ਬਣਤਰ k_mem_slab *slab;
+	k_spinlock_ਕੁੰਜੀ_t   ਕੁੰਜੀ;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	memcpy(stats, &slab->info, sizeof(slab->info));
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_ਦਾ(obj_core, ਬਣਤਰ k_mem_slab, obj_core);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
+	ਸਮ੍ਰਿਤੀ_ਨਕਲ(stats, &slab->info, ਆਕਾਰ(slab->info));
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-static int k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
+ਸਥਿਰ ਪੂਰਨ k_mem_slab_stats_query(ਬਣਤਰ k_obj_core *obj_core, ਖਾਲੀ *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != ਨਿਰਾ) && (stats != ਨਿਰਾ), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
-	struct sys_memory_stats *ptr = stats;
+	ਬਣਤਰ k_mem_slab *slab;
+	k_spinlock_ਕੁੰਜੀ_t   ਕੁੰਜੀ;
+	ਬਣਤਰ sys_ਸਮ੍ਰਿਤੀ_stats *ptr = stats;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	ptr->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			  slab->info.block_size;
-	ptr->allocated_bytes = slab->info.num_used * slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	ptr->max_allocated_bytes = slab->info.max_used * slab->info.block_size;
-#else
-	ptr->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_ਦਾ(obj_core, ਬਣਤਰ k_mem_slab, obj_core);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
+	ptr->free_ਬਾਈਟਾਂ = (slab->info.ਅੰਕ_ਖੰਡਾਂ - slab->info.ਅੰਕ_ਵਰਤਿਆ) *
+			  slab->info.ਖੰਡ_ਮਾਪ;
+	ptr->allocated_ਬਾਈਟਾਂ = slab->info.ਅੰਕ_ਵਰਤਿਆ * slab->info.ਖੰਡ_ਮਾਪ;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	ptr->max_allocated_ਬਾਈਟਾਂ = slab->info.max_ਵਰਤਿਆ * slab->info.ਖੰਡ_ਮਾਪ;
+#ਨਹੀਂਤਾਂ
+	ptr->max_allocated_ਬਾਈਟਾਂ = 0;
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-static int k_mem_slab_stats_reset(struct k_obj_core *obj_core)
+ਸਥਿਰ ਪੂਰਨ k_mem_slab_stats_reset(ਬਣਤਰ k_obj_core *obj_core)
 {
-	__ASSERT(obj_core != NULL, "NULL parameter");
+	__ASSERT(obj_core != ਨਿਰਾ, "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	ਬਣਤਰ k_mem_slab *slab;
+	k_spinlock_ਕੁੰਜੀ_t   ਕੁੰਜੀ;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
+	slab = CONTAINER_ਦਾ(obj_core, ਬਣਤਰ k_mem_slab, obj_core);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = slab->info.num_used;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_ਵਰਤਿਆ = slab->info.ਅੰਕ_ਵਰਤਿਆ;
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-static struct k_obj_core_stats_desc mem_slab_stats_desc = {
-	.raw_size = sizeof(struct k_mem_slab_info),
-	.query_size = sizeof(struct sys_memory_stats),
+ਸਥਿਰ ਬਣਤਰ k_obj_core_stats_desc mem_slab_stats_desc = {
+	.raw_ਮਾਪ = ਆਕਾਰ(ਬਣਤਰ k_mem_slab_info),
+	.query_ਮਾਪ = ਆਕਾਰ(ਬਣਤਰ sys_ਸਮ੍ਰਿਤੀ_stats),
 	.raw   = k_mem_slab_stats_raw,
 	.query = k_mem_slab_stats_query,
 	.reset = k_mem_slab_stats_reset,
-	.disable = NULL,
-	.enable = NULL,
+	.disable = ਨਿਰਾ,
+	.enable = ਨਿਰਾ,
 };
 
 K_OBJ_TYPE_DEFINE_STATS(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID,
 			&mem_slab_stats_desc, info);
-#else
-K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
+#ਨਹੀਂਤਾਂ
+K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, ਨਿਰਾ);
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_MEM_SLAB */
 
 /**
  * @brief Initialize kernel memory slab subsystem.
@@ -106,38 +106,38 @@ K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
  * @retval 0 on success.
  * @retval -EINVAL if @p slab contains invalid configuration and/or values.
  */
-static int create_free_list(struct k_mem_slab *slab)
+ਸਥਿਰ ਪੂਰਨ create_free_list(ਬਣਤਰ k_mem_slab *slab)
 {
-	char *p;
-	size_t total_size;
+	ਅੱਖਰ *p;
+	size_t ਕੁੱਲ_ਮਾਪ;
 
-	CHECKIF(slab->info.block_size == 0U) {
-		return -EINVAL;
+	CHECKIF(slab->info.ਖੰਡ_ਮਾਪ == 0U) {
+		ਵਾਪਸ -EINVAL;
 	}
 
 	/* blocks must be word aligned */
-	CHECKIF(((slab->info.block_size | (uintptr_t)slab->buffer) &
-				(sizeof(void *) - 1)) != 0U) {
-		return -EINVAL;
+	CHECKIF(((slab->info.ਖੰਡ_ਮਾਪ | (uintptr_t)slab->ਬਫਰ) &
+				(ਆਕਾਰ(ਖਾਲੀ *) - 1)) != 0U) {
+		ਵਾਪਸ -EINVAL;
 	}
 
-	if (size_mul_overflow(slab->info.block_size, slab->info.num_blocks, &total_size)) {
-		return -EINVAL;
+	ਜੇ (ਮਾਪ_mul_ਉਛਾਲ(slab->info.ਖੰਡ_ਮਾਪ, slab->info.ਅੰਕ_ਖੰਡਾਂ, &ਕੁੱਲ_ਮਾਪ)) {
+		ਵਾਪਸ -EINVAL;
 	}
-	if (size_add_overflow((size_t)(uintptr_t)slab->buffer, total_size, &total_size)) {
-		return -EINVAL;
+	ਜੇ (ਮਾਪ_ਜੋੜੋ_ਉਛਾਲ((size_t)(uintptr_t)slab->ਬਫਰ, ਕੁੱਲ_ਮਾਪ, &ਕੁੱਲ_ਮਾਪ)) {
+		ਵਾਪਸ -EINVAL;
 	}
 
-	slab->free_list = NULL;
-	p = (char *)(total_size - slab->info.block_size);
+	slab->free_list = ਨਿਰਾ;
+	p = (ਅੱਖਰ *)(ਕੁੱਲ_ਮਾਪ - slab->info.ਖੰਡ_ਮਾਪ);
 
-	for (uint32_t i = 0; i < slab->info.num_blocks; i++) {
-		*(char **)p = slab->free_list;
+	ਲਈ (uint32_t i = 0; i < slab->info.ਅੰਕ_ਖੰਡਾਂ; i++) {
+		*(ਅੱਖਰ **)p = slab->free_list;
 		slab->free_list = p;
-		p -= slab->info.block_size;
+		p -= slab->info.ਖੰਡ_ਮਾਪ;
 	}
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
 /**
@@ -153,11 +153,11 @@ static int create_free_list(struct k_mem_slab *slab)
  * (create_free_list() fails), matching the previous SYS_INIT behavior whose
  * return value was discarded by the init runner.
  */
-static void init_mem_slab_module(void)
+ਸਥਿਰ ਖਾਲੀ init_mem_slab_module(ਖਾਲੀ)
 {
 	STRUCT_SECTION_FOREACH(k_mem_slab, slab) {
-		if (create_free_list(slab) < 0) {
-			return;
+		ਜੇ (create_free_list(slab) < 0) {
+			ਵਾਪਸ;
 		}
 		k_object_init(slab);
 	}
@@ -165,172 +165,172 @@ static void init_mem_slab_module(void)
 
 K_KERNEL_INIT_PRE(init_mem_slab_module);
 
-int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
-		    size_t block_size, uint32_t num_blocks)
+ਪੂਰਨ k_mem_slab_init(ਬਣਤਰ k_mem_slab *slab, ਖਾਲੀ *ਬਫਰ,
+		    size_t ਖੰਡ_ਮਾਪ, uint32_t ਅੰਕ_ਖੰਡਾਂ)
 {
-	int rc;
+	ਪੂਰਨ rc;
 
-	slab->info.num_blocks = num_blocks;
-	slab->info.block_size = block_size;
-	slab->buffer = buffer;
-	slab->info.num_used = 0U;
-	slab->lock = (struct k_spinlock) {};
+	slab->info.ਅੰਕ_ਖੰਡਾਂ = ਅੰਕ_ਖੰਡਾਂ;
+	slab->info.ਖੰਡ_ਮਾਪ = ਖੰਡ_ਮਾਪ;
+	slab->ਬਫਰ = ਬਫਰ;
+	slab->info.ਅੰਕ_ਵਰਤਿਆ = 0U;
+	slab->ਤਾਲਾ = (ਬਣਤਰ k_spinlock) {};
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = 0U;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_ਵਰਤਿਆ = 0U;
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 	rc = create_free_list(slab);
-	if (rc < 0) {
-		goto out;
+	ਜੇ (rc < 0) {
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_MEM_SLAB
 	k_obj_core_init_and_link(K_OBJ_CORE(slab), &obj_type_mem_slab);
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
-	k_obj_core_stats_register(K_OBJ_CORE(slab), &slab->info,
-				  sizeof(struct k_mem_slab_info));
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_MEM_SLAB */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_STATS_MEM_SLAB
+	k_obj_core_stats_ਰਜਿਸਟਰ(K_OBJ_CORE(slab), &slab->info,
+				  ਆਕਾਰ(ਬਣਤਰ k_mem_slab_info));
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
 
 	z_waitq_init(&slab->wait_q);
 	k_object_init(slab);
-out:
-	SYS_PORT_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
+ਬਾਹਰਲਾ:
+	SYS_ਪੋਰਟ_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
 
-	return rc;
+	ਵਾਪਸ rc;
 }
 
-static bool slab_ptr_is_good(struct k_mem_slab *slab, const void *ptr)
+ਸਥਿਰ bool slab_ptr_is_good(ਬਣਤਰ k_mem_slab *slab, ਅਚਲ ਖਾਲੀ *ptr)
 {
-	if (!IS_ENABLED(CONFIG_MEM_SLAB_POINTER_VALIDATE)) {
-		return true;
+	ਜੇ (!IS_ENABLED(CONFIG_MEM_SLAB_ਸੂਚਕ_VALIDATE)) {
+		ਵਾਪਸ true;
 	}
 
-	const char *p = ptr;
-	ptrdiff_t offset = p - slab->buffer;
+	ਅਚਲ ਅੱਖਰ *p = ptr;
+	ptrdiff_t ਵਿੱਥ = p - slab->ਬਫਰ;
 
-	return (offset >= 0) &&
-	       (offset < (slab->info.block_size * slab->info.num_blocks)) &&
-	       ((offset % slab->info.block_size) == 0);
+	ਵਾਪਸ (ਵਿੱਥ >= 0) &&
+	       (ਵਿੱਥ < (slab->info.ਖੰਡ_ਮਾਪ * slab->info.ਅੰਕ_ਖੰਡਾਂ)) &&
+	       ((ਵਿੱਥ % slab->info.ਖੰਡ_ਮਾਪ) == 0);
 }
 
-int k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
+ਪੂਰਨ k_mem_slab_alloc(ਬਣਤਰ k_mem_slab *slab, ਖਾਲੀ **mem, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
-	int result;
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
+	ਪੂਰਨ ਨਤੀਜਾ;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
 
-	if (slab->free_list != NULL) {
+	ਜੇ (slab->free_list != ਨਿਰਾ) {
 		/* take a free block */
 		*mem = slab->free_list;
-		slab->free_list = *(char **)(slab->free_list);
-		slab->info.num_used++;
-		__ASSERT((slab->free_list == NULL &&
-			  slab->info.num_used == slab->info.num_blocks) ||
+		slab->free_list = *(ਅੱਖਰ **)(slab->free_list);
+		slab->info.ਅੰਕ_ਵਰਤਿਆ++;
+		__ASSERT((slab->free_list == ਨਿਰਾ &&
+			  slab->info.ਅੰਕ_ਵਰਤਿਆ == slab->info.ਅੰਕ_ਖੰਡਾਂ) ||
 			 slab_ptr_is_good(slab, slab->free_list),
 			 "slab corruption detected");
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-		slab->info.max_used = max(slab->info.num_used,
-					  slab->info.max_used);
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+		slab->info.max_ਵਰਤਿਆ = max(slab->info.ਅੰਕ_ਵਰਤਿਆ,
+					  slab->info.max_ਵਰਤਿਆ);
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
+		ਨਤੀਜਾ = 0;
+	} ਨਹੀਂਤਾਂ ਜੇ (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
 		   !IS_ENABLED(CONFIG_MULTITHREADING)) {
 		/* don't wait for a free block to become available */
-		*mem = NULL;
-		result = -ENOMEM;
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
+		*mem = ਨਿਰਾ;
+		ਨਤੀਜਾ = -ENOMEM;
+	} ਨਹੀਂਤਾਂ {
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
 
 		/* wait for a free block or timeout */
-		result = z_pend_curr(&slab->lock, key, &slab->wait_q, timeout);
-		if (result == 0) {
-			*mem = _current->base.swap_data;
+		ਨਤੀਜਾ = z_pend_curr(&slab->ਤਾਲਾ, ਕੁੰਜੀ, &slab->wait_q, timeout);
+		ਜੇ (ਨਤੀਜਾ == 0) {
+			*mem = _current->ਅਧਾਰ.ਅਦਲਾ_ਬਦਲੀ_ਅੰਕੜੇ;
 		}
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, ਨਤੀਜਾ);
 
-		return result;
+		ਵਾਪਸ ਨਤੀਜਾ;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, ਨਤੀਜਾ);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return result;
+	ਵਾਪਸ ਨਤੀਜਾ;
 }
 
-void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
+ਖਾਲੀ k_mem_slab_free(ਬਣਤਰ k_mem_slab *slab, ਖਾਲੀ *mem)
 {
-	if (!slab_ptr_is_good(slab, mem)) {
+	ਜੇ (!slab_ptr_is_good(slab, mem)) {
 		__ASSERT(false, "Invalid memory pointer provided");
 		k_panic();
-		return;
+		ਵਾਪਸ;
 	}
 
-#ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
-	k_obj_core_evict_range(mem, slab->info.block_size);
-#endif /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_EVICT_ON_FREE
+	k_obj_core_evict_range(mem, slab->info.ਖੰਡ_ਮਾਪ);
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, free, slab);
-	if (unlikely(slab->free_list == NULL) && IS_ENABLED(CONFIG_MULTITHREADING)) {
-		if (z_sched_wake(&slab->wait_q, 0, mem)) {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
-			z_reschedule(&slab->lock, key);
-			return;
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_mem_slab, ਮੁਕਤ, slab);
+	ਜੇ (unlikely(slab->free_list == ਨਿਰਾ) && IS_ENABLED(CONFIG_MULTITHREADING)) {
+		ਜੇ (z_sched_wake(&slab->wait_q, 0, mem)) {
+			SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, ਮੁਕਤ, slab);
+			z_reschedule(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
+			ਵਾਪਸ;
 		}
 	}
-	*(char **) mem = slab->free_list;
-	slab->free_list = (char *) mem;
-	slab->info.num_used--;
+	*(ਅੱਖਰ **) mem = slab->free_list;
+	slab->free_list = (ਅੱਖਰ *) mem;
+	slab->info.ਅੰਕ_ਵਰਤਿਆ--;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_mem_slab, ਮੁਕਤ, slab);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 }
 
-int k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stats *stats)
+ਪੂਰਨ k_mem_slab_runtime_stats_get(ਬਣਤਰ k_mem_slab *slab, ਬਣਤਰ sys_ਸਮ੍ਰਿਤੀ_stats *stats)
 {
-	if ((slab == NULL) || (stats == NULL)) {
-		return -EINVAL;
+	ਜੇ ((slab == ਨਿਰਾ) || (stats == ਨਿਰਾ)) {
+		ਵਾਪਸ -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
 
-	stats->allocated_bytes = slab->info.num_used * slab->info.block_size;
-	stats->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			    slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	stats->max_allocated_bytes = slab->info.max_used *
-				     slab->info.block_size;
-#else
-	stats->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	stats->allocated_ਬਾਈਟਾਂ = slab->info.ਅੰਕ_ਵਰਤਿਆ * slab->info.ਖੰਡ_ਮਾਪ;
+	stats->free_ਬਾਈਟਾਂ = (slab->info.ਅੰਕ_ਖੰਡਾਂ - slab->info.ਅੰਕ_ਵਰਤਿਆ) *
+			    slab->info.ਖੰਡ_ਮਾਪ;
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	stats->max_allocated_ਬਾਈਟਾਂ = slab->info.max_ਵਰਤਿਆ *
+				     slab->info.ਖੰਡ_ਮਾਪ;
+#ਨਹੀਂਤਾਂ
+	stats->max_allocated_ਬਾਈਟਾਂ = 0;
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-int k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+ਪੂਰਨ k_mem_slab_runtime_stats_reset_max(ਬਣਤਰ k_mem_slab *slab)
 {
-	if (slab == NULL) {
-		return -EINVAL;
+	ਜੇ (slab == ਨਿਰਾ) {
+		ਵਾਪਸ -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_ਕੁੰਜੀ_t ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&slab->ਤਾਲਾ);
 
-	slab->info.max_used = slab->info.num_used;
+	slab->info.max_ਵਰਤਿਆ = slab->info.ਅੰਕ_ਵਰਤਿਆ;
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	return 0;
+	ਵਾਪਸ 0;
 }
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#ਜੇ_ਅੰਤ /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */

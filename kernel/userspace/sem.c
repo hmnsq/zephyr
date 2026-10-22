@@ -4,102 +4,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/sem.h>
-#include <zephyr/internal/syscall_handler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/sem.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/internal/syscall_handler.h>
 
-#define SYS_SEM_MINIMUM      0
-#define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ SYS_SEM_MINIMUM      0
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+ਸਥਿਰ ਸਤਰਅੰਦਰ atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_ਮੁੱਲ, new_ਮੁੱਲ;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+	ਕਰੋ {
+		old_ਮੁੱਲ = atomic_get(val);
+		ਜੇ (old_ਮੁੱਲ < minimum) {
+			ਰੋਕੋ;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_ਮੁੱਲ = old_ਮੁੱਲ - 1;
+	} ਜਦੋਂ (atomic_cas(val, old_ਮੁੱਲ, new_ਮੁੱਲ) == 0);
 
-	return old_value;
+	ਵਾਪਸ old_ਮੁੱਲ;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
-				   atomic_t maximum)
+ਸਥਿਰ ਸਤਰਅੰਦਰ atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+				   atomic_t ਵੱਧ_ਤੋਂ_ਵੱਧ)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_ਮੁੱਲ, new_ਮੁੱਲ;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+	ਕਰੋ {
+		old_ਮੁੱਲ = atomic_get(val);
+		ਜੇ (old_ਮੁੱਲ >= ਵੱਧ_ਤੋਂ_ਵੱਧ) {
+			ਰੋਕੋ;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_ਮੁੱਲ = ((old_ਮੁੱਲ < minimum) ? minimum : old_ਮੁੱਲ) + 1;
+	} ਜਦੋਂ (atomic_cas(val, old_ਮੁੱਲ, new_ਮੁੱਲ) == 0U);
 
-	return old_value;
+	ਵਾਪਸ old_ਮੁੱਲ;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+ਪੂਰਨ sys_sem_init(ਬਣਤਰ sys_sem *sem, ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ initial_ਗਿਣਤੀ,
+		 ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ ਹੱਦਬੰਦੀ)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+	ਜੇ ((sem == ਨਿਰਾ) || (ਹੱਦਬੰਦੀ == SYS_SEM_MINIMUM) ||
+	    (initial_ਗਿਣਤੀ > ਹੱਦਬੰਦੀ) || (ਹੱਦਬੰਦੀ > ਵੱਧ_ਤੋਂ_ਵੱਧ_ਅੰਕ)) {
+		ਵਾਪਸ -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
-	sem->limit = limit;
+	(ਖਾਲੀ)atomic_ਸੈੱਟ(&sem->futex.val, initial_ਗਿਣਤੀ);
+	sem->ਹੱਦਬੰਦੀ = ਹੱਦਬੰਦੀ;
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+ਪੂਰਨ sys_sem_give(ਬਣਤਰ sys_sem *sem)
 {
-	int ret = 0;
-	atomic_t old_value;
+	ਪੂਰਨ ret = 0;
+	atomic_t old_ਮੁੱਲ;
 
-	old_value = bounded_inc(&sem->futex.val,
-				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	old_ਮੁੱਲ = bounded_inc(&sem->futex.val,
+				SYS_SEM_MINIMUM, sem->ਹੱਦਬੰਦੀ);
+	ਜੇ (old_ਮੁੱਲ < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		ਜੇ (ret > 0) {
+			ਵਾਪਸ 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} ਨਹੀਂਤਾਂ ਜੇ (old_ਮੁੱਲ >= sem->ਹੱਦਬੰਦੀ) {
+		ਵਾਪਸ -EAGAIN;
+	} ਨਹੀਂਤਾਂ {
 		;
 	}
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+ਪੂਰਨ sys_sem_take(ਬਣਤਰ sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
-	atomic_t old_value;
+	ਪੂਰਨ ret = 0;
+	atomic_t old_ਮੁੱਲ;
 
-	do {
-		old_value = bounded_dec(&sem->futex.val,
+	ਕਰੋ {
+		old_ਮੁੱਲ = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		ਜੇ (old_ਮੁੱਲ > 0) {
+			ਵਾਪਸ 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} ਜਦੋਂ (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	ਵਾਪਸ ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ sys_sem_ਗਿਣਤੀ_get(ਬਣਤਰ sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	ਪੂਰਨ ਮੁੱਲ = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	ਵਾਪਸ (ਮੁੱਲ > SYS_SEM_MINIMUM) ? ਮੁੱਲ : SYS_SEM_MINIMUM;
 }

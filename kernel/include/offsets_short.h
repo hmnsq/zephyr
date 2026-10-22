@@ -4,58 +4,58 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
-#define ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
 
-#include <zephyr/offsets.h>
-#include <offsets_short_arch.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/offsets.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <offsets_short_arch.h>
 
 /* kernel */
 
 /* main */
-#ifndef CONFIG_SMP
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_SMP
 /* Relies on _kernel.cpu being the first member of _kernel and having 1 element
  */
-#define _kernel_offset_to_nested \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_nested \
 	(___cpu_t_nested_OFFSET)
 
-#define _kernel_offset_to_irq_stack \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_irq_ਢੇਰ \
 	(___cpu_t_irq_stack_OFFSET)
 
-#define _kernel_offset_to_current \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_current \
 	(___cpu_t_current_OFFSET)
 
-#if defined(CONFIG_FPU_SHARING)
-#define _kernel_offset_to_fp_ctx \
+#ਜੇ defined(CONFIG_FPU_SHARING)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
-#endif /* CONFIG_FPU_SHARING */
-#endif /* CONFIG_SMP */
+#ਜੇ_ਅੰਤ /* CONFIG_FPU_SHARING */
+#ਜੇ_ਅੰਤ /* CONFIG_SMP */
 
-#define _kernel_offset_to_idle \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_idle \
 	(___kernel_t_idle_OFFSET)
 
-#define _kernel_offset_to_ready_q_cache \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ kernel_ਵਿੱਥ_ਮੰਜ਼ਿਲ_ready_q_cache \
 	(___kernel_t_ready_q_OFFSET + ___ready_q_t_cache_OFFSET)
 
 /* end - kernel */
 
-/* threads */
+/*ਧਾਗੇ*/
 
 /* main */
 
-#define _thread_offset_to_callee_saved \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ thread_ਵਿੱਥ_ਮੰਜ਼ਿਲ_callee_saved \
 	(___thread_t_callee_saved_OFFSET)
 
-#ifdef CONFIG_THREAD_LOCAL_STORAGE
-#define _thread_offset_to_tls \
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_THREAD_LOCAL_STORAGE
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ thread_ਵਿੱਥ_ਮੰਜ਼ਿਲ_tls \
 	(___thread_t_tls_OFFSET)
-#endif /* CONFIG_THREAD_LOCAL_STORAGE */
+#ਜੇ_ਅੰਤ /* CONFIG_THREAD_LOCAL_STORAGE */
 
-/* base */
+/*ਅਧਾਰ*/
 
-#define _thread_offset_to_user_options \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ thread_ਵਿੱਥ_ਮੰਜ਼ਿਲ_user_options \
 	(___thread_t_base_OFFSET + ___thread_base_t_user_options_OFFSET)
 
 /* end - threads */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */

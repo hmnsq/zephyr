@@ -22,64 +22,64 @@
  * @brief Kernel event object
  */
 
-#include <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/toolchain.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/dlist.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/internal/syscall_handler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/tracing/tracing.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/check.h>
 /* private kernel APIs */
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <wait_q.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <ksched.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <scheduler.h>
 
-#define K_EVENT_WAIT_ANY      0x00   /* Wait for any events */
-#define K_EVENT_WAIT_ALL      0x01   /* Wait for all events */
-#define K_EVENT_WAIT_MASK     0x01
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ K_EVENT_WAIT_ANY      0x00   /* Wait for any events */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ K_EVENT_WAIT_ALL      0x01   /* Wait for all events */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ K_EVENT_WAIT_ਨਕਾਬ     0x01
 
-#define K_EVENT_OPTION_RESET  0x02   /* Reset events prior to waiting */
-#define K_EVENT_OPTION_CLEAR  0x04   /* Clear events that are received */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ K_EVENT_OPTION_RESET  0x02   /* Reset events prior to waiting */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ K_EVENT_OPTION_CLEAR  0x04   /* Clear events that are received */
 
-struct event_walk_data {
-#ifdef CONFIG_WAITQ_SCALABLE
-	struct k_thread  *head;
-#endif /* CONFIG_WAITQ_SCALABLE */
+ਬਣਤਰ event_walk_ਅੰਕੜੇ {
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_WAITQ_SCALABLE
+	ਬਣਤਰ k_thread  *ਸਿਰ;
+#ਜੇ_ਅੰਤ /* CONFIG_WAITQ_SCALABLE */
 	uint32_t events;
 	uint32_t clear_events;
 };
 
-#ifdef CONFIG_OBJ_CORE_EVENT
-K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_EVENT */
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_EVENT
+K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, ਨਿਰਾ);
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_EVENT */
 
-void z_impl_k_event_init(struct k_event *event)
+ਖਾਲੀ z_impl_k_event_init(ਬਣਤਰ k_event *event)
 {
-	__ASSERT_NO_MSG(!arch_is_in_isr());
+	__ASSERT_NO_MSG(!arch_is_ਵਿੱਚ_isr());
 
 	event->events = 0;
-	event->lock = (struct k_spinlock) {};
+	event->ਤਾਲਾ = (ਬਣਤਰ k_spinlock) {};
 
-	SYS_PORT_TRACING_OBJ_INIT(k_event, event);
+	SYS_ਪੋਰਟ_TRACING_OBJ_INIT(k_event, event);
 
 	z_waitq_init(&event->wait_q);
 
 	k_object_init(event);
 
-#ifdef CONFIG_OBJ_CORE_EVENT
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_OBJ_CORE_EVENT
 	k_obj_core_init_and_link(K_OBJ_CORE(event), &obj_type_event);
-#endif /* CONFIG_OBJ_CORE_EVENT */
+#ਜੇ_ਅੰਤ /* CONFIG_OBJ_CORE_EVENT */
 }
 
-#ifdef CONFIG_USERSPACE
-void z_vrfy_k_event_init(struct k_event *event)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+ਖਾਲੀ z_vrfy_k_event_init(ਬਣਤਰ k_event *event)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(event, K_OBJ_EVENT));
 	z_impl_k_event_init(event);
 }
-#include <zephyr/syscalls/k_event_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_init_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
 /**
  * @brief determine the set of events that have been satisfied
@@ -93,59 +93,59 @@ void z_vrfy_k_event_init(struct k_event *event)
  *
  * @return event bits that satisfy the wait condition or zero
  */
-static uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
-					unsigned int wait_condition)
+ਸਥਿਰ uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
+					ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ wait_condition)
 {
-	uint32_t match = current & desired;
+	uint32_t ਮੇਲ = current & desired;
 
-	if ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
+	ਜੇ ((wait_condition == K_EVENT_WAIT_ALL) && (ਮੇਲ != desired)) {
 		/* special case for K_EVENT_WAIT_ALL */
-		return 0;
+		ਵਾਪਸ 0;
 	}
 
 	/* return the matched events for any wait condition */
-	return match;
+	ਵਾਪਸ ਮੇਲ;
 }
 
-#ifdef CONFIG_WAITQ_SCALABLE
-static void event_post_walk_op(int status, void *data)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_WAITQ_SCALABLE
+ਸਥਿਰ ਖਾਲੀ event_post_walk_op(ਪੂਰਨ ਸਥਿਤੀ, ਖਾਲੀ *ਅੰਕੜੇ)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
 	 * to call here because this walk_op callback
 	 * is invoked with the scheduler spinlock held.
 	 */
-	ARG_UNUSED(status);
-	struct event_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ARG_ਅਣਵਰਤਿਆ(ਸਥਿਤੀ);
+	ਬਣਤਰ event_walk_ਅੰਕੜੇ *walk_ਅੰਕੜੇ = ਅੰਕੜੇ;
+	ਬਣਤਰ k_thread *thread, *ਅਗਲਾ;
 
-	thread = walk_data->head;
+	thread = walk_ਅੰਕੜੇ->ਸਿਰ;
 
-	while (thread != NULL) {
-		next = thread->next_wake_link;
+	ਜਦੋਂ (thread != ਨਿਰਾ) {
+		ਅਗਲਾ = thread->ਅਗਲਾ_wake_link;
 
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_ਮੁੱਲ_ਸੈੱਟ(thread, 0);
 		z_sched_wake_thread_locked(thread);
 
-		thread = next;
+		thread = ਅਗਲਾ;
 	}
 }
-#define EVENT_POST_WALK_OP_FN event_post_walk_op
-#else /* CONFIG_WAITQ_SCALABLE */
-#define EVENT_POST_WALK_OP_FN NULL
-#endif /* CONFIG_WAITQ_SCALABLE */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ EVENT_POST_WALK_OP_FN event_post_walk_op
+#ਨਹੀਂਤਾਂ /* CONFIG_WAITQ_SCALABLE */
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ EVENT_POST_WALK_OP_FN ਨਿਰਾ
+#ਜੇ_ਅੰਤ /* CONFIG_WAITQ_SCALABLE */
 
-static int event_walk_op(struct k_thread *thread, void *data)
+ਸਥਿਰ ਪੂਰਨ event_walk_op(ਬਣਤਰ k_thread *thread, ਖਾਲੀ *ਅੰਕੜੇ)
 {
-	uint32_t match;
-	unsigned int wait_condition;
-	struct event_walk_data *event_data = data;
+	uint32_t ਮੇਲ;
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ wait_condition;
+	ਬਣਤਰ event_walk_ਅੰਕੜੇ *event_ਅੰਕੜੇ = ਅੰਕੜੇ;
 
-	wait_condition = thread->event_options & K_EVENT_WAIT_MASK;
+	wait_condition = thread->event_options & K_EVENT_WAIT_ਨਕਾਬ;
 
-	match = are_wait_conditions_met(thread->events, event_data->events,
+	ਮੇਲ = are_wait_conditions_met(thread->events, event_ਅੰਕੜੇ->events,
 					wait_condition);
-	if (match != 0) {
+	ਜੇ (ਮੇਲ != 0) {
 		/*
 		 * The wait conditions have been satisfied. Set the
 		 * received events then wake thread now if allowed,
@@ -153,44 +153,44 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 *
 		 * NOTE: thread event options can consume an event
 		 */
-		thread->events = match;
-		if (thread->event_options & K_EVENT_OPTION_CLEAR) {
-			event_data->clear_events |= match;
+		thread->events = ਮੇਲ;
+		ਜੇ (thread->event_options & K_EVENT_OPTION_CLEAR) {
+			event_ਅੰਕੜੇ->clear_events |= ਮੇਲ;
 		}
-		(void)z_try_abort_thread_timeout(thread);
+		(ਖਾਲੀ)z_try_abort_thread_timeout(thread);
 
-#ifndef CONFIG_WAITQ_SCALABLE
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
 		 * to call here because this walk_op callback
 		 * is invoked with the scheduler spinlock held.
 		 */
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_ਮੁੱਲ_ਸੈੱਟ(thread, 0);
 		z_sched_wake_thread_locked(thread);
-#else /* !CONFIG_WAITQ_SCALABLE */
-		thread->next_wake_link = event_data->head;
-		event_data->head = thread;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+#ਨਹੀਂਤਾਂ /* !CONFIG_WAITQ_SCALABLE */
+		thread->ਅਗਲਾ_wake_link = event_ਅੰਕੜੇ->ਸਿਰ;
+		event_ਅੰਕੜੇ->ਸਿਰ = thread;
+#ਜੇ_ਅੰਤ /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
-static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
-				  uint32_t events_mask)
+ਸਥਿਰ uint32_t k_event_post_ਅੰਦਰੂਨੀ(ਬਣਤਰ k_event *event, uint32_t events,
+				  uint32_t events_ਨਕਾਬ)
 {
-	k_spinlock_key_t  key;
-	struct event_walk_data data;
-	uint32_t previous_events;
+	k_spinlock_ਕੁੰਜੀ_t  ਕੁੰਜੀ;
+	ਬਣਤਰ event_walk_ਅੰਕੜੇ ਅੰਕੜੇ;
+	uint32_t ਪਿਛਲਾ_events;
 
-	key = k_spin_lock(&event->lock);
+	ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&event->ਤਾਲਾ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
-					events_mask);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
+					events_ਨਕਾਬ);
 
-	previous_events = event->events & events_mask;
-	events = (event->events & ~events_mask) |
-		 (events & events_mask);
+	ਪਿਛਲਾ_events = event->events & events_ਨਕਾਬ;
+	events = (event->events & ~events_ਨਕਾਬ) |
+		 (events & events_ਨਕਾਬ);
 
 	/*
 	 * Posting an event has the potential to wake multiple pended threads.
@@ -203,128 +203,128 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	 * 2. Walk the resulting linked list and wake each of the threads.
 	 */
 
-#ifdef CONFIG_WAITQ_SCALABLE
-	data.head = NULL;
-#endif /* CONFIG_WAITQ_SCALABLE */
-	data.events = events;
-	data.clear_events = 0;
-	z_sched_waitq_walk(&event->wait_q, event_walk_op, EVENT_POST_WALK_OP_FN, &data);
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_WAITQ_SCALABLE
+	ਅੰਕੜੇ.ਸਿਰ = ਨਿਰਾ;
+#ਜੇ_ਅੰਤ /* CONFIG_WAITQ_SCALABLE */
+	ਅੰਕੜੇ.events = events;
+	ਅੰਕੜੇ.clear_events = 0;
+	z_sched_waitq_walk(&event->wait_q, event_walk_op, EVENT_POST_WALK_OP_FN, &ਅੰਕੜੇ);
 
 	/* stash any events not consumed */
-	event->events = data.events & ~data.clear_events;
+	event->events = ਅੰਕੜੇ.events & ~ਅੰਕੜੇ.clear_events;
 
-	z_reschedule(&event->lock, key);
+	z_reschedule(&event->ਤਾਲਾ, ਕੁੰਜੀ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
-				       events_mask);
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
+				       events_ਨਕਾਬ);
 
-	return previous_events;
+	ਵਾਪਸ ਪਿਛਲਾ_events;
 }
 
-uint32_t z_impl_k_event_post(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_post(ਬਣਤਰ k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events);
+	ਵਾਪਸ k_event_post_ਅੰਦਰੂਨੀ(event, events, events);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_post(struct k_event *event, uint32_t events)
-{
-	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_post(event, events);
-}
-#include <zephyr/syscalls/k_event_post_mrsh.c>
-#endif /* CONFIG_USERSPACE */
-
-uint32_t z_impl_k_event_set(struct k_event *event, uint32_t events)
-{
-	return k_event_post_internal(event, events, ~0);
-}
-
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set(struct k_event *event, uint32_t events)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_post(ਬਣਤਰ k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set(event, events);
+	ਵਾਪਸ z_impl_k_event_post(event, events);
 }
-#include <zephyr/syscalls/k_event_set_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_post_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_set_masked(struct k_event *event, uint32_t events,
-			       uint32_t events_mask)
+uint32_t z_impl_k_event_ਸੈੱਟ(ਬਣਤਰ k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events_mask);
+	ਵਾਪਸ k_event_post_ਅੰਦਰੂਨੀ(event, events, ~0);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set_masked(struct k_event *event, uint32_t events,
-			       uint32_t events_mask)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_ਸੈੱਟ(ਬਣਤਰ k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set_masked(event, events, events_mask);
+	ਵਾਪਸ z_impl_k_event_ਸੈੱਟ(event, events);
 }
-#include <zephyr/syscalls/k_event_set_masked_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_set_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_clear(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_ਸੈੱਟ_masked(ਬਣਤਰ k_event *event, uint32_t events,
+			       uint32_t events_ਨਕਾਬ)
 {
-	return k_event_post_internal(event, 0, events);
+	ਵਾਪਸ k_event_post_ਅੰਦਰੂਨੀ(event, events, events_ਨਕਾਬ);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_clear(struct k_event *event, uint32_t events)
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_ਸੈੱਟ_masked(ਬਣਤਰ k_event *event, uint32_t events,
+			       uint32_t events_ਨਕਾਬ)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_clear(event, events);
+	ਵਾਪਸ z_impl_k_event_ਸੈੱਟ_masked(event, events, events_ਨਕਾਬ);
 }
-#include <zephyr/syscalls/k_event_clear_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_set_masked_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
-				      unsigned int options, k_timeout_t timeout)
+uint32_t z_impl_k_event_clear(ਬਣਤਰ k_event *event, uint32_t events)
+{
+	ਵਾਪਸ k_event_post_ਅੰਦਰੂਨੀ(event, 0, events);
+}
+
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_clear(ਬਣਤਰ k_event *event, uint32_t events)
+{
+	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
+	ਵਾਪਸ z_impl_k_event_clear(event, events);
+}
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_clear_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
+
+ਸਥਿਰ uint32_t k_event_wait_ਅੰਦਰੂਨੀ(ਬਣਤਰ k_event *event, uint32_t events,
+				      ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ options, k_timeout_t timeout)
 {
 	uint32_t  rv = 0;
 
-	__ASSERT(((arch_is_in_isr() == false) ||
+	__ASSERT(((arch_is_ਵਿੱਚ_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
 					options, timeout);
 
-	if ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+	ਜੇ ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
+		ਵਾਪਸ 0;
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&event->lock);
+	k_spinlock_ਕੁੰਜੀ_t  ਕੁੰਜੀ = k_spin_ਤਾਲਾ(&event->ਤਾਲਾ);
 
-	if (options & K_EVENT_OPTION_RESET) {
+	ਜੇ (options & K_EVENT_OPTION_RESET) {
 		event->events = 0;
 	}
 
-	if (events == 0) {
-		k_spin_unlock(&event->lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+	ਜੇ (events == 0) {
+		k_spin_unlock(&event->ਤਾਲਾ, ਕੁੰਜੀ);
+		SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
+		ਵਾਪਸ 0;
 	}
 
-	unsigned int wait_condition = options & K_EVENT_WAIT_MASK;
-	struct k_thread *thread = k_sched_current_thread_query();
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ wait_condition = options & K_EVENT_WAIT_ਨਕਾਬ;
+	ਬਣਤਰ k_thread *thread = k_sched_current_thread_query();
 
 	/* Test if the wait conditions have already been met. */
 	rv = are_wait_conditions_met(events, event->events, wait_condition);
-	if (rv != 0) {
+	ਜੇ (rv != 0) {
 		/* clear the events that are matched */
-		if (options & K_EVENT_OPTION_CLEAR) {
+		ਜੇ (options & K_EVENT_OPTION_CLEAR) {
 			event->events &= ~rv;
 		}
 
-		k_spin_unlock(&event->lock, key);
-		goto out;
+		k_spin_unlock(&event->ਤਾਲਾ, ਕੁੰਜੀ);
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&event->lock, key);
-		goto out;
+	ਜੇ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&event->ਤਾਲਾ, ਕੁੰਜੀ);
+		ਜਾਓ ਬਾਹਰਲਾ;
 	}
 
 	/*
@@ -335,97 +335,97 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	thread->events = events;
 	thread->event_options = options;
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
 					   options, timeout);
 
-	if (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
+	ਜੇ (z_pend_curr(&event->ਤਾਲਾ, ਕੁੰਜੀ, &event->wait_q, timeout) == 0) {
 		/* Retrieve the set of events that woke the thread */
 		rv = thread->events;
 	}
 
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
+ਬਾਹਰਲਾ:
+	SYS_ਪੋਰਟ_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
 
-	return rv;
+	ਵਾਪਸ rv;
 }
 
 /**
  * Wait for any of the specified events
  */
-uint32_t z_impl_k_event_wait(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait(ਬਣਤਰ k_event *event, uint32_t events,
 			     bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? K_EVENT_OPTION_RESET : 0;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	ਵਾਪਸ k_event_wait_ਅੰਦਰੂਨੀ(event, events, options, timeout);
 }
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait(struct k_event *event, uint32_t events,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait(ਬਣਤਰ k_event *event, uint32_t events,
 				    bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait(event, events, reset, timeout);
+	ਵਾਪਸ z_impl_k_event_wait(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_wait_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
 /**
  * Wait for all of the specified events
  */
-uint32_t z_impl_k_event_wait_all(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all(ਬਣਤਰ k_event *event, uint32_t events,
 				 bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : K_EVENT_WAIT_ALL;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	ਵਾਪਸ k_event_wait_ਅੰਦਰੂਨੀ(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all(struct k_event *event, uint32_t events,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_all(ਬਣਤਰ k_event *event, uint32_t events,
 					bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all(event, events, reset, timeout);
+	ਵਾਪਸ z_impl_k_event_wait_all(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_wait_all_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_ਸੁਰੱਖਿਅਤ(ਬਣਤਰ k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR | K_EVENT_OPTION_RESET)
 				 : K_EVENT_OPTION_CLEAR;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	ਵਾਪਸ k_event_wait_ਅੰਦਰੂਨੀ(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_safe(struct k_event *event, uint32_t events,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_ਸੁਰੱਖਿਅਤ(ਬਣਤਰ k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_safe(event, events, reset, timeout);
+	ਵਾਪਸ z_impl_k_event_wait_ਸੁਰੱਖਿਅਤ(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_safe_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_wait_safe_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all_ਸੁਰੱਖਿਅਤ(ਬਣਤਰ k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR |
 				    K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : (K_EVENT_OPTION_CLEAR | K_EVENT_WAIT_ALL);
 
-	return k_event_wait_internal(event, events, options, timeout);
+	ਵਾਪਸ k_event_wait_ਅੰਦਰੂਨੀ(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_all_ਸੁਰੱਖਿਅਤ(ਬਣਤਰ k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all_safe(event, events, reset, timeout);
+	ਵਾਪਸ z_impl_k_event_wait_all_ਸੁਰੱਖਿਅਤ(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
+#ਜੇ_ਅੰਤ /* CONFIG_USERSPACE */

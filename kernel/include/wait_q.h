@@ -6,21 +6,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_
 
-#include <zephyr/kernel_structs.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/rb.h>
-#include <timeout_q.h>
-#include <priority_q.h>
-#include <kspinlock.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel_structs.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/dlist.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/rb.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <timeout_q.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <priority_q.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kspinlock.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
+ਬਾਹਰੀ "C" {
+#ਜੇ_ਅੰਤ
 
-#ifdef CONFIG_WAITQ_SCALABLE
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ CONFIG_WAITQ_SCALABLE
 
 /**
  * Walk all threads pending on a wait queue.
@@ -30,29 +30,29 @@ extern "C" {
  *
  * @warning Do not remove thread from wait queue when using this macro.
  */
-#define _WAIT_Q_FOR_EACH(wq, thread_ptr) \
-	RB_FOR_EACH_CONTAINER(&(wq)->waitq.tree, thread_ptr, base.qnode_rb)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ _WAIT_Q_FOR_EACH(wq, thread_ptr) \
+	RB_FOR_EACH_CONTAINER(&(wq)->waitq.ਰੁੱਖ, thread_ptr, ਅਧਾਰ.qnode_rb)
 
 /*
  * RB_FOR_EACH_SAFE() does not (and cannot) exist so we are not
  * able to provide _WAIT_Q_FOR_EACH_SAFE when CONFIG_WAITQ_SCALABLE=y.
  */
 
-static inline void z_waitq_init(_wait_q_t *w)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_waitq_init(_wait_q_t *w)
 {
-	w->waitq = (struct _priq_rb) {
-		.tree = {
+	w->waitq = (ਬਣਤਰ _priq_rb) {
+		.ਰੁੱਖ = {
 			.lessthan_fn = z_priq_rb_lessthan
 		}
 	};
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਬਣਤਰ k_thread *z_waitq_ਸਿਰ_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)rb_get_min(&w->waitq.tree);
+	ਵਾਪਸ (ਬਣਤਰ k_thread *)rb_get_min(&w->waitq.ਰੁੱਖ);
 }
 
-#else /* !CONFIG_WAITQ_SCALABLE: */
+#ਨਹੀਂਤਾਂ /* !CONFIG_WAITQ_SCALABLE: */
 
 /**
  * Walk all threads pending on a wait queue.
@@ -63,9 +63,9 @@ static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
  * @warning Do not remove thread from wait queue when using this macro.
  * Use @ref _WAIT_Q_FOR_EACH_SAFE instead if this is required.
  */
-#define _WAIT_Q_FOR_EACH(wq, thread_ptr) \
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ _WAIT_Q_FOR_EACH(wq, thread_ptr) \
 	SYS_DLIST_FOR_EACH_CONTAINER(&((wq)->waitq), thread_ptr, \
-				     base.qnode_dlist)
+				     ਅਧਾਰ.qnode_dlist)
 
 /**
  * Walk all threads pending on a wait queue.
@@ -81,25 +81,25 @@ static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
  * @param thread_ptr Thread pointer iterator variable
  * @param loop_ptr Thread pointer variable used by loop
  */
-#define _WAIT_Q_FOR_EACH_SAFE(wq, thread_ptr, loop_ptr) \
-	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&((wq)->waitq), thread_ptr, \
-					  loop_ptr, base.qnode_dlist)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ WAIT_Q_FOR_EACH_ਸੁਰੱਖਿਅਤ(wq, thread_ptr, loop_ptr) \
+	SYS_DLIST_FOR_EACH_CONTAINER_ਸੁਰੱਖਿਅਤ(&((wq)->waitq), thread_ptr, \
+					  loop_ptr, ਅਧਾਰ.qnode_dlist)
 
-static inline void z_waitq_init(_wait_q_t *w)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਖਾਲੀ z_waitq_init(_wait_q_t *w)
 {
 	sys_dlist_init(&w->waitq);
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਬਣਤਰ k_thread *z_waitq_ਸਿਰ_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)sys_dlist_peek_head(&w->waitq);
+	ਵਾਪਸ (ਬਣਤਰ k_thread *)sys_dlist_peek_ਸਿਰ(&w->waitq);
 }
 
-#endif /* !CONFIG_WAITQ_SCALABLE */
+#ਜੇ_ਅੰਤ /* !CONFIG_WAITQ_SCALABLE */
 
-static inline struct k_thread *z_waitq_head(_wait_q_t *w)
+ਸਥਿਰ ਸਤਰਅੰਦਰ ਬਣਤਰ k_thread *z_waitq_ਸਿਰ(_wait_q_t *w)
 {
-	struct k_thread *thread = NULL;
+	ਬਣਤਰ k_thread *thread = ਨਿਰਾ;
 
 	/*
 	 * On a single core system, all callers of this function are already
@@ -110,16 +110,16 @@ static inline struct k_thread *z_waitq_head(_wait_q_t *w)
 	 * to protect the scope as necessary.
 	 */
 
-	LOCK_SCHED_SPINLOCK {
-		thread = z_waitq_head_locked(w);
+	ਤਾਲਾ_SCHED_SPINLOCK {
+		thread = z_waitq_ਸਿਰ_locked(w);
 	}
 
-	return thread;
+	ਵਾਪਸ thread;
 }
 
 
-#ifdef __cplusplus
+#ਜੇ_ਪਰਿਭਾਸ਼ਿਤ __cplusplus
 }
-#endif
+#ਜੇ_ਅੰਤ
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_INCLUDE_WAIT_Q_H_ */

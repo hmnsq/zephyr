@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
-#define ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
+#ਜੇ_ਅਪਰਿਭਾਸ਼ਿਤ ZEPHYR_KERNEL_TIMEOUT_ਬਾਲਟੀ_H
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ZEPHYR_KERNEL_TIMEOUT_ਬਾਲਟੀ_H
 
 /**
  * @file
@@ -40,176 +40,176 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/init.h>
-#include <zephyr/sys/dlist.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/init.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/sys/dlist.h>
 
-#define BUCKET_LISTS CONFIG_TIMEOUT_BUCKET_LISTS
-#define BUCKET_MASK  (BUCKET_LISTS - 1)
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਬਾਲਟੀ_LISTS CONFIG_TIMEOUT_ਬਾਲਟੀ_LISTS
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਬਾਲਟੀ_ਨਕਾਬ  (ਬਾਲਟੀ_LISTS - 1)
 
-BUILD_ASSERT((BUCKET_LISTS & BUCKET_MASK) == 0,
+BUILD_ASSERT((ਬਾਲਟੀ_LISTS & ਬਾਲਟੀ_ਨਕਾਬ) == 0,
 	     "CONFIG_TIMEOUT_BUCKET_LISTS must be a power of two");
-BUILD_ASSERT(BUCKET_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
+BUILD_ASSERT(ਬਾਲਟੀ_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
 
 /* Occupancy bitmap, one bit per bucket. Stay 32-bit for the common (and
  * smallest, cheapest-to-scan on 32-bit targets) window and only widen to
  * 64-bit when more than 32 buckets are configured.
  */
-#if BUCKET_LISTS <= 32
-typedef uint32_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u32_count_trailing_zeros(x)
-#else
-typedef uint64_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u64_count_trailing_zeros(x)
-#endif
-#define BUCKET_BIT(n) ((bucket_bitmap_t)1 << (n))
+#ਜੇ ਬਾਲਟੀ_LISTS <= 32
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ uint32_t ਬਾਲਟੀ_bitmap_t;
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਬਾਲਟੀ_ਬਿੱਟ_ctz(x) u32_ਗਿਣਤੀ_trailing_zeros(x)
+#ਨਹੀਂਤਾਂ
+ਕਿਸਮਪਰਿਭਾਸ਼ਾ uint64_t ਬਾਲਟੀ_bitmap_t;
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਬਾਲਟੀ_ਬਿੱਟ_ctz(x) u64_ਗਿਣਤੀ_trailing_zeros(x)
+#ਜੇ_ਅੰਤ
+#ਪਰਿਭਾਸ਼ਿਤ_ਕਰੋ ਬਾਲਟੀ_ਦੋਆਧਾਰੀ_ਅੰਕ(n) ((ਬਾਲਟੀ_bitmap_t)1 << (n))
 
-static sys_dlist_t bucket[BUCKET_LISTS];
-static sys_dlist_t overflow;        /* sorted ascending by absolute expiry */
-static bucket_bitmap_t bucket_bits; /* bit p set => bucket[p] is non-empty */
-static uint64_t cursor_base;        /* window start, aligned to BUCKET_LISTS */
+ਸਥਿਰ sys_dlist_t ਬਾਲਟੀ[ਬਾਲਟੀ_LISTS];
+ਸਥਿਰ sys_dlist_t ਉਛਾਲ;        /* sorted ascending by absolute expiry */
+ਸਥਿਰ ਬਾਲਟੀ_bitmap_t ਬਾਲਟੀ_ਬਿੱਟ; /* bit p set => bucket[p] is non-empty */
+ਸਥਿਰ uint64_t cursor_ਅਧਾਰ;        /* window start, aligned to BUCKET_LISTS */
 
-static int timeout_bucket_init(void)
+ਸਥਿਰ ਪੂਰਨ timeout_ਬਾਲਟੀ_init(ਖਾਲੀ)
 {
-	for (unsigned int i = 0; i < BUCKET_LISTS; i++) {
-		sys_dlist_init(&bucket[i]);
+	ਲਈ (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ i = 0; i < ਬਾਲਟੀ_LISTS; i++) {
+		sys_dlist_init(&ਬਾਲਟੀ[i]);
 	}
-	sys_dlist_init(&overflow);
-	bucket_bits = 0U;
-	cursor_base = 0U;
+	sys_dlist_init(&ਉਛਾਲ);
+	ਬਾਲਟੀ_ਬਿੱਟ = 0U;
+	cursor_ਅਧਾਰ = 0U;
 
-	return 0;
+	ਵਾਪਸ 0;
 }
 
 /* Runs before the timer driver (PRE_KERNEL_2) and before any timeout is added.
  * Priority 0 keeps it ahead of other PRE_KERNEL_1 initialisation.
  */
-SYS_INIT(timeout_bucket_init, PRE_KERNEL_1, 0);
+SYS_INIT(timeout_ਬਾਲਟੀ_init, PRE_KERNEL_1, 0);
 
-static struct _timeout *overflow_head(void)
+ਸਥਿਰ ਬਣਤਰ _timeout *ਉਛਾਲ_ਸਿਰ(ਖਾਲੀ)
 {
-	sys_dnode_t *n = sys_dlist_peek_head(&overflow);
+	sys_dnode_t *n = sys_dlist_peek_ਸਿਰ(&ਉਛਾਲ);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	ਵਾਪਸ (n == ਨਿਰਾ) ? ਨਿਰਾ : CONTAINER_ਦਾ(n, ਬਣਤਰ _timeout, ਗੰਢ);
 }
 
 /* Ticks from curr_tick to the earliest pending expiry, or INT64_MAX if none. */
-static int64_t earliest_gap(void)
+ਸਥਿਰ int64_t earliest_gap(ਖਾਲੀ)
 {
 	int64_t gap = INT64_MAX;
-	unsigned int cur_off = (unsigned int)(curr_tick & BUCKET_MASK);
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ cur_off = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)(curr_tick & ਬਾਲਟੀ_ਨਕਾਬ);
 
 	/* Nearest non-empty bucket strictly ahead of curr_tick in the window.
 	 * cursor_base is aligned, so bucket index == window offset.
 	 */
-	if (cur_off < (BUCKET_LISTS - 1)) {
-		bucket_bitmap_t ahead = bucket_bits & (~(bucket_bitmap_t)0 << (cur_off + 1));
+	ਜੇ (cur_off < (ਬਾਲਟੀ_LISTS - 1)) {
+		ਬਾਲਟੀ_bitmap_t ahead = ਬਾਲਟੀ_ਬਿੱਟ & (~(ਬਾਲਟੀ_bitmap_t)0 << (cur_off + 1));
 
-		if (ahead != 0U) {
-			gap = (int64_t)bucket_bits_ctz(ahead) - cur_off;
+		ਜੇ (ahead != 0U) {
+			gap = (int64_t)ਬਾਲਟੀ_ਬਿੱਟ_ctz(ahead) - cur_off;
 		}
 	}
 
-	if (gap == INT64_MAX) {
-		struct _timeout *t = overflow_head();
+	ਜੇ (gap == INT64_MAX) {
+		ਬਣਤਰ _timeout *t = ਉਛਾਲ_ਸਿਰ();
 
-		if (t != NULL) {
+		ਜੇ (t != ਨਿਰਾ) {
 			gap = (int64_t)t->dticks - (int64_t)curr_tick;
 		}
 	}
 
-	return gap;
+	ਵਾਪਸ gap;
 }
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ਸਥਿਰ bool z_timeout_q_ਪਾਓ(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ, k_ticks_t dticks)
 {
 	uint64_t expiry = curr_tick + (uint64_t)dticks;
 	int64_t old_gap = earliest_gap();
 
-	if (expiry < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)(expiry & BUCKET_MASK);
+	ਜੇ (expiry < cursor_ਅਧਾਰ + ਬਾਲਟੀ_LISTS) {
+		ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ idx = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)(expiry & ਬਾਲਟੀ_ਨਕਾਬ);
 
-		to->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &to->node);
-	} else {
+		ਮੰਜ਼ਿਲ->dticks = idx;
+		ਬਾਲਟੀ_ਬਿੱਟ |= ਬਾਲਟੀ_ਦੋਆਧਾਰੀ_ਅੰਕ(idx);
+		sys_dlist_append(&ਬਾਲਟੀ[idx], &ਮੰਜ਼ਿਲ->ਗੰਢ);
+	} ਨਹੀਂਤਾਂ {
 		/* Overflow: keep sorted ascending by absolute expiry. Insert
 		 * after any equal-keyed entries so same-tick order stays FIFO.
 		 */
-		struct _timeout *t;
+		ਬਣਤਰ _timeout *t;
 
-		to->dticks = (k_ticks_t)expiry;
-		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, node) {
-			if ((uint64_t)t->dticks > expiry) {
-				sys_dlist_insert(&t->node, &to->node);
-				return (int64_t)dticks < old_gap;
+		ਮੰਜ਼ਿਲ->dticks = (k_ticks_t)expiry;
+		SYS_DLIST_FOR_EACH_CONTAINER(&ਉਛਾਲ, t, ਗੰਢ) {
+			ਜੇ ((uint64_t)t->dticks > expiry) {
+				sys_dlist_ਪਾਓ(&t->ਗੰਢ, &ਮੰਜ਼ਿਲ->ਗੰਢ);
+				ਵਾਪਸ (int64_t)dticks < old_gap;
 			}
 		}
-		sys_dlist_append(&overflow, &to->node);
+		sys_dlist_append(&ਉਛਾਲ, &ਮੰਜ਼ਿਲ->ਗੰਢ);
 	}
 
-	return (int64_t)dticks < old_gap;
+	ਵਾਪਸ (int64_t)dticks < old_gap;
 }
 
-static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ਸਥਿਰ k_ticks_t z_timeout_q_remainder(ਅਚਲ ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
+	ਜੇ ((uint64_t)ਮੰਜ਼ਿਲ->dticks < ਬਾਲਟੀ_LISTS) {
 		/* Bucket entry: reconstruct its absolute expiry, the unique
 		 * tick in the window whose low bits are the bucket index.
 		 */
-		uint64_t off = ((uint64_t)to->dticks - cursor_base) & BUCKET_MASK;
+		uint64_t off = ((uint64_t)ਮੰਜ਼ਿਲ->dticks - cursor_ਅਧਾਰ) & ਬਾਲਟੀ_ਨਕਾਬ;
 
-		return (k_ticks_t)((cursor_base + off) - curr_tick);
+		ਵਾਪਸ (k_ticks_t)((cursor_ਅਧਾਰ + off) - curr_tick);
 	}
 
-	return (k_ticks_t)((uint64_t)to->dticks - curr_tick);
+	ਵਾਪਸ (k_ticks_t)((uint64_t)ਮੰਜ਼ਿਲ->dticks - curr_tick);
 }
 
-static bool z_timeout_q_remove(struct _timeout *to)
+ਸਥਿਰ bool z_timeout_q_remove(ਬਣਤਰ _timeout *ਮੰਜ਼ਿਲ)
 {
-	bool was_first = (z_timeout_q_remainder(to) <= earliest_gap());
+	bool was_ਪਹਿਲਾ = (z_timeout_q_remainder(ਮੰਜ਼ਿਲ) <= earliest_gap());
 
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)to->dticks;
+	ਜੇ ((uint64_t)ਮੰਜ਼ਿਲ->dticks < ਬਾਲਟੀ_LISTS) {
+		ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ idx = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)ਮੰਜ਼ਿਲ->dticks;
 
-		sys_dlist_remove(&to->node);
-		if (sys_dlist_is_empty(&bucket[idx])) {
-			bucket_bits &= ~BUCKET_BIT(idx);
+		sys_dlist_remove(&ਮੰਜ਼ਿਲ->ਗੰਢ);
+		ਜੇ (sys_dlist_is_ਖਾਲੀ_ਥਾਵਾਂ(&ਬਾਲਟੀ[idx])) {
+			ਬਾਲਟੀ_ਬਿੱਟ &= ~ਬਾਲਟੀ_ਦੋਆਧਾਰੀ_ਅੰਕ(idx);
 		}
-	} else {
+	} ਨਹੀਂਤਾਂ {
 		/* Overflow stores absolute expiry (not a delta), so removal
 		 * needs no successor fix-up.
 		 */
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&ਮੰਜ਼ਿਲ->ਗੰਢ);
 	}
 
-	return was_first;
+	ਵਾਪਸ was_ਪਹਿਲਾ;
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * none. The announce-range cap is applied centrally by next_timeout() in
  * timeout.c.
  */
-static k_ticks_t z_timeout_q_next_expiry(void)
+ਸਥਿਰ k_ticks_t z_timeout_q_ਅਗਲਾ_expiry(ਖਾਲੀ)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
+	ਵਾਪਸ (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
 }
 
-static int32_t z_timeout_q_next_gap(void)
+ਸਥਿਰ int32_t z_timeout_q_ਅਗਲਾ_gap(ਖਾਲੀ)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	ਵਾਪਸ (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static void z_timeout_q_advance(int32_t dt)
+ਸਥਿਰ ਖਾਲੀ z_timeout_q_advance(int32_t dt)
 {
 	uint64_t new_curr = curr_tick + (uint64_t)dt;
 
-	if (new_curr < cursor_base + BUCKET_LISTS) {
+	ਜੇ (new_curr < cursor_ਅਧਾਰ + ਬਾਲਟੀ_LISTS) {
 		/* Still inside the current window: nothing to migrate. */
-		return;
+		ਵਾਪਸ;
 	}
 
 	/* Crossed the window. The loop only advances past the boundary when no
@@ -217,40 +217,40 @@ static void z_timeout_q_advance(int32_t dt)
 	 * is empty here. Re-base the window onto curr_tick's new position and
 	 * migrate the overflow entries that have come within range.
 	 */
-	cursor_base = new_curr & ~(uint64_t)BUCKET_MASK;
-	bucket_bits = 0U;
+	cursor_ਅਧਾਰ = new_curr & ~(uint64_t)ਬਾਲਟੀ_ਨਕਾਬ;
+	ਬਾਲਟੀ_ਬਿੱਟ = 0U;
 
-	struct _timeout *t;
+	ਬਣਤਰ _timeout *t;
 
-	while ((t = overflow_head()) != NULL &&
-	       (uint64_t)t->dticks < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)((uint64_t)t->dticks & BUCKET_MASK);
+	ਜਦੋਂ ((t = ਉਛਾਲ_ਸਿਰ()) != ਨਿਰਾ &&
+	       (uint64_t)t->dticks < cursor_ਅਧਾਰ + ਬਾਲਟੀ_LISTS) {
+		ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ idx = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)((uint64_t)t->dticks & ਬਾਲਟੀ_ਨਕਾਬ);
 
-		sys_dlist_remove(&t->node);
+		sys_dlist_remove(&t->ਗੰਢ);
 		t->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &t->node);
+		ਬਾਲਟੀ_ਬਿੱਟ |= ਬਾਲਟੀ_ਦੋਆਧਾਰੀ_ਅੰਕ(idx);
+		sys_dlist_append(&ਬਾਲਟੀ[idx], &t->ਗੰਢ);
 	}
 }
 
-static struct _timeout *z_timeout_q_pop_due(void)
+ਸਥਿਰ ਬਣਤਰ _timeout *z_timeout_q_ਕੱਢੋ_due(ਖਾਲੀ)
 {
-	unsigned int idx = (unsigned int)(curr_tick & BUCKET_MASK);
-	sys_dnode_t *n = sys_dlist_peek_head(&bucket[idx]);
-	struct _timeout *t;
+	ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ idx = (ਬਿਨਾਨਿਸ਼ਾਨੀ ਪੂਰਨ)(curr_tick & ਬਾਲਟੀ_ਨਕਾਬ);
+	sys_dnode_t *n = sys_dlist_peek_ਸਿਰ(&ਬਾਲਟੀ[idx]);
+	ਬਣਤਰ _timeout *t;
 
-	if (n == NULL) {
-		return NULL;
+	ਜੇ (n == ਨਿਰਾ) {
+		ਵਾਪਸ ਨਿਰਾ;
 	}
 
 	/* All entries in bucket[curr_tick & MASK] expire exactly at curr_tick. */
-	t = CONTAINER_OF(n, struct _timeout, node);
-	sys_dlist_remove(&t->node);
-	if (sys_dlist_is_empty(&bucket[idx])) {
-		bucket_bits &= ~BUCKET_BIT(idx);
+	t = CONTAINER_ਦਾ(n, ਬਣਤਰ _timeout, ਗੰਢ);
+	sys_dlist_remove(&t->ਗੰਢ);
+	ਜੇ (sys_dlist_is_ਖਾਲੀ_ਥਾਵਾਂ(&ਬਾਲਟੀ[idx])) {
+		ਬਾਲਟੀ_ਬਿੱਟ &= ~ਬਾਲਟੀ_ਦੋਆਧਾਰੀ_ਅੰਕ(idx);
 	}
 
-	return t;
+	ਵਾਪਸ t;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */
+#ਜੇ_ਅੰਤ /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */

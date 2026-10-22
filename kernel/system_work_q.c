@@ -11,27 +11,27 @@
  * System workqueue.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <zephyr/kernel.h>
+#ਅਨ੍ਤਰ੍ਭਾਵ <kernel_internal.h>
 
-static K_KERNEL_STACK_DEFINE(sys_work_q_stack,
-			     CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE);
+ਸਥਿਰ K_KERNEL_ਢੇਰ_DEFINE(sys_work_q_ਢੇਰ,
+			     CONFIG_SYSTEM_WORKQUEUE_ਢੇਰ_ਮਾਪ);
 
-struct k_work_q k_sys_work_q;
+ਬਣਤਰ k_work_q k_sys_work_q;
 
-static void sys_work_q_init(void)
+ਸਥਿਰ ਖਾਲੀ sys_work_q_init(ਖਾਲੀ)
 {
-	static const struct k_work_queue_config cfg = {
+	ਸਥਿਰ ਅਚਲ ਬਣਤਰ k_work_ਕਤਾਰ_config cfg = {
 		.name = "sysworkq",
 		.no_yield = IS_ENABLED(CONFIG_SYSTEM_WORKQUEUE_NO_YIELD),
 		.essential = true,
 		.work_timeout_ms = CONFIG_SYSTEM_WORKQUEUE_WORK_TIMEOUT_MS,
 	};
 
-	k_work_queue_start(&k_sys_work_q,
-			    sys_work_q_stack,
-			    K_KERNEL_STACK_SIZEOF(sys_work_q_stack),
-			    CONFIG_SYSTEM_WORKQUEUE_PRIORITY, &cfg);
+	k_work_ਕਤਾਰ_ਸ਼ੁਰੂ(&k_sys_work_q,
+			    sys_work_q_ਢੇਰ,
+			    K_KERNEL_ਢੇਰ_SIZEOF(sys_work_q_ਢੇਰ),
+			    CONFIG_SYSTEM_WORKQUEUE_ਤਰਜੀਹ, &cfg);
 }
 
 /* Registered into the kernel post-init section. The entry lives in this TU,
