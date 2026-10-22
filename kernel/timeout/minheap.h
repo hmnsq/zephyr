@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
-#define ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
+#جے_بنا_تعریف ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
+#تعریف_کرو ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
 
 /**
  * @file
@@ -22,37 +22,37 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/min_heap_ref.h>
+#ضمن <zephyr/sys/min_heap_ref.h>
 
-static int timeout_cmp(const struct min_heap_handle *a, const struct min_heap_handle *b)
+ساكن صحيح timeout_cmp(ثابت بنية min_ڈھیر_handle *a, ثابت بنية min_ڈھیر_handle *b)
 {
-	const struct _timeout *ta = CONTAINER_OF(a, struct _timeout, heap_handle);
-	const struct _timeout *tb = CONTAINER_OF(b, struct _timeout, heap_handle);
+	ثابت بنية _timeout *ta = CONTAINER_دا(a, بنية _timeout, ڈھیر_handle);
+	ثابت بنية _timeout *tb = CONTAINER_دا(b, بنية _timeout, ڈھیر_handle);
 
-	if (ta->abs_ticks < tb->abs_ticks) {
-		return -1;
+	إذا (ta->abs_ticks < tb->abs_ticks) {
+		أرجع -1;
 	}
 
-	return (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
+	أرجع (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
 }
 
-MIN_HEAP_REF_DEFINE_STATIC(timeout_heap_inst, CONFIG_TIMEOUT_HEAP_MAX_ENTRIES, timeout_cmp);
+MIN_ڈھیر_REF_DEFINE_STATIC(timeout_ڈھیر_inst, CONFIG_TIMEOUT_ڈھیر_MAX_ENTRIES, timeout_cmp);
 
-static inline struct _timeout *z_timeout_q_root(void)
+ساكن مضمن بنية _timeout *z_timeout_q_جڑ(فراغ)
 {
-	const struct min_heap_handle *h = min_heap_ref_peek(&timeout_heap_inst);
+	ثابت بنية min_ڈھیر_handle *h = min_ڈھیر_ref_peek(&timeout_ڈھیر_inst);
 
-	return (h == NULL) ? NULL : CONTAINER_OF(h, struct _timeout, heap_handle);
+	أرجع (h == عدم) ? عدم : CONTAINER_دا(h, بنية _timeout, ڈھیر_handle);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout (heap root).
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ساكن مضمن bool z_timeout_q_داخل_کرو(بنية _timeout *منزل, k_ticks_t dticks)
 {
-	to->abs_ticks = (int64_t)curr_tick + dticks;
+	منزل->abs_ticks = (int64_t)curr_tick + dticks;
 
-	if (unlikely(min_heap_ref_push(&timeout_heap_inst, &to->heap_handle) != 0)) {
+	إذا (unlikely(min_ڈھیر_ref_ڈالو(&timeout_ڈھیر_inst, &منزل->ڈھیر_handle) != 0)) {
 		/*
 		 * Heap overflow is always a configuration error: there is no
 		 * graceful way to drop a kernel timeout. Increase
@@ -61,38 +61,38 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 		k_panic();
 	}
 
-	return to->heap_handle.idx == 1U;
+	أرجع منزل->ڈھیر_handle.idx == 1U;
 }
 
 /* Remove an arbitrary timeout from the heap. Returns true if it was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+ساكن مضمن bool z_timeout_q_remove(بنية _timeout *منزل)
 {
-	bool was_first = (to->heap_handle.idx == 1U);
+	bool was_پہلا = (منزل->ڈھیر_handle.idx == 1U);
 
-	(void)min_heap_ref_remove(&timeout_heap_inst, &to->heap_handle);
+	(فراغ)min_ڈھیر_ref_remove(&timeout_ڈھیر_inst, &منزل->ڈھیر_handle);
 
-	return was_first;
+	أرجع was_پہلا;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ساكن مضمن k_ticks_t z_timeout_q_remainder(ثابت بنية _timeout *منزل)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	أرجع (k_ticks_t)(منزل->abs_ticks - (int64_t)curr_tick);
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * the heap is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+ساكن مضمن k_ticks_t z_timeout_q_اگلا_expiry(فراغ)
 {
-	struct _timeout *t = z_timeout_q_root();
+	بنية _timeout *t = z_timeout_q_جڑ();
 
-	return (t == NULL) ? K_TICKS_FOREVER
+	أرجع (t == عدم) ? K_TICKS_FOREVER
 			   : (k_ticks_t)(t->abs_ticks - (int64_t)curr_tick);
 }
 
@@ -101,38 +101,38 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
 /* Ticks from curr_tick until the earliest expiry. A value larger than any
  * announce window when the heap is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+ساكن مضمن int32_t z_timeout_q_اگلا_gap(فراغ)
 {
-	struct _timeout *t = z_timeout_q_root();
+	بنية _timeout *t = z_timeout_q_جڑ();
 
-	if (t == NULL) {
-		return INT32_MAX;
+	إذا (t == عدم) {
+		أرجع INT32_MAX;
 	}
 
-	return (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
+	أرجع (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. The heap stores absolute expiry ticks,
  * so the caller's curr_tick += dt is all the advancing required here.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+ساكن مضمن فراغ z_timeout_q_advance(int32_t dt)
 {
-	ARG_UNUSED(dt);
+	ARG_بن_ورتیا(dt);
 }
 
 /* Pop and return one timeout that is due at the current curr_tick, or NULL if
  * none is due right now. Tied timeouts share the same abs_ticks and are
  * drained by successive calls.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+ساكن مضمن بنية _timeout *z_timeout_q_نکالو_due(فراغ)
 {
-	struct _timeout *t = z_timeout_q_root();
+	بنية _timeout *t = z_timeout_q_جڑ();
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	إذا ((t == عدم) || (t->abs_ticks > (int64_t)curr_tick)) {
+		أرجع عدم;
 	}
 
-	return CONTAINER_OF(min_heap_ref_pop(&timeout_heap_inst), struct _timeout, heap_handle);
+	أرجع CONTAINER_دا(min_ڈھیر_ref_نکالو(&timeout_ڈھیر_inst), بنية _timeout, ڈھیر_handle);
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_ */
+#جے_انت /* ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_ */

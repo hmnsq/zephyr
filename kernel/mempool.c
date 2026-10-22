@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <string.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/util.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <string.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/sys/util.h>
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+تعريفنوع فراغ * (sys_ڈھیر_allocator_t)(بنية sys_ڈھیر *ڈھیر_2, size_t align, size_t بائٹاں);
 
-static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
-			    sys_heap_allocator_t sys_heap_allocator)
+ساكن فراغ *z_alloc_helper(بنية k_ڈھیر *ڈھیر_2, size_t align, size_t ناپ,
+			    sys_ڈھیر_allocator_t sys_ڈھیر_allocator)
 {
-	void *mem;
-	struct k_heap **heap_ref;
+	فراغ *mem;
+	بنية k_ڈھیر **ڈھیر_ref;
 	size_t __align;
-	k_spinlock_key_t key;
+	k_spinlock_کلید_t کلید;
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
@@ -29,192 +29,192 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	 * This allows for storing the heap pointer right below the aligned
 	 * boundary without wasting any memory.
 	 */
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		return NULL;
+	إذا (ناپ_جوڑو_حد_توں_ودھ(ناپ, حجم(ڈھیر_ref), &ناپ)) {
+		أرجع عدم;
 	}
-	__align = align | sizeof(heap_ref);
+	__align = align | حجم(ڈھیر_ref);
 
 	/*
 	 * No point calling k_heap_malloc/k_heap_aligned_alloc with K_NO_WAIT.
 	 * Better bypass them and go directly to sys_heap_*() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	mem = sys_heap_allocator(&heap->heap, __align, size);
-	k_spin_unlock(&heap->lock, key);
+	کلید = k_spin_جندرا(&ڈھیر_2->جندرا);
+	mem = sys_ڈھیر_allocator(&ڈھیر_2->ڈھیر_2, __align, ناپ);
+	k_spin_unlock(&ڈھیر_2->جندرا, کلید);
 
-	if (mem == NULL) {
-		return NULL;
+	إذا (mem == عدم) {
+		أرجع عدم;
 	}
 
-	heap_ref = mem;
-	*heap_ref = heap;
-	mem = ++heap_ref;
+	ڈھیر_ref = mem;
+	*ڈھیر_ref = ڈھیر_2;
+	mem = ++ڈھیر_ref;
 	__ASSERT(align == 0 || ((uintptr_t)mem & (align - 1)) == 0,
 		 "misaligned memory at %p (align = %zu)", mem, align);
 
-	return mem;
+	أرجع mem;
 }
 
-void k_free(void *ptr)
+فراغ k_free(فراغ *ptr)
 {
-	struct k_heap **heap_ref;
+	بنية k_ڈھیر **ڈھیر_ref;
 
-	if (ptr != NULL) {
-		heap_ref = ptr;
-		--heap_ref;
-		ptr = heap_ref;
+	إذا (ptr != عدم) {
+		ڈھیر_ref = ptr;
+		--ڈھیر_ref;
+		ptr = ڈھیر_ref;
 
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_free, *heap_ref, heap_ref);
+		SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_ڈھیر_sys, k_free, *ڈھیر_ref, ڈھیر_ref);
 
 		/*
 		 * Bypass k_heap_free() as z_unpend_all() and its scheduler
 		 * locking is unnecessary here, similar to z_alloc_helper()
 		 * bypassing k_heap_alloc() to go directly to sys_heap_*().
 		 */
-		struct k_heap *heap = *heap_ref;
-		k_spinlock_key_t key = k_spin_lock(&heap->lock);
+		بنية k_ڈھیر *ڈھیر_2 = *ڈھیر_ref;
+		k_spinlock_کلید_t کلید = k_spin_جندرا(&ڈھیر_2->جندرا);
 
-		sys_heap_free(&heap->heap, ptr);
-		k_spin_unlock(&heap->lock, key);
+		sys_ڈھیر_free(&ڈھیر_2->ڈھیر_2, ptr);
+		k_spin_unlock(&ڈھیر_2->جندرا, کلید);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_free, heap, ptr);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_free, ڈھیر_2, ptr);
 	}
 }
 
-#if (K_HEAP_MEM_POOL_SIZE > 0)
+#إذا (K_ڈھیر_MEM_POOL_ناپ > 0)
 
-K_HEAP_DEFINE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#define _SYSTEM_HEAP (&_system_heap)
+K_ڈھیر_DEFINE_2(system_ڈھیر, Z_ڈھیر_MIN_ناپ_FOR(K_ڈھیر_MEM_POOL_ناپ));
+#تعریف_کرو SYSTEM_ڈھیر (&system_ڈھیر)
 
-#if defined(CONFIG_SYS_HEAP_KASAN_SYSTEM)
-#include <zephyr/sys/heap_kasan.h>
-K_HEAP_KASAN_ENABLE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#endif
+#إذا defined(CONFIG_SYS_ڈھیر_KASAN_SYSTEM)
+#ضمن <zephyr/sys/heap_kasan.h>
+K_ڈھیر_KASAN_ENABLE(system_ڈھیر, Z_ڈھیر_MIN_ناپ_FOR(K_ڈھیر_MEM_POOL_ناپ));
+#جے_انت
 
-void *k_aligned_alloc(size_t align, size_t size)
+فراغ *k_aligned_alloc(size_t align, size_t ناپ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_ڈھیر_sys, k_aligned_alloc, SYSTEM_ڈھیر);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, align, size, sys_heap_aligned_alloc);
+	فراغ *ret = z_alloc_helper(SYSTEM_ڈھیر, align, ناپ, sys_ڈھیر_aligned_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_aligned_alloc, SYSTEM_ڈھیر, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_malloc(size_t size)
+فراغ *k_malloc(size_t ناپ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_malloc, _SYSTEM_HEAP);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_ڈھیر_sys, k_malloc, SYSTEM_ڈھیر);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, 0, size, sys_heap_noalign_alloc);
+	فراغ *ret = z_alloc_helper(SYSTEM_ڈھیر, 0, ناپ, sys_ڈھیر_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_malloc, _SYSTEM_HEAP, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_malloc, SYSTEM_ڈھیر, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_calloc(size_t nmemb, size_t size)
+فراغ *k_calloc(size_t nmemb, size_t ناپ)
 {
-	void *ret;
+	فراغ *ret;
 	size_t bounds;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_calloc, _SYSTEM_HEAP);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_ڈھیر_sys, k_calloc, SYSTEM_ڈھیر);
 
-	if (size_mul_overflow(nmemb, size, &bounds)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, NULL);
+	إذا (ناپ_mul_حد_توں_ودھ(nmemb, ناپ, &bounds)) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_calloc, SYSTEM_ڈھیر, عدم);
 
-		return NULL;
+		أرجع عدم;
 	}
 
 	ret = k_malloc(bounds);
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	إذا (ret != عدم) {
+		(فراغ)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_calloc, SYSTEM_ڈھیر, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_realloc(void *ptr, size_t size)
+فراغ *k_realloc(فراغ *ptr, size_t ناپ)
 {
-	struct k_heap *heap, **heap_ref;
-	k_spinlock_key_t key;
-	void *ret;
+	بنية k_ڈھیر *ڈھیر_2, **ڈھیر_ref;
+	k_spinlock_کلید_t کلید;
+	فراغ *ret;
 
-	if (size == 0) {
+	إذا (ناپ == 0) {
 		k_free(ptr);
-		return NULL;
+		أرجع عدم;
 	}
-	if (ptr == NULL) {
-		return k_malloc(size);
+	إذا (ptr == عدم) {
+		أرجع k_malloc(ناپ);
 	}
-	heap_ref = ptr;
-	ptr = --heap_ref;
-	heap = *heap_ref;
+	ڈھیر_ref = ptr;
+	ptr = --ڈھیر_ref;
+	ڈھیر_2 = *ڈھیر_ref;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_realloc, heap, ptr);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_ڈھیر_sys, k_realloc, ڈھیر_2, ptr);
 
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, NULL);
-		return NULL;
+	إذا (ناپ_جوڑو_حد_توں_ودھ(ناپ, حجم(ڈھیر_ref), &ناپ)) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_realloc, ڈھیر_2, ptr, عدم);
+		أرجع عدم;
 	}
 
 	/*
 	 * No point calling k_heap_realloc() with K_NO_WAIT here.
 	 * Better bypass it and go directly to sys_heap_realloc() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	ret = sys_heap_realloc(&heap->heap, ptr, size);
-	k_spin_unlock(&heap->lock, key);
+	کلید = k_spin_جندرا(&ڈھیر_2->جندرا);
+	ret = sys_ڈھیر_realloc(&ڈھیر_2->ڈھیر_2, ptr, ناپ);
+	k_spin_unlock(&ڈھیر_2->جندرا, کلید);
 
-	if (ret != NULL) {
-		heap_ref = ret;
-		ret = ++heap_ref;
+	إذا (ret != عدم) {
+		ڈھیر_ref = ret;
+		ret = ++ڈھیر_ref;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_ڈھیر_sys, k_realloc, ڈھیر_2, ptr, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void k_thread_system_pool_assign(struct k_thread *thread)
+فراغ k_thread_system_pool_سونپو(بنية k_thread *thread)
 {
-	thread->resource_pool = _SYSTEM_HEAP;
+	thread->resource_pool = SYSTEM_ڈھیر;
 }
-#else
-#define _SYSTEM_HEAP	NULL
-#endif /* K_HEAP_MEM_POOL_SIZE */
+#وإلا
+#تعریف_کرو SYSTEM_ڈھیر	عدم
+#جے_انت /* K_HEAP_MEM_POOL_SIZE */
 
-static void *z_thread_alloc_helper(size_t align, size_t size,
-				   sys_heap_allocator_t sys_heap_allocator)
+ساكن فراغ *z_thread_alloc_helper(size_t align, size_t ناپ,
+				   sys_ڈھیر_allocator_t sys_ڈھیر_allocator)
 {
-	void *ret;
-	struct k_heap *heap;
+	فراغ *ret;
+	بنية k_ڈھیر *ڈھیر_2;
 
-	if (k_is_in_isr()) {
-		heap = _SYSTEM_HEAP;
-	} else {
-		heap = _current->resource_pool;
+	إذا (k_is_وچ_isr()) {
+		ڈھیر_2 = SYSTEM_ڈھیر;
+	} وإلا {
+		ڈھیر_2 = _current->resource_pool;
 	}
 
-	if (heap != NULL) {
-		ret = z_alloc_helper(heap, align, size, sys_heap_allocator);
-	} else {
-		ret = NULL;
+	إذا (ڈھیر_2 != عدم) {
+		ret = z_alloc_helper(ڈھیر_2, align, ناپ, sys_ڈھیر_allocator);
+	} وإلا {
+		ret = عدم;
 	}
 
-	return ret;
+	أرجع ret;
 }
 
-void *z_thread_aligned_alloc(size_t align, size_t size)
+فراغ *z_thread_aligned_alloc(size_t align, size_t ناپ)
 {
-	return z_thread_alloc_helper(align, size, sys_heap_aligned_alloc);
+	أرجع z_thread_alloc_helper(align, ناپ, sys_ڈھیر_aligned_alloc);
 }
 
-void *z_thread_malloc(size_t size)
+فراغ *z_thread_malloc(size_t ناپ)
 {
-	return z_thread_alloc_helper(0, size, sys_heap_noalign_alloc);
+	أرجع z_thread_alloc_helper(0, ناپ, sys_ڈھیر_noalign_alloc);
 }
 
 /*
@@ -223,4 +223,4 @@ void *z_thread_malloc(size_t size)
  * static heaps to be initialized and that is done in that file.
  * Make sure it is pulled in at least for that; the rest will be GC'd.
  */
-static void *const __used kheap_ref = k_heap_init;
+ساكن فراغ *ثابت __used kheap_ref = k_ڈھیر_init;

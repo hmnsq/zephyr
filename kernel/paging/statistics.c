@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/kernel/mm/demand_paging.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/kernel/mm/demand_paging.h>
 
-extern struct k_mem_paging_stats_t paging_stats;
+خارجي بنية k_mem_paging_stats_t paging_stats;
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-struct k_mem_paging_histogram_t z_paging_histogram_eviction;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
+#جے_تعریف_شدہ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+بنية k_mem_paging_histogram_t z_paging_histogram_eviction;
+بنية k_mem_paging_histogram_t z_paging_histogram_backing_store_ورقہ_وچ;
+بنية k_mem_paging_histogram_t z_paging_histogram_backing_store_ورقہ_باہرلا;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+#جے_تعریف_شدہ CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
 
 /*
  * The frequency of timing functions is highly dependent on
@@ -27,31 +27,31 @@ struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
  * being used.
  */
 
-extern unsigned long
+خارجي بنانشانی لما
 k_mem_paging_eviction_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_عدد_BINS];
 
-extern unsigned long
+خارجي بنانشانی لما
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_عدد_BINS];
 
-#else
-#define NS_TO_CYC(ns)		(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000U * ns)
+#وإلا
+#تعریف_کرو NS_منزل_CYC(ns)		(CONFIG_SYS_CLOCK_HW_چکراں_فی_SEC / 1000000U * ns)
 
 /*
  * This provides the upper bounds of the bins in eviction timing histogram.
  */
-__weak unsigned long
-k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
-	NS_TO_CYC(1),
-	NS_TO_CYC(5),
-	NS_TO_CYC(10),
-	NS_TO_CYC(50),
-	NS_TO_CYC(100),
-	NS_TO_CYC(200),
-	NS_TO_CYC(500),
-	NS_TO_CYC(1000),
-	NS_TO_CYC(2000),
+__weak بنانشانی لما
+k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_عدد_BINS] = {
+	NS_منزل_CYC(1),
+	NS_منزل_CYC(5),
+	NS_منزل_CYC(10),
+	NS_منزل_CYC(50),
+	NS_منزل_CYC(100),
+	NS_منزل_CYC(200),
+	NS_منزل_CYC(500),
+	NS_منزل_CYC(1000),
+	NS_منزل_CYC(2000),
 	ULONG_MAX
 };
 
@@ -59,83 +59,83 @@ k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM
  * This provides the upper bounds of the bins in backing store timing histogram
  * (both page-in and page-out).
  */
-__weak unsigned long
+__weak بنانشانی لما
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
-	NS_TO_CYC(10),
-	NS_TO_CYC(100),
-	NS_TO_CYC(125),
-	NS_TO_CYC(250),
-	NS_TO_CYC(500),
-	NS_TO_CYC(1000),
-	NS_TO_CYC(2000),
-	NS_TO_CYC(5000),
-	NS_TO_CYC(10000),
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_عدد_BINS] = {
+	NS_منزل_CYC(10),
+	NS_منزل_CYC(100),
+	NS_منزل_CYC(125),
+	NS_منزل_CYC(250),
+	NS_منزل_CYC(500),
+	NS_منزل_CYC(1000),
+	NS_منزل_CYC(2000),
+	NS_منزل_CYC(5000),
+	NS_منزل_CYC(10000),
 	ULONG_MAX
 };
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+#جے_انت /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#جے_انت /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-unsigned long k_mem_num_pagefaults_get(void)
+بنانشانی لما k_mem_عدد_pagefaults_get(فراغ)
 {
-	unsigned long ret;
-	unsigned int key;
+	بنانشانی لما ret;
+	بنانشانی صحيح کلید;
 
-	key = irq_lock();
+	کلید = irq_جندرا();
 	ret = paging_stats.pagefaults.cnt;
-	irq_unlock(key);
+	irq_unlock(کلید);
 
-	return ret;
+	أرجع ret;
 }
 
-void z_impl_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+فراغ z_impl_k_mem_paging_stats_get(بنية k_mem_paging_stats_t *stats)
 {
-	if (stats == NULL) {
-		return;
+	إذا (stats == عدم) {
+		أرجع;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &paging_stats, sizeof(paging_stats));
+	حافظہ_نقل(stats, &paging_stats, حجم(paging_stats));
 }
 
-#ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن
+فراغ z_vrfy_k_mem_paging_stats_get(بنية k_mem_paging_stats_t *stats)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(stats, حجم(*stats)));
 	z_impl_k_mem_paging_stats_get(stats);
 }
-#include <zephyr/syscalls/k_mem_paging_stats_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_mem_paging_stats_get_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-void z_impl_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+#جے_تعریف_شدہ CONFIG_DEMAND_PAGING_THREAD_STATS
+فراغ z_impl_k_mem_paging_thread_stats_get(بنية k_thread *thread,
+					  بنية k_mem_paging_stats_t *stats)
 {
-	if ((thread == NULL) || (stats == NULL)) {
-		return;
+	إذا ((thread == عدم) || (stats == عدم)) {
+		أرجع;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &thread->paging_stats, sizeof(thread->paging_stats));
+	حافظہ_نقل(stats, &thread->paging_stats, حجم(thread->paging_stats));
 }
 
-#ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن
+فراغ z_vrfy_k_mem_paging_thread_stats_get(بنية k_thread *thread,
+					  بنية k_mem_paging_stats_t *stats)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(stats, حجم(*stats)));
 	z_impl_k_mem_paging_thread_stats_get(thread, stats);
 }
-#include <zephyr/syscalls/k_mem_paging_thread_stats_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_mem_paging_thread_stats_get_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#جے_انت /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-void z_paging_histogram_init(void)
+#جے_تعریف_شدہ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+فراغ z_paging_histogram_init(فراغ)
 {
 	/*
 	 * Zero out the histogram structs and copy the bounds.
@@ -144,22 +144,22 @@ void z_paging_histogram_init(void)
 	 * the source bound array may not be pinned.
 	 */
 
-	memset(&z_paging_histogram_eviction, 0, sizeof(z_paging_histogram_eviction));
-	memcpy(z_paging_histogram_eviction.bounds,
+	memset(&z_paging_histogram_eviction, 0, حجم(z_paging_histogram_eviction));
+	حافظہ_نقل(z_paging_histogram_eviction.bounds,
 	       k_mem_paging_eviction_histogram_bounds,
-	       sizeof(z_paging_histogram_eviction.bounds));
+	       حجم(z_paging_histogram_eviction.bounds));
 
-	memset(&z_paging_histogram_backing_store_page_in, 0,
-	       sizeof(z_paging_histogram_backing_store_page_in));
-	memcpy(z_paging_histogram_backing_store_page_in.bounds,
+	memset(&z_paging_histogram_backing_store_ورقہ_وچ, 0,
+	       حجم(z_paging_histogram_backing_store_ورقہ_وچ));
+	حافظہ_نقل(z_paging_histogram_backing_store_ورقہ_وچ.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_in.bounds));
+	       حجم(z_paging_histogram_backing_store_ورقہ_وچ.bounds));
 
-	memset(&z_paging_histogram_backing_store_page_out, 0,
-	       sizeof(z_paging_histogram_backing_store_page_out));
-	memcpy(z_paging_histogram_backing_store_page_out.bounds,
+	memset(&z_paging_histogram_backing_store_ورقہ_باہرلا, 0,
+	       حجم(z_paging_histogram_backing_store_ورقہ_باہرلا));
+	حافظہ_نقل(z_paging_histogram_backing_store_ورقہ_باہرلا.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_out.bounds));
+	       حجم(z_paging_histogram_backing_store_ورقہ_باہرلا.bounds));
 }
 
 /**
@@ -168,84 +168,84 @@ void z_paging_histogram_init(void)
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
-			    uint32_t cycles)
+فراغ z_paging_histogram_inc(بنية k_mem_paging_histogram_t *hist,
+			    uint32_t چکراں)
 {
-	int idx;
+	صحيح idx;
 
-	for (idx = 0;
-	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS;
+	لكل (idx = 0;
+	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_عدد_BINS;
 	     idx++) {
-		if (cycles <= hist->bounds[idx]) {
+		إذا (چکراں <= hist->bounds[idx]) {
 			hist->counts[idx]++;
-			break;
+			اكسر;
 		}
 	}
 }
 
-void z_impl_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+فراغ z_impl_k_mem_paging_histogram_eviction_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	إذا (hist == عدم) {
+		أرجع;
 	}
 
 	/* Copy statistics */
-	memcpy(hist, &z_paging_histogram_eviction,
-	       sizeof(z_paging_histogram_eviction));
+	حافظہ_نقل(hist, &z_paging_histogram_eviction,
+	       حجم(z_paging_histogram_eviction));
 }
 
-void z_impl_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+فراغ z_impl_k_mem_paging_histogram_backing_store_ورقہ_وچ_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	إذا (hist == عدم) {
+		أرجع;
 	}
 
 	/* Copy histogram */
-	memcpy(hist, &z_paging_histogram_backing_store_page_in,
-	       sizeof(z_paging_histogram_backing_store_page_in));
+	حافظہ_نقل(hist, &z_paging_histogram_backing_store_ورقہ_وچ,
+	       حجم(z_paging_histogram_backing_store_ورقہ_وچ));
 }
 
-void z_impl_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+فراغ z_impl_k_mem_paging_histogram_backing_store_ورقہ_باہرلا_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	إذا (hist == عدم) {
+		أرجع;
 	}
 
 	/* Copy histogram */
-	memcpy(hist, &z_paging_histogram_backing_store_page_out,
-	       sizeof(z_paging_histogram_backing_store_page_out));
+	حافظہ_نقل(hist, &z_paging_histogram_backing_store_ورقہ_باہرلا,
+	       حجم(z_paging_histogram_backing_store_ورقہ_باہرلا));
 }
 
-#ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن
+فراغ z_vrfy_k_mem_paging_histogram_eviction_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(hist, حجم(*hist)));
 	z_impl_k_mem_paging_histogram_eviction_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_eviction_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_mem_paging_histogram_eviction_get_mrsh.c>
 
-static inline
-void z_vrfy_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+ساكن مضمن
+فراغ z_vrfy_k_mem_paging_histogram_backing_store_ورقہ_وچ_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
-	z_impl_k_mem_paging_histogram_backing_store_page_in_get(hist);
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(hist, حجم(*hist)));
+	z_impl_k_mem_paging_histogram_backing_store_ورقہ_وچ_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_in_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_in_get_mrsh.c>
 
-static inline
-void z_vrfy_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+ساكن مضمن
+فراغ z_vrfy_k_mem_paging_histogram_backing_store_ورقہ_باہرلا_get(
+	بنية k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
-	z_impl_k_mem_paging_histogram_backing_store_page_out_get(hist);
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(hist, حجم(*hist)));
+	z_impl_k_mem_paging_histogram_backing_store_ورقہ_باہرلا_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_out_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_out_get_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+#جے_انت /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */

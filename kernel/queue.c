@@ -11,313 +11,313 @@
  */
 
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/check.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <wait_q.h>
+#ضمن <ksched.h>
+#ضمن <scheduler.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/sys/check.h>
 
-BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "k_queue needs one sflist flag bit");
+BUILD_ASSERT(SYS_SFLIST_FLAG_بٹ >= 1, "k_queue needs one sflist flag bit");
 
-struct alloc_node {
-	sys_sfnode_t node;
-	void *data;
+بنية alloc_گرہ {
+	sys_sfnode_t گرہ;
+	فراغ *انکڑے;
 };
 
 /* The queue must have its spinlock held before calling this function. */
-static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
+ساكن فراغ *z_قطار_گرہ_peek(sys_sfnode_t *گرہ, bool needs_free)
 {
-	void *ret;
+	فراغ *ret;
 
-	if ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
+	إذا ((گرہ != عدم) && (sys_sfnode_flags_get(گرہ) != (uint8_t)0)) {
 		/* If the flag is set, then the enqueue operation for this item
 		 * did a behind-the scenes memory allocation of an alloc_node
 		 * struct, which is what got put in the queue. Free it and pass
 		 * back the data pointer.
 		 */
-		struct alloc_node *anode;
+		بنية alloc_گرہ *anode;
 
-		anode = CONTAINER_OF(node, struct alloc_node, node);
-		ret = anode->data;
-		if (needs_free) {
+		anode = CONTAINER_دا(گرہ, بنية alloc_گرہ, گرہ);
+		ret = anode->انکڑے;
+		إذا (needs_free) {
 			k_free(anode);
 		}
-	} else {
+	} وإلا {
 		/* Data was directly placed in the queue, the first word
 		 * reserved for the linked list. User mode isn't allowed to
 		 * do this, although it can get data sent this way.
 		 */
-		ret = (void *)node;
+		ret = (فراغ *)گرہ;
 	}
 
-	return ret;
+	أرجع ret;
 }
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
+#جے_تعریف_شدہ CONFIG_OBJ_CORE_قطار
 /* The queues embedded in statically defined FIFOs and LIFOs are permanent
  * objects of the queue type too.
  */
-BUILD_ASSERT(offsetof(struct k_fifo, _queue) == 0);
-BUILD_ASSERT(offsetof(struct k_lifo, _queue) == 0);
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
-STRUCT_SECTION_START_EXTERN(k_queue);
-STRUCT_SECTION_END_EXTERN(k_queue);
-K_OBJ_TYPE_DEFINE_RANGES(obj_type_queue, k_queue, K_OBJ_TYPE_QUEUE_ID, NULL,
-			 K_OBJ_RANGE_SECTION(k_queue), K_OBJ_RANGE_SECTION(k_fifo),
+BUILD_ASSERT(offsetof(بنية k_fifo, قطار_2) == 0);
+BUILD_ASSERT(offsetof(بنية k_lifo, قطار_2) == 0);
+STRUCT_SECTION_شروع_EXTERN(k_fifo);
+STRUCT_SECTION_سرا_EXTERN(k_fifo);
+STRUCT_SECTION_شروع_EXTERN(k_lifo);
+STRUCT_SECTION_سرا_EXTERN(k_lifo);
+STRUCT_SECTION_شروع_EXTERN(k_قطار);
+STRUCT_SECTION_سرا_EXTERN(k_قطار);
+K_OBJ_TYPE_DEFINE_RANGES(obj_type_قطار, k_قطار, K_OBJ_TYPE_قطار_ID, عدم,
+			 K_OBJ_RANGE_SECTION(k_قطار), K_OBJ_RANGE_SECTION(k_fifo),
 			 K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#جے_انت /* CONFIG_OBJ_CORE_QUEUE */
 
-void z_impl_k_queue_init(struct k_queue *queue)
+فراغ z_impl_k_قطار_init(بنية k_قطار *قطار)
 {
-	sys_sflist_init(&queue->data_q);
-	queue->lock = (struct k_spinlock) {};
-	z_waitq_init(&queue->wait_q);
-#if defined(CONFIG_POLL)
-	sys_dlist_init(&queue->poll_events);
-#endif
+	sys_sflist_init(&قطار->انکڑے_q);
+	قطار->جندرا = (بنية k_spinlock) {};
+	z_waitq_init(&قطار->wait_q);
+#إذا defined(CONFIG_POLL)
+	sys_dlist_init(&قطار->poll_events);
+#جے_انت
 
-	SYS_PORT_TRACING_OBJ_INIT(k_queue, queue);
+	SYS_پورٹ_TRACING_OBJ_INIT(k_قطار, قطار);
 
-	k_object_init(queue);
+	k_object_init(قطار);
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
-	k_obj_core_init_and_link(K_OBJ_CORE(queue), &obj_type_queue);
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#جے_تعریف_شدہ CONFIG_OBJ_CORE_قطار
+	k_obj_core_init_and_link(K_OBJ_CORE(قطار), &obj_type_قطار);
+#جے_انت /* CONFIG_OBJ_CORE_QUEUE */
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_init(struct k_queue *queue)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن فراغ z_vrfy_k_قطار_init(بنية k_قطار *قطار)
 {
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_init(queue);
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(قطار, K_OBJ_قطار));
+	z_impl_k_قطار_init(قطار);
 }
-#include <zephyr/syscalls/k_queue_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_queue_init_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-static inline bool queue_handle_poll_events(struct k_queue *queue, uint32_t state)
+ساكن مضمن bool قطار_handle_poll_events(بنية k_قطار *قطار, uint32_t state)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&queue->poll_events, state);
-#else
-	ARG_UNUSED(queue);
-	ARG_UNUSED(state);
+#جے_تعریف_شدہ CONFIG_POLL
+	أرجع z_handle_obj_poll_events(&قطار->poll_events, state);
+#وإلا
+	ARG_بن_ورتیا(قطار);
+	ARG_بن_ورتیا(state);
 
-	return false;
-#endif /* CONFIG_POLL */
+	أرجع false;
+#جے_انت /* CONFIG_POLL */
 }
 
-void z_impl_k_queue_cancel_wait(struct k_queue *queue)
+فراغ z_impl_k_قطار_cancel_wait(بنية k_قطار *قطار)
 {
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, cancel_wait, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC(k_قطار, cancel_wait, قطار);
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
 	bool resched = false;
 
-	if (z_sched_wake(&queue->wait_q, 0, NULL)) {
+	إذا (z_sched_wake(&قطار->wait_q, 0, عدم)) {
 		resched = true;
 	}
 
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_CANCELLED) || resched;
+	resched = قطار_handle_poll_events(قطار, K_POLL_STATE_CANCELLED) || resched;
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	إذا (resched) {
+		z_reschedule(&قطار->جندرا, کلید);
+	} وإلا {
+		k_spin_unlock(&قطار->جندرا, کلید);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_cancel_wait(struct k_queue *queue)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن فراغ z_vrfy_k_قطار_cancel_wait(بنية k_قطار *قطار)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_cancel_wait(queue);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	z_impl_k_قطار_cancel_wait(قطار);
 }
-#include <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
 /*
  * Common code for inserting a node into the queue.
  * The queue's spinlock must be held prior to entry.
  * However, that same spinlock will be unlocked before it returns.
  */
-static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
-			    bool alloc, bool is_append, k_spinlock_key_t key)
+ساكن int32_t قطار_داخل_کرو(بنية k_قطار *قطار, فراغ *prev, فراغ *انکڑے,
+			    bool alloc, bool is_append, k_spinlock_کلید_t کلید)
 {
-	int32_t result = 0;
+	int32_t نتیجہ = 0;
 	bool resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_insert, queue, alloc);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, قطار_داخل_کرو, قطار, alloc);
 
-	if (is_append) {
-		prev = sys_sflist_peek_tail(&queue->data_q);
+	إذا (is_append) {
+		prev = sys_sflist_peek_پوچھ(&قطار->انکڑے_q);
 	}
 
-	if (z_sched_wake(&queue->wait_q, 0, data)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_insert, queue, alloc, K_FOREVER);
+	إذا (z_sched_wake(&قطار->wait_q, 0, انکڑے)) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_قطار, قطار_داخل_کرو, قطار, alloc, K_FOREVER);
 		resched = true;
-		goto out;
+		اذهب باہرلا;
 	}
 
 	/* Only need to actually allocate if no threads are pending */
-	if (alloc) {
-		struct alloc_node *anode;
+	إذا (alloc) {
+		بنية alloc_گرہ *anode;
 
-		anode = z_thread_malloc(sizeof(*anode));
-		if (anode == NULL) {
-			result = -ENOMEM;
-			goto out;
+		anode = z_thread_malloc(حجم(*anode));
+		إذا (anode == عدم) {
+			نتیجہ = -ENOMEM;
+			اذهب باہرلا;
 		}
-		anode->data = data;
-		sys_sfnode_init(&anode->node, 0x1);
-		data = anode;
-	} else {
-		sys_sfnode_init(data, 0x0);
+		anode->انکڑے = انکڑے;
+		sys_sfnode_init(&anode->گرہ, 0x1);
+		انکڑے = anode;
+	} وإلا {
+		sys_sfnode_init(انکڑے, 0x0);
 	}
 
-	sys_sflist_insert(&queue->data_q, prev, data);
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE);
+	sys_sflist_داخل_کرو(&قطار->انکڑے_q, prev, انکڑے);
+	resched = قطار_handle_poll_events(قطار, K_POLL_STATE_انکڑے_دستیاب);
 
-out:
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+باہرلا:
+	إذا (resched) {
+		z_reschedule(&قطار->جندرا, کلید);
+	} وإلا {
+		k_spin_unlock(&قطار->جندرا, کلید);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_insert, queue, alloc, result);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, قطار_داخل_کرو, قطار, alloc, نتیجہ);
 
-	return result;
+	أرجع نتیجہ;
 }
 
-void k_queue_insert(struct k_queue *queue, void *prev, void *data)
+فراغ k_قطار_داخل_کرو(بنية k_قطار *قطار, فراغ *prev, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, insert, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, داخل_کرو, قطار);
 
-	(void)queue_insert(queue, prev, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(فراغ)قطار_داخل_کرو(قطار, prev, انکڑے, false, false,
+			   k_spin_جندرا(&قطار->جندرا));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, insert, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, داخل_کرو, قطار);
 }
 
-void k_queue_append(struct k_queue *queue, void *data)
+فراغ k_قطار_append(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, append, قطار);
 
-	(void)queue_insert(queue, NULL, data, false, true,
-			   k_spin_lock(&queue->lock));
+	(فراغ)قطار_داخل_کرو(قطار, عدم, انکڑے, false, true,
+			   k_spin_جندرا(&قطار->جندرا));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, append, قطار);
 }
 
-void k_queue_prepend(struct k_queue *queue, void *data)
+فراغ k_قطار_prepend(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, prepend, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, prepend, قطار);
 
-	(void)queue_insert(queue, NULL, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(فراغ)قطار_داخل_کرو(قطار, عدم, انکڑے, false, false,
+			   k_spin_جندرا(&قطار->جندرا));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, prepend, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, prepend, قطار);
 }
 
-int32_t z_impl_k_queue_alloc_append(struct k_queue *queue, void *data)
+int32_t z_impl_k_قطار_alloc_append(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_append, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, alloc_append, قطار);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, true,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = قطار_داخل_کرو(قطار, عدم, انکڑے, true, true,
+				   k_spin_جندرا(&قطار->جندرا));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_append, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, alloc_append, قطار, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_append(struct k_queue *queue,
-						  void *data)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن int32_t z_vrfy_k_قطار_alloc_append(بنية k_قطار *قطار,
+						  فراغ *انکڑے)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_append(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_alloc_append(قطار, انکڑے);
 }
-#include <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-int32_t z_impl_k_queue_alloc_prepend(struct k_queue *queue, void *data)
+int32_t z_impl_k_قطار_alloc_prepend(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_prepend, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, alloc_prepend, قطار);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, false,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = قطار_داخل_کرو(قطار, عدم, انکڑے, true, false,
+				   k_spin_جندرا(&قطار->جندرا));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_prepend, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, alloc_prepend, قطار, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_prepend(struct k_queue *queue,
-						   void *data)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن int32_t z_vrfy_k_قطار_alloc_prepend(بنية k_قطار *قطار,
+						   فراغ *انکڑے)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_prepend(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_alloc_prepend(قطار, انکڑے);
 }
-#include <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
+صحيح k_قطار_append_list(بنية k_قطار *قطار, فراغ *سر, فراغ *پوچھ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append_list, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, append_list, قطار);
 	bool resched = false;
 
 	/* invalid head or tail of list */
-	CHECKIF((head == NULL) || (tail == NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, -EINVAL);
+	CHECKIF((سر == عدم) || (پوچھ == عدم)) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, append_list, قطار, -EINVAL);
 
-		return -EINVAL;
+		أرجع -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
 
-	while ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
+	طالما ((سر != عدم) && z_sched_wake(&قطار->wait_q, 0, سر)) {
 		resched = true;
-		head = *(void **)head;
+		سر = *(فراغ **)سر;
 	}
 
-	if (head != NULL) {
-		sys_sflist_append_list(&queue->data_q, head, tail);
+	إذا (سر != عدم) {
+		sys_sflist_append_list(&قطار->انکڑے_q, سر, پوچھ);
 
-		resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE) || resched;
+		resched = قطار_handle_poll_events(قطار, K_POLL_STATE_انکڑے_دستیاب) || resched;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, 0);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, append_list, قطار, 0);
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	إذا (resched) {
+		z_reschedule(&قطار->جندرا, کلید);
+	} وإلا {
+		k_spin_unlock(&قطار->جندرا, کلید);
 	}
 
-	return 0;
+	أرجع 0;
 }
 
-int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
+صحيح k_قطار_ملاؤ_slist(بنية k_قطار *قطار, sys_slist_t *list)
 {
-	int ret;
+	صحيح ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, merge_slist, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, ملاؤ_slist, قطار);
 
 	/* list must not be empty */
-	CHECKIF(sys_slist_is_empty(list)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, -EINVAL);
+	CHECKIF(sys_slist_is_خالی_تھاواں(list)) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, ملاؤ_slist, قطار, -EINVAL);
 
-		return -EINVAL;
+		أرجع -EINVAL;
 	}
 
 	/*
@@ -329,178 +329,178 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 	 *   flag bytes in the lower order bits of the data pointer
 	 * - source list is really an slist and not an sflist with flags set
 	 */
-	ret = k_queue_append_list(queue, list->head, list->tail);
+	ret = k_قطار_append_list(قطار, list->سر, list->پوچھ);
 	CHECKIF(ret != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, ret);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, ملاؤ_slist, قطار, ret);
 
-		return ret;
+		أرجع ret;
 	}
 	sys_slist_init(list);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, 0);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, ملاؤ_slist, قطار, 0);
 
-	return 0;
+	أرجع 0;
 }
 
-void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
+فراغ *z_impl_k_قطار_get(بنية k_قطار *قطار, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *data;
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
+	فراغ *انکڑے;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, get, queue, timeout);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, get, قطار, timeout);
 
-	if (likely(!sys_sflist_is_empty(&queue->data_q))) {
-		sys_sfnode_t *node;
+	إذا (likely(!sys_sflist_is_خالی_تھاواں(&قطار->انکڑے_q))) {
+		sys_sfnode_t *گرہ;
 
-		node = sys_sflist_get_not_empty(&queue->data_q);
-		data = z_queue_node_peek(node, true);
-		k_spin_unlock(&queue->lock, key);
+		گرہ = sys_sflist_get_not_خالی_تھاواں(&قطار->انکڑے_q);
+		انکڑے = z_قطار_گرہ_peek(گرہ, true);
+		k_spin_unlock(&قطار->جندرا, کلید);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, data);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, get, قطار, timeout, انکڑے);
 
-		return data;
+		أرجع انکڑے;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&queue->lock, key);
+	إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&قطار->جندرا, کلید);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, NULL);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, get, قطار, timeout, عدم);
 
-		return NULL;
+		أرجع عدم;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, get, queue, timeout);
+	SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_قطار, get, قطار, timeout);
 
-	int ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
+	صحيح ret = z_pend_curr(&قطار->جندرا, کلید, &قطار->wait_q, timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout,
-		(ret != 0) ? NULL : _current->base.swap_data);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, get, قطار, timeout,
+		(ret != 0) ? عدم : _current->ادھار.وٹاندرا_انکڑے);
 
-	return (ret != 0) ? NULL : _current->base.swap_data;
+	أرجع (ret != 0) ? عدم : _current->ادھار.وٹاندرا_انکڑے;
 }
 
 /* Remove a queue item by its data pointer and free any wrapper node. */
-bool k_queue_remove(struct k_queue *queue, void *data)
+bool k_قطار_remove(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, remove, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	sys_sfnode_t *prev = NULL;
-	sys_sfnode_t *node = sys_sflist_peek_head(&queue->data_q);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, remove, قطار);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
+	sys_sfnode_t *prev = عدم;
+	sys_sfnode_t *گرہ = sys_sflist_peek_سر(&قطار->انکڑے_q);
 	bool ret = false;
 
-	while (node != NULL) {
-		void *peeked = z_queue_node_peek(node, false);
+	طالما (گرہ != عدم) {
+		فراغ *peeked = z_قطار_گرہ_peek(گرہ, false);
 
-		if (peeked == data) {
-			sys_sflist_remove(&queue->data_q, prev, node);
-			(void)z_queue_node_peek(node, true);
+		إذا (peeked == انکڑے) {
+			sys_sflist_remove(&قطار->انکڑے_q, prev, گرہ);
+			(فراغ)z_قطار_گرہ_peek(گرہ, true);
 			ret = true;
-			break;
+			اكسر;
 		}
-		prev = node;
-		node = sys_sflist_peek_next(node);
+		prev = گرہ;
+		گرہ = sys_sflist_peek_اگلا(گرہ);
 	}
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&قطار->جندرا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, remove, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, remove, قطار, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-bool k_queue_unique_append(struct k_queue *queue, void *data)
+bool k_قطار_unique_append(بنية k_قطار *قطار, فراغ *انکڑے)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, unique_append, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_قطار, unique_append, قطار);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
 
 	sys_sfnode_t *test;
 
-	SYS_SFLIST_FOR_EACH_NODE(&queue->data_q, test) {
-		if (test == (sys_sfnode_t *) data) {
-			k_spin_unlock(&queue->lock, key);
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, false);
+	SYS_SFLIST_FOR_EACH_گرہ(&قطار->انکڑے_q, test) {
+		إذا (test == (sys_sfnode_t *) انکڑے) {
+			k_spin_unlock(&قطار->جندرا, کلید);
+			SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, unique_append, قطار, false);
 
-			return false;
+			أرجع false;
 		}
 	}
 
-	(void)queue_insert(queue, NULL, data, false, true, key);
+	(فراغ)قطار_داخل_کرو(قطار, عدم, انکڑے, false, true, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, true);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_قطار, unique_append, قطار, true);
 
-	return true;
+	أرجع true;
 }
 
-void *z_impl_k_queue_peek_head(struct k_queue *queue)
+فراغ *z_impl_k_قطار_peek_سر(بنية k_قطار *قطار)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_head(&queue->data_q), false);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
+	فراغ *ret = z_قطار_گرہ_peek(sys_sflist_peek_سر(&قطار->انکڑے_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&قطار->جندرا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_head, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC(k_قطار, peek_سر, قطار, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *z_impl_k_queue_peek_tail(struct k_queue *queue)
+فراغ *z_impl_k_قطار_peek_پوچھ(بنية k_قطار *قطار)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_tail(&queue->data_q), false);
+	k_spinlock_کلید_t کلید = k_spin_جندرا(&قطار->جندرا);
+	فراغ *ret = z_قطار_گرہ_peek(sys_sflist_peek_پوچھ(&قطار->انکڑے_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&قطار->جندرا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_tail, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC(k_قطار, peek_پوچھ, قطار, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void *z_vrfy_k_queue_get(struct k_queue *queue,
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن فراغ *z_vrfy_k_قطار_get(بنية k_قطار *قطار,
 				       k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_get(queue, timeout);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_get(قطار, timeout);
 }
-#include <zephyr/syscalls/k_queue_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_queue_get_mrsh.c>
 
-static inline int z_vrfy_k_queue_is_empty(struct k_queue *queue)
+ساكن مضمن صحيح z_vrfy_k_قطار_is_خالی_تھاواں(بنية k_قطار *قطار)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_is_empty(queue);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_is_خالی_تھاواں(قطار);
 }
-#include <zephyr/syscalls/k_queue_is_empty_mrsh.c>
+#ضمن <zephyr/syscalls/k_queue_is_empty_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_head(struct k_queue *queue)
+ساكن مضمن فراغ *z_vrfy_k_قطار_peek_سر(بنية k_قطار *قطار)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_head(queue);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_peek_سر(قطار);
 }
-#include <zephyr/syscalls/k_queue_peek_head_mrsh.c>
+#ضمن <zephyr/syscalls/k_queue_peek_head_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_tail(struct k_queue *queue)
+ساكن مضمن فراغ *z_vrfy_k_قطار_peek_پوچھ(بنية k_قطار *قطار)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_tail(queue);
+	K_OOPS(K_SYSCALL_OBJ(قطار, K_OBJ_قطار));
+	أرجع z_impl_k_قطار_peek_پوچھ(قطار);
 }
-#include <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
+#ضمن <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#جے_انت /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_OBJ_CORE_FIFO
+#جے_تعریف_شدہ CONFIG_OBJ_CORE_FIFO
 /* Referenced by k_fifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
+STRUCT_SECTION_شروع_EXTERN(k_fifo);
+STRUCT_SECTION_سرا_EXTERN(k_fifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_fifo) =
-	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, عدم, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_fifo));
-#endif /* CONFIG_OBJ_CORE_FIFO */
+#جے_انت /* CONFIG_OBJ_CORE_FIFO */
 
-#ifdef CONFIG_OBJ_CORE_LIFO
+#جے_تعریف_شدہ CONFIG_OBJ_CORE_LIFO
 /* Referenced by k_lifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
+STRUCT_SECTION_شروع_EXTERN(k_lifo);
+STRUCT_SECTION_سرا_EXTERN(k_lifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_lifo) =
-	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, عدم, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_LIFO */
+#جے_انت /* CONFIG_OBJ_CORE_LIFO */

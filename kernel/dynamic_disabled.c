@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#ضمن <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/kernel/thread_stack.h>
+#ضمن <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_ڈھیر_t *z_impl_k_thread_ڈھیر_alloc(size_t ناپ, صحيح flags)
 {
-	ARG_UNUSED(size);
-	ARG_UNUSED(flags);
+	ARG_بن_ورتیا(ناپ);
+	ARG_بن_ورتیا(flags);
 
-	return NULL;
+	أرجع عدم;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن k_thread_ڈھیر_t *z_vrfy_k_thread_ڈھیر_alloc(size_t ناپ, صحيح flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	أرجع z_impl_k_thread_ڈھیر_alloc(ناپ, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+صحيح z_impl_k_thread_ڈھیر_free(k_thread_ڈھیر_t *ڈھیر)
 {
-	ARG_UNUSED(stack);
+	ARG_بن_ورتیا(ڈھیر);
 
-	return -ENOSYS;
+	أرجع -ENOSYS;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#جے_تعریف_شدہ CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_thread_ڈھیر_free(k_thread_ڈھیر_t *ڈھیر)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	أرجع z_impl_k_thread_ڈھیر_free(ڈھیر);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#جے_انت /* CONFIG_USERSPACE */
