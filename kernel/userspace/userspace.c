@@ -48,7 +48,7 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
  * not.
  */
 #ifdef CONFIG_DYNAMIC_OBJECTS
-static struct k_spinlock lists_lock;       /* kobj dlist */
+static sa_nracanaa k_spinlock lists_lock;       /* kobj dlist */
 
 #ifdef CONFIG_GEN_PRIV_STACKS
 /* On ARM & ARC MPU & RISC-V PMP we may have two different alignment requirement
@@ -56,36 +56,36 @@ static struct k_spinlock lists_lock;       /* kobj dlist */
  * stack and other for the user stack, so we need to account the
  * worst alignment scenario and reserve space for that.
  */
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+#ប្រសិនបើ defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
 #define STACK_ELEMENT_DATA_SIZE(size) \
-	(sizeof(struct z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
+	(parimaa_na(sa_nracanaa z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
 	Z_THREAD_STACK_OBJ_ALIGN(size) + K_THREAD_STACK_LEN(size))
-#else
-#define STACK_ELEMENT_DATA_SIZE(size) (sizeof(struct z_stack_data) + \
+#បើមិនដូច្នេះ
+#define STACK_ELEMENT_DATA_SIZE(size) (parimaa_na(sa_nracanaa z_stack_data) + \
 	K_THREAD_STACK_LEN(size))
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-#else
+#បើមិនដូច្នេះ
 #define STACK_ELEMENT_DATA_SIZE(size) K_THREAD_STACK_LEN(size)
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 #endif /* CONFIG_DYNAMIC_OBJECTS */
-static struct k_spinlock obj_lock;         /* kobj struct data */
+static sa_nracanaa k_spinlock obj_lock;         /* kobj struct data */
 
 #define MAX_THREAD_BITS (CONFIG_MAX_THREAD_BYTES * BITS_PER_BYTE)
 
 #ifdef CONFIG_DYNAMIC_OBJECTS
 extern uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
 
-extern int z_msgq_cleanup(struct k_msgq *q, bool locked);
-extern int z_stack_cleanup(struct k_stack *stack, bool locked);
-extern int z_timer_cleanup(struct k_timer *timer, bool locked);
+extern ចំនួនគត់ z_msgq_cleanup(sa_nracanaa k_msgq *q, bool locked);
+extern ចំនួនគត់ z_stack_cleanup(sa_nracanaa k_stack *stack, bool locked);
+extern ចំនួនគត់ z_timer_cleanup(sa_nracanaa k_timer *timer, bool locked);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked);
+static void unref_check(sa_nracanaa k_object *ko, uintptr_t index, bool locked);
 
-const char *otype_to_str(enum k_objects otype)
+const var_na *otype_to_str(ga_nanaa k_objects otype)
 {
-	const char *ret;
+	const var_na *ret;
 	/* -fdata-sections doesn't work right except in very recent
 	 * GCC and these literal strings would appear in the binary even if
 	 * otype_to_str was omitted by the linker
@@ -95,28 +95,28 @@ const char *otype_to_str(enum k_objects otype)
 	/* otype-to-str.h is generated automatically during build by
 	 * gen_kobject_list.py
 	 */
-	case K_OBJ_ANY:
+	pak_sa K_OBJ_ANY:
 		ret = "generic";
-		break;
-	case K_OBJ_DRIVER_ANY:
+		bha_nga;
+	pak_sa K_OBJ_DRIVER_ANY:
 		ret = "generic driver";
-		break;
+		bha_nga;
 #include <zephyr/otype-to-str.h>
 	default:
 		ret = "?";
-		break;
+		bha_nga;
 	}
-#else
+#បើមិនដូច្នេះ
 	ARG_UNUSED(otype);
 	ret = NULL;
 #endif /* CONFIG_LOG */
-	return ret;
+	ត្រឡប់ ret;
 }
 
-struct perm_ctx {
-	int parent_id;
-	int child_id;
-	struct k_thread *parent;
+sa_nracanaa perm_ctx {
+	ចំនួនគត់ parent_id;
+	ចំនួនគត់ child_id;
+	sa_nracanaa k_thread *parent;
 };
 
 #ifdef CONFIG_GEN_PRIV_STACKS
@@ -126,13 +126,13 @@ struct perm_ctx {
  */
 uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
 {
-	struct k_object *obj = k_object_find(stack);
+	sa_nracanaa k_object *obj = k_object_find(stack);
 
 	__ASSERT(obj != NULL, "stack object not found");
 	__ASSERT(obj->type == K_OBJ_THREAD_STACK_ELEMENT,
 		 "bad stack object");
 
-	return obj->data.stack_data->priv;
+	ត្រឡប់ obj->data.stack_data->priv;
 }
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
@@ -152,35 +152,35 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
  */
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 #define DYN_OBJ_DATA_ALIGN_K_THREAD	(ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT)
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD	(sizeof(void *))
+#បើមិនដូច្នេះ
+#define DYN_OBJ_DATA_ALIGN_K_THREAD	(parimaa_na(void *))
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 
 #ifdef CONFIG_DYNAMIC_THREAD_STACK_SIZE
-#if defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
+#ប្រសិនបើ defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_STACK_SIZE)
-#else
+#បើមិនដូច្នេះ
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_PRIVILEGED_STACK_SIZE)
 #endif /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
-#else
+#បើមិនដូច្នេះ
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(ARCH_STACK_PTR_ALIGN)
 #endif /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
 
 #define DYN_OBJ_DATA_ALIGN		\
-	MAX(DYN_OBJ_DATA_ALIGN_K_THREAD, (sizeof(void *)))
+	MAX(DYN_OBJ_DATA_ALIGN_K_THREAD, (parimaa_na(void *)))
 
-struct dyn_obj {
-	struct k_object kobj;
+sa_nracanaa dyn_obj {
+	sa_nracanaa k_object kobj;
 	sys_dnode_t dobj_list;
 
 	/* The object itself */
 	void *data;
 };
 
-extern struct k_object *z_object_gperf_find(const void *obj);
+extern sa_nracanaa k_object *z_object_gperf_find(const void *obj);
 extern void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func,
 					     void *context);
 
@@ -194,43 +194,43 @@ static sys_dlist_t obj_list = SYS_DLIST_STATIC_INIT(&obj_list);
  * TODO: Write some hash table code that will replace obj_list.
  */
 
-static size_t obj_size_get(enum k_objects otype)
+static size_t obj_size_get(ga_nanaa k_objects otype)
 {
 	size_t ret;
 
 	switch (otype) {
 #include <zephyr/otype-to-size.h>
 	default:
-		ret = sizeof(const struct device);
-		break;
+		ret = parimaa_na(const sa_nracanaa device);
+		bha_nga;
 	}
 
-	return ret;
+	ត្រឡប់ ret;
 }
 
-static size_t obj_align_get(enum k_objects otype)
+static size_t obj_align_get(ga_nanaa k_objects otype)
 {
 	size_t ret;
 
 	switch (otype) {
-	case K_OBJ_THREAD:
+	pak_sa K_OBJ_THREAD:
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 		ret = ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT;
-#else
-		ret = __alignof(struct dyn_obj);
+#បើមិនដូច្នេះ
+		ret = __alignof(sa_nracanaa dyn_obj);
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
-		break;
+		bha_nga;
 	default:
-		ret = __alignof(struct dyn_obj);
-		break;
+		ret = __alignof(sa_nracanaa dyn_obj);
+		bha_nga;
 	}
 
-	return ret;
+	ត្រឡប់ ret;
 }
 
-static struct dyn_obj *dyn_object_find_locked(const void *obj)
+static sa_nracanaa dyn_obj *dyn_object_find_locked(const void *obj)
 {
-	struct dyn_obj *node;
+	sa_nracanaa dyn_obj *node;
 
 	/* For any dynamically allocated kernel object, the object
 	 * pointer is just a member of the containing struct dyn_obj,
@@ -238,27 +238,27 @@ static struct dyn_obj *dyn_object_find_locked(const void *obj)
 	 * corresponding struct rbnode
 	 */
 	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, node, dobj_list) {
-		if (node->kobj.name == obj) {
-			return node;
+		ប្រសិនបើ (node->kobj.name == obj) {
+			ត្រឡប់ node;
 		}
 	}
 
-	return NULL;
+	ត្រឡប់ NULL;
 }
 
-static struct dyn_obj *dyn_object_find(const void *obj)
+static sa_nracanaa dyn_obj *dyn_object_find(const void *obj)
 {
-	struct dyn_obj *node;
+	sa_nracanaa dyn_obj *node;
 	k_spinlock_key_t key;
 
 	key = k_spin_lock(&lists_lock);
 	node = dyn_object_find_locked(obj);
 	k_spin_unlock(&lists_lock, key);
 
-	return node;
+	ត្រឡប់ node;
 }
 
-static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
+static void clear_perms_cb(sa_nracanaa k_object *ko, void *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -283,19 +283,19 @@ static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
  **/
 static bool thread_idx_alloc(uintptr_t *tidx)
 {
-	int i;
-	int idx;
-	int base;
+	ចំនួនគត់ i;
+	ចំនួនគត់ idx;
+	ចំនួនគត់ base;
 	bool ret = false;
 	k_spinlock_key_t key;
 
 	base = 0;
 	key = k_spin_lock(&lists_lock);
-	for (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+	សម្រាប់ (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
 		idx = find_lsb_set(_thread_idx_map[i]);
 
-		if (idx != 0) {
-			struct dyn_obj *obj, *next;
+		ប្រសិនបើ (idx != 0) {
+			sa_nracanaa dyn_obj *obj, *next;
 
 			*tidx = base + (idx - 1);
 
@@ -313,14 +313,14 @@ static bool thread_idx_alloc(uintptr_t *tidx)
 			}
 
 			ret = true;
-			break;
+			bha_nga;
 		}
 
 		base += 8;
 	}
 
 	k_spin_unlock(&lists_lock, key);
-	return ret;
+	ត្រឡប់ ret;
 }
 
 /**
@@ -335,7 +335,7 @@ static bool thread_idx_alloc(uintptr_t *tidx)
  **/
 static void thread_idx_free(uintptr_t tidx)
 {
-	struct dyn_obj *obj, *next;
+	sa_nracanaa dyn_obj *obj, *next;
 
 	z_object_gperf_wordlist_foreach(clear_perms_cb, (void *)tidx);
 
@@ -349,46 +349,46 @@ static void thread_idx_free(uintptr_t tidx)
 	}
 
 	/* Figure out which bits to set in _thread_idx_map[] and set it. */
-	int base = tidx / NUM_BITS(_thread_idx_map[0]);
-	int offset = tidx % NUM_BITS(_thread_idx_map[0]);
+	ចំនួនគត់ base = tidx / NUM_BITS(_thread_idx_map[0]);
+	ចំនួនគត់ offset = tidx % NUM_BITS(_thread_idx_map[0]);
 
 	_thread_idx_map[base] |= BIT(offset);
 
 	k_spin_unlock(&lists_lock, key);
 }
 
-static struct k_object *dynamic_object_create(enum k_objects otype, size_t align,
+static sa_nracanaa k_object *dynamic_object_create(ga_nanaa k_objects otype, size_t align,
 					      size_t size)
 {
-	struct dyn_obj *dyn;
+	sa_nracanaa dyn_obj *dyn;
 
-	dyn = z_thread_aligned_alloc(align, sizeof(struct dyn_obj));
-	if (dyn == NULL) {
-		return NULL;
+	dyn = z_thread_aligned_alloc(align, parimaa_na(sa_nracanaa dyn_obj));
+	ប្រសិនបើ (dyn == NULL) {
+		ត្រឡប់ NULL;
 	}
 
-	if (otype == K_OBJ_THREAD_STACK_ELEMENT) {
+	ប្រសិនបើ (otype == K_OBJ_THREAD_STACK_ELEMENT) {
 		size_t adjusted_size;
 
-		if (size == 0) {
+		ប្រសិនបើ (size == 0) {
 			k_free(dyn);
-			return NULL;
+			ត្រឡប់ NULL;
 		}
 
 		adjusted_size = STACK_ELEMENT_DATA_SIZE(size);
-		if (adjusted_size < size) {
+		ប្រសិនបើ (adjusted_size < size) {
 			/* The size adjustment above overflowed, which would
 			 * hand out an allocation smaller than requested.
 			 */
 			k_free(dyn);
-			return NULL;
+			ត្រឡប់ NULL;
 		}
 
 		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_STACK,
 						     adjusted_size);
-		if (dyn->data == NULL) {
+		ប្រសិនបើ (dyn->data == NULL) {
 			k_free(dyn);
-			return NULL;
+			ត្រឡប់ NULL;
 		}
 
 #ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
@@ -399,39 +399,39 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 		 * cached area such that the thread object will have its stack
 		 * inside cached area.
 		 */
-		if (sys_cache_is_ptr_uncached(dyn->data)) {
+		ប្រសិនបើ (sys_cache_is_ptr_uncached(dyn->data)) {
 			dyn->data = sys_cache_cached_ptr_get(dyn->data);
 		}
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 
 #ifdef CONFIG_GEN_PRIV_STACKS
-		struct z_stack_data *stack_data = (struct z_stack_data *)
-			((uint8_t *)dyn->data + adjusted_size - sizeof(*stack_data));
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+		sa_nracanaa z_stack_data *stack_data = (sa_nracanaa z_stack_data *)
+			((uint8_t *)dyn->data + adjusted_size - parimaa_na(*stack_data));
+#ប្រសិនបើ defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
 		stack_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
 			  Z_THREAD_STACK_OBJ_ALIGN(size));
-#else
+#បើមិនដូច្នេះ
 		stack_data->priv = (uint8_t *)dyn->data;
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
 		stack_data->size = adjusted_size;
 		dyn->kobj.data.stack_data = stack_data;
 		dyn->kobj.name = dyn->data;
-#else
+#បើមិនដូច្នេះ
 		dyn->kobj.name = dyn->data;
 		dyn->kobj.data.stack_size = adjusted_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
-	} else {
+	} បើមិនដូច្នេះ {
 		size_t total_size = obj_size_get(otype) + size;
 
-		if (total_size < size) {
+		ប្រសិនបើ (total_size < size) {
 			k_free(dyn);
-			return NULL;
+			ត្រឡប់ NULL;
 		}
 
 		dyn->data = z_thread_aligned_alloc(align, total_size);
-		if (dyn->data == NULL) {
+		ប្រសិនបើ (dyn->data == NULL) {
 			k_free(dyn);
-			return NULL;
+			ត្រឡប់ NULL;
 		}
 		dyn->kobj.name = dyn->data;
 	}
@@ -445,57 +445,57 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 	sys_dlist_append(&obj_list, &dyn->dobj_list);
 	k_spin_unlock(&lists_lock, key);
 
-	return &dyn->kobj;
+	ត្រឡប់ &dyn->kobj;
 }
 
-struct k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
+sa_nracanaa k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
 {
-	struct k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
+	sa_nracanaa k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
 
-	if (obj == NULL) {
+	ប្រសិនបើ (obj == NULL) {
 		LOG_ERR("could not allocate kernel object, out of memory");
 	}
 
-	return obj;
+	ត្រឡប់ obj;
 }
 
-static void *z_object_alloc(enum k_objects otype, size_t size)
+static void *z_object_alloc(ga_nanaa k_objects otype, size_t size)
 {
-	struct k_object *zo;
+	sa_nracanaa k_object *zo;
 	uintptr_t tidx = 0;
 
-	if ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
+	ប្រសិនបើ ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
 		LOG_ERR("bad object type %d requested", otype);
-		return NULL;
+		ត្រឡប់ NULL;
 	}
 
 	switch (otype) {
-	case K_OBJ_THREAD:
-		if (!thread_idx_alloc(&tidx)) {
+	pak_sa K_OBJ_THREAD:
+		ប្រសិនបើ (!thread_idx_alloc(&tidx)) {
 			LOG_ERR("out of free thread indexes");
-			return NULL;
+			ត្រឡប់ NULL;
 		}
-		break;
+		bha_nga;
 	/* The following are currently not allowed at all */
-	case K_OBJ_SYS_MUTEX:			/* Lives in user memory */
-	case K_OBJ_NET_SOCKET:			/* Indeterminate size */
+	pak_sa K_OBJ_SYS_MUTEX:			/* Lives in user memory */
+	pak_sa K_OBJ_NET_SOCKET:			/* Indeterminate size */
 		LOG_ERR("forbidden object type '%s' requested",
 			otype_to_str(otype));
-		return NULL;
+		ត្រឡប់ NULL;
 	default:
 		/* Remainder within bounds are permitted */
-		break;
+		bha_nga;
 	}
 
 	zo = dynamic_object_create(otype, obj_align_get(otype), size);
-	if (zo == NULL) {
-		if (otype == K_OBJ_THREAD) {
+	ប្រសិនបើ (zo == NULL) {
+		ប្រសិនបើ (otype == K_OBJ_THREAD) {
 			thread_idx_free(tidx);
 		}
-		return NULL;
+		ត្រឡប់ NULL;
 	}
 
-	if (otype == K_OBJ_THREAD) {
+	ប្រសិនបើ (otype == K_OBJ_THREAD) {
 		zo->data.thread_id = tidx;
 	}
 
@@ -509,22 +509,22 @@ static void *z_object_alloc(enum k_objects otype, size_t size)
 	 */
 	zo->flags |= K_OBJ_FLAG_ALLOC;
 
-	return zo->name;
+	ត្រឡប់ zo->name;
 }
 
-void *z_impl_k_object_alloc(enum k_objects otype)
+void *z_impl_k_object_alloc(ga_nanaa k_objects otype)
 {
-	return z_object_alloc(otype, 0);
+	ត្រឡប់ z_object_alloc(otype, 0);
 }
 
-void *z_impl_k_object_alloc_size(enum k_objects otype, size_t size)
+void *z_impl_k_object_alloc_size(ga_nanaa k_objects otype, size_t size)
 {
-	return z_object_alloc(otype, size);
+	ត្រឡប់ z_object_alloc(otype, size);
 }
 
 void k_object_free(void *obj)
 {
-	struct dyn_obj *dyn = NULL;
+	sa_nracanaa dyn_obj *dyn = NULL;
 	bool free_thread_idx = false;
 	uintptr_t thread_idx = 0;
 
@@ -541,10 +541,10 @@ void k_object_free(void *obj)
 
 	dyn = dyn_object_find_locked(obj);
 
-	if (dyn != NULL) {
+	ប្រសិនបើ (dyn != NULL) {
 		sys_dlist_remove(&dyn->dobj_list);
 
-		if (dyn->kobj.type == K_OBJ_THREAD) {
+		ប្រសិនបើ (dyn->kobj.type == K_OBJ_THREAD) {
 			free_thread_idx = true;
 			thread_idx = dyn->kobj.data.thread_id;
 		}
@@ -555,13 +555,13 @@ void k_object_free(void *obj)
 	 * non-atomic bitmap update against concurrent frees, so it must
 	 * run with the lock dropped here.
 	 */
-	if (free_thread_idx) {
+	ប្រសិនបើ (free_thread_idx) {
 		thread_idx_free(thread_idx);
 	}
 
-	if (dyn != NULL) {
+	ប្រសិនបើ (dyn != NULL) {
 #ifdef CONFIG_OBJ_CORE
-		if (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
+		ប្រសិនបើ (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
 			k_obj_core_evict_range(obj, obj_size_get(dyn->kobj.type));
 		}
 #endif /* CONFIG_OBJ_CORE */
@@ -571,17 +571,17 @@ void k_object_free(void *obj)
 		 * stack object. So we need to restore the uncached one before
 		 * freeing it.
 		 */
-		if (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
+		ប្រសិនបើ (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
 			uint8_t *stack;
 
-			if (sys_cache_is_ptr_cached(dyn->data)) {
+			ប្រសិនបើ (sys_cache_is_ptr_cached(dyn->data)) {
 				stack = sys_cache_uncached_ptr_get(dyn->data);
-			} else {
+			} បើមិនដូច្នេះ {
 				stack = dyn->data;
 			}
 
 			k_free(stack);
-		} else
+		} បើមិនដូច្នេះ
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 		{
 			k_free(dyn->data);
@@ -590,31 +590,31 @@ void k_object_free(void *obj)
 	}
 }
 
-struct k_object *k_object_find(const void *obj)
+sa_nracanaa k_object *k_object_find(const void *obj)
 {
-	struct k_object *ret;
+	sa_nracanaa k_object *ret;
 
 	ret = z_object_gperf_find(obj);
 
-	if (ret == NULL) {
-		struct dyn_obj *dyn;
+	ប្រសិនបើ (ret == NULL) {
+		sa_nracanaa dyn_obj *dyn;
 
 		/* The cast to pointer-to-non-const violates MISRA
 		 * 11.8 but is justified since we know dynamic objects
 		 * were not declared with a const qualifier.
 		 */
 		dyn = dyn_object_find(obj);
-		if (dyn != NULL) {
+		ប្រសិនបើ (dyn != NULL) {
 			ret = &dyn->kobj;
 		}
 	}
 
-	return ret;
+	ត្រឡប់ ret;
 }
 
 void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
 {
-	struct dyn_obj *obj, *next;
+	sa_nracanaa dyn_obj *obj, *next;
 
 	z_object_gperf_wordlist_foreach(func, context);
 
@@ -634,10 +634,10 @@ void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
  */
 #ifdef CONFIG_DYNAMIC_OBJECTS
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *z_object_gperf_find(const void *obj)
+__weak sa_nracanaa k_object *z_object_gperf_find(const void *obj)
 {
 	ARG_UNUSED(obj);
-	return NULL;
+	ត្រឡប់ NULL;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *context)
@@ -645,11 +645,11 @@ __weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *cont
 	ARG_UNUSED(func);
 	ARG_UNUSED(context);
 }
-#else
+#បើមិនដូច្នេះ
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *k_object_find(const void *obj)
+__weak sa_nracanaa k_object *k_object_find(const void *obj)
 {
-	return NULL;
+	ត្រឡប់ NULL;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
@@ -657,17 +657,17 @@ __weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
 }
 #endif
 
-static unsigned int thread_index_get(struct k_thread *thread)
+static unsigned ចំនួនគត់ thread_index_get(sa_nracanaa k_thread *thread)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	ko = k_object_find(thread);
 
-	if (ko == NULL) {
-		return -1;
+	ប្រសិនបើ (ko == NULL) {
+		ត្រឡប់ -1;
 	}
 
-	return ko->data.thread_id;
+	ត្រឡប់ ko->data.thread_id;
 }
 
 /* Caller must hold lists_lock for the duration of this call so that the
@@ -677,26 +677,26 @@ static unsigned int thread_index_get(struct k_thread *thread)
  * Note: The 'locked' parameter in this function refers to the scheduler's
  * spinlock.
  */
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
+static void unref_check(sa_nracanaa k_object *ko, uintptr_t index, bool locked)
 {
 	k_spinlock_key_t key = k_spin_lock(&obj_lock);
 
 	sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 
 #ifdef CONFIG_DYNAMIC_OBJECTS
-	if ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
+	ប្រសិនបើ ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
 		/* skip unref check for static kernel object */
 		goto out;
 	}
 
 	void *vko = ko;
 
-	struct dyn_obj *dyn = CONTAINER_OF(vko, struct dyn_obj, kobj);
+	sa_nracanaa dyn_obj *dyn = CONTAINER_OF(vko, sa_nracanaa dyn_obj, kobj);
 
-	__ASSERT(IS_PTR_ALIGNED(dyn, struct dyn_obj), "unaligned z_object");
+	__ASSERT(IS_PTR_ALIGNED(dyn, sa_nracanaa dyn_obj), "unaligned z_object");
 
-	for (int i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
-		if (ko->perms[i] != 0U) {
+	សម្រាប់ (ចំនួនគត់ i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+		ប្រសិនបើ (ko->perms[i] != 0U) {
 			goto out;
 		}
 	}
@@ -707,25 +707,25 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	 * specifically needs to happen depends on the object type.
 	 */
 	switch (ko->type) {
-	case K_OBJ_MSGQ:
-		(void)z_msgq_cleanup((struct k_msgq *)ko->name, locked);
-		break;
-	case K_OBJ_STACK:
-		(void)z_stack_cleanup((struct k_stack *)ko->name, locked);
-		break;
-	case K_OBJ_TIMER:
+	pak_sa K_OBJ_MSGQ:
+		(void)z_msgq_cleanup((sa_nracanaa k_msgq *)ko->name, locked);
+		bha_nga;
+	pak_sa K_OBJ_STACK:
+		(void)z_stack_cleanup((sa_nracanaa k_stack *)ko->name, locked);
+		bha_nga;
+	pak_sa K_OBJ_TIMER:
 		/* k_timer_cleanup() does not check whether the timer has
 		 * been initialized; calling it on an uninitialized timer
 		 * would read garbage from an uninitialized dnode. Guard
 		 * explicitly here.
 		 */
-		if ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
-			(void)z_timer_cleanup((struct k_timer *)ko->name, locked);
+		ប្រសិនបើ ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
+			(void)z_timer_cleanup((sa_nracanaa k_timer *)ko->name, locked);
 		}
-		break;
+		bha_nga;
 	default:
 		/* Nothing to do */
-		break;
+		bha_nga;
 	}
 
 	sys_dlist_remove(&dyn->dobj_list);
@@ -736,43 +736,43 @@ out:
 	k_spin_unlock(&obj_lock, key);
 }
 
-static void wordlist_cb(struct k_object *ko, void *ctx_ptr)
+static void wordlist_cb(sa_nracanaa k_object *ko, void *ctx_ptr)
 {
-	struct perm_ctx *ctx = (struct perm_ctx *)ctx_ptr;
+	sa_nracanaa perm_ctx *ctx = (sa_nracanaa perm_ctx *)ctx_ptr;
 
-	if (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
-				  ((struct k_thread *)ko->name != ctx->parent)) {
+	ប្រសិនបើ (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
+				  ((sa_nracanaa k_thread *)ko->name != ctx->parent)) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, ctx->child_id);
 	}
 }
 
-void k_thread_perms_inherit(struct k_thread *parent, struct k_thread *child)
+void k_thread_perms_inherit(sa_nracanaa k_thread *parent, sa_nracanaa k_thread *child)
 {
-	struct perm_ctx ctx = {
+	sa_nracanaa perm_ctx ctx = {
 		thread_index_get(parent),
 		thread_index_get(child),
 		parent
 	};
 
-	if ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
+	ប្រសិនបើ ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
 		k_object_wordlist_foreach(wordlist_cb, &ctx);
 	}
 }
 
-void k_thread_perms_set(struct k_object *ko, struct k_thread *thread)
+void k_thread_perms_set(sa_nracanaa k_object *ko, sa_nracanaa k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	ចំនួនគត់ index = thread_index_get(thread);
 
-	if (index != -1) {
+	ប្រសិនបើ (index != -1) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, index);
 	}
 }
 
-void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
+void k_thread_perms_clear(sa_nracanaa k_object *ko, sa_nracanaa k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	ចំនួនគត់ index = thread_index_get(thread);
 
-	if (index != -1) {
+	ប្រសិនបើ (index != -1) {
 		sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 		/* unref_check() requires lists_lock so its dlist remove is
 		 * SMP-safe.
@@ -782,13 +782,13 @@ void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
 
 		unref_check(ko, index, false);
 		k_spin_unlock(&lists_lock, key);
-#else
+#បើមិនដូច្នេះ
 		unref_check(ko, index, false);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 	}
 }
 
-static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
+static void clear_perms_cb_locked(sa_nracanaa k_object *ko, void *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -802,91 +802,91 @@ static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
  * be passed down to the lower layers so that they do not try to reacquire the
  * spinlock (leading to deadlock).
  */
-void k_thread_perms_all_clear(struct k_thread *thread)
+void k_thread_perms_all_clear(sa_nracanaa k_thread *thread)
 {
 	uintptr_t index = thread_index_get(thread);
 
-	if ((int)index != -1) {
+	ប្រសិនបើ ((ចំនួនគត់)index != -1) {
 		k_object_wordlist_foreach(clear_perms_cb_locked, (void *)index);
 	}
 }
 
-static int thread_perms_test(struct k_object *ko)
+static ចំនួនគត់ thread_perms_test(sa_nracanaa k_object *ko)
 {
-	int index;
+	ចំនួនគត់ index;
 
-	if ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
-		return 1;
+	ប្រសិនបើ ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
+		ត្រឡប់ 1;
 	}
 
 	index = thread_index_get(_current);
-	if (index != -1) {
-		return sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
+	ប្រសិនបើ (index != -1) {
+		ត្រឡប់ sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
 	}
-	return 0;
+	ត្រឡប់ 0;
 }
 
-static void dump_permission_error(struct k_object *ko)
+static void dump_permission_error(sa_nracanaa k_object *ko)
 {
-	int index = thread_index_get(_current);
+	ចំនួនគត់ index = thread_index_get(_current);
 	LOG_ERR("thread %p (%d) does not have permission on %s %p",
 		_current, index,
 		otype_to_str(ko->type), ko->name);
-	LOG_HEXDUMP_ERR(ko->perms, sizeof(ko->perms), "permission bitmap");
+	LOG_HEXDUMP_ERR(ko->perms, parimaa_na(ko->perms), "permission bitmap");
 }
 
-void k_object_dump_error(int retval, const void *obj, struct k_object *ko,
-			enum k_objects otype)
+void k_object_dump_error(ចំនួនគត់ retval, const void *obj, sa_nracanaa k_object *ko,
+			ga_nanaa k_objects otype)
 {
 	switch (retval) {
-	case -EBADF:
+	pak_sa -EBADF:
 		LOG_ERR("%p is not a valid %s", obj, otype_to_str(otype));
-		if (ko == NULL) {
+		ប្រសិនបើ (ko == NULL) {
 			LOG_ERR("address is not a known kernel object");
-		} else {
+		} បើមិនដូច្នេះ {
 			LOG_ERR("address is actually a %s",
 				otype_to_str(ko->type));
 		}
-		break;
-	case -EPERM:
+		bha_nga;
+	pak_sa -EPERM:
 		dump_permission_error(ko);
-		break;
-	case -EINVAL:
+		bha_nga;
+	pak_sa -EINVAL:
 		LOG_ERR("%p used before initialization", obj);
-		break;
-	case -EADDRINUSE:
+		bha_nga;
+	pak_sa -EADDRINUSE:
 		LOG_ERR("%p %s in use", obj, otype_to_str(otype));
-		break;
+		bha_nga;
 	default:
 		/* Not handled error */
-		break;
+		bha_nga;
 	}
 }
 
-void z_impl_k_object_access_grant(const void *object, struct k_thread *thread)
+void z_impl_k_object_access_grant(const void *object, sa_nracanaa k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	sa_nracanaa k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	ប្រសិនបើ (ko != NULL) {
 		k_thread_perms_set(ko, thread);
 	}
 }
 
-void k_object_access_revoke(const void *object, struct k_thread *thread)
+void k_object_access_revoke(const void *object, sa_nracanaa k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	sa_nracanaa k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	ប្រសិនបើ (ko != NULL) {
 		k_thread_perms_clear(ko, thread);
 	}
 }
 
 void k_object_access_revoke_others(const void *object)
 {
-	struct k_object *ko = k_object_find(object);
+	sa_nracanaa k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
+	ប្រសិនបើ (ko != NULL) {
+		(void)memset(ko->perms, 0, parimaa_na(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags &= ~K_OBJ_FLAG_PUBLIC;
 	}
@@ -899,61 +899,61 @@ void z_impl_k_object_release(const void *object)
 
 void k_object_access_all_grant(const void *object)
 {
-	struct k_object *ko = k_object_find(object);
+	sa_nracanaa k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	ប្រសិនបើ (ko != NULL) {
 		ko->flags |= K_OBJ_FLAG_PUBLIC;
 	}
 }
 
-int k_object_validate(struct k_object *ko, enum k_objects otype,
-		       enum _obj_init_check init)
+ចំនួនគត់ k_object_validate(sa_nracanaa k_object *ko, ga_nanaa k_objects otype,
+		       ga_nanaa _obj_init_check init)
 {
-	if (unlikely(ko == NULL)) {
-		return -EBADF;
+	ប្រសិនបើ (unlikely(ko == NULL)) {
+		ត្រឡប់ -EBADF;
 	}
 
-	if (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
-		if ((otype != K_OBJ_DRIVER_ANY) ||
+	ប្រសិនបើ (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
+		ប្រសិនបើ ((otype != K_OBJ_DRIVER_ANY) ||
 		    (ko->type < K_OBJ_DRIVER_FIRST) ||
 		    (ko->type > K_OBJ_DRIVER_LAST)) {
-			return -EBADF;
+			ត្រឡប់ -EBADF;
 		}
 	}
 
 	/* Manipulation of any kernel objects by a user thread requires that
 	 * thread be granted access first, even for uninitialized objects
 	 */
-	if (unlikely(thread_perms_test(ko) == 0)) {
-		return -EPERM;
+	ប្រសិនបើ (unlikely(thread_perms_test(ko) == 0)) {
+		ត្រឡប់ -EPERM;
 	}
 
 	/* Initialization state checks. _OBJ_INIT_ANY, we don't care */
-	if (likely(init == _OBJ_INIT_TRUE)) {
+	ប្រសិនបើ (likely(init == _OBJ_INIT_TRUE)) {
 		/* Object MUST be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
-			return -EINVAL;
+		ប្រសិនបើ (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
+			ត្រឡប់ -EINVAL;
 		}
-	} else if (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
+	} បើមិនដូច្នេះ ប្រសិនបើ (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
 		/* Object MUST NOT be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
-			return -EADDRINUSE;
+		ប្រសិនបើ (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
+			ត្រឡប់ -EADDRINUSE;
 		}
-	} else {
+	} បើមិនដូច្នេះ {
 		/* _OBJ_INIT_ANY */
 	}
 
-	return 0;
+	ត្រឡប់ 0;
 }
 
-int z_impl_k_object_access_check(const void *object)
+ចំនួនគត់ z_impl_k_object_access_check(const void *object)
 {
-	return k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
+	ត្រឡប់ k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
 void k_object_init(const void *obj)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	/* By the time we get here, if the caller was from userspace, all the
 	 * necessary checks have been done in k_object_validate(), which takes
@@ -964,12 +964,12 @@ void k_object_init(const void *obj)
 	 */
 
 	ko = k_object_find(obj);
-	if (ko == NULL) {
+	ប្រសិនបើ (ko == NULL) {
 		/* Supervisor threads can ignore rules about kernel objects
 		 * and may declare them on stacks, etc. Such objects will never
 		 * be usable from userspace, but we shouldn't explode.
 		 */
-		return;
+		ត្រឡប់;
 	}
 
 	/* Allows non-initialization system calls to be made on this object */
@@ -978,10 +978,10 @@ void k_object_init(const void *obj)
 
 void k_object_recycle(const void *obj)
 {
-	struct k_object *ko = k_object_find(obj);
+	sa_nracanaa k_object *ko = k_object_find(obj);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
+	ប្រសិនបើ (ko != NULL) {
+		(void)memset(ko->perms, 0, parimaa_na(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags |= K_OBJ_FLAG_INITIALIZED;
 	}
@@ -989,12 +989,12 @@ void k_object_recycle(const void *obj)
 
 void k_object_uninit(const void *obj)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	/* See comments in k_object_init() */
 	ko = k_object_find(obj);
-	if (ko == NULL) {
-		return;
+	ប្រសិនបើ (ko == NULL) {
+		ត្រឡប់;
 	}
 
 	ko->flags &= ~K_OBJ_FLAG_INITIALIZED;
@@ -1008,27 +1008,27 @@ void *k_usermode_alloc_from_copy(const void *src, size_t size)
 	void *dst = NULL;
 
 	/* Does the caller in user mode have access to read this memory? */
-	if (K_SYSCALL_MEMORY_READ(src, size)) {
+	ប្រសិនបើ (K_SYSCALL_MEMORY_READ(src, size)) {
 		goto out_err;
 	}
 
 	dst = z_thread_malloc(size);
-	if (dst == NULL) {
+	ប្រសិនបើ (dst == NULL) {
 		LOG_ERR("out of thread resource pool memory (%zu)", size);
 		goto out_err;
 	}
 
 	(void)memcpy(dst, src, size);
 out_err:
-	return dst;
+	ត្រឡប់ dst;
 }
 
-static int user_copy(void *dst, const void *src, size_t size, bool to_user)
+static ចំនួនគត់ user_copy(void *dst, const void *src, size_t size, bool to_user)
 {
-	int ret = EFAULT;
+	ចំនួនគត់ ret = EFAULT;
 
 	/* Does the caller in user mode have access to this memory? */
-	if (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
+	ប្រសិនបើ (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
 			K_SYSCALL_MEMORY_READ(src, size)) {
 		goto out_err;
 	}
@@ -1036,35 +1036,35 @@ static int user_copy(void *dst, const void *src, size_t size, bool to_user)
 	(void)memcpy(dst, src, size);
 	ret = 0;
 out_err:
-	return ret;
+	ត្រឡប់ ret;
 }
 
-int k_usermode_from_copy(void *dst, const void *src, size_t size)
+ចំនួនគត់ k_usermode_from_copy(void *dst, const void *src, size_t size)
 {
-	return user_copy(dst, src, size, false);
+	ត្រឡប់ user_copy(dst, src, size, false);
 }
 
-int k_usermode_to_copy(void *dst, const void *src, size_t size)
+ចំនួនគត់ k_usermode_to_copy(void *dst, const void *src, size_t size)
 {
-	return user_copy(dst, src, size, true);
+	ត្រឡប់ user_copy(dst, src, size, true);
 }
 
-char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
+var_na *k_usermode_string_alloc_copy(const var_na *src, size_t maxlen)
 {
 	size_t actual_len;
-	int err;
-	char *ret = NULL;
+	ចំនួនគត់ err;
+	var_na *ret = NULL;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	ប្រសិនបើ (err != 0) {
 		goto out;
 	}
-	if (actual_len == maxlen) {
+	ប្រសិនបើ (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		goto out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	ប្រសិនបើ (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		goto out;
 	}
@@ -1075,30 +1075,30 @@ char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
 	 * checks. Ensure what we actually copied is still terminated
 	 * properly.
 	 */
-	if (ret != NULL) {
+	ប្រសិនបើ (ret != NULL) {
 		ret[actual_len - 1U] = '\0';
 	}
 out:
-	return ret;
+	ត្រឡប់ ret;
 }
 
-int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
+ចំនួនគត់ k_usermode_string_copy(var_na *dst, const var_na *src, size_t maxlen)
 {
 	size_t actual_len;
-	int ret, err;
+	ចំនួនគត់ ret, err;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	ប្រសិនបើ (err != 0) {
 		ret = EFAULT;
 		goto out;
 	}
-	if (actual_len == maxlen) {
+	ប្រសិនបើ (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		ret = EINVAL;
 		goto out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	ប្រសិនបើ (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		ret = EINVAL;
 		goto out;
@@ -1109,25 +1109,25 @@ int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
 	/* See comment above in k_usermode_string_alloc_copy() */
 	dst[actual_len - 1] = '\0';
 out:
-	return ret;
+	ត្រឡប់ ret;
 }
 
 /*
  * Application memory region initialization
  */
 
-extern char __app_shmem_regions_start[];
-extern char __app_shmem_regions_end[];
+extern var_na __app_shmem_regions_start[];
+extern var_na __app_shmem_regions_end[];
 
 static void app_shmem_bss_zero(void)
 {
-	struct z_app_region *region, *end;
+	sa_nracanaa z_app_region *region, *end;
 
 
-	end = (struct z_app_region *)&__app_shmem_regions_end[0];
-	region = (struct z_app_region *)&__app_shmem_regions_start[0];
+	end = (sa_nracanaa z_app_region *)&__app_shmem_regions_end[0];
+	region = (sa_nracanaa z_app_region *)&__app_shmem_regions_start[0];
 
-	for ( ; region < end; region++) {
+	សម្រាប់ ( ; region < end; region++) {
 		(void)memset(region->bss_start, 0, region->bss_size);
 	}
 }

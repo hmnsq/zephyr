@@ -32,15 +32,15 @@
  * "inside" a given critical section).  Do the synchronization port
  * later as an optimization.
  */
-static struct k_spinlock poll_lock;
+static sa_nracanaa k_spinlock poll_lock;
 
-enum POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
+ga_nanaa POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
 
-static int signal_poller(struct k_poll_event *event, uint32_t state);
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status);
+static ចំនួនគត់ signal_poller(sa_nracanaa k_poll_event *event, uint32_t state);
+static ចំនួនគត់ signal_triggered_work(sa_nracanaa k_poll_event *event, uint32_t status);
 
-void k_poll_event_init(struct k_poll_event *event, uint32_t type,
-		       int mode, void *obj)
+void k_poll_event_init(sa_nracanaa k_poll_event *event, uint32_t type,
+		       ចំនួនគត់ mode, void *obj)
 {
 	__ASSERT(mode == K_POLL_MODE_NOTIFY_ONLY,
 		 "only NOTIFY_ONLY mode is supported\n");
@@ -59,78 +59,78 @@ void k_poll_event_init(struct k_poll_event *event, uint32_t type,
 }
 
 /* must be called with interrupts locked */
-static inline bool is_condition_met(struct k_poll_event *event, uint32_t *state)
+static anta_hstha bool is_condition_met(sa_nracanaa k_poll_event *event, uint32_t *state)
 {
 	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		if (k_sem_count_get(event->sem) > 0U) {
+	pak_sa K_POLL_TYPE_SEM_AVAILABLE:
+		ប្រសិនបើ (k_sem_count_get(event->sem) > 0U) {
 			*state = K_POLL_STATE_SEM_AVAILABLE;
-			return true;
+			ត្រឡប់ true;
 		}
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		if (!k_queue_is_empty(event->queue)) {
+		bha_nga;
+	pak_sa K_POLL_TYPE_DATA_AVAILABLE:
+		ប្រសិនបើ (!k_queue_is_empty(event->queue)) {
 			*state = K_POLL_STATE_FIFO_DATA_AVAILABLE;
-			return true;
+			ត្រឡប់ true;
 		}
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		if (event->signal->signaled != 0U) {
+		bha_nga;
+	pak_sa K_POLL_TYPE_SIGNAL:
+		ប្រសិនបើ (event->sa_nkeeta->signaled != 0U) {
 			*state = K_POLL_STATE_SIGNALED;
-			return true;
+			ត្រឡប់ true;
 		}
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		if (event->msgq->used_msgs > 0) {
+		bha_nga;
+	pak_sa K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		ប្រសិនបើ (event->msgq->used_msgs > 0) {
 			*state = K_POLL_STATE_MSGQ_DATA_AVAILABLE;
-			return true;
+			ត្រឡប់ true;
 		}
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_PIPE_DATA_AVAILABLE:
 		/*
 		 * A closed pipe is readable: k_pipe_read() returns any
 		 * remaining bytes, then -EPIPE. Without the closed check,
 		 * k_poll() waits forever on a closed empty pipe.
 		 */
-		if (!ring_buf_is_empty(&event->pipe->buf) ||
+		ប្រសិនបើ (!ring_buf_is_empty(&event->pipe->buf) ||
 		    (event->pipe->flags & PIPE_FLAG_OPEN) == 0U) {
 			*state = K_POLL_STATE_PIPE_DATA_AVAILABLE;
-			return true;
+			ត្រឡប់ true;
 		}
-		break;
-	case K_POLL_TYPE_IGNORE:
-		break;
+		bha_nga;
+	pak_sa K_POLL_TYPE_IGNORE:
+		bha_nga;
 	default:
 		__ASSERT(false, "invalid event type (0x%x)\n", event->type);
-		break;
+		bha_nga;
 	}
 
-	return false;
+	ត្រឡប់ false;
 }
 
-static struct k_thread *poller_thread(struct z_poller *p)
+static sa_nracanaa k_thread *poller_thread(sa_nracanaa z_poller *p)
 {
-	return p ? CONTAINER_OF(p, struct k_thread, poller) : NULL;
+	ត្រឡប់ p ? CONTAINER_OF(p, sa_nracanaa k_thread, poller) : NULL;
 }
 
-static inline void add_event(sys_dlist_t *events, struct k_poll_event *event,
-			     struct z_poller *poller)
+static anta_hstha void add_event(sys_dlist_t *events, sa_nracanaa k_poll_event *event,
+			     sa_nracanaa z_poller *poller)
 {
-	struct k_poll_event *pending;
+	sa_nracanaa k_poll_event *pending;
 
-	pending = (struct k_poll_event *)sys_dlist_peek_tail(events);
-	if ((pending == NULL) ||
+	pending = (sa_nracanaa k_poll_event *)sys_dlist_peek_tail(events);
+	ប្រសិនបើ ((pending == NULL) ||
 		(z_sched_prio_cmp(poller_thread(pending->poller),
 							   poller_thread(poller)) > 0)) {
 		sys_dlist_append(events, &event->_node);
-		return;
+		ត្រឡប់;
 	}
 
 	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, _node) {
-		if (z_sched_prio_cmp(poller_thread(poller),
+		ប្រសិនបើ (z_sched_prio_cmp(poller_thread(poller),
 					poller_thread(pending->poller)) > 0) {
 			sys_dlist_insert(&pending->_node, &event->_node);
-			return;
+			ត្រឡប់;
 		}
 	}
 
@@ -138,118 +138,118 @@ static inline void add_event(sys_dlist_t *events, struct k_poll_event *event,
 }
 
 /* must be called with interrupts locked */
-static inline void register_event(struct k_poll_event *event,
-				 struct z_poller *poller)
+static anta_hstha void register_event(sa_nracanaa k_poll_event *event,
+				 sa_nracanaa z_poller *poller)
 {
 	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
+	pak_sa K_POLL_TYPE_SEM_AVAILABLE:
 		__ASSERT(event->sem != NULL, "invalid semaphore\n");
 		add_event(&event->sem->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_DATA_AVAILABLE:
 		__ASSERT(event->queue != NULL, "invalid queue\n");
 		add_event(&event->queue->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
-		add_event(&event->signal->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->sa_nkeeta != NULL, "invalid poll signal\n");
+		add_event(&event->sa_nkeeta->poll_events, event, poller);
+		bha_nga;
+	pak_sa K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
 		__ASSERT(event->msgq != NULL, "invalid message queue\n");
 		add_event(&event->msgq->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_PIPE_DATA_AVAILABLE:
 		__ASSERT(event->pipe != NULL, "invalid pipe\n");
 		add_event(&event->pipe->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_IGNORE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
+		bha_nga;
 	default:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		bha_nga;
 	}
 
 	event->poller = poller;
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registration(struct k_poll_event *event)
+static anta_hstha void clear_event_registration(sa_nracanaa k_poll_event *event)
 {
 	bool remove_event = false;
 
 	event->poller = NULL;
 
 	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
+	pak_sa K_POLL_TYPE_SEM_AVAILABLE:
 		__ASSERT(event->sem != NULL, "invalid semaphore\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_DATA_AVAILABLE:
 		__ASSERT(event->queue != NULL, "invalid queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
+		bha_nga;
+	pak_sa K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->sa_nkeeta != NULL, "invalid poll signal\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
 		__ASSERT(event->msgq != NULL, "invalid message queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_PIPE_DATA_AVAILABLE:
 		__ASSERT(event->pipe != NULL, "invalid pipe\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_IGNORE:
+		bha_nga;
+	pak_sa K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
+		bha_nga;
 	default:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		bha_nga;
 	}
-	if (remove_event && sys_dnode_is_linked(&event->_node)) {
+	ប្រសិនបើ (remove_event && sys_dnode_is_linked(&event->_node)) {
 		sys_dlist_remove(&event->_node);
 	}
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registrations(struct k_poll_event *events,
-					      int num_events,
+static anta_hstha void clear_event_registrations(sa_nracanaa k_poll_event *events,
+					      ចំនួនគត់ num_events,
 					      k_spinlock_key_t key)
 {
-	while (num_events--) {
+	ខណៈពេល (num_events--) {
 		clear_event_registration(&events[num_events]);
 		k_spin_unlock(&poll_lock, key);
 		key = k_spin_lock(&poll_lock);
 	}
 }
 
-static inline void set_event_ready(struct k_poll_event *event, uint32_t state)
+static anta_hstha void set_event_ready(sa_nracanaa k_poll_event *event, uint32_t state)
 {
 	event->poller = NULL;
 	event->state |= state;
 }
 
-static inline int register_events(struct k_poll_event *events,
-				  int num_events,
-				  struct z_poller *poller,
+static anta_hstha ចំនួនគត់ register_events(sa_nracanaa k_poll_event *events,
+				  ចំនួនគត់ num_events,
+				  sa_nracanaa z_poller *poller,
 				  bool just_check)
 {
-	int events_registered = 0;
+	ចំនួនគត់ events_registered = 0;
 
-	for (int ii = 0; ii < num_events; ii++) {
+	សម្រាប់ (ចំនួនគត់ ii = 0; ii < num_events; ii++) {
 		k_spinlock_key_t key;
 		uint32_t state;
 
 		key = k_spin_lock(&poll_lock);
-		if (is_condition_met(&events[ii], &state)) {
+		ប្រសិនបើ (is_condition_met(&events[ii], &state)) {
 			set_event_ready(&events[ii], state);
 			poller->is_polling = false;
-		} else if (!just_check && poller->is_polling) {
+		} បើមិនដូច្នេះ ប្រសិនបើ (!just_check && poller->is_polling) {
 			register_event(&events[ii], poller);
 			events_registered += 1;
-		} else {
+		} បើមិនដូច្នេះ {
 			/* Event is not one of those identified in is_condition_met()
 			 * catching non-polling events, or is marked for just check,
 			 * or not marked for polling. No action needed.
@@ -259,38 +259,38 @@ static inline int register_events(struct k_poll_event *events,
 		k_spin_unlock(&poll_lock, key);
 	}
 
-	return events_registered;
+	ត្រឡប់ events_registered;
 }
 
-static int signal_poller(struct k_poll_event *event, uint32_t state)
+static ចំនួនគត់ signal_poller(sa_nracanaa k_poll_event *event, uint32_t state)
 {
-	struct k_thread *thread = poller_thread(event->poller);
+	sa_nracanaa k_thread *thread = poller_thread(event->poller);
 
 	__ASSERT(thread != NULL, "poller should have a thread\n");
 
-	if (!z_is_thread_pending(thread)) {
-		return 0;
+	ប្រសិនបើ (!z_is_thread_pending(thread)) {
+		ត្រឡប់ 0;
 	}
 
 	z_unpend_thread(thread);
 	arch_thread_return_value_set(thread,
 		state == K_POLL_STATE_CANCELLED ? -EINTR : 0);
 
-	if (!z_is_thread_ready(thread)) {
-		return 0;
+	ប្រសិនបើ (!z_is_thread_ready(thread)) {
+		ត្រឡប់ 0;
 	}
 
 	z_ready_thread(thread);
 
-	return 0;
+	ត្រឡប់ 0;
 }
 
-int z_impl_k_poll(struct k_poll_event *events, int num_events,
+ចំនួនគត់ z_impl_k_poll(sa_nracanaa k_poll_event *events, ចំនួនគត់ num_events,
 		  k_timeout_t timeout)
 {
-	int events_registered;
+	ចំនួនគត់ events_registered;
 	k_spinlock_key_t key;
-	struct z_poller *poller = &_current->poller;
+	sa_nracanaa z_poller *poller = &_current->poller;
 
 	poller->is_polling = true;
 	poller->mode = MODE_POLL;
@@ -311,28 +311,28 @@ int z_impl_k_poll(struct k_poll_event *events, int num_events,
 	 * condition is met, either when looping through the events here or
 	 * because one of the events registered has had its state changed.
 	 */
-	if (!poller->is_polling) {
+	ប្រសិនបើ (!poller->is_polling) {
 		clear_event_registrations(events, events_registered, key);
 		k_spin_unlock(&poll_lock, key);
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
 
-		return 0;
+		ត្រឡប់ 0;
 	}
 
 	poller->is_polling = false;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ប្រសិនបើ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		k_spin_unlock(&poll_lock, key);
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
 
-		return -EAGAIN;
+		ត្រឡប់ -EAGAIN;
 	}
 
 	static _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
 
-	int swap_rc = z_pend_curr(&poll_lock, key, &wait_q, timeout);
+	ចំនួនគត់ swap_rc = z_pend_curr(&poll_lock, key, &wait_q, timeout);
 
 	/*
 	 * Clear all event registrations. If events happen while we're in this
@@ -349,39 +349,39 @@ int z_impl_k_poll(struct k_poll_event *events, int num_events,
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, swap_rc);
 
-	return swap_rc;
+	ត្រឡប់ swap_rc;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll(struct k_poll_event *events,
-				int num_events, k_timeout_t timeout)
+static anta_hstha ចំនួនគត់ z_vrfy_k_poll(sa_nracanaa k_poll_event *events,
+				ចំនួនគត់ num_events, k_timeout_t timeout)
 {
-	int ret;
+	ចំនួនគត់ ret;
 	k_spinlock_key_t key;
-	struct k_poll_event *events_copy = NULL;
+	sa_nracanaa k_poll_event *events_copy = NULL;
 	uint32_t bounds;
 
 	/* Validate the events buffer and make a copy of it in an
 	 * allocated kernel-side buffer.
 	 */
-	if (K_SYSCALL_VERIFY(num_events >= 0)) {
+	ប្រសិនបើ (K_SYSCALL_VERIFY(num_events >= 0)) {
 		ret = -EINVAL;
 		goto out;
 	}
-	if (K_SYSCALL_VERIFY_MSG(!u32_mul_overflow(num_events,
-						   sizeof(struct k_poll_event),
+	ប្រសិនបើ (K_SYSCALL_VERIFY_MSG(!u32_mul_overflow(num_events,
+						   parimaa_na(sa_nracanaa k_poll_event),
 						   &bounds),
 				 "num_events too large")) {
 		ret = -EINVAL;
 		goto out;
 	}
 	events_copy = z_thread_malloc(bounds);
-	if (!events_copy) {
+	ប្រសិនបើ (!events_copy) {
 		ret = -ENOMEM;
 		goto out;
 	}
 
-	if (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
+	ប្រសិនបើ (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
 		goto oops_free;
 	}
 
@@ -390,42 +390,42 @@ static inline int z_vrfy_k_poll(struct k_poll_event *events,
 	k_spin_unlock(&poll_lock, key);
 
 	/* Validate what's inside events_copy */
-	for (int i = 0; i < num_events; i++) {
-		struct k_poll_event *e = &events_copy[i];
+	សម្រាប់ (ចំនួនគត់ i = 0; i < num_events; i++) {
+		sa_nracanaa k_poll_event *e = &events_copy[i];
 
-		if (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
+		ប្រសិនបើ (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
 			ret = -EINVAL;
 			goto out_free;
 		}
 
 		switch (e->type) {
-		case K_POLL_TYPE_IGNORE:
-			break;
-		case K_POLL_TYPE_SIGNAL:
-			if (K_SYSCALL_OBJ(e->signal, K_OBJ_POLL_SIGNAL)) {
+		pak_sa K_POLL_TYPE_IGNORE:
+			bha_nga;
+		pak_sa K_POLL_TYPE_SIGNAL:
+			ប្រសិនបើ (K_SYSCALL_OBJ(e->sa_nkeeta, K_OBJ_POLL_SIGNAL)) {
 				goto oops_free;
 			}
-			break;
-		case K_POLL_TYPE_SEM_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
+			bha_nga;
+		pak_sa K_POLL_TYPE_SEM_AVAILABLE:
+			ប្រសិនបើ (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
 				goto oops_free;
 			}
-			break;
-		case K_POLL_TYPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
+			bha_nga;
+		pak_sa K_POLL_TYPE_DATA_AVAILABLE:
+			ប្រសិនបើ (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
 				goto oops_free;
 			}
-			break;
-		case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
+			bha_nga;
+		pak_sa K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+			ប្រសិនបើ (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
 				goto oops_free;
 			}
-			break;
-		case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
+			bha_nga;
+		pak_sa K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+			ប្រសិនបើ (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
 				goto oops_free;
 			}
-			break;
+			bha_nga;
 		default:
 			ret = -EINVAL;
 			goto out_free;
@@ -437,7 +437,7 @@ static inline int z_vrfy_k_poll(struct k_poll_event *events,
 out_free:
 	k_free(events_copy);
 out:
-	return ret;
+	ត្រឡប់ ret;
 oops_free:
 	k_free(events_copy);
 	K_OOPS(1);
@@ -446,48 +446,48 @@ oops_free:
 #endif /* CONFIG_USERSPACE */
 
 /* must be called with interrupts locked */
-static int signal_poll_event(struct k_poll_event *event, uint32_t state)
+static ចំនួនគត់ signal_poll_event(sa_nracanaa k_poll_event *event, uint32_t state)
 {
-	struct z_poller *poller = event->poller;
-	int retcode = 0;
+	sa_nracanaa z_poller *poller = event->poller;
+	ចំនួនគត់ retcode = 0;
 
-	if (poller != NULL) {
-		if (poller->mode == MODE_POLL) {
+	ប្រសិនបើ (poller != NULL) {
+		ប្រសិនបើ (poller->mode == MODE_POLL) {
 			retcode = signal_poller(event, state);
-		} else if (poller->mode == MODE_TRIGGERED) {
+		} បើមិនដូច្នេះ ប្រសិនបើ (poller->mode == MODE_TRIGGERED) {
 			retcode = signal_triggered_work(event, state);
-		} else {
+		} បើមិនដូច្នេះ {
 			/* Poller is not poll or triggered mode. No action needed.*/
 			;
 		}
 
 		poller->is_polling = false;
 
-		if (retcode < 0) {
-			return retcode;
+		ប្រសិនបើ (retcode < 0) {
+			ត្រឡប់ retcode;
 		}
 	}
 
 	set_event_ready(event, state);
-	return retcode;
+	ត្រឡប់ retcode;
 }
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state)
 {
-	struct k_poll_event *poll_event;
+	sa_nracanaa k_poll_event *poll_event;
 	k_spinlock_key_t key = k_spin_lock(&poll_lock);
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(events);
-	if (poll_event != NULL) {
+	poll_event = (sa_nracanaa k_poll_event *)sys_dlist_get(events);
+	ប្រសិនបើ (poll_event != NULL) {
 		(void) signal_poll_event(poll_event, state);
 	}
 
 	k_spin_unlock(&poll_lock, key);
 
-	return (poll_event != NULL);
+	ត្រឡប់ (poll_event != NULL);
 }
 
-void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
+void z_impl_k_poll_signal_init(sa_nracanaa k_poll_signal *sig)
 {
 	sys_dlist_init(&sig->poll_events);
 	sig->signaled = 0U;
@@ -498,7 +498,7 @@ void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_poll_signal_init(struct k_poll_signal *sig)
+static anta_hstha void z_vrfy_k_poll_signal_init(sa_nracanaa k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_init(sig);
@@ -506,15 +506,15 @@ static inline void z_vrfy_k_poll_signal_init(struct k_poll_signal *sig)
 #include <zephyr/syscalls/k_poll_signal_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_poll_signal_reset(struct k_poll_signal *sig)
+void z_impl_k_poll_signal_reset(sa_nracanaa k_poll_signal *sig)
 {
 	sig->signaled = 0U;
 
 	SYS_PORT_TRACING_FUNC(k_poll_api, signal_reset, sig);
 }
 
-void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+void z_impl_k_poll_signal_check(sa_nracanaa k_poll_signal *sig,
+			       unsigned ចំនួនគត់ *signaled, ចំនួនគត់ *result)
 {
 	*signaled = sig->signaled;
 	*result = sig->result;
@@ -523,52 +523,52 @@ void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
 }
 
 #ifdef CONFIG_USERSPACE
-void z_vrfy_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+void z_vrfy_k_poll_signal_check(sa_nracanaa k_poll_signal *sig,
+			       unsigned ចំនួនគត់ *signaled, ចំនួនគត់ *result)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, sizeof(unsigned int)));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, sizeof(int)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, parimaa_na(unsigned ចំនួនគត់)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, parimaa_na(ចំនួនគត់)));
 	z_impl_k_poll_signal_check(sig, signaled, result);
 }
 #include <zephyr/syscalls/k_poll_signal_check_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_poll_signal_raise(struct k_poll_signal *sig, int result)
+ចំនួនគត់ z_impl_k_poll_signal_raise(sa_nracanaa k_poll_signal *sig, ចំនួនគត់ result)
 {
 	k_spinlock_key_t key = k_spin_lock(&poll_lock);
-	struct k_poll_event *poll_event;
+	sa_nracanaa k_poll_event *poll_event;
 
 	sig->result = result;
 	sig->signaled = 1U;
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(&sig->poll_events);
-	if (poll_event == NULL) {
+	poll_event = (sa_nracanaa k_poll_event *)sys_dlist_get(&sig->poll_events);
+	ប្រសិនបើ (poll_event == NULL) {
 		k_spin_unlock(&poll_lock, key);
 
 		SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
 
-		return 0;
+		ត្រឡប់ 0;
 	}
 
-	int rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
+	ចំនួនគត់ rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
 
 	SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
 
 	z_reschedule(&poll_lock, key);
-	return rc;
+	ត្រឡប់ rc;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll_signal_raise(struct k_poll_signal *sig,
-					     int result)
+static anta_hstha ចំនួនគត់ z_vrfy_k_poll_signal_raise(sa_nracanaa k_poll_signal *sig,
+					     ចំនួនគត់ result)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	return z_impl_k_poll_signal_raise(sig, result);
+	ត្រឡប់ z_impl_k_poll_signal_raise(sig, result);
 }
 #include <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
 
-static inline void z_vrfy_k_poll_signal_reset(struct k_poll_signal *sig)
+static anta_hstha void z_vrfy_k_poll_signal_reset(sa_nracanaa k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_reset(sig);
@@ -577,16 +577,16 @@ static inline void z_vrfy_k_poll_signal_reset(struct k_poll_signal *sig)
 
 #endif /* CONFIG_USERSPACE */
 
-static void triggered_work_handler(struct k_work *work)
+static void triggered_work_handler(sa_nracanaa k_work *work)
 {
-	struct k_work_poll *twork =
-			CONTAINER_OF(work, struct k_work_poll, work);
+	sa_nracanaa k_work_poll *twork =
+			CONTAINER_OF(work, sa_nracanaa k_work_poll, work);
 
 	/*
 	 * If callback is not set, the k_work_poll_submit_to_queue()
 	 * already cleared event registrations.
 	 */
-	if (twork->poller.mode != MODE_NONE) {
+	ប្រសិនបើ (twork->poller.mode != MODE_NONE) {
 		k_spinlock_key_t key;
 
 		key = k_spin_lock(&poll_lock);
@@ -600,22 +600,22 @@ static void triggered_work_handler(struct k_work *work)
 	twork->real_handler(work);
 }
 
-extern int z_work_submit_to_queue(struct k_work_q *queue,
-			 struct k_work *work);
+extern ចំនួនគត់ z_work_submit_to_queue(sa_nracanaa k_work_q *queue,
+			 sa_nracanaa k_work *work);
 
-static void triggered_work_expiration_handler(struct _timeout *timeout)
+static void triggered_work_expiration_handler(sa_nracanaa _timeout *timeout)
 {
-	struct k_work_poll *twork =
-		CONTAINER_OF(timeout, struct k_work_poll, timeout);
+	sa_nracanaa k_work_poll *twork =
+		CONTAINER_OF(timeout, sa_nracanaa k_work_poll, timeout);
 	k_spinlock_key_t key = k_spin_lock(&poll_lock);
 
-	if (!twork->poller.is_polling) {
+	ប្រសិនបើ (!twork->poller.is_polling) {
 		/* signal_triggered_work() or triggered_work_cancel() has
 		 * already claimed this wake under the same lock; nothing
 		 * for us to do.
 		 */
 		k_spin_unlock(&poll_lock, key);
-		return;
+		ត្រឡប់;
 	}
 
 	twork->poller.is_polling = false;
@@ -625,14 +625,14 @@ static void triggered_work_expiration_handler(struct _timeout *timeout)
 	k_spin_unlock(&poll_lock, key);
 }
 
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status)
+static ចំនួនគត់ signal_triggered_work(sa_nracanaa k_poll_event *event, uint32_t status)
 {
-	struct z_poller *poller = event->poller;
-	struct k_work_poll *twork =
-		CONTAINER_OF(poller, struct k_work_poll, poller);
+	sa_nracanaa z_poller *poller = event->poller;
+	sa_nracanaa k_work_poll *twork =
+		CONTAINER_OF(poller, sa_nracanaa k_work_poll, poller);
 
-	if (poller->is_polling && twork->workq != NULL) {
-		struct k_work_q *work_q = twork->workq;
+	ប្រសិនបើ (poller->is_polling && twork->workq != NULL) {
+		sa_nracanaa k_work_q *work_q = twork->workq;
 
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
@@ -643,14 +643,14 @@ static int signal_triggered_work(struct k_poll_event *event, uint32_t status)
 		z_work_submit_to_queue(work_q, &twork->work);
 	}
 
-	return 0;
+	ត្រឡប់ 0;
 }
 
-static int triggered_work_cancel(struct k_work_poll *work,
+static ចំនួនគត់ triggered_work_cancel(sa_nracanaa k_work_poll *work,
 				 k_spinlock_key_t key)
 {
 	/* Check if the work waits for event. */
-	if (work->poller.is_polling && work->poller.mode != MODE_NONE) {
+	ប្រសិនបើ (work->poller.is_polling && work->poller.mode != MODE_NONE) {
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
@@ -663,7 +663,7 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		 * `work` for a new poll without the old handler eventually
 		 * acting on the new setup.
 		 */
-		while (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
+		ខណៈពេល (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
 			k_spin_unlock(&poll_lock, key);
 			key = k_spin_lock(&poll_lock);
 		}
@@ -677,7 +677,7 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		/* Clear registrations and work ownership. */
 		clear_event_registrations(work->events, work->num_events, key);
 		work->workq = NULL;
-		return 0;
+		ត្រឡប់ 0;
 	}
 
 	/*
@@ -687,15 +687,15 @@ static int triggered_work_cancel(struct k_work_poll *work,
 	 * unfortunately there is no public API performing this task.
 	 */
 
-	return -EINVAL;
+	ត្រឡប់ -EINVAL;
 }
 
-void k_work_poll_init(struct k_work_poll *work,
+void k_work_poll_init(sa_nracanaa k_work_poll *work,
 		      k_work_handler_t handler)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
 
-	*work = (struct k_work_poll) {};
+	*work = (sa_nracanaa k_work_poll) {};
 	k_work_init(&work->work, triggered_work_handler);
 	work->real_handler = handler;
 	z_init_timeout(&work->timeout);
@@ -703,13 +703,13 @@ void k_work_poll_init(struct k_work_poll *work,
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
 }
 
-int k_work_poll_submit_to_queue(struct k_work_q *work_q,
-				struct k_work_poll *work,
-				struct k_poll_event *events,
-				int num_events,
+ចំនួនគត់ k_work_poll_submit_to_queue(sa_nracanaa k_work_q *work_q,
+				sa_nracanaa k_work_poll *work,
+				sa_nracanaa k_poll_event *events,
+				ចំនួនគត់ num_events,
 				k_timeout_t timeout)
 {
-	int events_registered;
+	ចំនួនគត់ events_registered;
 	k_spinlock_key_t key;
 
 	__ASSERT(work_q != NULL, "NULL work_q\n");
@@ -721,26 +721,26 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 
 	/* Take ownership of the work if it is possible. */
 	key = k_spin_lock(&poll_lock);
-	if (work->workq != NULL) {
-		if (work->workq == work_q) {
-			int retval;
+	ប្រសិនបើ (work->workq != NULL) {
+		ប្រសិនបើ (work->workq == work_q) {
+			ចំនួនគត់ retval;
 
 			retval = triggered_work_cancel(work, key);
-			if (retval < 0) {
+			ប្រសិនបើ (retval < 0) {
 				k_spin_unlock(&poll_lock, key);
 
 				SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
 					work, timeout, retval);
 
-				return retval;
+				ត្រឡប់ retval;
 			}
-		} else {
+		} បើមិនដូច្នេះ {
 			k_spin_unlock(&poll_lock, key);
 
 			SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
 				work, timeout, -EADDRINUSE);
 
-			return -EADDRINUSE;
+			ត្រឡប់ -EADDRINUSE;
 		}
 	}
 
@@ -762,7 +762,7 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 					    &work->poller, false);
 
 	key = k_spin_lock(&poll_lock);
-	if (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ប្រសិនបើ (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/*
 		 * Poller is still polling.
 		 * No event is ready and all are watched.
@@ -779,7 +779,7 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
 
-		return 0;
+		ត្រឡប់ 0;
 	}
 
 	/*
@@ -793,10 +793,10 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 	 * If poller is still polling, no watched event occurred. This means
 	 * we reached here due to K_NO_WAIT timeout "expiration".
 	 */
-	if (work->poller.is_polling) {
+	ប្រសិនបើ (work->poller.is_polling) {
 		work->poller.is_polling = false;
 		work->poll_result = -EAGAIN;
-	} else {
+	} បើមិនដូច្នេះ {
 		work->poll_result = 0;
 	}
 
@@ -809,36 +809,36 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
 
-	return 0;
+	ត្រឡប់ 0;
 }
 
-int k_work_poll_submit(struct k_work_poll *work,
-				     struct k_poll_event *events,
-				     int num_events,
+ចំនួនគត់ k_work_poll_submit(sa_nracanaa k_work_poll *work,
+				     sa_nracanaa k_poll_event *events,
+				     ចំនួនគត់ num_events,
 				     k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
 
-	int ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
+	ចំនួនគត់ ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
 								events, num_events, timeout);
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
 
-	return ret;
+	ត្រឡប់ ret;
 }
 
-int k_work_poll_cancel(struct k_work_poll *work)
+ចំនួនគត់ k_work_poll_cancel(sa_nracanaa k_work_poll *work)
 {
 	k_spinlock_key_t key;
-	int retval;
+	ចំនួនគត់ retval;
 
 	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
 
 	/* Check if the work was submitted. */
-	if (work == NULL || work->workq == NULL) {
+	ប្រសិនបើ (work == NULL || work->workq == NULL) {
 		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
 
-		return -EINVAL;
+		ត្រឡប់ -EINVAL;
 	}
 
 	key = k_spin_lock(&poll_lock);
@@ -847,5 +847,5 @@ int k_work_poll_cancel(struct k_work_poll *work)
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
 
-	return retval;
+	ត្រឡប់ retval;
 }

@@ -10,96 +10,96 @@
 #define SYS_SEM_MINIMUM      0
 #define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+static anta_hstha atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
 	atomic_t old_value, new_value;
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+		ប្រសិនបើ (old_value < minimum) {
+			bha_nga;
 		}
 
 		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+	} ខណៈពេល (atomic_cas(val, old_value, new_value) == 0);
 
-	return old_value;
+	ត្រឡប់ old_value;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+static anta_hstha atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
 	atomic_t old_value, new_value;
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+		ប្រសិនបើ (old_value >= maximum) {
+			bha_nga;
 		}
 
 		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+	} ខណៈពេល (atomic_cas(val, old_value, new_value) == 0U);
 
-	return old_value;
+	ត្រឡប់ old_value;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+ចំនួនគត់ sys_sem_init(sa_nracanaa sys_sem *sem, unsigned ចំនួនគត់ initial_count,
+		 unsigned ចំនួនគត់ limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
+	ប្រសិនបើ ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
 	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+		ត្រឡប់ -EINVAL;
 	}
 
 	(void)atomic_set(&sem->futex.val, initial_count);
 	sem->limit = limit;
 
-	return 0;
+	ត្រឡប់ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+ចំនួនគត់ sys_sem_give(sa_nracanaa sys_sem *sem)
 {
-	int ret = 0;
+	ចំនួនគត់ ret = 0;
 	atomic_t old_value;
 
 	old_value = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	ប្រសិនបើ (old_value < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		ប្រសិនបើ (ret > 0) {
+			ត្រឡប់ 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} បើមិនដូច្នេះ ប្រសិនបើ (old_value >= sem->limit) {
+		ត្រឡប់ -EAGAIN;
+	} បើមិនដូច្នេះ {
 		;
 	}
-	return ret;
+	ត្រឡប់ ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+ចំនួនគត់ sys_sem_take(sa_nracanaa sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
+	ចំនួនគត់ ret = 0;
 	atomic_t old_value;
 
 	do {
 		old_value = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		ប្រសិនបើ (old_value > 0) {
+			ត្រឡប់ 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} ខណៈពេល (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	ត្រឡប់ ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned ចំនួនគត់ sys_sem_count_get(sa_nracanaa sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	ចំនួនគត់ value = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	ត្រឡប់ (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
 }
