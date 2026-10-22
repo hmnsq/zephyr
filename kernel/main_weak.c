@@ -21,10 +21,10 @@
 
 #include <kernel_internal.h>
 
-int __weak main(void)
+整数 __weak 主要(void)
 {
 	/* NOP default main() if the application does not provide one. */
 	arch_nop();
 
-	return 0;
+	返回 0;
 }

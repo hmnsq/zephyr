@@ -14,12 +14,12 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	while (true) {
+	当 (true) {
 		struct k_work_user *work;
 		k_work_user_handler_t handler;
 
 		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
+		如果 (work == NULL) {
 			continue;
 		}
 
@@ -27,7 +27,7 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 		__ASSERT(handler != NULL, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		如果 (atomic_test_and_clear_bit(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -40,7 +40,7 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 }
 
 void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+			     size_t stack_size, 整数 prio, const char *name)
 {
 	k_queue_init(&work_q->queue);
 
@@ -51,7 +51,7 @@ void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *sta
 			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
 	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
+	如果 (name != NULL) {
 		k_thread_name_set(&work_q->thread, name);
 	}
 

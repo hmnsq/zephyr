@@ -20,11 +20,11 @@ static struct k_spinlock timer_lock;
 K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
-#if defined(CONFIG_TIMER_OBSERVER)
+#如果 defined(CONFIG_TIMER_OBSERVER)
 static inline void z_timer_observer_on_init(struct k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_init != NULL) {
+		如果 (obs->on_init != NULL) {
 			obs->on_init(timer);
 		}
 	}
@@ -34,7 +34,7 @@ static inline void z_timer_observer_on_start(struct k_timer *timer, k_timeout_t 
 					     k_timeout_t period)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_start != NULL) {
+		如果 (obs->on_start != NULL) {
 			obs->on_start(timer, duration, period);
 		}
 	}
@@ -43,7 +43,7 @@ static inline void z_timer_observer_on_start(struct k_timer *timer, k_timeout_t 
 static inline void z_timer_observer_on_stop(struct k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_stop != NULL) {
+		如果 (obs->on_stop != NULL) {
 			obs->on_stop(timer);
 		}
 	}
@@ -52,12 +52,12 @@ static inline void z_timer_observer_on_stop(struct k_timer *timer)
 static inline void z_timer_observer_on_expiry(struct k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_expiry != NULL) {
+		如果 (obs->on_expiry != NULL) {
 			obs->on_expiry(timer);
 		}
 	}
 }
-#else
+#否则
 #define z_timer_observer_on_init(timer) (void)0
 #define z_timer_observer_on_start(timer, duration, period) (void)0
 #define z_timer_observer_on_stop(timer) (void)0
@@ -83,17 +83,17 @@ void z_timer_expiration_handler(struct _timeout *t)
 	 *  - The timer was stopped (z_try_abort_timeout marked the
 	 *    in-flight slot superseded): bail without firing expiry_fn.
 	 */
-	if (!z_is_inactive_timeout(t) ||
+	如果 (!z_is_inactive_timeout(t) ||
 	    z_timeout_inflight_superseded(t)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		返回;
 	}
 
 	/*
 	 * if the timer is periodic, start it again; don't add _TICK_ALIGN
 	 * since we're already aligned to a tick boundary
 	 */
-	if (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
+	如果 (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
 	    !K_TIMEOUT_EQ(timer->period, K_FOREVER)) {
 		k_timeout_t next = timer->period;
 
@@ -118,7 +118,7 @@ void z_timer_expiration_handler(struct _timeout *t)
 	z_timer_observer_on_expiry(timer);
 
 	/* invoke timer expiry function */
-	if (timer->expiry_fn != NULL) {
+	如果 (timer->expiry_fn != NULL) {
 		k_timer_expiry_t expiry_fn = timer->expiry_fn;
 
 		/* Unlock for user handler. */
@@ -133,15 +133,15 @@ void z_timer_expiration_handler(struct _timeout *t)
 		key = k_spin_lock(&timer_lock);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	如果 (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		返回;
 	}
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_waitq_head_locked(&timer->wait_q);
 
-		if (thread != NULL) {
+		如果 (thread != NULL) {
 			unpend_thread_no_timeout(thread);
 			arch_thread_return_value_set(thread, 0);
 			z_sched_ready_locked(thread);
@@ -153,7 +153,7 @@ void z_timer_expiration_handler(struct _timeout *t)
 }
 
 
-int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
+整数 z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
 {
 	/* Not callable from an ISR: this is the one timer path that can
 	 * spin waiting for an in-flight handler, and an ISR spinning here
@@ -163,7 +163,7 @@ int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, cleanup, timer);
 
-	int ret = 0;
+	整数 ret = 0;
 	k_spinlock_key_t key;
 
 	/* Refuse if anyone is still pending on the timer's wait queue
@@ -196,7 +196,7 @@ retry:
 	 * whose handler does that is a caller bug; ordinary stop/start do
 	 * not wait and so cannot stall.
 	 */
-	if (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
+	如果 (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
 		k_spin_unlock(&timer_lock, key);
 		goto retry;
 	}
@@ -205,19 +205,19 @@ out:
 	k_spin_unlock(&timer_lock, key);
 
 #ifdef CONFIG_OBJ_CORE_TIMER
-	if (ret == 0) {
+	如果 (ret == 0) {
 		k_obj_core_unlink(K_OBJ_CORE(timer));
 	}
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, cleanup, timer, ret);
 
-	return ret;
+	返回 ret;
 }
 
-int k_timer_cleanup(struct k_timer *timer)
+整数 k_timer_cleanup(struct k_timer *timer)
 {
-	return z_timer_cleanup(timer, false);
+	返回 z_timer_cleanup(timer, false);
 }
 
 
@@ -229,7 +229,7 @@ void k_timer_init(struct k_timer *timer,
 	timer->stop_fn = stop_fn;
 	timer->status = 0U;
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	如果 (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		z_waitq_init(&timer->wait_q);
 	}
 
@@ -254,8 +254,8 @@ void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_timer, start, timer, duration, period);
 
-	if (K_TIMEOUT_EQ(duration, K_FOREVER)) {
-		return;
+	如果 (K_TIMEOUT_EQ(duration, K_FOREVER)) {
+		返回;
 	}
 
 	/* Hold the timer lock across abort + add to serialize against a
@@ -296,19 +296,19 @@ void z_impl_k_timer_stop(struct k_timer *timer)
 
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 
-	if (z_try_abort_timeout(&timer->timeout) != 0) {
+	如果 (z_try_abort_timeout(&timer->timeout) != 0) {
 		/* Not removed from the queue: either the timer was not
 		 * active, or its handler is in flight. In the latter case
 		 * z_try_abort_timeout() has flagged it superseded so the
 		 * handler bails; we do not wait for it. Nothing to stop here.
 		 */
 		k_spin_unlock(&timer_lock, key);
-		return;
+		返回;
 	}
 
 	z_timer_observer_on_stop(timer);
 
-	if (timer->stop_fn != NULL) {
+	如果 (timer->stop_fn != NULL) {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, stop_fn_expiry, timer);
 		k_spin_unlock(&timer_lock, key);
 
@@ -319,18 +319,18 @@ void z_impl_k_timer_stop(struct k_timer *timer)
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, stop_fn_expiry, timer);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	如果 (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		返回;
 
 	}
 
 	struct k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
 
-	if (pending_thread != NULL) {
+	如果 (pending_thread != NULL) {
 		z_ready_thread(pending_thread);
 		z_reschedule(&timer_lock, key);
-	} else {
+	} 否则 {
 		k_spin_unlock(&timer_lock, key);
 	}
 }
@@ -352,14 +352,14 @@ uint32_t z_impl_k_timer_status_get(struct k_timer *timer)
 	timer->status = 0U;
 	k_spin_unlock(&timer_lock, key);
 
-	return result;
+	返回 result;
 }
 
 #ifdef CONFIG_USERSPACE
 static inline uint32_t z_vrfy_k_timer_status_get(struct k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_get(timer);
+	返回 z_impl_k_timer_status_get(timer);
 }
 #include <zephyr/syscalls/k_timer_status_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -369,36 +369,36 @@ uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
 	__ASSERT(!arch_is_in_isr(), "");
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, status_sync, timer);
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	如果 (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		uint32_t result;
 
 		do {
-			unsigned int key = irq_lock();
+			unsigned 整数 key = irq_lock();
 
-			if (!z_is_inactive_timeout(&timer->timeout)) {
+			如果 (!z_is_inactive_timeout(&timer->timeout)) {
 				result = *(volatile uint32_t *)&timer->status;
 				timer->status = 0U;
-				if (result > 0) {
+				如果 (result > 0) {
 					irq_unlock(key);
 					break;
-				} else {
+				} 否则 {
 					k_cpu_atomic_idle(key);
 				}
-			} else {
+			} 否则 {
 				result = timer->status;
 				irq_unlock(key);
 				break;
 			}
-		} while (true);
+		} 当 (true);
 
-		return result;
+		返回 result;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 	uint32_t result = timer->status;
 
-	if (result == 0U) {
-		if (!z_is_inactive_timeout(&timer->timeout)) {
+	如果 (result == 0U) {
+		如果 (!z_is_inactive_timeout(&timer->timeout)) {
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_timer, status_sync, timer, K_FOREVER);
 
 			/* wait for timer to expire or stop */
@@ -407,10 +407,10 @@ uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
 			/* get updated timer status */
 			key = k_spin_lock(&timer_lock);
 			result = timer->status;
-		} else {
+		} 否则 {
 			/* timer is already stopped */
 		}
-	} else {
+	} 否则 {
 		/* timer has already expired at least once */
 	}
 
@@ -422,14 +422,14 @@ uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
 	 */
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, status_sync, timer, result);
 
-	return result;
+	返回 result;
 }
 
 #ifdef CONFIG_USERSPACE
 static inline uint32_t z_vrfy_k_timer_status_sync(struct k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_sync(timer);
+	返回 z_impl_k_timer_status_sync(timer);
 }
 #include <zephyr/syscalls/k_timer_status_sync_mrsh.c>
 
@@ -437,7 +437,7 @@ static inline k_ticks_t z_vrfy_k_timer_remaining_ticks(
 						const struct k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_remaining_ticks(timer);
+	返回 z_impl_k_timer_remaining_ticks(timer);
 }
 #include <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
 
@@ -445,14 +445,14 @@ static inline k_ticks_t z_vrfy_k_timer_expires_ticks(
 						const struct k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_expires_ticks(timer);
+	返回 z_impl_k_timer_expires_ticks(timer);
 }
 #include <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
 
 static inline void *z_vrfy_k_timer_user_data_get(const struct k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_user_data_get(timer);
+	返回 z_impl_k_timer_user_data_get(timer);
 }
 #include <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
 

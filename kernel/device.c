@@ -15,16 +15,16 @@
 #include <zephyr/toolchain.h>
 #include <zephyr/pm/device_runtime.h>
 
-int do_device_init(const struct device *dev)
+整数 do_device_init(const struct device *dev)
 {
-	int rc = 0;
+	整数 rc = 0;
 
-	if (dev->ops.init != NULL) {
+	如果 (dev->ops.init != NULL) {
 		rc = dev->ops.init(dev);
 		/* If initialization failed, record in dev->state->init_res
 		 * the POSITIVE value of the resulting errno
 		 */
-		if (rc != 0) {
+		如果 (rc != 0) {
 			/* device's init function should return:
 			 *   0 on success
 			 *   a negative value on failure (-errno)
@@ -33,13 +33,13 @@ int do_device_init(const struct device *dev)
 			__ASSERT(rc >= -UINT8_MAX && rc < 0, "device %s init: invalid error (%d)",
 				 dev->name, rc);
 
-			if (rc < 0) {
+			如果 (rc < 0) {
 				rc = -rc;
 			}
 			/* handle error value overflow in production
 			 * this is likely a bug in the device's init function. Signals it
 			 */
-			if (rc > UINT8_MAX) {
+			如果 (rc > UINT8_MAX) {
 				rc = UINT8_MAX;
 			}
 		}
@@ -51,7 +51,7 @@ int do_device_init(const struct device *dev)
 		dev->state->init_res = rc;
 	}
 
-	if (rc == 0) {
+	如果 (rc == 0) {
 		/* A failed init leaves the device uninitialized, so it can be
 		 * retried by device_init() and nothing can be released by
 		 * device_deinit().
@@ -65,24 +65,24 @@ int do_device_init(const struct device *dev)
 	/* here, the value of rc is either 0 or +errno
 	 * flip the sign to return a negative value on failure as expected
 	 */
-	return -rc;
+	返回 -rc;
 }
 
-int z_impl_device_init(const struct device *dev)
+整数 z_impl_device_init(const struct device *dev)
 {
-	if (dev->state->initialized) {
-		return -EALREADY;
+	如果 (dev->state->initialized) {
+		返回 -EALREADY;
 	}
 
-	return do_device_init(dev);
+	返回 do_device_init(dev);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_init(const struct device *dev)
+static inline 整数 z_vrfy_device_init(const struct device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_init(dev);
+	返回 z_impl_device_init(dev);
 }
 #include <zephyr/syscalls/device_init_mrsh.c>
 #endif
@@ -93,18 +93,18 @@ const struct device *z_impl_device_get_binding(const char *name)
 	/* A null string identifies no device.  So does an empty
 	 * string.
 	 */
-	if ((name == NULL) || (name[0] == '\0')) {
-		return NULL;
+	如果 ((name == NULL) || (name[0] == '\0')) {
+		返回 NULL;
 	}
 
 	/* Return NULL if the device matching 'name' is not ready. */
 	STRUCT_SECTION_FOREACH(device, dev) {
-		if ((dev->name == name) || (strcmp(name, dev->name) == 0)) {
-			return z_impl_device_is_ready(dev) ? dev : NULL;
+		如果 ((dev->name == name) || (strcmp(name, dev->name) == 0)) {
+			返回 z_impl_device_is_ready(dev) ? dev : NULL;
 		}
 	}
 
-	return NULL;
+	返回 NULL;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -112,25 +112,25 @@ static inline const struct device *z_vrfy_device_get_binding(const char *name)
 {
 	char name_copy[Z_DEVICE_MAX_NAME_LEN];
 
-	if (k_usermode_string_copy(name_copy, name, sizeof(name_copy))
+	如果 (k_usermode_string_copy(name_copy, name, sizeof(name_copy))
 	    != 0) {
-		return NULL;
+		返回 NULL;
 	}
 
-	return z_impl_device_get_binding(name_copy);
+	返回 z_impl_device_get_binding(name_copy);
 }
 #include <zephyr/syscalls/device_get_binding_mrsh.c>
 
 static inline bool z_vrfy_device_is_ready(const struct device *dev)
 {
 	/* NULL is a documented argument, not an invalid kernel object */
-	if (dev == NULL) {
-		return false;
+	如果 (dev == NULL) {
+		返回 false;
 	}
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_is_ready(dev);
+	返回 z_impl_device_is_ready(dev);
 }
 #include <zephyr/syscalls/device_is_ready_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -139,8 +139,8 @@ static inline bool z_vrfy_device_is_ready(const struct device *dev)
 const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
 {
 	/* For consistency with device_get_binding(). */
-	if ((nodelabel == NULL) || (nodelabel[0] == '\0')) {
-		return NULL;
+	如果 ((nodelabel == NULL) || (nodelabel[0] == '\0')) {
+		返回 NULL;
 	}
 
 	/* Unlike device_get_binding(), which has a history of being
@@ -155,20 +155,20 @@ const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
 	STRUCT_SECTION_FOREACH(device, dev) {
 		const struct device_dt_nodelabels *nl = device_get_dt_nodelabels(dev);
 
-		if (!z_impl_device_is_ready(dev) || nl == NULL) {
+		如果 (!z_impl_device_is_ready(dev) || nl == NULL) {
 			continue;
 		}
 
-		for (size_t i = 0; i < nl->num_nodelabels; i++) {
+		为 (size_t i = 0; i < nl->num_nodelabels; i++) {
 			const char *dev_nodelabel = nl->nodelabels[i];
 
-			if (strcmp(nodelabel, dev_nodelabel) == 0) {
-				return dev;
+			如果 (strcmp(nodelabel, dev_nodelabel) == 0) {
+				返回 dev;
 			}
 		}
 	}
 
-	return NULL;
+	返回 NULL;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -176,11 +176,11 @@ static inline const struct device *z_vrfy_device_get_by_dt_nodelabel(const char 
 {
 	char nl_copy[Z_DEVICE_MAX_NODELABEL_LEN];
 
-	if (k_usermode_string_copy(nl_copy, (char *)nodelabel, sizeof(nl_copy)) != 0) {
-		return NULL;
+	如果 (k_usermode_string_copy(nl_copy, (char *)nodelabel, sizeof(nl_copy)) != 0) {
+		返回 NULL;
 	}
 
-	return z_impl_device_get_by_dt_nodelabel(nl_copy);
+	返回 z_impl_device_get_by_dt_nodelabel(nl_copy);
 }
 #include <zephyr/syscalls/device_get_by_dt_nodelabel_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -193,7 +193,7 @@ size_t z_device_get_all_static(struct device const **devices)
 	STRUCT_SECTION_GET(device, 0, devices);
 	STRUCT_SECTION_COUNT(device, &cnt);
 
-	return cnt;
+	返回 cnt;
 }
 
 bool z_impl_device_is_ready(const struct device *dev)
@@ -202,89 +202,89 @@ bool z_impl_device_is_ready(const struct device *dev)
 	 * if an invalid device pointer is passed as argument, this call
 	 * reports the `device` as not ready for usage.
 	 */
-	if (dev == NULL) {
-		return false;
+	如果 (dev == NULL) {
+		返回 false;
 	}
 
-	return dev->state->initialized;
+	返回 dev->state->initialized;
 }
 
-int z_impl_device_deinit(const struct device *dev)
+整数 z_impl_device_deinit(const struct device *dev)
 {
 #ifdef CONFIG_DEVICE_DEINIT_SUPPORT
-	int ret;
+	整数 ret;
 
-	if (!dev->state->initialized) {
-		return -EPERM;
+	如果 (!dev->state->initialized) {
+		返回 -EPERM;
 	}
 
-	if (dev->ops.deinit == NULL) {
-		return -ENOTSUP;
+	如果 (dev->ops.deinit == NULL) {
+		返回 -ENOTSUP;
 	}
 
 	ret = dev->ops.deinit(dev);
-	if (ret < 0) {
-		return ret;
+	如果 (ret < 0) {
+		返回 ret;
 	}
 
 	dev->state->initialized = false;
 
-	return 0;
-#else
+	返回 0;
+#否则
 	ARG_UNUSED(dev);
-	return -ENOTSUP;
+	返回 -ENOTSUP;
 #endif /* CONFIG_DEVICE_DEINIT_SUPPORT */
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_deinit(const struct device *dev)
+static inline 整数 z_vrfy_device_deinit(const struct device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_deinit(dev);
+	返回 z_impl_device_deinit(dev);
 }
 #include <zephyr/syscalls/device_deinit_mrsh.c>
 #endif
 
 #ifdef CONFIG_DEVICE_DEPS
 
-static int device_visitor(const device_handle_t *handles,
+static 整数 device_visitor(const device_handle_t *handles,
 			   size_t handle_count,
 			   device_visitor_callback_t visitor_cb,
 			   void *context)
 {
 	/* Iterate over fixed devices */
-	for (size_t i = 0; i < handle_count; ++i) {
+	为 (size_t i = 0; i < handle_count; ++i) {
 		device_handle_t dh = handles[i];
 		const struct device *rdev = device_from_handle(dh);
-		int rc = visitor_cb(rdev, context);
+		整数 rc = visitor_cb(rdev, context);
 
-		if (rc < 0) {
-			return rc;
+		如果 (rc < 0) {
+			返回 rc;
 		}
 	}
 
-	return handle_count;
+	返回 handle_count;
 }
 
-int device_required_foreach(const struct device *dev,
+整数 device_required_foreach(const struct device *dev,
 			    device_visitor_callback_t visitor_cb,
 			    void *context)
 {
 	size_t handle_count = 0;
 	const device_handle_t *handles = device_required_handles_get(dev, &handle_count);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	返回 device_visitor(handles, handle_count, visitor_cb, context);
 }
 
-int device_supported_foreach(const struct device *dev,
+整数 device_supported_foreach(const struct device *dev,
 			     device_visitor_callback_t visitor_cb,
 			     void *context)
 {
 	size_t handle_count = 0;
 	const device_handle_t *handles = device_supported_handles_get(dev, &handle_count);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	返回 device_visitor(handles, handle_count, visitor_cb, context);
 }
 
 #endif /* CONFIG_DEVICE_DEPS */

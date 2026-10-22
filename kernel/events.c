@@ -94,21 +94,21 @@ void z_vrfy_k_event_init(struct k_event *event)
  * @return event bits that satisfy the wait condition or zero
  */
 static uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
-					unsigned int wait_condition)
+					unsigned 整数 wait_condition)
 {
 	uint32_t match = current & desired;
 
-	if ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
+	如果 ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
 		/* special case for K_EVENT_WAIT_ALL */
-		return 0;
+		返回 0;
 	}
 
 	/* return the matched events for any wait condition */
-	return match;
+	返回 match;
 }
 
 #ifdef CONFIG_WAITQ_SCALABLE
-static void event_post_walk_op(int status, void *data)
+static void event_post_walk_op(整数 status, void *data)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
@@ -121,7 +121,7 @@ static void event_post_walk_op(int status, void *data)
 
 	thread = walk_data->head;
 
-	while (thread != NULL) {
+	当 (thread != NULL) {
 		next = thread->next_wake_link;
 
 		arch_thread_return_value_set(thread, 0);
@@ -131,21 +131,21 @@ static void event_post_walk_op(int status, void *data)
 	}
 }
 #define EVENT_POST_WALK_OP_FN event_post_walk_op
-#else /* CONFIG_WAITQ_SCALABLE */
+#否则 /* CONFIG_WAITQ_SCALABLE */
 #define EVENT_POST_WALK_OP_FN NULL
 #endif /* CONFIG_WAITQ_SCALABLE */
 
-static int event_walk_op(struct k_thread *thread, void *data)
+static 整数 event_walk_op(struct k_thread *thread, void *data)
 {
 	uint32_t match;
-	unsigned int wait_condition;
+	unsigned 整数 wait_condition;
 	struct event_walk_data *event_data = data;
 
 	wait_condition = thread->event_options & K_EVENT_WAIT_MASK;
 
 	match = are_wait_conditions_met(thread->events, event_data->events,
 					wait_condition);
-	if (match != 0) {
+	如果 (match != 0) {
 		/*
 		 * The wait conditions have been satisfied. Set the
 		 * received events then wake thread now if allowed,
@@ -154,7 +154,7 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 * NOTE: thread event options can consume an event
 		 */
 		thread->events = match;
-		if (thread->event_options & K_EVENT_OPTION_CLEAR) {
+		如果 (thread->event_options & K_EVENT_OPTION_CLEAR) {
 			event_data->clear_events |= match;
 		}
 		(void)z_try_abort_thread_timeout(thread);
@@ -167,13 +167,13 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 */
 		arch_thread_return_value_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
-#else /* !CONFIG_WAITQ_SCALABLE */
+#否则 /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = event_data->head;
 		event_data->head = thread;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	返回 0;
 }
 
 static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
@@ -218,33 +218,33 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
 				       events_mask);
 
-	return previous_events;
+	返回 previous_events;
 }
 
 uint32_t z_impl_k_event_post(struct k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events);
+	返回 k_event_post_internal(event, events, events);
 }
 
 #ifdef CONFIG_USERSPACE
 uint32_t z_vrfy_k_event_post(struct k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_post(event, events);
+	返回 z_impl_k_event_post(event, events);
 }
 #include <zephyr/syscalls/k_event_post_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 uint32_t z_impl_k_event_set(struct k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, ~0);
+	返回 k_event_post_internal(event, events, ~0);
 }
 
 #ifdef CONFIG_USERSPACE
 uint32_t z_vrfy_k_event_set(struct k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set(event, events);
+	返回 z_impl_k_event_set(event, events);
 }
 #include <zephyr/syscalls/k_event_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -252,7 +252,7 @@ uint32_t z_vrfy_k_event_set(struct k_event *event, uint32_t events)
 uint32_t z_impl_k_event_set_masked(struct k_event *event, uint32_t events,
 			       uint32_t events_mask)
 {
-	return k_event_post_internal(event, events, events_mask);
+	返回 k_event_post_internal(event, events, events_mask);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -260,27 +260,27 @@ uint32_t z_vrfy_k_event_set_masked(struct k_event *event, uint32_t events,
 			       uint32_t events_mask)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set_masked(event, events, events_mask);
+	返回 z_impl_k_event_set_masked(event, events, events_mask);
 }
 #include <zephyr/syscalls/k_event_set_masked_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 uint32_t z_impl_k_event_clear(struct k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, 0, events);
+	返回 k_event_post_internal(event, 0, events);
 }
 
 #ifdef CONFIG_USERSPACE
 uint32_t z_vrfy_k_event_clear(struct k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_clear(event, events);
+	返回 z_impl_k_event_clear(event, events);
 }
 #include <zephyr/syscalls/k_event_clear_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
-				      unsigned int options, k_timeout_t timeout)
+				      unsigned 整数 options, k_timeout_t timeout)
 {
 	uint32_t  rv = 0;
 
@@ -290,31 +290,31 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
 					options, timeout);
 
-	if ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
+	如果 ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+		返回 0;
 	}
 
 	k_spinlock_key_t  key = k_spin_lock(&event->lock);
 
-	if (options & K_EVENT_OPTION_RESET) {
+	如果 (options & K_EVENT_OPTION_RESET) {
 		event->events = 0;
 	}
 
-	if (events == 0) {
+	如果 (events == 0) {
 		k_spin_unlock(&event->lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+		返回 0;
 	}
 
-	unsigned int wait_condition = options & K_EVENT_WAIT_MASK;
+	unsigned 整数 wait_condition = options & K_EVENT_WAIT_MASK;
 	struct k_thread *thread = k_sched_current_thread_query();
 
 	/* Test if the wait conditions have already been met. */
 	rv = are_wait_conditions_met(events, event->events, wait_condition);
-	if (rv != 0) {
+	如果 (rv != 0) {
 		/* clear the events that are matched */
-		if (options & K_EVENT_OPTION_CLEAR) {
+		如果 (options & K_EVENT_OPTION_CLEAR) {
 			event->events &= ~rv;
 		}
 
@@ -322,7 +322,7 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 		goto out;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	如果 (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		k_spin_unlock(&event->lock, key);
 		goto out;
 	}
@@ -338,7 +338,7 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
 					   options, timeout);
 
-	if (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
+	如果 (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
 		/* Retrieve the set of events that woke the thread */
 		rv = thread->events;
 	}
@@ -346,7 +346,7 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
 
-	return rv;
+	返回 rv;
 }
 
 /**
@@ -357,14 +357,14 @@ uint32_t z_impl_k_event_wait(struct k_event *event, uint32_t events,
 {
 	uint32_t options = reset ? K_EVENT_OPTION_RESET : 0;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	返回 k_event_wait_internal(event, events, options, timeout);
 }
 #ifdef CONFIG_USERSPACE
 uint32_t z_vrfy_k_event_wait(struct k_event *event, uint32_t events,
 				    bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait(event, events, reset, timeout);
+	返回 z_impl_k_event_wait(event, events, reset, timeout);
 }
 #include <zephyr/syscalls/k_event_wait_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -378,7 +378,7 @@ uint32_t z_impl_k_event_wait_all(struct k_event *event, uint32_t events,
 	uint32_t options = reset ? (K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : K_EVENT_WAIT_ALL;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	返回 k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -386,7 +386,7 @@ uint32_t z_vrfy_k_event_wait_all(struct k_event *event, uint32_t events,
 					bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all(event, events, reset, timeout);
+	返回 z_impl_k_event_wait_all(event, events, reset, timeout);
 }
 #include <zephyr/syscalls/k_event_wait_all_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -397,7 +397,7 @@ uint32_t z_impl_k_event_wait_safe(struct k_event *event, uint32_t events,
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR | K_EVENT_OPTION_RESET)
 				 : K_EVENT_OPTION_CLEAR;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	返回 k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -405,7 +405,7 @@ uint32_t z_vrfy_k_event_wait_safe(struct k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_safe(event, events, reset, timeout);
+	返回 z_impl_k_event_wait_safe(event, events, reset, timeout);
 }
 #include <zephyr/syscalls/k_event_wait_safe_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -417,7 +417,7 @@ uint32_t z_impl_k_event_wait_all_safe(struct k_event *event, uint32_t events,
 				    K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : (K_EVENT_OPTION_CLEAR | K_EVENT_WAIT_ALL);
 
-	return k_event_wait_internal(event, events, options, timeout);
+	返回 k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
@@ -425,7 +425,7 @@ uint32_t z_vrfy_k_event_wait_all_safe(struct k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all_safe(event, events, reset, timeout);
+	返回 z_impl_k_event_wait_all_safe(event, events, reset, timeout);
 }
 #include <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
 #endif /* CONFIG_USERSPACE */
