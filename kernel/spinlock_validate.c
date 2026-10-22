@@ -3,37 +3,37 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <kernel_internal.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/llext/symbol.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <zephyr/llext/symbol.h>
 
-#define SPIN_CPU_ID_MASK (sizeof(void *) - 1)
+#define SPIN_CPU_ID_MASK (حجم(فراغ *) - 1)
 
 /* Outermost spinlock held on each CPU; set-if-NULL on lock,
  * clear-if-matches on unlock.
  */
-static struct k_spinlock *z_held_spinlock[CONFIG_MP_MAX_NUM_CPUS];
+ساكن بنية k_spinlock *z_held_spinlock[CONFIG_MP_MAX_NUM_CPUS];
 
 /* Total spinlock hold count per CPU, incremented on every lock and
  * decremented on every unlock regardless of nesting depth.
  */
-static int z_held_spinlock_count[CONFIG_MP_MAX_NUM_CPUS];
+ساكن صحيح z_held_spinlock_count[CONFIG_MP_MAX_NUM_CPUS];
 
 /* Sentinel: set in swap_data by the ztest harness before force-aborting a
  * thread that holds a lock after an expected panic/assert.
  */
-const uint8_t z_spinlock_abort_sentinel;
+ثابت uint8_t z_spinlock_abort_sentinel;
 
-bool z_spin_lock_valid(struct k_spinlock *l)
+bool z_spin_lock_valid(بنية k_spinlock *l)
 {
 	uintptr_t thread_cpu = l->thread_cpu;
 
-	if (thread_cpu != 0U) {
-		if ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
-			return false;
+	𐤀𐤌 (thread_cpu != 0U) {
+		𐤀𐤌 ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
+			أرجع false;
 		}
 	}
-	return true;
+	أرجع true;
 }
 EXPORT_SYMBOL(z_spin_lock_valid);
 
@@ -44,42 +44,42 @@ EXPORT_SYMBOL(z_spin_lock_valid);
  * called from k_spin_lock() and k_spin_unlock() with the lock held, hence with
  * interrupts locked as _raw_current requires.
  */
-bool z_spin_unlock_valid(struct k_spinlock *l)
+bool z_spin_unlock_valid(بنية k_spinlock *l)
 {
 	uint8_t cpu_id = _current_cpu->id;
 	uintptr_t tcpu = l->thread_cpu;
 
 	l->thread_cpu = 0;
 
-	if (z_held_spinlock[cpu_id] == l) {
-		z_held_spinlock[cpu_id] = NULL;
+	𐤀𐤌 (z_held_spinlock[cpu_id] == l) {
+		z_held_spinlock[cpu_id] = عدم;
 	}
 
-	if (arch_is_in_isr() &&
+	𐤀𐤌 (arch_is_in_isr() &&
 	    (_raw_current->base.thread_state & _THREAD_DUMMY) != 0) {
 		/* Edge case where an ISR aborted _current */
 		z_held_spinlock_count[cpu_id]--;
 		__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
 			 "spinlock unlock with no matching lock");
-		return true;
+		أرجع true;
 	}
-	if (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
-		return false;
+	𐤀𐤌 (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
+		أرجع false;
 	}
 	z_held_spinlock_count[cpu_id]--;
 	__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
 		 "spinlock unlock with no matching lock");
-	return true;
+	أرجع true;
 }
 EXPORT_SYMBOL(z_spin_unlock_valid);
 
-void z_spin_lock_set_owner(struct k_spinlock *l)
+فراغ z_spin_lock_set_owner(بنية k_spinlock *l)
 {
 	uint8_t cpu_id = _current_cpu->id;
 
 	l->thread_cpu = cpu_id | (uintptr_t)_raw_current;
 
-	if (z_held_spinlock[cpu_id] == NULL) {
+	𐤀𐤌 (z_held_spinlock[cpu_id] == عدم) {
 		z_held_spinlock[cpu_id] = l;
 	}
 	z_held_spinlock_count[cpu_id]++;
@@ -93,7 +93,7 @@ EXPORT_SYMBOL(z_spin_lock_set_owner);
  * made it current, and _current is not required to report it until the switch
  * completes (see z_current_thread_set()).
  */
-void z_spin_lock_transfer_owner(struct k_spinlock *l, struct k_thread *thread)
+فراغ z_spin_lock_transfer_owner(بنية k_spinlock *l, بنية k_thread *thread)
 {
 	l->thread_cpu = _current_cpu->id | (uintptr_t)thread;
 }
@@ -105,28 +105,28 @@ EXPORT_SYMBOL(z_spin_lock_transfer_owner);
  * path need to be counted.  lock_held=true if exactly one such lock
  * remains and will be released after this call.
  */
-void z_spin_validate_reset(bool lock_held)
+فراغ z_spin_validate_reset(bool lock_held)
 {
 	uint8_t cpu_id = _current_cpu->id;
 
-	z_held_spinlock[cpu_id] = NULL;
+	z_held_spinlock[cpu_id] = عدم;
 	z_held_spinlock_count[cpu_id] = lock_held ? 1 : 0;
 }
 
 /* Internal: caller must ensure IRQs are disabled. */
-static inline struct k_spinlock *z_spin_get_held_lock_locked(uint8_t cpu_id)
+ساكن مضمن بنية k_spinlock *z_spin_get_held_lock_locked(uint8_t cpu_id)
 {
-	return z_held_spinlock[cpu_id];
+	أرجع z_held_spinlock[cpu_id];
 }
 
 #ifdef CONFIG_TEST
-struct k_spinlock *z_spin_get_held_lock(void)
+بنية k_spinlock *z_spin_get_held_lock(فراغ)
 {
-	unsigned int key = arch_irq_lock();
-	struct k_spinlock *l = z_spin_get_held_lock_locked(_current_cpu->id);
+	unsigned صحيح key = arch_irq_lock();
+	بنية k_spinlock *l = z_spin_get_held_lock_locked(_current_cpu->id);
 
 	arch_irq_unlock(key);
-	return l;
+	أرجع l;
 }
 #endif /* CONFIG_TEST */
 
@@ -143,25 +143,25 @@ struct k_spinlock *z_spin_get_held_lock(void)
  * section — i.e. breaking the lock of someone higher up the call stack,
  * which is forbidden.
  */
-void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
+فراغ z_assert_can_swap(unsigned صحيح key, بنية k_spinlock *swap_lock)
 {
 	uint8_t cpu_id = _current_cpu->id;
-	struct k_spinlock *held = z_spin_get_held_lock_locked(cpu_id);
-	int count = z_held_spinlock_count[cpu_id];
-	int extra = (swap_lock != NULL) ? count - 1 : count;
+	بنية k_spinlock *held = z_spin_get_held_lock_locked(cpu_id);
+	صحيح count = z_held_spinlock_count[cpu_id];
+	صحيح extra = (swap_lock != عدم) ? count - 1 : count;
 
 	ARG_UNUSED(held);
 	ARG_UNUSED(extra);
 
 	/* ztest expected-fault: thread aborted with a lock held.*/
-	if ((_current->base.thread_state & _THREAD_DEAD) &&
-	    _current->base.swap_data == (void *)&z_spinlock_abort_sentinel) {
-		z_spin_validate_reset(swap_lock != NULL);
-	} else {
+	𐤀𐤌 ((_current->base.thread_state & _THREAD_DEAD) &&
+	    _current->base.swap_data == (فراغ *)&z_spinlock_abort_sentinel) {
+		z_spin_validate_reset(swap_lock != عدم);
+	} وإلا {
 		__ASSERT(extra >= 0,
 			 "swap_lock %p is not tracked in the spinlock hold count!", swap_lock);
 
-		__ASSERT(held == NULL || held == swap_lock,
+		__ASSERT(held == عدم || held == swap_lock,
 			 "Context switching while holding spinlock %p!", held);
 
 		/* Catches lock(A); lock(B); unlock(A); z_swap(): slot cleared when A
@@ -185,9 +185,9 @@ void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
 }
 
 #ifdef CONFIG_KERNEL_COHERENCE
-bool z_spin_lock_mem_coherent(struct k_spinlock *l)
+bool z_spin_lock_mem_coherent(بنية k_spinlock *l)
 {
-	return sys_cache_is_mem_coherent((void *)l);
+	أرجع sys_cache_is_mem_coherent((فراغ *)l);
 }
 EXPORT_SYMBOL(z_spin_lock_mem_coherent);
 #endif /* CONFIG_KERNEL_COHERENCE */

@@ -11,38 +11,38 @@
  * This module provides general purpose thread support.
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/clock.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <wait_q.h>
-#include <timeout_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <kswap.h>
-#include <zephyr/init.h>
-#include <zephyr/tracing/tracing.h>
-#include <string.h>
-#include <stdbool.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/random/random.h>
-#include <zephyr/sys/atomic.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/llext/symbol.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/minmax.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/sys/clock.h>
+#ضمن <ksched.h>
+#ضمن <kthread.h>
+#ضمن <wait_q.h>
+#ضمن <timeout_q.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <kernel_internal.h>
+#ضمن <kswap.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/tracing/tracing.h>
+#ضمن <string.h>
+#ضمن <stdbool.h>
+#ضمن <zephyr/sys/check.h>
+#ضمن <zephyr/random/random.h>
+#ضمن <zephyr/sys/atomic.h>
+#ضمن <zephyr/logging/log.h>
+#ضمن <zephyr/llext/symbol.h>
+#ضمن <zephyr/sys/iterable_sections.h>
+#ضمن <zephyr/sys/minmax.h>
 
-#include <usage.h>
+#ضمن <usage.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 #ifdef CONFIG_OBJ_CORE_THREAD
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
-static struct k_obj_core_stats_desc  thread_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats),
-	.query_size = sizeof(struct k_thread_runtime_stats),
+ساكن بنية k_obj_core_stats_desc  thread_stats_desc = {
+	.raw_size = حجم(بنية k_cycle_stats),
+	.query_size = حجم(بنية k_thread_runtime_stats),
 	.raw   = z_thread_stats_raw,
 	.query = z_thread_stats_query,
 	.reset = z_thread_stats_reset,
@@ -58,9 +58,9 @@ static struct k_obj_core_stats_desc  thread_stats_desc = {
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_thread, k_thread, K_OBJ_TYPE_THREAD_ID,
 			    &thread_stats_desc);
-#else
+#وإلا
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_thread, k_thread, K_OBJ_TYPE_THREAD_ID,
-			    NULL);
+			    عدم);
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
 #endif /* CONFIG_OBJ_CORE_THREAD */
 
@@ -68,88 +68,88 @@ K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_thread, k_thread, K_OBJ_TYPE_THREAD_ID,
 #define _FOREACH_STATIC_THREAD(thread_data)              \
 	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data)
 
-bool k_is_in_isr(void)
+bool k_is_in_isr(فراغ)
 {
-	return arch_is_in_isr();
+	أرجع arch_is_in_isr();
 }
 EXPORT_SYMBOL(k_is_in_isr);
 
 #ifdef CONFIG_THREAD_CUSTOM_DATA
-void z_impl_k_thread_custom_data_set(void *value)
+فراغ z_impl_k_thread_custom_data_set(فراغ *value)
 {
 	_current->custom_data = value;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_custom_data_set(void *data)
+ساكن مضمن فراغ z_vrfy_k_thread_custom_data_set(فراغ *data)
 {
 	z_impl_k_thread_custom_data_set(data);
 }
-#include <zephyr/syscalls/k_thread_custom_data_set_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_custom_data_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void *z_impl_k_thread_custom_data_get(void)
+فراغ *z_impl_k_thread_custom_data_get(فراغ)
 {
-	return _current->custom_data;
+	أرجع _current->custom_data;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void *z_vrfy_k_thread_custom_data_get(void)
+ساكن مضمن فراغ *z_vrfy_k_thread_custom_data_get(فراغ)
 {
-	return z_impl_k_thread_custom_data_get();
+	أرجع z_impl_k_thread_custom_data_get();
 }
-#include <zephyr/syscalls/k_thread_custom_data_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_custom_data_get_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */
 #endif /* CONFIG_THREAD_CUSTOM_DATA */
 
-int z_impl_k_is_preempt_thread(void)
+صحيح z_impl_k_is_preempt_thread(فراغ)
 {
-	return !arch_is_in_isr() && thread_is_preemptible(_current);
+	أرجع !arch_is_in_isr() && thread_is_preemptible(_current);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_is_preempt_thread(void)
+ساكن مضمن صحيح z_vrfy_k_is_preempt_thread(فراغ)
 {
-	return z_impl_k_is_preempt_thread();
+	أرجع z_impl_k_is_preempt_thread();
 }
-#include <zephyr/syscalls/k_is_preempt_thread_mrsh.c>
+#ضمن <zephyr/syscalls/k_is_preempt_thread_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_priority_get(k_tid_t thread)
+صحيح z_impl_k_thread_priority_get(k_tid_t thread)
 {
-	return thread->base.prio;
+	أرجع thread->base.prio;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_priority_get(k_tid_t thread)
+ساكن مضمن صحيح z_vrfy_k_thread_priority_get(k_tid_t thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	return z_impl_k_thread_priority_get(thread);
+	أرجع z_impl_k_thread_priority_get(thread);
 }
-#include <zephyr/syscalls/k_thread_priority_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_priority_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_THREAD_NAME
-static void set_thread_name(struct k_thread *thread, const char *str)
+ساكن فراغ set_thread_name(بنية k_thread *thread, ثابت حرف *str)
 {
-	if (str != NULL) {
+	𐤀𐤌 (str != عدم) {
 		strncpy(thread->name, str, CONFIG_THREAD_MAX_NAME_LEN - 1);
 		/* Ensure NULL termination, truncate if longer */
 		thread->name[CONFIG_THREAD_MAX_NAME_LEN - 1] = '\0';
 #ifdef CONFIG_ARCH_HAS_THREAD_NAME_HOOK
 		arch_thread_name_set(thread, str);
 #endif /* CONFIG_ARCH_HAS_THREAD_NAME_HOOK */
-	} else {
+	} وإلا {
 		thread->name[0] = '\0';
 	}
 }
 #endif /* CONFIG_THREAD_NAME */
 
-int z_impl_k_thread_name_set(k_tid_t thread, const char *str)
+صحيح z_impl_k_thread_name_set(k_tid_t thread, ثابت حرف *str)
 {
 #ifdef CONFIG_THREAD_NAME
-	if (thread == NULL) {
+	𐤀𐤌 (thread == عدم) {
 		thread = _current;
 	}
 
@@ -157,26 +157,26 @@ int z_impl_k_thread_name_set(k_tid_t thread, const char *str)
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, name_set, thread, 0);
 
-	return 0;
-#else
+	أرجع 0;
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(str);
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, name_set, thread, -ENOSYS);
 
-	return -ENOSYS;
+	أرجع -ENOSYS;
 #endif /* CONFIG_THREAD_NAME */
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_name_set(k_tid_t thread, const char *str)
+ساكن مضمن صحيح z_vrfy_k_thread_name_set(k_tid_t thread, ثابت حرف *str)
 {
 #ifdef CONFIG_THREAD_NAME
-	char name[CONFIG_THREAD_MAX_NAME_LEN];
+	حرف name[CONFIG_THREAD_MAX_NAME_LEN];
 
-	if (thread != NULL) {
-		if (K_SYSCALL_OBJ(thread, K_OBJ_THREAD) != 0) {
-			return -EINVAL;
+	𐤀𐤌 (thread != عدم) {
+		𐤀𐤌 (K_SYSCALL_OBJ(thread, K_OBJ_THREAD) != 0) {
+			أرجع -EINVAL;
 		}
 	}
 
@@ -184,59 +184,59 @@ static inline int z_vrfy_k_thread_name_set(k_tid_t thread, const char *str)
 	 * the current z_vrfy / z_impl split does not provide a
 	 * means of doing so.
 	 */
-	if (k_usermode_string_copy(name, str, sizeof(name)) != 0) {
-		return -EFAULT;
+	𐤀𐤌 (k_usermode_string_copy(name, str, حجم(name)) != 0) {
+		أرجع -EFAULT;
 	}
 
-	return z_impl_k_thread_name_set(thread, name);
-#else
-	return -ENOSYS;
+	أرجع z_impl_k_thread_name_set(thread, name);
+#وإلا
+	أرجع -ENOSYS;
 #endif /* CONFIG_THREAD_NAME */
 }
-#include <zephyr/syscalls/k_thread_name_set_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_name_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-const char *k_thread_name_get(k_tid_t thread)
+ثابت حرف *k_thread_name_get(k_tid_t thread)
 {
 #ifdef CONFIG_THREAD_NAME
-	return (const char *)thread->name;
-#else
+	أرجع (ثابت حرف *)thread->name;
+#وإلا
 	ARG_UNUSED(thread);
-	return NULL;
+	أرجع عدم;
 #endif /* CONFIG_THREAD_NAME */
 }
 
-int z_impl_k_thread_name_copy(k_tid_t thread, char *buf, size_t size)
+صحيح z_impl_k_thread_name_copy(k_tid_t thread, حرف *buf, size_t size)
 {
 #ifdef CONFIG_THREAD_NAME
 	strncpy(buf, thread->name, size);
-	return 0;
-#else
+	أرجع 0;
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(buf);
 	ARG_UNUSED(size);
-	return -ENOSYS;
+	أرجع -ENOSYS;
 #endif /* CONFIG_THREAD_NAME */
 }
 
-static size_t copy_bytes(char *dest, size_t dest_size, const char *src, size_t src_size)
+ساكن size_t copy_bytes(حرف *dest, size_t dest_size, ثابت حرف *src, size_t src_size)
 {
 	size_t  bytes_to_copy;
 
 	bytes_to_copy = min(dest_size, src_size);
 	memcpy(dest, src, bytes_to_copy);
 
-	return bytes_to_copy;
+	أرجع bytes_to_copy;
 }
 
-const char *k_thread_state_str(k_tid_t thread_id, char *buf, size_t buf_size)
+ثابت حرف *k_thread_state_str(k_tid_t thread_id, حرف *buf, size_t buf_size)
 {
 	size_t      off = 0;
 	uint8_t     bit;
 	uint8_t     thread_state = thread_id->base.thread_state;
-#define SS_ENT(s) { Z_STATE_STR_##s, _THREAD_##s, sizeof(Z_STATE_STR_##s) - 1 }
-	static const struct {
-		const char *str;
+#define SS_ENT(s) { Z_STATE_STR_##s, _THREAD_##s, حجم(Z_STATE_STR_##s) - 1 }
+	ساكن ثابت بنية {
+		ثابت حرف *str;
 		uint16_t    bit;
 		uint16_t    len;
 	} state_string[] = {
@@ -251,8 +251,8 @@ const char *k_thread_state_str(k_tid_t thread_id, char *buf, size_t buf_size)
 	};
 #undef SS_ENT
 
-	if ((buf == NULL) || (buf_size == 0)) {
-		return "";
+	𐤀𐤌 ((buf == عدم) || (buf_size == 0)) {
+		أرجع "";
 	}
 
 	buf_size--;   /* Reserve 1 byte for end-of-string character */
@@ -264,10 +264,10 @@ const char *k_thread_state_str(k_tid_t thread_id, char *buf, size_t buf_size)
 	 */
 
 
-	for (unsigned int index = 0; thread_state != 0; index++) {
+	لكل (unsigned صحيح index = 0; thread_state != 0; index++) {
 		bit = state_string[index].bit;
-		if ((thread_state & bit) == 0) {
-			continue;
+		𐤀𐤌 ((thread_state & bit) == 0) {
+			استمر;
 		}
 
 		off += copy_bytes(buf + off, buf_size - off,
@@ -276,48 +276,48 @@ const char *k_thread_state_str(k_tid_t thread_id, char *buf, size_t buf_size)
 
 		thread_state &= ~bit;
 
-		if (thread_state != 0) {
+		𐤀𐤌 (thread_state != 0) {
 			off += copy_bytes(buf + off, buf_size - off, "+", 1);
 		}
 	}
 
 	buf[off] = '\0';
 
-	return (const char *)buf;
+	أرجع (ثابت حرف *)buf;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_name_copy(k_tid_t thread,
-					    char *buf, size_t size)
+ساكن مضمن صحيح z_vrfy_k_thread_name_copy(k_tid_t thread,
+					    حرف *buf, size_t size)
 {
 #ifdef CONFIG_THREAD_NAME
 	size_t len;
-	struct k_object *ko = k_object_find(thread);
+	بنية k_object *ko = k_object_find(thread);
 
 	/* Special case: we allow reading the names of initialized threads
 	 * even if we don't have permission on them
 	 */
-	if ((ko == NULL) || (ko->type != K_OBJ_THREAD) ||
+	𐤀𐤌 ((ko == عدم) || (ko->type != K_OBJ_THREAD) ||
 		((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0)) {
-		return -EINVAL;
+		أرجع -EINVAL;
 	}
-	if (K_SYSCALL_MEMORY_WRITE(buf, size) != 0) {
-		return -EFAULT;
+	𐤀𐤌 (K_SYSCALL_MEMORY_WRITE(buf, size) != 0) {
+		أرجع -EFAULT;
 	}
 	len = strlen(thread->name);
-	if ((len + 1) > size) {
-		return -ENOSPC;
+	𐤀𐤌 ((len + 1) > size) {
+		أرجع -ENOSPC;
 	}
 
-	return k_usermode_to_copy((void *)buf, thread->name, len + 1);
-#else
+	أرجع k_usermode_to_copy((فراغ *)buf, thread->name, len + 1);
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(buf);
 	ARG_UNUSED(size);
-	return -ENOSYS;
+	أرجع -ENOSYS;
 #endif /* CONFIG_THREAD_NAME */
 }
-#include <zephyr/syscalls/k_thread_name_copy_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_name_copy_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_STACK_SENTINEL
@@ -336,16 +336,16 @@ static inline int z_vrfy_k_thread_name_copy(k_tid_t thread,
  * If the check fails, the thread will be terminated appropriately through
  * the system fatal error handler.
  */
-void z_check_stack_sentinel(void)
+فراغ z_check_stack_sentinel(فراغ)
 {
 	uint32_t *stack;
 
-	if ((_current->base.thread_state & _THREAD_DUMMY) != 0) {
-		return;
+	𐤀𐤌 ((_current->base.thread_state & _THREAD_DUMMY) != 0) {
+		أرجع;
 	}
 
 	stack = (uint32_t *)_current->stack_info.start;
-	if (*stack != STACK_SENTINEL) {
+	𐤀𐤌 (*stack != STACK_SENTINEL) {
 		/* Restore it so further checks don't trigger this same error */
 		*stack = STACK_SENTINEL;
 		z_except_reason(K_ERR_STACK_CHK_FAIL);
@@ -353,17 +353,17 @@ void z_check_stack_sentinel(void)
 }
 #endif /* CONFIG_STACK_SENTINEL */
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-int z_stack_adjust_initialized;
+#𐤀𐤌 defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+صحيح z_stack_adjust_initialized;
 
-static size_t random_offset(size_t stack_size)
+ساكن size_t random_offset(size_t stack_size)
 {
 	size_t random_val;
 
-	if (!z_stack_adjust_initialized) {
-		z_early_rand_get((uint8_t *)&random_val, sizeof(random_val));
-	} else {
-		sys_rand_get((uint8_t *)&random_val, sizeof(random_val));
+	𐤀𐤌 (!z_stack_adjust_initialized) {
+		z_early_rand_get((uint8_t *)&random_val, حجم(random_val));
+	} وإلا {
+		sys_rand_get((uint8_t *)&random_val, حجم(random_val));
 	}
 
 	/* Don't need to worry about alignment of the size here,
@@ -372,15 +372,15 @@ static size_t random_offset(size_t stack_size)
 	 * FIXME: Not the best way to get a random number in a range.
 	 * See #6493
 	 */
-	const size_t fuzz = random_val % CONFIG_STACK_POINTER_RANDOM;
+	ثابت size_t fuzz = random_val % CONFIG_STACK_POINTER_RANDOM;
 
-	if (unlikely(fuzz * 2 > stack_size)) {
-		return 0;
+	𐤀𐤌 (unlikely(fuzz * 2 > stack_size)) {
+		أرجع 0;
 	}
 
-	return fuzz;
+	أرجع fuzz;
 }
-#if defined(CONFIG_STACK_GROWS_UP)
+#𐤀𐤌 defined(CONFIG_STACK_GROWS_UP)
 	/* This is so rare not bothering for now */
 #error "Stack pointer randomization not implemented for upward growing stacks"
 #endif /* CONFIG_STACK_GROWS_UP */
@@ -390,9 +390,9 @@ static size_t random_offset(size_t stack_size)
  * Geometry of a thread's stack object, computed once and threaded through the
  * setup_thread_stack() helpers below.
  */
-struct stack_geometry {
+بنية stack_geometry {
 	size_t obj_size;	/* size of the whole stack object */
-	char *buf_start;	/* start of the usable stack buffer */
+	حرف *buf_start;	/* start of the usable stack buffer */
 	size_t buf_size;	/* size of the usable stack buffer */
 };
 
@@ -400,17 +400,17 @@ struct stack_geometry {
  * Derive the stack object geometry from the caller-supplied stack and size.
  * User-capable stacks and kernel-only stacks reserve different amounts.
  */
-static struct stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
+ساكن بنية stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
 						    size_t stack_size)
 {
-	struct stack_geometry geo;
+	بنية stack_geometry geo;
 
 #ifdef CONFIG_USERSPACE
-	if (z_stack_is_user_capable(stack)) {
+	𐤀𐤌 (z_stack_is_user_capable(stack)) {
 		geo.obj_size = K_THREAD_STACK_LEN(stack_size);
 		geo.buf_start = K_THREAD_STACK_BUFFER(stack);
 		geo.buf_size = geo.obj_size - K_THREAD_STACK_RESERVED;
-	} else
+	} وإلا
 #endif /* CONFIG_USERSPACE */
 	{
 		/* Object cannot host a user mode thread */
@@ -418,18 +418,18 @@ static struct stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
 		geo.buf_start = K_KERNEL_STACK_BUFFER(stack);
 		geo.buf_size = geo.obj_size - K_KERNEL_STACK_RESERVED;
 
-#if defined(ARCH_KERNEL_STACK_RESERVED)
+#𐤀𐤌 defined(ARCH_KERNEL_STACK_RESERVED)
 		/* Zephyr treats stack overflow as an app bug.  But
 		 * this particular overflow can be seen by static
 		 * analysis so needs to be handled somehow.
 		 */
-		if (K_KERNEL_STACK_RESERVED > geo.obj_size) {
+		𐤀𐤌 (K_KERNEL_STACK_RESERVED > geo.obj_size) {
 			k_panic();
 		}
 #endif
 	}
 
-	return geo;
+	أرجع geo;
 }
 
 /*
@@ -437,11 +437,11 @@ static struct stack_geometry compute_stack_geometry(k_thread_stack_t *stack,
  * this maps the object into virtual memory, records the mapping so it can be
  * torn down at thread exit, and rebases buf_start onto the mapped address.
  */
-static char *map_thread_stack(struct k_thread *new_thread,
+ساكن حرف *map_thread_stack(بنية k_thread *new_thread,
 			      k_thread_stack_t *stack,
-			      struct stack_geometry *geo)
+			      بنية stack_geometry *geo)
 {
-	char *stack_ptr;
+	حرف *stack_ptr;
 
 #ifdef CONFIG_THREAD_STACK_MEM_MAPPED
 	/* Map the stack into virtual memory and use that as the base to
@@ -453,53 +453,53 @@ static char *map_thread_stack(struct k_thread *new_thread,
 	 * stack. If CONFIG_INIT_STACKS is enabled, the stack will be
 	 * cleared later.
 	 */
-	void *stack_mapped = k_mem_map_phys_guard((uintptr_t)stack, geo->obj_size,
+	فراغ *stack_mapped = k_mem_map_phys_guard((uintptr_t)stack, geo->obj_size,
 				K_MEM_PERM_RW | K_MEM_CACHE_WB | K_MEM_MAP_UNINIT,
 				false);
 
 	__ASSERT_NO_MSG((uintptr_t)stack_mapped != 0);
 
 #ifdef CONFIG_USERSPACE
-	if (z_stack_is_user_capable(stack)) {
+	𐤀𐤌 (z_stack_is_user_capable(stack)) {
 		geo->buf_start = K_THREAD_STACK_BUFFER(stack_mapped);
-	} else
+	} وإلا
 #endif /* CONFIG_USERSPACE */
 	{
 		geo->buf_start = K_KERNEL_STACK_BUFFER(stack_mapped);
 	}
 
-	stack_ptr = (char *)stack_mapped + geo->obj_size;
+	stack_ptr = (حرف *)stack_mapped + geo->obj_size;
 
 	/* Need to store the info on mapped stack so we can remove the mappings
 	 * when the thread ends.
 	 */
 	new_thread->stack_info.mapped.addr = stack_mapped;
 	new_thread->stack_info.mapped.sz = geo->obj_size;
-#else /* CONFIG_THREAD_STACK_MEM_MAPPED */
+#وإلا /* CONFIG_THREAD_STACK_MEM_MAPPED */
 	ARG_UNUSED(new_thread);
 
 	/* Initial stack pointer at the high end of the stack object, may
 	 * be reduced later by TLS or random offset
 	 */
-	stack_ptr = (char *)stack + geo->obj_size;
+	stack_ptr = (حرف *)stack + geo->obj_size;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-	return stack_ptr;
+	أرجع stack_ptr;
 }
 
 /* Pre-fill the stack buffer with a known pattern for usage measurement. */
-static inline void fill_init_stack(char *buf_start, size_t buf_size)
+ساكن مضمن فراغ fill_init_stack(حرف *buf_start, size_t buf_size)
 {
 #ifdef CONFIG_INIT_STACKS
 	memset(buf_start, 0xaa, buf_size);
-#else
+#وإلا
 	ARG_UNUSED(buf_start);
 	ARG_UNUSED(buf_size);
 #endif /* CONFIG_INIT_STACKS */
 }
 
 /* Place the overflow-detection sentinel at the low end of the stack buffer. */
-static inline void set_stack_sentinel(char *buf_start)
+ساكن مضمن فراغ set_stack_sentinel(حرف *buf_start)
 {
 #ifdef CONFIG_STACK_SENTINEL
 	/* Put the stack sentinel at the lowest 4 bytes of the stack area.
@@ -507,7 +507,7 @@ static inline void set_stack_sentinel(char *buf_start)
 	 * if it isn't.
 	 */
 	*((uint32_t *)buf_start) = STACK_SENTINEL;
-#else
+#وإلا
 	ARG_UNUSED(buf_start);
 #endif /* CONFIG_STACK_SENTINEL */
 }
@@ -517,8 +517,8 @@ static inline void set_stack_sentinel(char *buf_start)
  * userspace-local data and stack-pointer randomization, and return the
  * aligned amount the initial stack pointer must be lowered by.
  */
-static size_t reserve_stack_headroom(struct k_thread *new_thread,
-				     char *stack_ptr, size_t buf_size)
+ساكن size_t reserve_stack_headroom(بنية k_thread *new_thread,
+				     حرف *stack_ptr, size_t buf_size)
 {
 	size_t delta = 0;
 
@@ -531,22 +531,22 @@ static size_t reserve_stack_headroom(struct k_thread *new_thread,
 	delta += arch_tls_stack_setup(new_thread, stack_ptr);
 #endif /* CONFIG_THREAD_LOCAL_STORAGE */
 #ifdef CONFIG_THREAD_USERSPACE_LOCAL_DATA
-	size_t tls_size = sizeof(struct _thread_userspace_local_data);
+	size_t tls_size = حجم(بنية _thread_userspace_local_data);
 
 	/* reserve space on highest memory of stack buffer for local data */
 	delta += tls_size;
 	new_thread->userspace_local_data =
-		(struct _thread_userspace_local_data *)(stack_ptr - delta);
+		(بنية _thread_userspace_local_data *)(stack_ptr - delta);
 #endif /* CONFIG_THREAD_USERSPACE_LOCAL_DATA */
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+#𐤀𐤌 defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
 	delta += random_offset(buf_size);
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
-	return ROUND_UP(delta, ARCH_STACK_PTR_ALIGN);
+	أرجع ROUND_UP(delta, ARCH_STACK_PTR_ALIGN);
 }
 
 /* Record the thread-accessible stack bounds (and runtime-safety threshold). */
-static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
+ساكن مضمن فراغ set_stack_info(بنية k_thread *new_thread, حرف *buf_start,
 				  size_t buf_size, size_t delta)
 {
 #ifdef CONFIG_THREAD_STACK_INFO
@@ -566,7 +566,7 @@ static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
 		(CONFIG_THREAD_RUNTIME_STACK_SAFETY_DEFAULT_UNUSED_THRESHOLD_PCT *
 		 buf_size) / 100;
 #endif
-#else
+#وإلا
 	ARG_UNUSED(new_thread);
 	ARG_UNUSED(buf_start);
 	ARG_UNUSED(buf_size);
@@ -574,55 +574,55 @@ static inline void set_stack_info(struct k_thread *new_thread, char *buf_start,
 #endif /* CONFIG_THREAD_STACK_INFO */
 }
 
-static char *setup_thread_stack(struct k_thread *new_thread,
+ساكن حرف *setup_thread_stack(بنية k_thread *new_thread,
 				k_thread_stack_t *stack, size_t stack_size)
 {
-	struct stack_geometry geo = compute_stack_geometry(stack, stack_size);
-	char *stack_ptr = map_thread_stack(new_thread, stack, &geo);
+	بنية stack_geometry geo = compute_stack_geometry(stack, stack_size);
+	حرف *stack_ptr = map_thread_stack(new_thread, stack, &geo);
 	size_t delta;
 
 	LOG_DBG("stack %p for thread %p: obj_size=%zu buf_start=%p "
 		" buf_size %zu stack_ptr=%p",
-		stack, new_thread, geo.obj_size, (void *)geo.buf_start,
-		geo.buf_size, (void *)stack_ptr);
+		stack, new_thread, geo.obj_size, (فراغ *)geo.buf_start,
+		geo.buf_size, (فراغ *)stack_ptr);
 
 	fill_init_stack(geo.buf_start, geo.buf_size);
 	set_stack_sentinel(geo.buf_start);
 	delta = reserve_stack_headroom(new_thread, stack_ptr, geo.buf_size);
 	set_stack_info(new_thread, geo.buf_start, geo.buf_size, delta);
 
-	return stack_ptr - delta;
+	أرجع stack_ptr - delta;
 }
 
 #ifdef CONFIG_HW_SHADOW_STACK
-static void setup_shadow_stack(struct k_thread *new_thread,
+ساكن فراغ setup_shadow_stack(بنية k_thread *new_thread,
 			 k_thread_stack_t *stack)
 {
-	int ret = -ENOENT;
+	صحيح ret = -ENOENT;
 
 	STRUCT_SECTION_FOREACH(_stack_to_hw_shadow_stack, stk_to_hw_shstk) {
-		if (stk_to_hw_shstk->stack == stack) {
+		𐤀𐤌 (stk_to_hw_shstk->stack == stack) {
 			ret = k_thread_hw_shadow_stack_attach(new_thread,
 							      stk_to_hw_shstk->shstk_addr,
 							      stk_to_hw_shstk->size);
-			if (ret != 0) {
+			𐤀𐤌 (ret != 0) {
 				LOG_ERR("Could not set thread %p shadow stack %p, got error %d",
 					new_thread, stk_to_hw_shstk->shstk_addr, ret);
 				k_panic();
 			}
-			break;
+			اكسر;
 		}
 	}
 
 	/* Check if the stack isn't in a stack array, and use the corresponding
 	 * shadow stack.
 	 */
-	if (ret != -ENOENT) {
-		return;
+	𐤀𐤌 (ret != -ENOENT) {
+		أرجع;
 	}
 
 	STRUCT_SECTION_FOREACH(_stack_to_hw_shadow_stack_arr, stk_to_hw_shstk) {
-		if ((uintptr_t)stack >= stk_to_hw_shstk->stack_addr &&
+		𐤀𐤌 ((uintptr_t)stack >= stk_to_hw_shstk->stack_addr &&
 		    (uintptr_t)stack < stk_to_hw_shstk->stack_addr +
 		    stk_to_hw_shstk->stack_size * stk_to_hw_shstk->nmemb) {
 			/* Now we have to guess which index of the stack array is being used */
@@ -630,7 +630,7 @@ static void setup_shadow_stack(struct k_thread *new_thread,
 			uintptr_t stack_index = stack_offset / stk_to_hw_shstk->stack_size;
 			uintptr_t addr;
 
-			if (stack_index >= stk_to_hw_shstk->nmemb) {
+			𐤀𐤌 (stack_index >= stk_to_hw_shstk->nmemb) {
 				LOG_ERR("Could not find shadow stack for thread %p, stack %p",
 					new_thread, stack);
 				k_panic();
@@ -641,24 +641,24 @@ static void setup_shadow_stack(struct k_thread *new_thread,
 			ret = k_thread_hw_shadow_stack_attach(new_thread,
 							      (arch_thread_hw_shadow_stack_t *)addr,
 							      stk_to_hw_shstk->shstk_size);
-			if (ret != 0) {
+			𐤀𐤌 (ret != 0) {
 				LOG_ERR("Could not set thread %p shadow stack 0x%lx, got error %d",
 					new_thread, stk_to_hw_shstk->shstk_addr, ret);
 				k_panic();
 			}
-			break;
+			اكسر;
 		}
 	}
 
-	if (ret == -ENOENT) {
+	𐤀𐤌 (ret == -ENOENT) {
 		LOG_ERR("Could not find shadow stack for thread %p, stack %p",
 			new_thread, stack);
 		k_panic();
 	}
 }
-#else
+#وإلا
 /* No-op stub used when hardware shadow stacks are not configured. */
-static inline void setup_shadow_stack(struct k_thread *new_thread,
+ساكن مضمن فراغ setup_shadow_stack(بنية k_thread *new_thread,
 				      k_thread_stack_t *stack)
 {
 	ARG_UNUSED(new_thread);
@@ -675,25 +675,25 @@ static inline void setup_shadow_stack(struct k_thread *new_thread,
  */
 
 /* Reset per-thread cleanup bookkeeping before a k_thread object is reused. */
-static inline void thread_abort_cleanup_check_reuse(struct k_thread *thread)
+ساكن مضمن فراغ thread_abort_cleanup_check_reuse(بنية k_thread *thread)
 {
 #ifdef CONFIG_THREAD_ABORT_NEED_CLEANUP
 	k_thread_abort_cleanup_check_reuse(thread);
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 }
 
 /* Register the thread with the object-core framework and its usage stats. */
-static inline void init_thread_obj_core(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_obj_core(بنية k_thread *thread)
 {
 #ifdef CONFIG_OBJ_CORE_THREAD
 	k_obj_core_init_and_link(K_OBJ_CORE(thread), &obj_type_thread);
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
 	k_obj_core_stats_register(K_OBJ_CORE(thread), &thread->base.usage,
-				  sizeof(thread->base.usage));
+				  حجم(thread->base.usage));
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_OBJ_CORE_THREAD */
 }
@@ -702,7 +702,7 @@ static inline void init_thread_obj_core(struct k_thread *thread)
  * Initialize userspace bookkeeping: register the thread and stack kernel
  * objects, record stack ownership, and grant the thread access to itself.
  */
-static inline void init_thread_userspace(struct k_thread *thread,
+ساكن مضمن فراغ init_thread_userspace(بنية k_thread *thread,
 					 k_thread_stack_t *stack,
 					 uint32_t options)
 {
@@ -712,11 +712,11 @@ static inline void init_thread_userspace(struct k_thread *thread,
 	k_object_init(thread);
 	k_object_init(stack);
 	thread->stack_obj = stack;
-	thread->syscall_frame = NULL;
+	thread->syscall_frame = عدم;
 
 	/* Any given thread has access to itself */
 	k_object_access_grant(thread, thread);
-#else
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(stack);
 	ARG_UNUSED(options);
@@ -724,7 +724,7 @@ static inline void init_thread_userspace(struct k_thread *thread,
 }
 
 /* Assert the thread object is cache-coherent while its stack stays cached. */
-static inline void assert_thread_coherence(struct k_thread *thread,
+ساكن مضمن فراغ assert_thread_coherence(بنية k_thread *thread,
 					   k_thread_stack_t *stack)
 {
 #ifdef CONFIG_KERNEL_COHERENCE
@@ -745,26 +745,26 @@ static inline void assert_thread_coherence(struct k_thread *thread,
 }
 
 /* Assert the arch layer populated switch_handle on USE_SWITCH builds. */
-static inline void assert_switch_handle(struct k_thread *thread)
+ساكن مضمن فراغ assert_switch_handle(بنية k_thread *thread)
 {
 #ifdef CONFIG_USE_SWITCH
 	/* switch_handle must be non-null except when inside z_swap()
 	 * for synchronization reasons.  Historically some notional
 	 * USE_SWITCH architectures have actually ignored the field
 	 */
-	__ASSERT(thread->switch_handle != NULL,
+	__ASSERT(thread->switch_handle != عدم,
 		 "arch layer failed to initialize switch_handle");
 #endif /* CONFIG_USE_SWITCH */
 	ARG_UNUSED(thread);
 }
 
 /* Clear the opaque, kernel-managed per-thread custom data pointer. */
-static inline void init_thread_custom_data(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_custom_data(بنية k_thread *thread)
 {
 #ifdef CONFIG_THREAD_CUSTOM_DATA
 	/* Initialize custom data field (value is opaque to kernel) */
-	thread->custom_data = NULL;
-#else
+	thread->custom_data = عدم;
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_THREAD_CUSTOM_DATA */
 }
@@ -773,9 +773,9 @@ static inline void init_thread_custom_data(struct k_thread *thread)
  * Record the entry point and parameters, then link the thread into the
  * global thread-monitor list under the monitor spinlock.
  */
-static inline void add_thread_to_monitor(struct k_thread *thread,
+ساكن مضمن فراغ add_thread_to_monitor(بنية k_thread *thread,
 					 k_thread_entry_t entry,
-					 void *p1, void *p2, void *p3)
+					 فراغ *p1, فراغ *p2, فراغ *p3)
 {
 #ifdef CONFIG_THREAD_MONITOR
 	thread->entry.pEntry = entry;
@@ -788,7 +788,7 @@ static inline void add_thread_to_monitor(struct k_thread *thread,
 	thread->next_thread = _kernel.threads;
 	_kernel.threads = thread;
 	k_spin_unlock(&z_thread_monitor_lock, key);
-#else
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(entry);
 	ARG_UNUSED(p1);
@@ -798,26 +798,26 @@ static inline void add_thread_to_monitor(struct k_thread *thread,
 }
 
 /* Set the thread's name from the caller-supplied string (may be NULL). */
-static inline void init_thread_name(struct k_thread *thread, const char *name)
+ساكن مضمن فراغ init_thread_name(بنية k_thread *thread, ثابت حرف *name)
 {
 #ifdef CONFIG_THREAD_NAME
 	set_thread_name(thread, name);
-#else
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(name);
 #endif /* CONFIG_THREAD_NAME */
 }
 
 /* Set the thread's initial SMP CPU affinity mask. */
-static inline void init_thread_cpu_mask(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_cpu_mask(بنية k_thread *thread)
 {
 #ifdef CONFIG_SCHED_CPU_MASK
-	if (IS_ENABLED(CONFIG_SCHED_CPU_MASK_PIN_ONLY)) {
+	𐤀𐤌 (IS_ENABLED(CONFIG_SCHED_CPU_MASK_PIN_ONLY)) {
 		thread->base.cpu_mask = 1; /* must specify only one cpu */
-	} else {
+	} وإلا {
 		thread->base.cpu_mask = -1; /* allow all cpus */
 	}
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_SCHED_CPU_MASK */
 }
@@ -825,54 +825,54 @@ static inline void init_thread_cpu_mask(struct k_thread *thread)
 /* Attach the thread to its memory domain and inherit caller permissions
  * when K_INHERIT_PERMS is requested.
  */
-static inline void init_thread_userspace_perms(struct k_thread *thread,
+ساكن مضمن فراغ init_thread_userspace_perms(بنية k_thread *thread,
 					       uint32_t options)
 {
 #ifdef CONFIG_USERSPACE
 	z_mem_domain_init_thread(thread);
 
-	if ((options & K_INHERIT_PERMS) != 0U) {
+	𐤀𐤌 ((options & K_INHERIT_PERMS) != 0U) {
 		k_thread_perms_inherit(_current, thread);
 	}
-#else
+#وإلا
 	ARG_UNUSED(thread);
 	ARG_UNUSED(options);
 #endif /* CONFIG_USERSPACE */
 }
 
 /* Clear the EDF scheduling deadline. */
-static inline void init_thread_deadline(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_deadline(بنية k_thread *thread)
 {
 #ifdef CONFIG_SCHED_DEADLINE
 	thread->base.prio_deadline = 0;
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_SCHED_DEADLINE */
 }
 
 /* Initialize the wait queue used to synchronize SMP thread halt/abort. */
-static inline void init_thread_halt_queue(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_halt_queue(بنية k_thread *thread)
 {
 #ifdef CONFIG_SMP
 	z_waitq_init(&thread->halt_queue);
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_SMP */
 }
 
 /* Initialize runtime CPU-usage tracking for the thread. */
-static inline void init_thread_usage(struct k_thread *thread)
+ساكن مضمن فراغ init_thread_usage(بنية k_thread *thread)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE
-	thread->base.usage = (struct k_cycle_stats) {};
+	thread->base.usage = (بنية k_cycle_stats) {};
 	thread->base.usage.track_usage = CONFIG_SCHED_THREAD_USAGE_AUTO_ENABLE;
-#else
+#وإلا
 	ARG_UNUSED(thread);
 #endif /* CONFIG_SCHED_THREAD_USAGE */
 }
 
 /* Assert the thread wasn't already linked into the monitor list. */
-static inline void assert_thread_not_reused(struct k_thread *new_thread)
+ساكن مضمن فراغ assert_thread_not_reused(بنية k_thread *new_thread)
 {
 #ifdef CONFIG_THREAD_MONITOR
 #ifdef CONFIG_ASSERT
@@ -880,10 +880,10 @@ static inline void assert_thread_not_reused(struct k_thread *new_thread)
 	bool reused = false;
 
 	/* Check if the thread is already in the list */
-	for (struct k_thread *t = _kernel.threads; t; t = t->next_thread) {
-		if (t == new_thread) {
+	لكل (بنية k_thread *t = _kernel.threads; t; t = t->next_thread) {
+		𐤀𐤌 (t == new_thread) {
 			reused = true;
-			break;
+			اكسر;
 		}
 	}
 
@@ -900,13 +900,13 @@ static inline void assert_thread_not_reused(struct k_thread *new_thread)
  * K_THREAD_STACK_SIZEOF(stack), or the size value passed to the instance
  * of K_THREAD_STACK_DEFINE() which defined 'stack'.
  */
-char *z_setup_new_thread(struct k_thread *new_thread,
+حرف *z_setup_new_thread(بنية k_thread *new_thread,
 			 k_thread_stack_t *stack, size_t stack_size,
 			 k_thread_entry_t entry,
-			 void *p1, void *p2, void *p3,
-			 int prio, uint32_t options, const char *name)
+			 فراغ *p1, فراغ *p2, فراغ *p3,
+			 صحيح prio, uint32_t options, ثابت حرف *name)
 {
-	char *stack_ptr;
+	حرف *stack_ptr;
 
 	Z_ASSERT_VALID_PRIO(prio, entry);
 
@@ -922,9 +922,9 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 	z_init_thread_base(&new_thread->base, prio, _THREAD_SLEEPING, options);
 	stack_ptr = setup_thread_stack(new_thread, stack, stack_size);
 
-#if Z_MUTEX_PI_ENABLED
+#𐤀𐤌 Z_MUTEX_PI_ENABLED
 	sys_slist_init(&new_thread->held_mutexes);
-	new_thread->mutex_pended_on = NULL;
+	new_thread->mutex_pended_on = عدم;
 	new_thread->orig_prio = new_thread->base.prio;
 #endif /* Z_MUTEX_PI_ENABLED */
 
@@ -934,7 +934,7 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 	arch_new_thread(new_thread, stack, stack_ptr, entry, p1, p2, p3);
 
 	/* static threads overwrite it afterwards with real value */
-	new_thread->init_data = NULL;
+	new_thread->init_data = عدم;
 
 	assert_switch_handle(new_thread);
 	init_thread_custom_data(new_thread);
@@ -943,10 +943,10 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 	init_thread_cpu_mask(new_thread);
 
 	/* _current may be NULL if the dummy thread is not used */
-	if (IS_ENABLED(CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN) &&
-	    (_current == NULL)) {
-		new_thread->resource_pool = NULL;
-		return stack_ptr;
+	𐤀𐤌 (IS_ENABLED(CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN) &&
+	    (_current == عدم)) {
+		new_thread->resource_pool = عدم;
+		أرجع stack_ptr;
 	}
 
 	init_thread_userspace_perms(new_thread, options);
@@ -957,102 +957,102 @@ char *z_setup_new_thread(struct k_thread *new_thread,
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, create, new_thread);
 
-	return stack_ptr;
+	أرجع stack_ptr;
 }
 
 #ifdef CONFIG_THREAD_RUNTIME_STACK_SAFETY
-int z_impl_k_thread_runtime_stack_unused_threshold_pct_set(struct k_thread *thread,
+صحيح z_impl_k_thread_runtime_stack_unused_threshold_pct_set(بنية k_thread *thread,
 							   uint32_t pct)
 {
 	size_t unused_threshold;
 
-	if (pct > 99) {
-		return -EINVAL;   /* 100% unused stack and up is invalid */
+	𐤀𐤌 (pct > 99) {
+		أرجع -EINVAL;   /* 100% unused stack and up is invalid */
 	}
 
 	unused_threshold = (thread->stack_info.size * pct) / 100;
 
 	thread->stack_info.usage.unused_threshold = unused_threshold;
 
-	return 0;
+	أرجع 0;
 }
 
-int z_impl_k_thread_runtime_stack_unused_threshold_set(struct k_thread *thread,
+صحيح z_impl_k_thread_runtime_stack_unused_threshold_set(بنية k_thread *thread,
 						       size_t threshold)
 {
-	if (threshold > thread->stack_info.size) {
-		return -EINVAL;
+	𐤀𐤌 (threshold > thread->stack_info.size) {
+		أرجع -EINVAL;
 	}
 
 	thread->stack_info.usage.unused_threshold = threshold;
 
-	return 0;
+	أرجع 0;
 }
 
-size_t z_impl_k_thread_runtime_stack_unused_threshold_get(struct k_thread *thread)
+size_t z_impl_k_thread_runtime_stack_unused_threshold_get(بنية k_thread *thread)
 {
-	return thread->stack_info.usage.unused_threshold;
+	أرجع thread->stack_info.usage.unused_threshold;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_thread_runtime_stack_unused_threshold_pct_set(struct k_thread *thread,
+صحيح z_vrfy_k_thread_runtime_stack_unused_threshold_pct_set(بنية k_thread *thread,
 							   uint32_t pct)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_pct_set(thread, pct);
+	أرجع z_impl_k_thread_runtime_stack_unused_threshold_pct_set(thread, pct);
 }
-#include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_pct_set_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_pct_set_mrsh.c>
 
-int z_vrfy_k_thread_runtime_stack_unused_threshold_set(struct k_thread *thread,
+صحيح z_vrfy_k_thread_runtime_stack_unused_threshold_set(بنية k_thread *thread,
 						       size_t threshold)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_set(thread, threshold);
+	أرجع z_impl_k_thread_runtime_stack_unused_threshold_set(thread, threshold);
 }
-#include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_set_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_set_mrsh.c>
 
-size_t z_vrfy_k_thread_runtime_stack_unused_threshold_get(struct k_thread *thread)
+size_t z_vrfy_k_thread_runtime_stack_unused_threshold_get(بنية k_thread *thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	return z_impl_k_thread_runtime_stack_unused_threshold_get(thread);
+	أرجع z_impl_k_thread_runtime_stack_unused_threshold_get(thread);
 }
-#include <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_runtime_stack_unused_threshold_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 #endif /* CONFIG_THREAD_RUNTIME_STACK_SAFETY */
 
-k_tid_t z_impl_k_thread_create(struct k_thread *new_thread,
+k_tid_t z_impl_k_thread_create(بنية k_thread *new_thread,
 			      k_thread_stack_t *stack,
 			      size_t stack_size, k_thread_entry_t entry,
-			      void *p1, void *p2, void *p3,
-			      int prio, uint32_t options, k_timeout_t delay)
+			      فراغ *p1, فراغ *p2, فراغ *p3,
+			      صحيح prio, uint32_t options, k_timeout_t delay)
 {
 	__ASSERT(!arch_is_in_isr(), "Threads may not be created in ISRs");
 
 	z_setup_new_thread(new_thread, stack, stack_size, entry, p1, p2, p3,
-			  prio, options, NULL);
+			  prio, options, عدم);
 
 	thread_schedule_new(new_thread, delay);
 
-	return new_thread;
+	أرجع new_thread;
 }
 
 #ifdef CONFIG_USERSPACE
 bool z_stack_is_user_capable(k_thread_stack_t *stack)
 {
-	return k_object_find(stack) != NULL;
+	أرجع k_object_find(stack) != عدم;
 }
 
-k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
+k_tid_t z_vrfy_k_thread_create(بنية k_thread *new_thread,
 			       k_thread_stack_t *stack,
 			       size_t stack_size, k_thread_entry_t entry,
-			       void *p1, void *p2, void *p3,
-			       int prio, uint32_t options, k_timeout_t delay)
+			       فراغ *p1, فراغ *p2, فراغ *p3,
+			       صحيح prio, uint32_t options, k_timeout_t delay)
 {
 	size_t total_size, stack_obj_size;
-	struct k_object *stack_object;
+	بنية k_object *stack_object;
 
 	/* The thread and stack objects *must* be in an uninitialized state */
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(new_thread, K_OBJ_THREAD));
@@ -1080,7 +1080,7 @@ k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
 	 */
 #ifdef CONFIG_GEN_PRIV_STACKS
 	stack_obj_size = stack_object->data.stack_data->size;
-#else
+#وإلا
 	stack_obj_size = stack_object->data.stack_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
 	K_OOPS(K_SYSCALL_VERIFY_MSG(total_size <= stack_obj_size,
@@ -1096,25 +1096,25 @@ k_tid_t z_vrfy_k_thread_create(struct k_thread *new_thread,
 	/* Check validity of prio argument; must be the same or worse priority
 	 * than the caller
 	 */
-	K_OOPS(K_SYSCALL_VERIFY(_is_valid_prio(prio, NULL)));
+	K_OOPS(K_SYSCALL_VERIFY(_is_valid_prio(prio, عدم)));
 	K_OOPS(K_SYSCALL_VERIFY(z_is_prio_lower_or_equal(prio,
 							_current->base.prio)));
 
 	z_setup_new_thread(new_thread, stack, stack_size,
-			   entry, p1, p2, p3, prio, options, NULL);
+			   entry, p1, p2, p3, prio, options, عدم);
 
 	thread_schedule_new(new_thread, delay);
 
-	return new_thread;
+	أرجع new_thread;
 }
-#include <zephyr/syscalls/k_thread_create_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_create_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_init_thread_base(struct _thread_base *thread_base, int priority,
-		       uint32_t initial_state, unsigned int options)
+فراغ z_init_thread_base(بنية _thread_base *thread_base, صحيح priority,
+		       uint32_t initial_state, unsigned صحيح options)
 {
 	/* k_q_node is initialized upon first insertion in a list */
-	thread_base->pended_on = NULL;
+	thread_base->pended_on = عدم;
 	thread_base->user_options = (uint16_t)options;
 	thread_base->thread_state = (uint8_t)initial_state;
 
@@ -1134,19 +1134,19 @@ void z_init_thread_base(struct _thread_base *thread_base, int priority,
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
 	thread_base->slice_ticks = 0;
-	thread_base->slice_expired = NULL;
+	thread_base->slice_expired = عدم;
 #endif /* CONFIG_TIMESLICE_PER_THREAD */
 
 #ifdef CONFIG_SPIN_VALIDATE
-	thread_base->swap_data = NULL;
+	thread_base->swap_data = عدم;
 	/* otherwise swap_data does not need to be initialized */
 #endif
 
 	z_init_thread_timeout(thread_base);
 }
 
-FUNC_NORETURN void k_thread_user_mode_enter(k_thread_entry_t entry,
-					    void *p1, void *p2, void *p3)
+FUNC_NORETURN فراغ k_thread_user_mode_enter(k_thread_entry_t entry,
+					    فراغ *p1, فراغ *p2, فراغ *p3)
 {
 	SYS_PORT_TRACING_FUNC(k_thread, user_mode_enter);
 
@@ -1163,34 +1163,34 @@ FUNC_NORETURN void k_thread_user_mode_enter(k_thread_entry_t entry,
 		 "dropping to user mode with kernel-only stack object");
 #ifdef CONFIG_THREAD_USERSPACE_LOCAL_DATA
 	memset(_current->userspace_local_data, 0,
-	       sizeof(struct _thread_userspace_local_data));
+	       حجم(بنية _thread_userspace_local_data));
 #endif /* CONFIG_THREAD_USERSPACE_LOCAL_DATA */
 #ifdef CONFIG_THREAD_LOCAL_STORAGE
 	arch_tls_stack_setup(_current,
-			     (char *)(_current->stack_info.start +
+			     (حرف *)(_current->stack_info.start +
 				      _current->stack_info.size));
 #endif /* CONFIG_THREAD_LOCAL_STORAGE */
 	arch_user_mode_enter(entry, p1, p2, p3);
-#else
+#وإلا
 	/* XXX In this case we do not reset the stack */
 	z_thread_entry(entry, p1, p2, p3);
 #endif /* CONFIG_USERSPACE */
 }
 
-#if defined(CONFIG_INIT_STACKS) && defined(CONFIG_THREAD_STACK_INFO)
+#𐤀𐤌 defined(CONFIG_INIT_STACKS) && defined(CONFIG_THREAD_STACK_INFO)
 #ifdef CONFIG_STACK_GROWS_UP
 #error "Unsupported configuration for stack analysis"
 #endif /* CONFIG_STACK_GROWS_UP */
 
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr)
+صحيح z_stack_space_get(ثابت uint8_t *stack_start, size_t size, size_t *unused_ptr)
 {
 	size_t unused = 0;
-	const uint8_t *checked_stack = stack_start;
+	ثابت uint8_t *checked_stack = stack_start;
 	/* Take the address of any local variable as a shallow bound for the
 	 * stack pointer.  Addresses above it are guaranteed to be
 	 * accessible.
 	 */
-	const uint8_t *stack_pointer = (const uint8_t *)&stack_start;
+	ثابت uint8_t *stack_pointer = (ثابت uint8_t *)&stack_start;
 
 	/* If we are currently running on the stack being analyzed, some
 	 * memory management hardware will generate an exception if we
@@ -1199,16 +1199,16 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 	 * This never happens when invoked from user mode, as user mode
 	 * will always run this function on the privilege elevation stack.
 	 */
-	if ((stack_pointer > stack_start) && (stack_pointer <= (stack_start + size)) &&
+	𐤀𐤌 ((stack_pointer > stack_start) && (stack_pointer <= (stack_start + size)) &&
 	    IS_ENABLED(CONFIG_NO_UNUSED_STACK_INSPECTION)) {
 		/* TODO: We could add an arch_ API call to temporarily
 		 * disable the stack checking in the CPU, but this would
 		 * need to be properly managed wrt context switches/interrupts
 		 */
-		return -ENOTSUP;
+		أرجع -ENOTSUP;
 	}
 
-	if (IS_ENABLED(CONFIG_STACK_SENTINEL)) {
+	𐤀𐤌 (IS_ENABLED(CONFIG_STACK_SENTINEL)) {
 		/* First 4 bytes of the stack buffer reserved for the
 		 * sentinel value, it won't be 0xAAAAAAAA for thread
 		 * stacks.
@@ -1220,60 +1220,60 @@ int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_pt
 		size -= 4;
 	}
 
-	for (size_t i = 0; i < size; i++) {
-		if ((checked_stack[i]) == 0xaaU) {
+	لكل (size_t i = 0; i < size; i++) {
+		𐤀𐤌 ((checked_stack[i]) == 0xaaU) {
 			unused++;
-		} else {
-			break;
+		} وإلا {
+			اكسر;
 		}
 	}
 
 	*unused_ptr = unused;
 
-	return 0;
+	أرجع 0;
 }
 
 #ifdef CONFIG_THREAD_RUNTIME_STACK_SAFETY
-int k_thread_runtime_stack_safety_full_check(const struct k_thread *thread,
+صحيح k_thread_runtime_stack_safety_full_check(ثابت بنية k_thread *thread,
 					     size_t *unused_ptr,
 					     k_thread_stack_safety_handler_t handler,
-					     void *arg)
+					     فراغ *arg)
 {
-	int    rv;
+	صحيح    rv;
 	size_t unused_space;
 
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(thread != عدم);
 
-	rv = z_stack_space_get((const uint8_t *)thread->stack_info.start,
+	rv = z_stack_space_get((ثابت uint8_t *)thread->stack_info.start,
 			       thread->stack_info.size, &unused_space);
 
-	if (rv != 0) {
-		return rv;
+	𐤀𐤌 (rv != 0) {
+		أرجع rv;
 	}
 
-	if (unused_ptr != NULL) {
+	𐤀𐤌 (unused_ptr != عدم) {
 		*unused_ptr = unused_space;
 	}
 
-	if ((unused_space < thread->stack_info.usage.unused_threshold) &&
-	    (handler != NULL)) {
+	𐤀𐤌 ((unused_space < thread->stack_info.usage.unused_threshold) &&
+	    (handler != عدم)) {
 		handler(thread, unused_space, arg);
 	}
 
-	return 0;
+	أرجع 0;
 }
 
-int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
+صحيح k_thread_runtime_stack_safety_threshold_check(ثابت بنية k_thread *thread,
 						  size_t *unused_ptr,
 						  k_thread_stack_safety_handler_t handler,
-						  void *arg)
+						  فراغ *arg)
 {
-	int    rv;
+	صحيح    rv;
 	size_t unused_space;
 	size_t threshold;
 	size_t scan_size;
 
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(thread != عدم);
 
 	threshold = thread->stack_info.usage.unused_threshold;
 	scan_size = threshold;
@@ -1285,89 +1285,89 @@ int k_thread_runtime_stack_safety_threshold_check(const struct k_thread *thread,
 	 * otherwise a fully unused window would report fewer than 'threshold'
 	 * unused bytes and spuriously trip the threshold.
 	 */
-	if (IS_ENABLED(CONFIG_STACK_SENTINEL) && (threshold != 0U)) {
-		scan_size += sizeof(uint32_t);
+	𐤀𐤌 (IS_ENABLED(CONFIG_STACK_SENTINEL) && (threshold != 0U)) {
+		scan_size += حجم(uint32_t);
 	}
 
-	rv = z_stack_space_get((const uint8_t *)thread->stack_info.start,
+	rv = z_stack_space_get((ثابت uint8_t *)thread->stack_info.start,
 			       scan_size, &unused_space);
 
-	if (rv != 0) {
-		return rv;
+	𐤀𐤌 (rv != 0) {
+		أرجع rv;
 	}
 
-	if (unused_ptr != NULL) {
+	𐤀𐤌 (unused_ptr != عدم) {
 		*unused_ptr = unused_space;
 	}
 
-	if ((unused_space < threshold) && (handler != NULL)) {
+	𐤀𐤌 ((unused_space < threshold) && (handler != عدم)) {
 		handler(thread, unused_space, arg);
 	}
 
-	return 0;
+	أرجع 0;
 }
 #endif /* CONFIG_THREAD_RUNTIME_STACK_SAFETY */
 
-int z_impl_k_thread_stack_space_get(const struct k_thread *thread,
+صحيح z_impl_k_thread_stack_space_get(ثابت بنية k_thread *thread,
 				    size_t *unused_ptr)
 {
 #ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-	if (thread->stack_info.mapped.addr == NULL) {
-		return -EINVAL;
+	𐤀𐤌 (thread->stack_info.mapped.addr == عدم) {
+		أرجع -EINVAL;
 	}
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-	return z_stack_space_get((const uint8_t *)thread->stack_info.start,
+	أرجع z_stack_space_get((ثابت uint8_t *)thread->stack_info.start,
 				 thread->stack_info.size, unused_ptr);
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_thread_stack_space_get(const struct k_thread *thread,
+صحيح z_vrfy_k_thread_stack_space_get(ثابت بنية k_thread *thread,
 				    size_t *unused_ptr)
 {
 	size_t unused;
-	int ret;
+	صحيح ret;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
 	ret = z_impl_k_thread_stack_space_get(thread, &unused);
 	CHECKIF(ret != 0) {
-		return ret;
+		أرجع ret;
 	}
 
-	ret = k_usermode_to_copy(unused_ptr, &unused, sizeof(size_t));
+	ret = k_usermode_to_copy(unused_ptr, &unused, حجم(size_t));
 	CHECKIF(ret != 0) {
-		return ret;
+		أرجع ret;
 	}
 
-	return 0;
+	أرجع 0;
 }
-#include <zephyr/syscalls/k_thread_stack_space_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_stack_space_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 #endif /* CONFIG_INIT_STACKS && CONFIG_THREAD_STACK_INFO */
 
 #ifdef CONFIG_USERSPACE
-static inline k_ticks_t z_vrfy_k_thread_timeout_remaining_ticks(
-						    const struct k_thread *thread)
+ساكن مضمن k_ticks_t z_vrfy_k_thread_timeout_remaining_ticks(
+						    ثابت بنية k_thread *thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	return z_impl_k_thread_timeout_remaining_ticks(thread);
+	أرجع z_impl_k_thread_timeout_remaining_ticks(thread);
 }
-#include <zephyr/syscalls/k_thread_timeout_remaining_ticks_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_timeout_remaining_ticks_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_thread_timeout_expires_ticks(
-						  const struct k_thread *thread)
+ساكن مضمن k_ticks_t z_vrfy_k_thread_timeout_expires_ticks(
+						  ثابت بنية k_thread *thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	return z_impl_k_thread_timeout_expires_ticks(thread);
+	أرجع z_impl_k_thread_timeout_expires_ticks(thread);
 }
-#include <zephyr/syscalls/k_thread_timeout_expires_ticks_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_timeout_expires_ticks_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
-void z_thread_mark_switched_in(void)
+فراغ z_thread_mark_switched_in(فراغ)
 {
-#if defined(CONFIG_SCHED_THREAD_USAGE) && !defined(CONFIG_USE_SWITCH)
+#𐤀𐤌 defined(CONFIG_SCHED_THREAD_USAGE) && !defined(CONFIG_USE_SWITCH)
 	z_sched_usage_start(_current);
 #endif /* CONFIG_SCHED_THREAD_USAGE && !CONFIG_USE_SWITCH */
 
@@ -1376,18 +1376,18 @@ void z_thread_mark_switched_in(void)
 #endif /* CONFIG_TRACING */
 }
 
-void z_thread_mark_switched_out(void)
+فراغ z_thread_mark_switched_out(فراغ)
 {
-#if defined(CONFIG_SCHED_THREAD_USAGE) && !defined(CONFIG_USE_SWITCH)
+#𐤀𐤌 defined(CONFIG_SCHED_THREAD_USAGE) && !defined(CONFIG_USE_SWITCH)
 	z_sched_usage_stop();
 #endif /*CONFIG_SCHED_THREAD_USAGE && !CONFIG_USE_SWITCH */
 
 #ifdef CONFIG_TRACING
 #ifdef CONFIG_THREAD_LOCAL_STORAGE
 	/* Dummy thread won't have TLS set up to run arbitrary code */
-	if (!_current ||
+	𐤀𐤌 (!_current ||
 	    (_current->base.thread_state & _THREAD_DUMMY) != 0) {
-		return;
+		أرجع;
 	}
 #endif /* CONFIG_THREAD_LOCAL_STORAGE */
 	SYS_PORT_TRACING_FUNC(k_thread, switched_out);
@@ -1395,30 +1395,30 @@ void z_thread_mark_switched_out(void)
 }
 #endif /* CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
-int k_thread_runtime_stats_get(k_tid_t thread,
+صحيح k_thread_runtime_stats_get(k_tid_t thread,
 			       k_thread_runtime_stats_t *stats)
 {
-	if ((thread == NULL) || (stats == NULL)) {
-		return -EINVAL;
+	𐤀𐤌 ((thread == عدم) || (stats == عدم)) {
+		أرجع -EINVAL;
 	}
 
 #ifdef CONFIG_SCHED_THREAD_USAGE
 	z_sched_thread_usage(thread, stats);
-#else
+#وإلا
 	*stats = (k_thread_runtime_stats_t) {};
 #endif /* CONFIG_SCHED_THREAD_USAGE */
 
-	return 0;
+	أرجع 0;
 }
 
-int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
+صحيح k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
 	k_thread_runtime_stats_t  tmp_stats;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	if (stats == NULL) {
-		return -EINVAL;
+	𐤀𐤌 (stats == عدم) {
+		أرجع -EINVAL;
 	}
 
 	*stats = (k_thread_runtime_stats_t) {};
@@ -1426,9 +1426,9 @@ int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
 	/* Retrieve the usage stats for each core and amalgamate them. */
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned صحيح num_cpus = arch_num_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	لكل (unsigned صحيح i = 0; i < num_cpus; i++) {
 		z_sched_cpu_usage(i, &tmp_stats);
 
 		stats->execution_cycles += tmp_stats.execution_cycles;
@@ -1442,50 +1442,50 @@ int k_thread_runtime_stats_all_get(k_thread_runtime_stats_t *stats)
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	return 0;
+	أرجع 0;
 }
 
-int k_thread_runtime_stats_cpu_get(int cpu, k_thread_runtime_stats_t *stats)
+صحيح k_thread_runtime_stats_cpu_get(صحيح cpu, k_thread_runtime_stats_t *stats)
 {
-	if (stats == NULL) {
-		return -EINVAL;
+	𐤀𐤌 (stats == عدم) {
+		أرجع -EINVAL;
 	}
 
 	*stats = (k_thread_runtime_stats_t) {};
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-	CHECKIF((cpu < 0) || ((unsigned int)cpu >= arch_num_cpus())) {
-		return -EINVAL;
+	CHECKIF((cpu < 0) || ((unsigned صحيح)cpu >= arch_num_cpus())) {
+		أرجع -EINVAL;
 	}
 
 	z_sched_cpu_usage(cpu, stats);
-#else
+#وإلا
 	ARG_UNUSED(cpu);
 #endif
 
-	return 0;
+	أرجع 0;
 }
 
 #ifdef CONFIG_THREAD_ABORT_NEED_CLEANUP
 /** Pointer to thread which needs to be cleaned up. */
-static struct k_thread *thread_to_cleanup;
+ساكن بنية k_thread *thread_to_cleanup;
 
 /** Spinlock for thread abort cleanup. */
-static struct k_spinlock thread_cleanup_lock;
+ساكن بنية k_spinlock thread_cleanup_lock;
 
 #ifdef CONFIG_THREAD_STACK_MEM_MAPPED
-static void *thread_cleanup_stack_addr;
-static size_t thread_cleanup_stack_sz;
+ساكن فراغ *thread_cleanup_stack_addr;
+ساكن size_t thread_cleanup_stack_sz;
 
-static void unmap_thread_stack(void *addr, size_t sz)
+ساكن فراغ unmap_thread_stack(فراغ *addr, size_t sz)
 {
-	if (addr != NULL) {
+	𐤀𐤌 (addr != عدم) {
 		k_mem_unmap_phys_guard(addr, sz, false);
 	}
 }
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 
-void defer_thread_cleanup(struct k_thread *thread)
+فراغ defer_thread_cleanup(بنية k_thread *thread)
 {
 	/* Note when adding new deferred cleanup steps:
 	 * - The thread object may have been overwritten by the time
@@ -1512,12 +1512,12 @@ void defer_thread_cleanup(struct k_thread *thread)
 	 * from looking directly into the mapped stack if they are made to be aware
 	 * of memory mapped stacks, e.g., z_stack_space_get().
 	 */
-	thread->stack_info.mapped.addr = NULL;
+	thread->stack_info.mapped.addr = عدم;
 	thread->stack_info.mapped.sz = 0;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 }
 
-void do_deferred_thread_cleanup(void)
+فراغ do_deferred_thread_cleanup(فراغ)
 {
 	/* Note when adding new actual cleanup steps:
 	 * - The thread object may have been overwritten when this is
@@ -1528,12 +1528,12 @@ void do_deferred_thread_cleanup(void)
 #ifdef CONFIG_THREAD_STACK_MEM_MAPPED
 	unmap_thread_stack(thread_cleanup_stack_addr, thread_cleanup_stack_sz);
 
-	thread_cleanup_stack_addr = NULL;
+	thread_cleanup_stack_addr = عدم;
 	thread_cleanup_stack_sz = 0;
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 }
 
-void do_thread_cleanup(struct k_thread *thread)
+فراغ do_thread_cleanup(بنية k_thread *thread)
 {
 	/* This is only for threads which are no longer running and are not
 	 * the current thread, so the thread object is still valid here and
@@ -1549,23 +1549,23 @@ void do_thread_cleanup(struct k_thread *thread)
 	 * a repeated cleanup of the same thread object is a no-op,
 	 * e.g., z_stack_space_get().
 	 */
-	thread->stack_info.mapped.addr = NULL;
+	thread->stack_info.mapped.addr = عدم;
 	thread->stack_info.mapped.sz = 0;
-#else /* CONFIG_THREAD_STACK_MEM_MAPPED */
+#وإلا /* CONFIG_THREAD_STACK_MEM_MAPPED */
 	ARG_UNUSED(thread);
 #endif /* CONFIG_THREAD_STACK_MEM_MAPPED */
 }
 
-void k_thread_abort_cleanup(struct k_thread *thread)
+فراغ k_thread_abort_cleanup(بنية k_thread *thread)
 {
 	K_SPINLOCK(&thread_cleanup_lock) {
-		if (thread_to_cleanup != NULL) {
+		𐤀𐤌 (thread_to_cleanup != عدم) {
 			/* Finish the pending one first. */
 			do_deferred_thread_cleanup();
-			thread_to_cleanup = NULL;
+			thread_to_cleanup = عدم;
 		}
 
-		if (thread == _current) {
+		𐤀𐤌 (thread == _current) {
 			/* Need to defer for current running thread as the cleanup
 			 * might result in exception. Actual cleanup will be done
 			 * at the next time k_thread_abort() is called, or at thread
@@ -1579,7 +1579,7 @@ void k_thread_abort_cleanup(struct k_thread *thread)
 			 * require architecture code support (e.g. via exception).
 			 */
 			defer_thread_cleanup(thread);
-		} else {
+		} وإلا {
 			/* Not the current running thread, so we are safe to do
 			 * cleanups.
 			 */
@@ -1588,32 +1588,32 @@ void k_thread_abort_cleanup(struct k_thread *thread)
 	}
 }
 
-void k_thread_abort_cleanup_check_reuse(struct k_thread *thread)
+فراغ k_thread_abort_cleanup_check_reuse(بنية k_thread *thread)
 {
 	K_SPINLOCK(&thread_cleanup_lock) {
 		/* This is to guard reuse of the same thread object and make sure
 		 * any pending cleanups of it needs to be finished before the thread
 		 * object can be reused.
 		 */
-		if (thread_to_cleanup == thread) {
+		𐤀𐤌 (thread_to_cleanup == thread) {
 			do_deferred_thread_cleanup();
-			thread_to_cleanup = NULL;
+			thread_to_cleanup = عدم;
 		}
 	}
 }
 
 #endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 
-void z_dummy_thread_init(struct k_thread *dummy_thread)
+فراغ z_dummy_thread_init(بنية k_thread *dummy_thread)
 {
 	dummy_thread->base.thread_state = _THREAD_DUMMY;
 #ifdef CONFIG_SCHED_CPU_MASK
 	dummy_thread->base.cpu_mask = -1;
 #endif /* CONFIG_SCHED_CPU_MASK */
 	dummy_thread->base.user_options = K_ESSENTIAL;
-#if Z_MUTEX_PI_ENABLED
+#𐤀𐤌 Z_MUTEX_PI_ENABLED
 	sys_slist_init(&dummy_thread->held_mutexes);
-	dummy_thread->mutex_pended_on = NULL;
+	dummy_thread->mutex_pended_on = عدم;
 	dummy_thread->orig_prio = dummy_thread->base.prio;
 #endif /* Z_MUTEX_PI_ENABLED */
 #ifdef CONFIG_THREAD_STACK_INFO
@@ -1623,14 +1623,14 @@ void z_dummy_thread_init(struct k_thread *dummy_thread)
 #ifdef CONFIG_USERSPACE
 	dummy_thread->mem_domain_info.mem_domain = &k_mem_domain_default;
 #endif /* CONFIG_USERSPACE */
-#if (K_HEAP_MEM_POOL_SIZE > 0)
+#𐤀𐤌 (K_HEAP_MEM_POOL_SIZE > 0)
 	k_thread_system_pool_assign(dummy_thread);
-#else
-	dummy_thread->resource_pool = NULL;
+#وإلا
+	dummy_thread->resource_pool = عدم;
 #endif /* K_HEAP_MEM_POOL_SIZE */
 
 #ifdef CONFIG_USE_SWITCH
-	dummy_thread->switch_handle = NULL;
+	dummy_thread->switch_handle = عدم;
 #endif /* CONFIG_USE_SWITCH */
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
@@ -1648,27 +1648,27 @@ void z_dummy_thread_init(struct k_thread *dummy_thread)
  * z_sched_ready_locked, z_sched_add_to_waitq_locked) exposed via ksched.h.
  */
 
-void z_impl_k_thread_priority_set(k_tid_t thread, int prio)
+فراغ z_impl_k_thread_priority_set(k_tid_t thread, صحيح prio)
 {
 	/*
 	 * Use NULL, since we cannot know what the entry point is (we do not
 	 * keep track of it) and idle cannot change its priority.
 	 */
-	Z_ASSERT_VALID_PRIO(prio, NULL);
+	Z_ASSERT_VALID_PRIO(prio, عدم);
 
-	bool need_sched = z_thread_prio_set((struct k_thread *)thread, prio);
+	bool need_sched = z_thread_prio_set((بنية k_thread *)thread, prio);
 
-	if ((need_sched) && (IS_ENABLED(CONFIG_SMP) ||
+	𐤀𐤌 ((need_sched) && (IS_ENABLED(CONFIG_SMP) ||
 			     (_current->base.sched_locked == 0U))) {
 		z_reschedule_unlocked();
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_priority_set(k_tid_t thread, int prio)
+ساكن مضمن فراغ z_vrfy_k_thread_priority_set(k_tid_t thread, صحيح prio)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_VERIFY_MSG(_is_valid_prio(prio, NULL),
+	K_OOPS(K_SYSCALL_VERIFY_MSG(_is_valid_prio(prio, عدم),
 				    "invalid thread priority %d", prio));
 #ifndef CONFIG_USERSPACE_THREAD_MAY_RAISE_PRIORITY
 	K_OOPS(K_SYSCALL_VERIFY_MSG((int8_t)prio >= thread->base.prio,
@@ -1677,30 +1677,30 @@ static inline void z_vrfy_k_thread_priority_set(k_tid_t thread, int prio)
 #endif /* CONFIG_USERSPACE_THREAD_MAY_RAISE_PRIORITY */
 	z_impl_k_thread_priority_set(thread, prio);
 }
-#include <zephyr/syscalls/k_thread_priority_set_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_priority_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_thread_suspend(k_tid_t thread)
+فراغ z_impl_k_thread_suspend(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, suspend, thread);
 
 	/* Special case "suspend the current thread" as it doesn't
 	 * need the async complexity below.
 	 */
-	if (!IS_ENABLED(CONFIG_SMP) &&
+	𐤀𐤌 (!IS_ENABLED(CONFIG_SMP) &&
 	    likely((thread == _current) && !arch_is_in_isr())) {
 		z_thread_suspend_current(thread);
-		return;
+		أرجع;
 	}
 
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 
-	if (unlikely(z_is_thread_suspended(thread))) {
+	𐤀𐤌 (unlikely(z_is_thread_suspended(thread))) {
 
 		/* The target thread is already suspended. Nothing to do. */
 
 		z_sched_spinlock_unlock(key);
-		return;
+		أرجع;
 	}
 
 	z_thread_halt(thread, key, false);
@@ -1709,24 +1709,24 @@ void z_impl_k_thread_suspend(k_tid_t thread)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_suspend(k_tid_t thread)
+ساكن مضمن فراغ z_vrfy_k_thread_suspend(k_tid_t thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 	z_impl_k_thread_suspend(thread);
 }
-#include <zephyr/syscalls/k_thread_suspend_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_suspend_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_thread_resume(k_tid_t thread)
+فراغ z_impl_k_thread_resume(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, resume, thread);
 
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 
 	/* Do not try to resume a thread that was not suspended */
-	if (unlikely(!z_is_thread_suspended(thread))) {
+	𐤀𐤌 (unlikely(!z_is_thread_suspended(thread))) {
 		z_sched_spinlock_unlock(key);
-		return;
+		أرجع;
 	}
 
 	z_mark_thread_as_not_suspended(thread);
@@ -1738,59 +1738,59 @@ void z_impl_k_thread_resume(k_tid_t thread)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_resume(k_tid_t thread)
+ساكن مضمن فراغ z_vrfy_k_thread_resume(k_tid_t thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 	z_impl_k_thread_resume(thread);
 }
-#include <zephyr/syscalls/k_thread_resume_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_resume_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_wakeup(k_tid_t thread)
+فراغ z_impl_k_wakeup(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_thread, wakeup, thread);
 
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 
-	if (z_is_thread_sleeping(thread)) {
-		(void)z_try_abort_thread_timeout(thread);
+	𐤀𐤌 (z_is_thread_sleeping(thread)) {
+		(فراغ)z_try_abort_thread_timeout(thread);
 		z_mark_thread_as_not_sleeping(thread);
 		z_sched_ready_locked(thread);
 		z_reschedule_locked(key);
-	} else {
+	} وإلا {
 		z_sched_spinlock_unlock(key);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_wakeup(k_tid_t thread)
+ساكن مضمن فراغ z_vrfy_k_wakeup(k_tid_t thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 	z_impl_k_wakeup(thread);
 }
-#include <zephyr/syscalls/k_wakeup_mrsh.c>
+#ضمن <zephyr/syscalls/k_wakeup_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_thread_abort(struct k_thread *thread)
+فراغ z_thread_abort(بنية k_thread *thread)
 {
 	bool essential = z_is_thread_essential(thread);
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 
-	if (z_is_thread_dead(thread)) {
+	𐤀𐤌 (z_is_thread_dead(thread)) {
 		z_sched_spinlock_unlock(key);
-		return;
+		أرجع;
 	}
 
 	z_thread_halt(thread, key, true);
 
-	if (essential) {
+	𐤀𐤌 (essential) {
 		__ASSERT(!essential, "aborted essential thread %p", thread);
 		k_panic();
 	}
 }
 
-#if !defined(CONFIG_ARCH_HAS_THREAD_ABORT)
-void z_impl_k_thread_abort(k_tid_t thread)
+#𐤀𐤌 !defined(CONFIG_ARCH_HAS_THREAD_ABORT)
+فراغ z_impl_k_thread_abort(k_tid_t thread)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, abort, thread);
 
@@ -1802,22 +1802,22 @@ void z_impl_k_thread_abort(k_tid_t thread)
 }
 #endif /* !CONFIG_ARCH_HAS_THREAD_ABORT */
 
-int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
+صحيح z_impl_k_thread_join(بنية k_thread *thread, k_timeout_t timeout)
 {
 	k_spinlock_key_t key = z_sched_spinlock_lock();
-	int ret;
+	صحيح ret;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_thread, join, thread, timeout);
 
-	if (z_is_thread_dead(thread)) {
+	𐤀𐤌 (z_is_thread_dead(thread)) {
 		z_sched_switch_spin(thread);
 		ret = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	} وإلا 𐤀𐤌 (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		ret = -EBUSY;
-	} else if ((thread == _current) ||
+	} وإلا 𐤀𐤌 ((thread == _current) ||
 		   (thread->base.pended_on == &_current->join_queue)) {
 		ret = -EDEADLK;
-	} else {
+	} وإلا {
 		__ASSERT(!arch_is_in_isr(), "cannot join in ISR");
 		z_sched_add_to_waitq_locked(_current, &thread->join_queue);
 		z_add_thread_timeout(_current, timeout);
@@ -1826,13 +1826,13 @@ int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
 		ret = z_swap_locked(key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, join, thread, timeout, ret);
 
-		return ret;
+		أرجع ret;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_thread, join, thread, timeout, ret);
 
 	z_sched_spinlock_unlock(key);
-	return ret;
+	أرجع ret;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -1844,17 +1844,17 @@ int z_impl_k_thread_join(struct k_thread *thread, k_timeout_t timeout)
  * Return true in this case indicating we should just do nothing and return
  * success to the caller.
  */
-static bool thread_obj_validate(struct k_thread *thread)
+ساكن bool thread_obj_validate(بنية k_thread *thread)
 {
-	struct k_object *ko = k_object_find(thread);
-	int ret = k_object_validate(ko, K_OBJ_THREAD, _OBJ_INIT_TRUE);
+	بنية k_object *ko = k_object_find(thread);
+	صحيح ret = k_object_validate(ko, K_OBJ_THREAD, _OBJ_INIT_TRUE);
 
-	switch (ret) {
-	case 0:
-		return false;
-	case -EINVAL:
-		return true;
-	default:
+	بدل (ret) {
+	حالة 0:
+		أرجع false;
+	حالة -EINVAL:
+		أرجع true;
+	افتراضي:
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, thread, ko, K_OBJ_THREAD);
 #endif /* CONFIG_LOG */
@@ -1869,38 +1869,38 @@ static bool thread_obj_validate(struct k_thread *thread)
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static inline int z_vrfy_k_thread_join(struct k_thread *thread,
+ساكن مضمن صحيح z_vrfy_k_thread_join(بنية k_thread *thread,
 				       k_timeout_t timeout)
 {
-	if (thread_obj_validate(thread)) {
-		return 0;
+	𐤀𐤌 (thread_obj_validate(thread)) {
+		أرجع 0;
 	}
 
-	return z_impl_k_thread_join(thread, timeout);
+	أرجع z_impl_k_thread_join(thread, timeout);
 }
-#include <zephyr/syscalls/k_thread_join_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_join_mrsh.c>
 
-static inline void z_vrfy_k_thread_abort(k_tid_t thread)
+ساكن مضمن فراغ z_vrfy_k_thread_abort(k_tid_t thread)
 {
-	if (thread_obj_validate(thread)) {
-		return;
+	𐤀𐤌 (thread_obj_validate(thread)) {
+		أرجع;
 	}
 
 	K_OOPS(K_SYSCALL_VERIFY_MSG(!z_is_thread_essential(thread),
 				    "aborting essential thread %p", thread));
 
-	z_impl_k_thread_abort((struct k_thread *)thread);
+	z_impl_k_thread_abort((بنية k_thread *)thread);
 }
-#include <zephyr/syscalls/k_thread_abort_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_abort_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-bool k_can_yield(void)
+bool k_can_yield(فراغ)
 {
-	return !(k_is_pre_kernel() || k_is_in_isr() || !arch_cpu_irqs_are_enabled() ||
+	أرجع !(k_is_pre_kernel() || k_is_in_isr() || !arch_cpu_irqs_are_enabled() ||
 		 z_is_idle_thread_object(_current));
 }
 
-void z_impl_k_yield(void)
+فراغ z_impl_k_yield(فراغ)
 {
 	__ASSERT(!arch_is_in_isr(), "");
 
@@ -1910,9 +1910,9 @@ void z_impl_k_yield(void)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_yield(void)
+ساكن مضمن فراغ z_vrfy_k_yield(فراغ)
 {
 	z_impl_k_yield();
 }
-#include <zephyr/syscalls/k_yield_mrsh.c>
+#ضمن <zephyr/syscalls/k_yield_mrsh.c>
 #endif /* CONFIG_USERSPACE */
