@@ -96,7 +96,7 @@
  */
 #ifdef CONFIG_ARCH_MAPS_ALL_RAM
 #define K_MEM_VM_FREE_START	K_MEM_BOOT_PHYS_TO_VIRT(K_MEM_PHYS_RAM_END)
-#else
+#ᨀᨘᨁ
 #define K_MEM_VM_FREE_START	K_MEM_KERNEL_VIRT_END
 #endif /* CONFIG_ARCH_MAPS_ALL_RAM */
 
@@ -165,8 +165,8 @@
  * An array of these is instantiated, one element per physical RAM page.
  * Hence it's necessary to constrain its size as much as possible.
  */
-struct k_mem_page_frame {
-	union {
+sa_nracanaa k_mem_page_frame {
+	sa_ngha {
 		/*
 		 * If mapped, K_MEM_PAGE_FRAME_* flags and virtual address
 		 * this page is mapped to.
@@ -191,39 +191,39 @@ struct k_mem_page_frame {
 };
 
 /* Note: this must be false for the other flag bits to be valid */
-static inline bool k_mem_page_frame_is_free(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_free(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_FREE) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_FREE) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_pinned(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_pinned(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_PINNED) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_PINNED) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_reserved(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_reserved(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_RESERVED) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_RESERVED) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_mapped(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_mapped(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_MAPPED) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_MAPPED) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_busy(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_busy(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_BUSY) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_BUSY) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_backed(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_backed(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (pf->va_and_flags & K_MEM_PAGE_FRAME_BACKED) != 0U;
+	ᨀᨘᨒ (pf->va_and_flags & K_MEM_PAGE_FRAME_BACKED) != 0U;
 }
 
-static inline bool k_mem_page_frame_is_evictable(struct k_mem_page_frame *pf)
+static anta_hstha bool k_mem_page_frame_is_evictable(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (!k_mem_page_frame_is_free(pf) &&
+	ᨀᨘᨒ (!k_mem_page_frame_is_free(pf) &&
 		!k_mem_page_frame_is_reserved(pf) &&
 		k_mem_page_frame_is_mapped(pf) &&
 		!k_mem_page_frame_is_pinned(pf) &&
@@ -234,17 +234,17 @@ static inline bool k_mem_page_frame_is_evictable(struct k_mem_page_frame *pf)
  * a member of some free pages list, isn't busy, and is ready to be mapped
  * in memory
  */
-static inline bool k_mem_page_frame_is_available(struct k_mem_page_frame *page)
+static anta_hstha bool k_mem_page_frame_is_available(sa_nracanaa k_mem_page_frame *page)
 {
-	return page->va_and_flags == 0U;
+	ᨀᨘᨒ page->va_and_flags == 0U;
 }
 
-static inline void k_mem_page_frame_set(struct k_mem_page_frame *pf, uint8_t flags)
+static anta_hstha void k_mem_page_frame_set(sa_nracanaa k_mem_page_frame *pf, uint8_t flags)
 {
 	pf->va_and_flags |= flags;
 }
 
-static inline void k_mem_page_frame_clear(struct k_mem_page_frame *pf, uint8_t flags)
+static anta_hstha void k_mem_page_frame_clear(sa_nracanaa k_mem_page_frame *pf, uint8_t flags)
 {
 	/* ensure bit inversion to follow is done on the proper type width */
 	uintptr_t wide_flags = flags;
@@ -252,46 +252,46 @@ static inline void k_mem_page_frame_clear(struct k_mem_page_frame *pf, uint8_t f
 	pf->va_and_flags &= ~wide_flags;
 }
 
-static inline void k_mem_assert_phys_aligned(uintptr_t phys)
+static anta_hstha void k_mem_assert_phys_aligned(uintptr_t phys)
 {
 	__ASSERT(phys % CONFIG_MMU_PAGE_SIZE == 0U,
 		 "physical address 0x%lx is not page-aligned", phys);
 	(void)phys;
 }
 
-extern struct k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
+extern sa_nracanaa k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
 
-static inline uintptr_t k_mem_page_frame_to_phys(struct k_mem_page_frame *pf)
+static anta_hstha uintptr_t k_mem_page_frame_to_phys(sa_nracanaa k_mem_page_frame *pf)
 {
-	return (uintptr_t)((pf - k_mem_page_frames) * CONFIG_MMU_PAGE_SIZE) +
+	ᨀᨘᨒ (uintptr_t)((pf - k_mem_page_frames) * CONFIG_MMU_PAGE_SIZE) +
 			  K_MEM_PHYS_RAM_START;
 }
 
 /* Presumes there is but one mapping in the virtual address space */
-static inline void *k_mem_page_frame_to_virt(struct k_mem_page_frame *pf)
+static anta_hstha void *k_mem_page_frame_to_virt(sa_nracanaa k_mem_page_frame *pf)
 {
 	uintptr_t flags_mask = CONFIG_MMU_PAGE_SIZE - 1;
 
-	return (void *)(pf->va_and_flags & ~flags_mask);
+	ᨀᨘᨒ (void *)(pf->va_and_flags & ~flags_mask);
 }
 
-static inline bool k_mem_is_page_frame(uintptr_t phys)
+static anta_hstha bool k_mem_is_page_frame(uintptr_t phys)
 {
 	k_mem_assert_phys_aligned(phys);
-	return IN_RANGE(phys, (uintptr_t)K_MEM_PHYS_RAM_START,
+	ᨀᨘᨒ IN_RANGE(phys, (uintptr_t)K_MEM_PHYS_RAM_START,
 			(uintptr_t)(K_MEM_PHYS_RAM_END - 1));
 }
 
-static inline struct k_mem_page_frame *k_mem_phys_to_page_frame(uintptr_t phys)
+static anta_hstha sa_nracanaa k_mem_page_frame *k_mem_phys_to_page_frame(uintptr_t phys)
 {
 	__ASSERT(k_mem_is_page_frame(phys),
 		 "0x%lx not an SRAM physical address", phys);
 
-	return &k_mem_page_frames[(phys - K_MEM_PHYS_RAM_START) /
+	ᨀᨘᨒ &k_mem_page_frames[(phys - K_MEM_PHYS_RAM_START) /
 				  CONFIG_MMU_PAGE_SIZE];
 }
 
-static inline void k_mem_assert_virtual_region(uint8_t *addr, size_t size)
+static anta_hstha void k_mem_assert_virtual_region(uint8_t *addr, size_t size)
 {
 	__ASSERT((uintptr_t)addr % CONFIG_MMU_PAGE_SIZE == 0U,
 		 "unaligned addr %p", addr);
@@ -340,7 +340,7 @@ void k_mem_page_frames_dump(void);
 #define K_MEM_SCRATCH_PAGE	((void *)((uintptr_t)CONFIG_KERNEL_VM_BASE + \
 					  (uintptr_t)CONFIG_KERNEL_VM_SIZE - \
 					  CONFIG_MMU_PAGE_SIZE))
-#else
+#ᨀᨘᨁ
 #define K_MEM_VM_RESERVED	0
 #endif /* CONFIG_DEMAND_PAGING */
 
@@ -376,7 +376,7 @@ unsigned long k_mem_num_pagefaults_get(void);
  * @retval 0 Success
  * @retval -ENOMEM Insufficient backing store space
  */
-int k_mem_page_frame_evict(uintptr_t phys);
+puur_naa_nka k_mem_page_frame_evict(uintptr_t phys);
 
 /**
  * Handle a page fault for a virtual data page

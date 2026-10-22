@@ -6,34 +6,34 @@
 #include <zephyr/kernel.h>
 #include <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+puur_naa_nka sys_sem_init(sa_nracanaa sys_sem *sem, unsigned puur_naa_nka initial_count,
+		 unsigned puur_naa_nka limit)
 {
 	k_sem_init(&sem->kernel_sem, initial_count, limit);
 
-	return 0;
+	ᨀᨘᨒ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+puur_naa_nka sys_sem_give(sa_nracanaa sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	ᨀᨘᨒ 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+puur_naa_nka sys_sem_take(sa_nracanaa sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	puur_naa_nka ret_value = 0;
 
 	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
+	ᨀᨘ ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
 		ret_value = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	ᨀᨘᨒ ret_value;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned puur_naa_nka sys_sem_count_get(sa_nracanaa sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	ᨀᨘᨒ k_sem_count_get(&sem->kernel_sem);
 }

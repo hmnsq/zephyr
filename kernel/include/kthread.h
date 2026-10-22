@@ -27,167 +27,167 @@
  * initial _kernel.threads pointer and the linked list made up of
  * thread->next_thread (until NULL)
  */
-extern struct k_spinlock z_thread_monitor_lock;
+extern sa_nracanaa k_spinlock z_thread_monitor_lock;
 #endif /* CONFIG_THREAD_MONITOR */
 
 #ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+extern sa_nracanaa k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
 #endif /* CONFIG_MULTITHREADING */
 
 void idle(void *unused1, void *unused2, void *unused3);
 
 /* clean up when a thread is aborted */
 
-#if defined(CONFIG_THREAD_MONITOR)
-void z_thread_monitor_exit(struct k_thread *thread);
-#else
+#ᨀᨘ defined(CONFIG_THREAD_MONITOR)
+void z_thread_monitor_exit(sa_nracanaa k_thread *thread);
+#ᨀᨘᨁ
 #define z_thread_monitor_exit(thread) \
 	do {/* nothing */    \
-	} while (false)
+	} ᨀᨛ (false)
 #endif /* CONFIG_THREAD_MONITOR */
 
-void z_thread_abort(struct k_thread *thread);
+void z_thread_abort(sa_nracanaa k_thread *thread);
 
-static inline void thread_schedule_new(struct k_thread *thread, k_timeout_t delay)
+static anta_hstha void thread_schedule_new(sa_nracanaa k_thread *thread, k_timeout_t delay)
 {
 #ifdef CONFIG_SYS_CLOCK_EXISTS
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+	ᨀᨘ (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
 		k_thread_start(thread);
-	} else {
+	} ᨀᨘᨁ {
 		z_add_thread_timeout(thread, delay);
 	}
-#else
-	if (!K_TIMEOUT_EQ(delay, K_FOREVER)) {
+#ᨀᨘᨁ
+	ᨀᨘ (!K_TIMEOUT_EQ(delay, K_FOREVER)) {
 		k_thread_start(thread);
 	}
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 }
 
-static inline int thread_is_preemptible(const struct k_thread *thread)
+static anta_hstha puur_naa_nka thread_is_preemptible(const sa_nracanaa k_thread *thread)
 {
 	/* explanation in kernel_struct.h */
-	return thread->base.preempt <= _PREEMPT_THRESHOLD;
+	ᨀᨘᨒ thread->base.preempt <= _PREEMPT_THRESHOLD;
 }
 
 
-static inline int thread_is_metairq(const struct k_thread *thread)
+static anta_hstha puur_naa_nka thread_is_metairq(const sa_nracanaa k_thread *thread)
 {
-#if CONFIG_NUM_METAIRQ_PRIORITIES > 0
-	return (thread->base.prio - K_HIGHEST_THREAD_PRIO)
+#ᨀᨘ CONFIG_NUM_METAIRQ_PRIORITIES > 0
+	ᨀᨘᨒ (thread->base.prio - K_HIGHEST_THREAD_PRIO)
 		< CONFIG_NUM_METAIRQ_PRIORITIES;
-#else
+#ᨀᨘᨁ
 	ARG_UNUSED(thread);
-	return 0;
+	ᨀᨘᨒ 0;
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES */
 }
 
-static inline bool is_thread_dummy(const struct k_thread *thread)
+static anta_hstha bool is_thread_dummy(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_DUMMY) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_DUMMY) != 0U;
 }
 
-static inline bool z_is_thread_suspended(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_suspended(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_SUSPENDED) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_SUSPENDED) != 0U;
 }
 
-static inline bool z_is_thread_pending(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_pending(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_PENDING) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_PENDING) != 0U;
 }
 
-static inline bool z_is_thread_dead(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_dead(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_DEAD) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_DEAD) != 0U;
 }
 
 /* Return true if the thread is aborting, else false */
-static inline bool z_is_thread_aborting(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_aborting(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_ABORTING) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_ABORTING) != 0U;
 }
 
 /* Return true if the thread is aborting or suspending, else false */
-static inline bool z_is_thread_halting(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_halting(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state &
+	ᨀᨘᨒ (thread->base.thread_state &
 		(_THREAD_ABORTING | _THREAD_SUSPENDING)) != 0U;
 }
 
 
-static inline bool z_is_thread_prevented_from_running(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_prevented_from_running(const sa_nracanaa k_thread *thread)
 {
 	uint8_t state = thread->base.thread_state;
 
-	return (state & (_THREAD_PENDING | _THREAD_SLEEPING | _THREAD_DEAD |
+	ᨀᨘᨒ (state & (_THREAD_PENDING | _THREAD_SLEEPING | _THREAD_DEAD |
 			 _THREAD_DUMMY | _THREAD_SUSPENDED)) != 0U;
 }
 
-static inline bool z_is_thread_timeout_active(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_timeout_active(const sa_nracanaa k_thread *thread)
 {
-	return !z_is_inactive_timeout(&thread->base.timeout);
+	ᨀᨘᨒ !z_is_inactive_timeout(&thread->base.timeout);
 }
 
-static inline bool z_is_thread_ready(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_ready(const sa_nracanaa k_thread *thread)
 {
-	return !z_is_thread_prevented_from_running(thread);
+	ᨀᨘᨒ !z_is_thread_prevented_from_running(thread);
 }
 
-static inline bool z_is_thread_state_set(const struct k_thread *thread, uint32_t state)
+static anta_hstha bool z_is_thread_state_set(const sa_nracanaa k_thread *thread, uint32_t state)
 {
-	return (thread->base.thread_state & state) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & state) != 0U;
 }
 
-static inline bool z_is_thread_queued(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_queued(const sa_nracanaa k_thread *thread)
 {
-	return z_is_thread_state_set(thread, _THREAD_QUEUED);
+	ᨀᨘᨒ z_is_thread_state_set(thread, _THREAD_QUEUED);
 }
 
-static inline void z_mark_thread_as_queued(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_queued(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state |= _THREAD_QUEUED;
 }
 
-static inline void z_mark_thread_as_not_queued(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_not_queued(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state &= ~_THREAD_QUEUED;
 }
 
-static inline void z_mark_thread_as_suspended(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_suspended(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state |= _THREAD_SUSPENDED;
 
 	SYS_PORT_TRACING_FUNC(k_thread, sched_suspend, thread);
 }
 
-static inline void z_mark_thread_as_not_suspended(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_not_suspended(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state &= ~_THREAD_SUSPENDED;
 
 	SYS_PORT_TRACING_FUNC(k_thread, sched_resume, thread);
 }
 
-static inline void z_mark_thread_as_pending(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_pending(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state |= _THREAD_PENDING;
 }
 
-static inline void z_mark_thread_as_not_pending(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_not_pending(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state &= ~_THREAD_PENDING;
 }
 
-static inline bool z_is_thread_sleeping(struct k_thread *thread)
+static anta_hstha bool z_is_thread_sleeping(sa_nracanaa k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_SLEEPING) != 0U;
+	ᨀᨘᨒ (thread->base.thread_state & _THREAD_SLEEPING) != 0U;
 }
 
-static inline void z_mark_thread_as_sleeping(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_sleeping(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state |= _THREAD_SLEEPING;
 }
 
-static inline void z_mark_thread_as_not_sleeping(struct k_thread *thread)
+static anta_hstha void z_mark_thread_as_not_sleeping(sa_nracanaa k_thread *thread)
 {
 	thread->base.thread_state &= ~_THREAD_SLEEPING;
 }
@@ -196,7 +196,7 @@ static inline void z_mark_thread_as_not_sleeping(struct k_thread *thread)
  * This function tags the current thread as essential to system operation.
  * Exceptions raised by this thread will be treated as a fatal system error.
  */
-static inline void z_thread_essential_set(struct k_thread *thread)
+static anta_hstha void z_thread_essential_set(sa_nracanaa k_thread *thread)
 {
 	thread->base.user_options |= K_ESSENTIAL;
 }
@@ -206,7 +206,7 @@ static inline void z_thread_essential_set(struct k_thread *thread)
  * Exceptions raised by this thread may be recoverable.
  * (This is the default tag for a thread.)
  */
-static inline void z_thread_essential_clear(struct k_thread *thread)
+static anta_hstha void z_thread_essential_clear(sa_nracanaa k_thread *thread)
 {
 	thread->base.user_options &= ~K_ESSENTIAL;
 }
@@ -216,34 +216,34 @@ static inline void z_thread_essential_clear(struct k_thread *thread)
  *
  * Returns true if current thread is essential, false if it is not.
  */
-static inline bool z_is_thread_essential(const struct k_thread *thread)
+static anta_hstha bool z_is_thread_essential(const sa_nracanaa k_thread *thread)
 {
-	return (thread->base.user_options & K_ESSENTIAL) == K_ESSENTIAL;
+	ᨀᨘᨒ (thread->base.user_options & K_ESSENTIAL) == K_ESSENTIAL;
 }
 
 
-static ALWAYS_INLINE bool should_preempt(const struct k_thread *thread,
-					 int preempt_ok)
+static ALWAYS_INLINE bool should_preempt(const sa_nracanaa k_thread *thread,
+					 puur_naa_nka preempt_ok)
 {
 	/* Preemption is OK if it's being explicitly allowed by
 	 * software state (e.g. the thread called k_yield())
 	 */
-	if (preempt_ok != 0) {
-		return true;
+	ᨀᨘ (preempt_ok != 0) {
+		ᨀᨘᨒ true;
 	}
 
 	__ASSERT(_current != NULL, "");
 
 	/* Or if we're pended/suspended/dummy (duh) */
-	if (z_is_thread_prevented_from_running(_current)) {
-		return true;
+	ᨀᨘ (z_is_thread_prevented_from_running(_current)) {
+		ᨀᨘᨒ true;
 	}
 
 	/* Otherwise we have to be running a preemptible thread or
 	 * switching to a metairq
 	 */
-	if (thread_is_preemptible(_current) || thread_is_metairq(thread)) {
-		return true;
+	ᨀᨘ (thread_is_preemptible(_current) || thread_is_metairq(thread)) {
+		ᨀᨘᨒ true;
 	}
 
 	/* Edge case on ARM where a thread can be pended out of an
@@ -251,30 +251,30 @@ static ALWAYS_INLINE bool should_preempt(const struct k_thread *thread,
 	 * context switching.  Platforms with atomic swap can never
 	 * hit this.
 	 */
-	if (IS_ENABLED(CONFIG_SWAP_NONATOMIC)
+	ᨀᨘ (IS_ENABLED(CONFIG_SWAP_NONATOMIC)
 	    && z_is_thread_timeout_active(thread)) {
-		return true;
+		ᨀᨘᨒ true;
 	}
 
-	return false;
+	ᨀᨘᨒ false;
 }
 
 
-static inline bool z_is_idle_thread_entry(k_thread_entry_t entry_point)
+static anta_hstha bool z_is_idle_thread_entry(k_thread_entry_t entry_point)
 {
-	return entry_point == idle;
+	ᨀᨘᨒ entry_point == idle;
 }
 
-static inline bool z_is_idle_thread_object(const struct k_thread *thread)
+static anta_hstha bool z_is_idle_thread_object(const sa_nracanaa k_thread *thread)
 {
 #ifdef CONFIG_MULTITHREADING
 #ifdef CONFIG_SMP
-	return thread->base.is_idle;
-#else
-	return thread == &z_idle_threads[0];
+	ᨀᨘᨒ thread->base.is_idle;
+#ᨀᨘᨁ
+	ᨀᨘᨒ thread == &z_idle_threads[0];
 #endif /* CONFIG_SMP */
-#else
-	return false;
+#ᨀᨘᨁ
+	ᨀᨘᨒ false;
 #endif /* CONFIG_MULTITHREADING */
 }
 

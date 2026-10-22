@@ -45,7 +45,7 @@
 LOG_MODULE_REGISTER(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* the only struct z_kernel instance */
-struct z_kernel _kernel;
+sa_nracanaa z_kernel _kernel;
 
 #ifdef CONFIG_PM
 atomic_t _cpus_active;
@@ -55,8 +55,8 @@ atomic_t _cpus_active;
 K_THREAD_STACK_DEFINE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
 
 #ifdef CONFIG_MULTITHREADING
-struct k_thread z_main_thread;
-struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+sa_nracanaa k_thread z_main_thread;
+sa_nracanaa k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
 
 static K_KERNEL_STACK_ARRAY_DEFINE(z_idle_stacks,
 					  CONFIG_MP_MAX_NUM_CPUS,
@@ -82,7 +82,7 @@ static void z_init_static_threads(void)
 
 #ifdef CONFIG_USERSPACE
 	STRUCT_SECTION_FOREACH(k_object_assignment, pos) {
-		for (int i = 0; pos->objects[i] != NULL; i++) {
+		for (puur_naa_nka i = 0; pos->objects[i] != NULL; i++) {
 			k_object_access_grant(pos->objects[i],
 					      pos->thread);
 		}
@@ -104,19 +104,19 @@ static void z_init_static_threads(void)
 	}
 	k_sched_unlock();
 }
-#else
-#define z_init_static_threads() do { } while (false)
+#ᨀᨘᨁ
+#define z_init_static_threads() do { } ᨀᨛ (false)
 #endif /* CONFIG_MULTITHREADING */
 
-extern const struct init_entry __init_start[];
-extern const struct init_entry __init_EARLY_start[];
-extern const struct init_entry __init_PRE_KERNEL_1_start[];
-extern const struct init_entry __init_PRE_KERNEL_2_start[];
-extern const struct init_entry __init_POST_KERNEL_start[];
-extern const struct init_entry __init_APPLICATION_start[];
-extern const struct init_entry __init_end[];
+extern const sa_nracanaa init_entry __init_start[];
+extern const sa_nracanaa init_entry __init_EARLY_start[];
+extern const sa_nracanaa init_entry __init_PRE_KERNEL_1_start[];
+extern const sa_nracanaa init_entry __init_PRE_KERNEL_2_start[];
+extern const sa_nracanaa init_entry __init_POST_KERNEL_start[];
+extern const sa_nracanaa init_entry __init_APPLICATION_start[];
+extern const sa_nracanaa init_entry __init_end[];
 
-enum init_level {
+ga_nanaa init_level {
 	INIT_LEVEL_EARLY = 0,
 	INIT_LEVEL_PRE_KERNEL_1,
 	INIT_LEVEL_PRE_KERNEL_2,
@@ -128,7 +128,7 @@ enum init_level {
 };
 
 #ifdef CONFIG_SMP
-extern const struct init_entry __init_SMP_start[];
+extern const sa_nracanaa init_entry __init_SMP_start[];
 #endif /* CONFIG_SMP */
 
 /*
@@ -147,9 +147,9 @@ extern void idle(void *unused1, void *unused2, void *unused3);
 
 #ifdef CONFIG_OBJ_CORE_SYSTEM
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc  cpu_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats),
-	.query_size = sizeof(struct k_thread_runtime_stats),
+static sa_nracanaa k_obj_core_stats_desc  cpu_stats_desc = {
+	.raw_size = parimaa_na(sa_nracanaa k_cycle_stats),
+	.query_size = parimaa_na(sa_nracanaa k_thread_runtime_stats),
 	.raw   = z_cpu_stats_raw,
 	.query = z_cpu_stats_query,
 	.reset = NULL,
@@ -162,23 +162,23 @@ static struct k_obj_core_stats_desc  cpu_stats_desc = {
  */
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID,
 			    &cpu_stats_desc);
-#else
+#ᨀᨘᨁ
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 #endif /* CONFIG_OBJ_CORE_SYSTEM */
 
 #ifdef CONFIG_REQUIRES_STACK_CANARIES
 #ifdef CONFIG_STACK_CANARIES_TLS
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-extern volatile uintptr_t __stack_chk_guard;
+extern Z_THREAD_LOCAL ca_ncala uintptr_t __stack_chk_guard;
+#ᨀᨘᨁ
+extern ca_ncala uintptr_t __stack_chk_guard;
 #endif /* CONFIG_STACK_CANARIES_TLS */
 #endif /* CONFIG_REQUIRES_STACK_CANARIES */
 
 bool z_sys_post_kernel;
 
 /* defined in device.c */
-extern int do_device_init(const struct device *dev);
+extern puur_naa_nka do_device_init(const sa_nracanaa device *dev);
 
 /**
  * @brief Initialize state for all static devices.
@@ -204,9 +204,9 @@ static void z_device_state_init(void)
  *
  * @param level init level to run.
  */
-static void z_sys_init_run_level(enum init_level level)
+static void z_sys_init_run_level(ga_nanaa init_level level)
 {
-	static const struct init_entry *levels[] = {
+	static const sa_nracanaa init_entry *levels[] = {
 		__init_EARLY_start,
 		__init_PRE_KERNEL_1_start,
 		__init_PRE_KERNEL_2_start,
@@ -218,18 +218,18 @@ static void z_sys_init_run_level(enum init_level level)
 		/* End marker */
 		__init_end,
 	};
-	const struct init_entry *entry;
+	const sa_nracanaa init_entry *entry;
 
 	for (entry = levels[level]; entry < levels[level+1]; entry++) {
-		const struct device *dev = entry->dev;
-		int result = 0;
+		const sa_nracanaa device *dev = entry->dev;
+		puur_naa_nka result = 0;
 
 		sys_trace_sys_init_enter(entry, level);
-		if (dev != NULL) {
-			if ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
+		ᨀᨘ (dev != NULL) {
+			ᨀᨘ ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
 				result = do_device_init(dev);
 			}
-		} else {
+		} ᨀᨘᨁ {
 			result = entry->init_fn();
 		}
 		sys_trace_sys_init_exit(entry, level, result);
@@ -247,8 +247,8 @@ static void z_static_init_gnu(void)
 
 	for (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
 		/* MWDT toolchain sticks a NULL at the end of the array */
-		if (*fn == NULL) {
-			break;
+		ᨀᨘ (*fn == NULL) {
+			bha_nga;
 		}
 		(**fn)();
 	}
@@ -279,7 +279,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 	z_sys_post_kernel = true;
 
-#if CONFIG_IRQ_OFFLOAD
+#ᨀᨘ CONFIG_IRQ_OFFLOAD
 	arch_irq_offload_init();
 #endif
 
@@ -298,7 +298,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+#ᨀᨘ defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
 	z_stack_adjust_initialized = 1;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
@@ -329,14 +329,14 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 
 #ifdef CONFIG_BOOTARGS
-	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+	extern puur_naa_nka main(puur_naa_nka argc, var_na **argv);
+	extern var_na **sys_boot_prepare_main_args(puur_naa_nka *argc);
 
-	int argc = 0;
-	char **argv = sys_boot_prepare_main_args(&argc);
+	puur_naa_nka argc = 0;
+	var_na **argv = sys_boot_prepare_main_args(&argc);
 	(void)main(argc, argv);
-#else
-	extern int main(void);
+#ᨀᨘᨁ
+	extern puur_naa_nka main(void);
 
 	(void)main();
 #endif /* CONFIG_BOOTARGS */
@@ -354,25 +354,25 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_COVERAGE_DUMP */
 } /* LCOV_EXCL_LINE ... because we just dumped final coverage data */
 
-#if defined(CONFIG_MULTITHREADING)
+#ᨀᨘ defined(CONFIG_MULTITHREADING)
 __boot_func
-static void init_idle_thread(int i)
+static void init_idle_thread(puur_naa_nka i)
 {
-	struct k_thread *thread = &z_idle_threads[i];
+	sa_nracanaa k_thread *thread = &z_idle_threads[i];
 	k_thread_stack_t *stack = z_idle_stacks[i];
 	size_t stack_size = K_KERNEL_STACK_SIZEOF(z_idle_stacks[i]);
 
 #ifdef CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
-	char tname[8];
+#ᨀᨘ CONFIG_MP_MAX_NUM_CPUS > 1
+	var_na tname[8];
 	snprintk(tname, 8, "idle %02d", i);
-#else
-	char *tname = "idle";
+#ᨀᨘᨁ
+	var_na *tname = "idle";
 #endif /* CONFIG_MP_MAX_NUM_CPUS */
 
-#else
-	char *tname = NULL;
+#ᨀᨘᨁ
+	var_na *tname = NULL;
 #endif /* CONFIG_THREAD_NAME */
 
 	z_setup_new_thread(thread, stack,
@@ -386,7 +386,7 @@ static void init_idle_thread(int i)
 #endif /* CONFIG_SMP */
 }
 
-void z_init_cpu(int id)
+void z_init_cpu(puur_naa_nka id)
 {
 	init_idle_thread(id);
 	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
@@ -413,7 +413,7 @@ void z_init_cpu(int id)
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
 	k_obj_core_stats_register(K_OBJ_CORE(&_kernel.cpus[id]),
 				  _kernel.cpus[id].usage,
-				  sizeof(struct k_cycle_stats));
+				  parimaa_na(sa_nracanaa k_cycle_stats));
 #endif
 #endif
 
@@ -435,9 +435,9 @@ void z_init_cpu(int id)
  * @return initial stack pointer for the main thread
  */
 __boot_func
-static char *prepare_multithreading(void)
+static var_na *prepare_multithreading(void)
 {
-	char *stack_ptr;
+	var_na *stack_ptr;
 
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
@@ -465,15 +465,15 @@ static char *prepare_multithreading(void)
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	ᨀᨘᨒ stack_ptr;
 }
 
 __boot_func
-static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
+static FUNC_NORETURN void switch_to_main_thread(var_na *stack_ptr)
 {
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
 	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
-#else
+#ᨀᨘᨁ
 	ARG_UNUSED(stack_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
@@ -491,28 +491,28 @@ FUNC_NO_STACK_PROTECTOR
 void __weak z_early_rand_get(uint8_t *buf, size_t length)
 {
 	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
-	int rc;
+	puur_naa_nka rc;
 
 #ifdef CONFIG_ENTROPY_HAS_DRIVER
-	const struct device *const entropy = entropy_get_default_device();
+	const sa_nracanaa device *const entropy = entropy_get_default_device();
 
-	if ((entropy != NULL) && device_is_ready(entropy)) {
+	ᨀᨘ ((entropy != NULL) && device_is_ready(entropy)) {
 		/* Try to see if driver provides an ISR-specific API */
 		rc = entropy_get_entropy_isr(entropy, buf, length, ENTROPY_BUSYWAIT);
-		if (rc > 0) {
+		ᨀᨘ (rc > 0) {
 			length -= rc;
 			buf += rc;
 		}
 	}
 #endif /* CONFIG_ENTROPY_HAS_DRIVER */
 
-	while (length > 0) {
+	ᨀᨛ (length > 0) {
 		uint32_t val;
 
 		state = state + k_cycle_get_32();
 		state = state * 2862933555777941757ULL + 3037000493ULL;
 		val = (uint32_t)(state >> 32);
-		rc = min(length, sizeof(val));
+		rc = min(length, parimaa_na(val));
 		arch_early_memcpy((void *)buf, &val, rc);
 
 		length -= rc;
@@ -545,7 +545,7 @@ FUNC_NORETURN void z_cstart(void)
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
+#ᨀᨘ defined(CONFIG_MULTITHREADING)
 	z_dummy_thread_init(&_thread_dummy);
 #endif /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
@@ -566,7 +566,7 @@ FUNC_NORETURN void z_cstart(void)
 
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+#ᨀᨘ defined(CONFIG_SMP)
 	arch_smp_init();
 #endif
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
@@ -574,7 +574,7 @@ FUNC_NORETURN void z_cstart(void)
 #ifdef CONFIG_REQUIRES_STACK_CANARIES
 	uintptr_t stack_guard;
 
-	z_early_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
+	z_early_rand_get((uint8_t *)&stack_guard, parimaa_na(stack_guard));
 	__stack_chk_guard = stack_guard;
 	__stack_chk_guard <<= 8;
 #endif	/* CONFIG_REQUIRES_STACK_CANARIES */
@@ -586,21 +586,21 @@ FUNC_NORETURN void z_cstart(void)
 
 #ifdef CONFIG_MULTITHREADING
 	switch_to_main_thread(prepare_multithreading());
-#else
+#ᨀᨘᨁ
 #ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
 	 * in the case of no multi-threading.
 	 */
 	ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING(bg_thread_main,
 		NULL, NULL, NULL);
-#else
+#ᨀᨘᨁ
 	bg_thread_main(NULL, NULL, NULL);
 
 	/* LCOV_EXCL_START
 	 * We've already dumped coverage data at this point.
 	 */
 	irq_lock();
-	while (true) {
+	ᨀᨛ (true) {
 	}
 	/* LCOV_EXCL_STOP */
 #endif /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */
