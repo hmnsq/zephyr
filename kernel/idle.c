@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/llext/symbol.h>
-#include <zephyr/pm/pm.h>
-#include <stdbool.h>
-#include <zephyr/logging/log.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <zephyr/toolchain.h>
+#অন্তর্ভাব <zephyr/linker/sections.h>
+#অন্তর্ভাব <zephyr/drivers/timer/system_timer.h>
+#অন্তর্ভাব <zephyr/llext/symbol.h>
+#অন্তর্ভাব <zephyr/pm/pm.h>
+#অন্তর্ভাব <stdbool.h>
+#অন্তর্ভাব <zephyr/logging/log.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kswap.h>
-#include <wait_q.h>
+#অন্তর্ভাব <ksched.h>
+#অন্তর্ভাব <kswap.h>
+#অন্তর্ভাব <wait_q.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-void idle(void *unused1, void *unused2, void *unused3)
+শূন্য idle(শূন্য *unused1, শূন্য *unused2, শূন্য *unused3)
 {
 	ARG_UNUSED(unused1);
 	ARG_UNUSED(unused2);
@@ -27,7 +27,7 @@ void idle(void *unused1, void *unused2, void *unused3)
 
 	__ASSERT_NO_MSG(_current->base.prio >= 0);
 
-	while (true) {
+	যখন (true) {
 		/* SMP systems without a working IPI can't actual
 		 * enter an idle state, because they can't be notified
 		 * of scheduler changes (i.e. threads they should
@@ -36,8 +36,8 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * lock and/or timer driver.  This is intended as a
 		 * fallback configuration for new platform bringup.
 		 */
-		if (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
-			for (volatile int i = 0; i < 100000; i++) {
+		যদি (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
+			জন্য (অস্থির পূর্ণসংখ্যা i = 0; i < 100000; i++) {
 				/* Empty loop */
 			}
 			z_swap_unlocked();
@@ -48,16 +48,16 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * unmasked.  It does not take a spinlock or other
 		 * higher level construct.
 		 */
-		unsigned int key = arch_irq_lock();
+		unsigned পূর্ণসংখ্যা চাবি = arch_irq_lock();
 
 #ifdef CONFIG_PM
 		bool system_suspended = false;
 
-		if (!k_is_pre_kernel()) {
+		যদি (!k_is_pre_kernel()) {
 			/* Value preserving: the helper returns either at most
 			 * SYS_CLOCK_MAX_WAIT (== INT32_MAX) or K_TICKS_FOREVER.
 			 */
-			_kernel.idle = (int32_t)z_get_next_timeout_expiry();
+			_kernel.idle = (int32_t)z_get_পরবর্তী_timeout_expiry();
 
 			/*
 			 * Call the suspend hook function of the soc interface
@@ -68,18 +68,18 @@ void idle(void *unused1, void *unused2, void *unused3)
 			system_suspended = pm_system_suspend(_kernel.idle);
 		}
 
-		if (system_suspended) {
-			arch_irq_unlock(key);
-		} else {
+		যদি (system_suspended) {
+			arch_irq_unlock(চাবি);
+		} অন্যথা {
 			k_cpu_idle();
 		}
-#else
-		ARG_UNUSED(key);
+#অন্যথা
+		ARG_UNUSED(চাবি);
 		k_cpu_idle();
 #endif /* CONFIG_PM */
 
-#if !defined(CONFIG_PREEMPT_ENABLED)
-# if !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
+#যদি !defined(CONFIG_PREEMPT_ENABLED)
+# যদি !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
 		/* A legacy mess: the idle thread is by definition
 		 * preemptible as far as the modern scheduler is
 		 * concerned, but older platforms use
@@ -89,7 +89,7 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * explicitly yield in the idle thread otherwise
 		 * nothing else will run once it starts.
 		 */
-		if (_kernel.ready_q.cache != _current) {
+		যদি (_kernel.ready_q.cache != _current) {
 			z_swap_unlocked();
 		}
 # endif /* !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC) */
@@ -97,11 +97,11 @@ void idle(void *unused1, void *unused2, void *unused3)
 	}
 }
 
-void __weak arch_spin_relax(void)
+শূন্য __weak arch_spin_relax(শূন্য)
 {
 	__ASSERT(!arch_cpu_irqs_are_enabled(),
 		 "this is meant to be called with IRQs disabled");
 
 	arch_nop();
 }
-EXPORT_SYMBOL(arch_spin_relax);
+EXPORT_প্রতীক(arch_spin_relax);

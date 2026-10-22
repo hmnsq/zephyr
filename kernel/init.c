@@ -11,78 +11,78 @@
  * This module contains routines that are used to initialize the kernel.
  */
 
-#include <ctype.h>
-#include <stdbool.h>
-#include <string.h>
-#include <offsets_short.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/debug/stack.h>
-#include <zephyr/random/random.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/device.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/platform/hooks.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <ipi.h>
-#include <zephyr/sys/dlist.h>
-#include <kernel_internal.h>
-#include <zephyr/drivers/entropy.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/debug/gcov.h>
-#include <kswap.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/arch/common/init.h>
-#include <scheduler.h>
+#অন্তর্ভাব <ctype.h>
+#অন্তর্ভাব <stdbool.h>
+#অন্তর্ভাব <string.h>
+#অন্তর্ভাব <offsets_short.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <zephyr/sys/minmax.h>
+#অন্তর্ভাব <zephyr/sys/printk.h>
+#অন্তর্ভাব <zephyr/debug/stack.h>
+#অন্তর্ভাব <zephyr/random/random.h>
+#অন্তর্ভাব <zephyr/linker/sections.h>
+#অন্তর্ভাব <zephyr/toolchain.h>
+#অন্তর্ভাব <zephyr/device.h>
+#অন্তর্ভাব <zephyr/init.h>
+#অন্তর্ভাব <zephyr/linker/linker-defs.h>
+#অন্তর্ভাব <zephyr/platform/hooks.h>
+#অন্তর্ভাব <ksched.h>
+#অন্তর্ভাব <kthread.h>
+#অন্তর্ভাব <ipi.h>
+#অন্তর্ভাব <zephyr/sys/dlist.h>
+#অন্তর্ভাব <kernel_internal.h>
+#অন্তর্ভাব <zephyr/drivers/entropy.h>
+#অন্তর্ভাব <zephyr/logging/log_ctrl.h>
+#অন্তর্ভাব <zephyr/tracing/tracing.h>
+#অন্তর্ভাব <zephyr/debug/gcov.h>
+#অন্তর্ভাব <kswap.h>
+#অন্তর্ভাব <zephyr/timing/timing.h>
+#অন্তর্ভাব <zephyr/logging/log.h>
+#অন্তর্ভাব <zephyr/internal/syscall_handler.h>
+#অন্তর্ভাব <zephyr/arch/common/init.h>
+#অন্তর্ভাব <scheduler.h>
 
 LOG_MODULE_REGISTER(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* the only struct z_kernel instance */
-struct z_kernel _kernel;
+কাঠামো z_kernel _kernel;
 
 #ifdef CONFIG_PM
 atomic_t _cpus_active;
 #endif
 
 /* init/main and idle threads */
-K_THREAD_STACK_DEFINE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_THREAD_স্তূপ_DEFINE(z_main_স্তূপ, CONFIG_MAIN_স্তূপ_আকার);
 
 #ifdef CONFIG_MULTITHREADING
-struct k_thread z_main_thread;
-struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+কাঠামো k_thread z_main_thread;
+কাঠামো k_thread z_idle_threads[CONFIG_MP_MAX_অঙ্ক_CPUS];
 
-static K_KERNEL_STACK_ARRAY_DEFINE(z_idle_stacks,
-					  CONFIG_MP_MAX_NUM_CPUS,
-					  CONFIG_IDLE_STACK_SIZE);
+স্থির K_KERNEL_স্তূপ_ARRAY_DEFINE(z_idle_stacks,
+					  CONFIG_MP_MAX_অঙ্ক_CPUS,
+					  CONFIG_IDLE_স্তূপ_আকার);
 
-static void z_init_static_threads(void)
+স্থির শূন্য z_init_static_threads(শূন্য)
 {
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
+	STRUCT_SECTION_FOREACH(static_thread_তথ্য, thread_তথ্য) {
 		z_setup_new_thread(
-			thread_data->init_thread,
-			thread_data->init_stack,
-			thread_data->init_stack_size,
-			thread_data->init_entry,
-			thread_data->init_p1,
-			thread_data->init_p2,
-			thread_data->init_p3,
-			thread_data->init_prio,
-			thread_data->init_options,
-			thread_data->init_name);
+			thread_তথ্য->init_thread,
+			thread_তথ্য->init_স্তূপ,
+			thread_তথ্য->init_স্তূপ_আকার,
+			thread_তথ্য->init_entry,
+			thread_তথ্য->init_p1,
+			thread_তথ্য->init_p2,
+			thread_তথ্য->init_p3,
+			thread_তথ্য->init_prio,
+			thread_তথ্য->init_options,
+			thread_তথ্য->init_name);
 
-		thread_data->init_thread->init_data = thread_data;
+		thread_তথ্য->init_thread->init_তথ্য = thread_তথ্য;
 	}
 
 #ifdef CONFIG_USERSPACE
 	STRUCT_SECTION_FOREACH(k_object_assignment, pos) {
-		for (int i = 0; pos->objects[i] != NULL; i++) {
+		জন্য (পূর্ণসংখ্যা i = 0; pos->objects[i] != ফাঁকা; i++) {
 			k_object_access_grant(pos->objects[i],
 					      pos->thread);
 		}
@@ -97,26 +97,26 @@ static void z_init_static_threads(void)
 	 * until they are all started.
 	 */
 	k_sched_lock();
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
-		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_data);
+	STRUCT_SECTION_FOREACH(static_thread_তথ্য, thread_তথ্য) {
+		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_তথ্য);
 
-		thread_schedule_new(thread_data->init_thread, init_delay);
+		thread_schedule_new(thread_তথ্য->init_thread, init_delay);
 	}
 	k_sched_unlock();
 }
-#else
-#define z_init_static_threads() do { } while (false)
+#অন্যথা
+#define z_init_static_threads() করো { } যখন (false)
 #endif /* CONFIG_MULTITHREADING */
 
-extern const struct init_entry __init_start[];
-extern const struct init_entry __init_EARLY_start[];
-extern const struct init_entry __init_PRE_KERNEL_1_start[];
-extern const struct init_entry __init_PRE_KERNEL_2_start[];
-extern const struct init_entry __init_POST_KERNEL_start[];
-extern const struct init_entry __init_APPLICATION_start[];
-extern const struct init_entry __init_end[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_EARLY_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_PRE_KERNEL_1_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_PRE_KERNEL_2_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_POST_KERNEL_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_APPLICATION_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_end[];
 
-enum init_level {
+গণনা init_level {
 	INIT_LEVEL_EARLY = 0,
 	INIT_LEVEL_PRE_KERNEL_1,
 	INIT_LEVEL_PRE_KERNEL_2,
@@ -128,7 +128,7 @@ enum init_level {
 };
 
 #ifdef CONFIG_SMP
-extern const struct init_entry __init_SMP_start[];
+বাহ্যিক ধ্রুবক কাঠামো init_entry __init_SMP_start[];
 #endif /* CONFIG_SMP */
 
 /*
@@ -139,22 +139,22 @@ extern const struct init_entry __init_SMP_start[];
  * of this area is safe since interrupts are disabled until the kernel context
  * switches to the init thread.
  */
-K_KERNEL_STACK_ARRAY_DEFINE(z_interrupt_stacks,
-				   CONFIG_MP_MAX_NUM_CPUS,
-				   CONFIG_ISR_STACK_SIZE);
+K_KERNEL_স্তূপ_ARRAY_DEFINE(z_interrupt_stacks,
+				   CONFIG_MP_MAX_অঙ্ক_CPUS,
+				   CONFIG_ISR_স্তূপ_আকার);
 
-extern void idle(void *unused1, void *unused2, void *unused3);
+বাহ্যিক শূন্য idle(শূন্য *unused1, শূন্য *unused2, শূন্য *unused3);
 
 #ifdef CONFIG_OBJ_CORE_SYSTEM
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc  cpu_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats),
-	.query_size = sizeof(struct k_thread_runtime_stats),
+স্থির কাঠামো k_obj_core_stats_desc  cpu_stats_desc = {
+	.raw_আকার = আকার(কাঠামো k_cycle_stats),
+	.query_আকার = আকার(কাঠামো k_thread_runtime_stats),
 	.raw   = z_cpu_stats_raw,
 	.query = z_cpu_stats_query,
-	.reset = NULL,
-	.disable = NULL,
-	.enable  = NULL,
+	.reset = ফাঁকা,
+	.disable = ফাঁকা,
+	.enable  = ফাঁকা,
 };
 
 /* CPU object cores have no static instances to walk; each CPU links its own
@@ -162,23 +162,23 @@ static struct k_obj_core_stats_desc  cpu_stats_desc = {
  */
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID,
 			    &cpu_stats_desc);
-#else
-K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
+#অন্যথা
+K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, ফাঁকা);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 #endif /* CONFIG_OBJ_CORE_SYSTEM */
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-#ifdef CONFIG_STACK_CANARIES_TLS
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-extern volatile uintptr_t __stack_chk_guard;
+#ifdef CONFIG_REQUIRES_স্তূপ_CANARIES
+#ifdef CONFIG_স্তূপ_CANARIES_TLS
+বাহ্যিক Z_THREAD_LOCAL অস্থির uintptr_t __stack_chk_guard;
+#অন্যথা
+বাহ্যিক অস্থির uintptr_t __stack_chk_guard;
 #endif /* CONFIG_STACK_CANARIES_TLS */
 #endif /* CONFIG_REQUIRES_STACK_CANARIES */
 
 bool z_sys_post_kernel;
 
 /* defined in device.c */
-extern int do_device_init(const struct device *dev);
+বাহ্যিক পূর্ণসংখ্যা do_device_init(ধ্রুবক কাঠামো device *dev);
 
 /**
  * @brief Initialize state for all static devices.
@@ -186,7 +186,7 @@ extern int do_device_init(const struct device *dev);
  * The state object is always zero-initialized, but this may not be
  * sufficient.
  */
-static void z_device_state_init(void)
+স্থির শূন্য z_device_state_init(শূন্য)
 {
 	STRUCT_SECTION_FOREACH(device, dev) {
 		k_object_init(dev);
@@ -204,9 +204,9 @@ static void z_device_state_init(void)
  *
  * @param level init level to run.
  */
-static void z_sys_init_run_level(enum init_level level)
+স্থির শূন্য z_sys_init_run_level(গণনা init_level level)
 {
-	static const struct init_entry *levels[] = {
+	স্থির ধ্রুবক কাঠামো init_entry *levels[] = {
 		__init_EARLY_start,
 		__init_PRE_KERNEL_1_start,
 		__init_PRE_KERNEL_2_start,
@@ -218,37 +218,37 @@ static void z_sys_init_run_level(enum init_level level)
 		/* End marker */
 		__init_end,
 	};
-	const struct init_entry *entry;
+	ধ্রুবক কাঠামো init_entry *entry;
 
-	for (entry = levels[level]; entry < levels[level+1]; entry++) {
-		const struct device *dev = entry->dev;
-		int result = 0;
+	জন্য (entry = levels[level]; entry < levels[level+1]; entry++) {
+		ধ্রুবক কাঠামো device *dev = entry->dev;
+		পূর্ণসংখ্যা ফলাফল = 0;
 
 		sys_trace_sys_init_enter(entry, level);
-		if (dev != NULL) {
-			if ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
-				result = do_device_init(dev);
+		যদি (dev != ফাঁকা) {
+			যদি ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
+				ফলাফল = do_device_init(dev);
 			}
-		} else {
-			result = entry->init_fn();
+		} অন্যথা {
+			ফলাফল = entry->init_fn();
 		}
-		sys_trace_sys_init_exit(entry, level, result);
+		sys_trace_sys_init_exit(entry, level, ফলাফল);
 	}
 }
 
 #ifdef CONFIG_STATIC_INIT_GNU
 
-extern void (*__zephyr_init_array_start[])();
-extern void (*__zephyr_init_array_end[])();
+বাহ্যিক শূন্য (*__zephyr_init_array_start[])();
+বাহ্যিক শূন্য (*__zephyr_init_array_end[])();
 
-static void z_static_init_gnu(void)
+স্থির শূন্য z_static_init_gnu(শূন্য)
 {
-	void	(**fn)();
+	শূন্য	(**fn)();
 
-	for (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
+	জন্য (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
 		/* MWDT toolchain sticks a NULL at the end of the array */
-		if (*fn == NULL) {
-			break;
+		যদি (*fn == ফাঁকা) {
+			বিরতি;
 		}
 		(**fn)();
 	}
@@ -263,7 +263,7 @@ static void z_static_init_gnu(void)
  * init functions, then invokes application's main() routine.
  */
 __boot_func
-static void bg_thread_main(void *unused1, void *unused2, void *unused3)
+স্থির শূন্য bg_thread_main(শূন্য *unused1, শূন্য *unused2, শূন্য *unused3)
 {
 	ARG_UNUSED(unused1);
 	ARG_UNUSED(unused2);
@@ -279,7 +279,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 	z_sys_post_kernel = true;
 
-#if CONFIG_IRQ_OFFLOAD
+#যদি CONFIG_IRQ_OFFLOAD
 	arch_irq_offload_init();
 #endif
 
@@ -298,8 +298,8 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-	z_stack_adjust_initialized = 1;
+#যদি defined(CONFIG_স্তূপ_POINTER_RANDOM) && (CONFIG_স্তূপ_POINTER_RANDOM != 0)
+	z_স্তূপ_adjust_initialized = 1;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
 #ifdef CONFIG_STATIC_INIT_GNU
@@ -329,16 +329,16 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 
 #ifdef CONFIG_BOOTARGS
-	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+	বাহ্যিক পূর্ণসংখ্যা প্রধান(পূর্ণসংখ্যা argc, অক্ষর **argv);
+	বাহ্যিক অক্ষর **sys_boot_prepare_main_args(পূর্ণসংখ্যা *argc);
 
-	int argc = 0;
-	char **argv = sys_boot_prepare_main_args(&argc);
-	(void)main(argc, argv);
-#else
-	extern int main(void);
+	পূর্ণসংখ্যা argc = 0;
+	অক্ষর **argv = sys_boot_prepare_main_args(&argc);
+	(শূন্য)প্রধান(argc, argv);
+#অন্যথা
+	বাহ্যিক পূর্ণসংখ্যা প্রধান(শূন্য);
 
-	(void)main();
+	(শূন্য)প্রধান();
 #endif /* CONFIG_BOOTARGS */
 
 #ifdef CONFIG_MULTITHREADING
@@ -349,35 +349,35 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #ifdef CONFIG_COVERAGE_DUMP
 	/* Dump coverage data once the main() has exited. */
 	gcov_coverage_dump();
-#elif defined(CONFIG_COVERAGE_SEMIHOST)
+#নতুবা_যদি defined(CONFIG_COVERAGE_SEMIHOST)
 	gcov_coverage_semihost();
 #endif /* CONFIG_COVERAGE_DUMP */
 } /* LCOV_EXCL_LINE ... because we just dumped final coverage data */
 
-#if defined(CONFIG_MULTITHREADING)
+#যদি defined(CONFIG_MULTITHREADING)
 __boot_func
-static void init_idle_thread(int i)
+স্থির শূন্য init_idle_thread(পূর্ণসংখ্যা i)
 {
-	struct k_thread *thread = &z_idle_threads[i];
-	k_thread_stack_t *stack = z_idle_stacks[i];
-	size_t stack_size = K_KERNEL_STACK_SIZEOF(z_idle_stacks[i]);
+	কাঠামো k_thread *thread = &z_idle_threads[i];
+	k_thread_স্তূপ_t *স্তূপ = z_idle_stacks[i];
+	size_t স্তূপ_আকার = K_KERNEL_স্তূপ_SIZEOF(z_idle_stacks[i]);
 
 #ifdef CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
-	char tname[8];
+#যদি CONFIG_MP_MAX_অঙ্ক_CPUS > 1
+	অক্ষর tname[8];
 	snprintk(tname, 8, "idle %02d", i);
-#else
-	char *tname = "idle";
+#অন্যথা
+	অক্ষর *tname = "idle";
 #endif /* CONFIG_MP_MAX_NUM_CPUS */
 
-#else
-	char *tname = NULL;
+#অন্যথা
+	অক্ষর *tname = ফাঁকা;
 #endif /* CONFIG_THREAD_NAME */
 
-	z_setup_new_thread(thread, stack,
-			  stack_size, idle, &_kernel.cpus[i],
-			  NULL, NULL, K_IDLE_PRIO, K_ESSENTIAL,
+	z_setup_new_thread(thread, স্তূপ,
+			  স্তূপ_আকার, idle, &_kernel.cpus[i],
+			  ফাঁকা, ফাঁকা, K_IDLE_PRIO, K_ESSENTIAL,
 			  tname);
 	z_mark_thread_as_not_sleeping(thread);
 
@@ -386,14 +386,14 @@ static void init_idle_thread(int i)
 #endif /* CONFIG_SMP */
 }
 
-void z_init_cpu(int id)
+শূন্য z_init_cpu(পূর্ণসংখ্যা id)
 {
 	init_idle_thread(id);
 	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
 	_kernel.cpus[id].id = id;
-	_kernel.cpus[id].irq_stack =
-		(K_KERNEL_STACK_BUFFER(z_interrupt_stacks[id]) +
-		 K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[id]));
+	_kernel.cpus[id].irq_স্তূপ =
+		(K_KERNEL_স্তূপ_বাফার(z_interrupt_stacks[id]) +
+		 K_KERNEL_স্তূপ_SIZEOF(z_interrupt_stacks[id]));
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
 	_kernel.cpus[id].usage = &_kernel.usage[id];
 	_kernel.cpus[id].usage->track_usage =
@@ -413,7 +413,7 @@ void z_init_cpu(int id)
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
 	k_obj_core_stats_register(K_OBJ_CORE(&_kernel.cpus[id]),
 				  _kernel.cpus[id].usage,
-				  sizeof(struct k_cycle_stats));
+				  আকার(কাঠামো k_cycle_stats));
 #endif
 #endif
 
@@ -435,9 +435,9 @@ void z_init_cpu(int id)
  * @return initial stack pointer for the main thread
  */
 __boot_func
-static char *prepare_multithreading(void)
+স্থির অক্ষর *prepare_multithreading(শূন্য)
 {
-	char *stack_ptr;
+	অক্ষর *স্তূপ_ptr;
 
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
@@ -454,10 +454,10 @@ static char *prepare_multithreading(void)
 	 */
 	_kernel.ready_q.cache = &z_main_thread;
 #endif /* CONFIG_SMP */
-	stack_ptr = z_setup_new_thread(&z_main_thread, z_main_stack,
-				       K_THREAD_STACK_SIZEOF(z_main_stack),
+	স্তূপ_ptr = z_setup_new_thread(&z_main_thread, z_main_স্তূপ,
+				       K_THREAD_স্তূপ_SIZEOF(z_main_স্তূপ),
 				       bg_thread_main,
-				       NULL, NULL, NULL,
+				       ফাঁকা, ফাঁকা, ফাঁকা,
 				       CONFIG_MAIN_THREAD_PRIORITY,
 				       K_ESSENTIAL, "main");
 	z_mark_thread_as_not_sleeping(&z_main_thread);
@@ -465,16 +465,16 @@ static char *prepare_multithreading(void)
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	ফেরত স্তূপ_ptr;
 }
 
 __boot_func
-static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
+স্থির FUNC_NORETURN শূন্য switch_to_main_thread(অক্ষর *স্তূপ_ptr)
 {
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
-	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
-#else
-	ARG_UNUSED(stack_ptr);
+	arch_switch_to_main_thread(&z_main_thread, স্তূপ_ptr, bg_thread_main);
+#অন্যথা
+	ARG_UNUSED(স্তূপ_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
 	 * current fake thread is not on a wait queue or ready queue, so it
@@ -487,35 +487,35 @@ static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
 #endif /* CONFIG_MULTITHREADING */
 
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-void __weak z_early_rand_get(uint8_t *buf, size_t length)
+FUNC_NO_স্তূপ_PROTECTOR
+শূন্য __weak z_early_rand_get(uint8_t *buf, size_t দৈর্ঘ্য)
 {
-	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
-	int rc;
+	স্থির uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
+	পূর্ণসংখ্যা rc;
 
 #ifdef CONFIG_ENTROPY_HAS_DRIVER
-	const struct device *const entropy = entropy_get_default_device();
+	ধ্রুবক কাঠামো device *ধ্রুবক entropy = entropy_get_default_device();
 
-	if ((entropy != NULL) && device_is_ready(entropy)) {
+	যদি ((entropy != ফাঁকা) && device_is_ready(entropy)) {
 		/* Try to see if driver provides an ISR-specific API */
-		rc = entropy_get_entropy_isr(entropy, buf, length, ENTROPY_BUSYWAIT);
-		if (rc > 0) {
-			length -= rc;
+		rc = entropy_get_entropy_isr(entropy, buf, দৈর্ঘ্য, ENTROPY_BUSYWAIT);
+		যদি (rc > 0) {
+			দৈর্ঘ্য -= rc;
 			buf += rc;
 		}
 	}
 #endif /* CONFIG_ENTROPY_HAS_DRIVER */
 
-	while (length > 0) {
+	যখন (দৈর্ঘ্য > 0) {
 		uint32_t val;
 
 		state = state + k_cycle_get_32();
 		state = state * 2862933555777941757ULL + 3037000493ULL;
 		val = (uint32_t)(state >> 32);
-		rc = min(length, sizeof(val));
-		arch_early_memcpy((void *)buf, &val, rc);
+		rc = min(দৈর্ঘ্য, আকার(val));
+		arch_early_memcpy((শূন্য *)buf, &val, rc);
 
-		length -= rc;
+		দৈর্ঘ্য -= rc;
 		buf += rc;
 	}
 }
@@ -531,8 +531,8 @@ void __weak z_early_rand_get(uint8_t *buf, size_t length)
  * @return Does not return
  */
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-FUNC_NORETURN void z_cstart(void)
+FUNC_NO_স্তূপ_PROTECTOR
+FUNC_NORETURN শূন্য z_cstart(শূন্য)
 {
 	/* gcov hook needed to get the coverage report.*/
 	gcov_static_init();
@@ -545,7 +545,7 @@ FUNC_NORETURN void z_cstart(void)
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
+#যদি defined(CONFIG_MULTITHREADING)
 	z_dummy_thread_init(&_thread_dummy);
 #endif /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
@@ -566,16 +566,16 @@ FUNC_NORETURN void z_cstart(void)
 
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+#যদি defined(CONFIG_SMP)
 	arch_smp_init();
 #endif
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-	uintptr_t stack_guard;
+#ifdef CONFIG_REQUIRES_স্তূপ_CANARIES
+	uintptr_t স্তূপ_guard;
 
-	z_early_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	z_early_rand_get((uint8_t *)&স্তূপ_guard, আকার(স্তূপ_guard));
+	__stack_chk_guard = স্তূপ_guard;
 	__stack_chk_guard <<= 8;
 #endif	/* CONFIG_REQUIRES_STACK_CANARIES */
 
@@ -586,21 +586,21 @@ FUNC_NORETURN void z_cstart(void)
 
 #ifdef CONFIG_MULTITHREADING
 	switch_to_main_thread(prepare_multithreading());
-#else
+#অন্যথা
 #ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
 	 * in the case of no multi-threading.
 	 */
 	ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING(bg_thread_main,
-		NULL, NULL, NULL);
-#else
-	bg_thread_main(NULL, NULL, NULL);
+		ফাঁকা, ফাঁকা, ফাঁকা);
+#অন্যথা
+	bg_thread_main(ফাঁকা, ফাঁকা, ফাঁকা);
 
 	/* LCOV_EXCL_START
 	 * We've already dumped coverage data at this point.
 	 */
 	irq_lock();
-	while (true) {
+	যখন (true) {
 	}
 	/* LCOV_EXCL_STOP */
 #endif /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */

@@ -11,16 +11,16 @@
  * This file provides the common thread entry function
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/arch/cfi.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <zephyr/arch/cfi.h>
 
 #ifdef CONFIG_CURRENT_THREAD_USE_TLS
 Z_THREAD_LOCAL k_tid_t z_tls_current;
 #endif
 
-#ifdef CONFIG_STACK_CANARIES_TLS
-#include <zephyr/random/random.h>
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
+#ifdef CONFIG_স্তূপ_CANARIES_TLS
+#অন্তর্ভাব <zephyr/random/random.h>
+বাহ্যিক Z_THREAD_LOCAL অস্থির uintptr_t __stack_chk_guard;
 #endif /* CONFIG_STACK_CANARIES_TLS */
 
 /*
@@ -33,8 +33,8 @@ extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
  * This routine does not return, and is marked as such so the compiler won't
  * generate preamble code that is only used by functions that actually return.
  */
-FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-				 void *p1, void *p2, void *p3)
+FUNC_NORETURN শূন্য z_thread_entry(k_thread_entry_t entry,
+				 শূন্য *p1, শূন্য *p2, শূন্য *p3)
 {
 /*
  * Inform the unwinder that the current return address is undefined.
@@ -50,11 +50,11 @@ FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
 #ifdef CONFIG_CURRENT_THREAD_USE_TLS
 	z_tls_current = k_sched_current_thread_query();
 #endif
-#ifdef CONFIG_STACK_CANARIES_TLS
-	uintptr_t stack_guard;
+#ifdef CONFIG_স্তূপ_CANARIES_TLS
+	uintptr_t স্তূপ_guard;
 
-	sys_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	sys_rand_get((uint8_t *)&স্তূপ_guard, আকার(স্তূপ_guard));
+	__stack_chk_guard = স্তূপ_guard;
 	__stack_chk_guard <<= 8;
 #endif	/* CONFIG_STACK_CANARIES_TLS */
 	entry(p1, p2, p3);
