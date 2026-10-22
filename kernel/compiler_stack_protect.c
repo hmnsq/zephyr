@@ -17,12 +17,12 @@
  * function __stack_chk_fail and global variable __stack_chk_guard.
  */
 
-#include <zephyr/toolchain.h> /* compiler specific configurations */
+#ضمن <zephyr/toolchain.h> /* compiler specific configurations */
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/kernel.h>
-#include <zephyr/app_memory/app_memdomain.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/linker/sections.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/app_memory/app_memdomain.h>
 
 /**
  *
@@ -32,12 +32,12 @@
  *
  * @note This function does not return.
  */
-void _StackCheckHandler(void)
+فراغ پشته_Check_Handler(فراغ)
 {
 	/* Stack canary error is a software fatal condition; treat it as such.
 	 */
-	z_except_reason(K_ERR_STACK_CHK_FAIL);
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	z_except_reason(K_ERR_پشته_CHK_FAIL);
+	کد_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
 /* Global variable */
@@ -46,17 +46,17 @@ void _StackCheckHandler(void)
  * Symbol referenced by GCC compiler generated code for canary value.
  * The canary value gets initialized in z_cstart().
  */
-#ifdef CONFIG_STACK_CANARIES_TLS
-#ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
-__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#endif
-#elif CONFIG_USERSPACE
-K_APP_DMEM(z_libc_partition) volatile uintptr_t __stack_chk_guard;
-#else
-__noinit volatile uintptr_t __stack_chk_guard;
-#endif
+#اگر_تعریف_شده CONFIG_پشته_CANARIES_TLS
+#اگر_تعریف_شده CONFIG_پشته_CANARIES_TLS_PREPEND
+__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL متطاير uintptr_t __stack_chk_guard;
+#وإلا
+Z_THREAD_LOCAL متطاير uintptr_t __stack_chk_guard;
+#پایان_اگر
+#وإلاإذا CONFIG_USERSPACE
+K_APP_DMEM(z_libc_افراز) متطاير uintptr_t __stack_chk_guard;
+#وإلا
+__noinit متطاير uintptr_t __stack_chk_guard;
+#پایان_اگر
 
 /**
  *
@@ -65,4 +65,4 @@ __noinit volatile uintptr_t __stack_chk_guard;
  * This routine is invoked when a stack canary error is detected, indicating
  * a buffer overflow or stack corruption problem.
  */
-FUNC_ALIAS(_StackCheckHandler, __stack_chk_fail, void);
+FUNC_ALIAS(پشته_Check_Handler, __stack_chk_fail, فراغ);

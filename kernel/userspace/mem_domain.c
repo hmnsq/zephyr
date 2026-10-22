@@ -4,400 +4,400 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <stdbool.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/libc-hooks.h>
-#include <zephyr/logging/log.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/sys/__assert.h>
+#ضمن <stdbool.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <zephyr/sys/check.h>
+#ضمن <zephyr/sys/libc-hooks.h>
+#ضمن <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-struct k_spinlock z_mem_domain_lock;
-static uint8_t max_partitions;
+بنية k_spinlock z_mem_domain_قفل;
+ساكن uint8_t max_partitions;
 
-struct k_mem_domain k_mem_domain_default;
+بنية k_mem_domain k_mem_domain_default;
 
-static bool check_add_partition(struct k_mem_domain *domain,
-				struct k_mem_partition *part)
+ساكن bool check_جمع_کن_افراز(بنية k_mem_domain *domain,
+				بنية k_mem_افراز *part)
 {
 
-	int i;
+	صحيح i;
 	uintptr_t pstart, pend, dstart, dend;
 
-	if (part == NULL) {
+	إذا (part == عدم) {
 		LOG_ERR("NULL k_mem_partition provided");
-		return false;
+		أرجع false;
 	}
 
-#ifdef CONFIG_EXECUTE_XOR_WRITE
+#اگر_تعریف_شده CONFIG_EXECUTE_XOR_WRITE
 	/* Arches where execution cannot be disabled should always return
 	 * false to this check
 	 */
-	if (K_MEM_PARTITION_IS_EXECUTABLE(part->attr) &&
-	    K_MEM_PARTITION_IS_WRITABLE(part->attr)) {
+	إذا (K_MEM_افراز_IS_EXECUTABLE(part->attr) &&
+	    K_MEM_افراز_IS_WRITABLE(part->attr)) {
 		LOG_ERR("partition is writable and executable <start %lx>",
-			part->start);
-		return false;
+			part->شروع);
+		أرجع false;
 	}
-#endif /* CONFIG_EXECUTE_XOR_WRITE */
+#پایان_اگر /* CONFIG_EXECUTE_XOR_WRITE */
 
-	if (part->size == 0U) {
+	إذا (part->اندازه == 0U) {
 		LOG_ERR("zero sized partition at %p with base 0x%lx",
-			part, part->start);
-		return false;
+			part, part->شروع);
+		أرجع false;
 	}
 
-	pstart = part->start;
-	pend = part->start + part->size;
+	pstart = part->شروع;
+	pend = part->شروع + part->اندازه;
 
-	if (pend <= pstart) {
+	إذا (pend <= pstart) {
 		LOG_ERR("invalid partition %p, wraparound detected. base 0x%lx size %zu",
-			part, part->start, part->size);
-		return false;
+			part, part->شروع, part->اندازه);
+		أرجع false;
 	}
 
 	/* Check that this partition doesn't overlap any existing ones already
 	 * in the domain
 	 */
-	for (i = 0; i < domain->num_partitions; i++) {
-		struct k_mem_partition *dpart = &domain->partitions[i];
+	لكل (i = 0; i < domain->رقم_partitions; i++) {
+		بنية k_mem_افراز *dpart = &domain->partitions[i];
 
-		if (dpart->size == 0U) {
+		إذا (dpart->اندازه == 0U) {
 			/* Unused slot */
-			continue;
+			استمر;
 		}
 
-		dstart = dpart->start;
-		dend = dstart + dpart->size;
+		dstart = dpart->شروع;
+		dend = dstart + dpart->اندازه;
 
-		if (pend > dstart && dend > pstart) {
+		إذا (pend > dstart && dend > pstart) {
 			LOG_ERR("partition %p base %lx (size %zu) overlaps existing base %lx (size %zu)",
-				part, part->start, part->size,
-				dpart->start, dpart->size);
-			return false;
+				part, part->شروع, part->اندازه,
+				dpart->شروع, dpart->اندازه);
+			أرجع false;
 		}
 	}
 
-	return true;
+	أرجع true;
 }
 
-int k_mem_domain_init(struct k_mem_domain *domain, uint8_t num_parts,
-		      struct k_mem_partition *parts[])
+صحيح k_mem_domain_init(بنية k_mem_domain *domain, uint8_t رقم_parts,
+		      بنية k_mem_افراز *parts[])
 {
-	k_spinlock_key_t key;
-	int ret = 0;
+	k_spinlock_کلید_t کلید;
+	صحيح ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == عدم) {
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	CHECKIF(!(num_parts == 0U || parts != NULL)) {
+	CHECKIF(!(رقم_parts == 0U || parts != عدم)) {
 		LOG_ERR("parts array is NULL and num_parts is nonzero");
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	CHECKIF(!(num_parts <= max_partitions)) {
+	CHECKIF(!(رقم_parts <= max_partitions)) {
 		LOG_ERR("num_parts of %d exceeds maximum allowable partitions (%d)",
-			num_parts, max_partitions);
+			رقم_parts, max_partitions);
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	کلید = k_spin_قفل(&z_mem_domain_قفل);
 
-	domain->num_partitions = 0U;
-	(void)memset(domain->partitions, 0, sizeof(domain->partitions));
+	domain->رقم_partitions = 0U;
+	(فراغ)memset(domain->partitions, 0, حجم(domain->partitions));
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+#اگر_تعریف_شده CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_init(&domain->thread_mem_domain_list);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+#پایان_اگر /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_DATA
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_داده
 	ret = arch_mem_domain_init(domain);
 
-	if (ret != 0) {
+	إذا (ret != 0) {
 		LOG_ERR("architecture-specific initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
-		goto unlock_out;
+		اذهب unlock_بیرون;
 	}
-#endif /* CONFIG_ARCH_MEM_DOMAIN_DATA */
-	if (num_parts != 0U) {
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_DATA */
+	إذا (رقم_parts != 0U) {
 		uint32_t i;
 
-		for (i = 0U; i < num_parts; i++) {
-			CHECKIF(!check_add_partition(domain, parts[i])) {
+		لكل (i = 0U; i < رقم_parts; i++) {
+			CHECKIF(!check_جمع_کن_افراز(domain, parts[i])) {
 				LOG_ERR("invalid partition index %d (%p)",
 					i, parts[i]);
 				ret = -EINVAL;
-				goto unlock_out;
+				اذهب unlock_بیرون;
 			}
 
 			domain->partitions[i] = *parts[i];
-			domain->num_partitions++;
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-			int ret2 = arch_mem_domain_partition_add(domain, i);
+			domain->رقم_partitions++;
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+			صحيح ret2 = arch_mem_domain_افراز_جمع_کن(domain, i);
 
-			ARG_UNUSED(ret2);
+			ARG_استفادهنشده(ret2);
 			CHECKIF(ret2 != 0) {
 				ret = ret2;
 			}
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 		}
 	}
 
-unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+unlock_بیرون:
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 
-out:
-	return ret;
+بیرون:
+	أرجع ret;
 }
 
-int k_mem_domain_deinit(struct k_mem_domain *domain)
+صحيح k_mem_domain_deinit(بنية k_mem_domain *domain)
 {
-#if defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
-	k_spinlock_key_t key;
-	int ret = 0;
+#إذا defined(CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT)
+	k_spinlock_کلید_t کلید;
+	صحيح ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == عدم) {
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	if (domain == &k_mem_domain_default) {
+	إذا (domain == &k_mem_domain_default) {
 		/* Default memory domain must be there forever. */
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	کلید = k_spin_قفل(&z_mem_domain_قفل);
 
 	/* Must make sure there are no threads associated with this memory
 	 * domain anymore. Or else these threads will run with an invalid
 	 * memory domain.
 	 */
-	if (!sys_dlist_is_empty(&domain->thread_mem_domain_list)) {
+	إذا (!sys_dlist_is_خالی(&domain->thread_mem_domain_list)) {
 		ret = -EBUSY;
-		goto unlock_out;
+		اذهب unlock_بیرون;
 	}
 
 	ret = arch_mem_domain_deinit(domain);
-	if (ret != 0) {
+	إذا (ret != 0) {
 		LOG_ERR("architecture-specific de-initialization failed for domain %p with %d",
 			domain, ret);
 		ret = -ENOMEM;
-		goto unlock_out;
+		اذهب unlock_بیرون;
 	}
 
-unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+unlock_بیرون:
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 
-out:
-	return ret;
-#else  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
-	ARG_UNUSED(domain);
-	return -ENOTSUP;
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
+بیرون:
+	أرجع ret;
+#وإلا  /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
+	ARG_استفادهنشده(domain);
+	أرجع -ENOTSUP;
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SUPPORTS_DEINIT */
 }
 
-int k_mem_domain_add_partition(struct k_mem_domain *domain,
-			       struct k_mem_partition *part)
+صحيح k_mem_domain_جمع_کن_افراز(بنية k_mem_domain *domain,
+			       بنية k_mem_افراز *part)
 {
-	int p_idx;
-	k_spinlock_key_t key;
-	int ret = 0;
+	صحيح p_idx;
+	k_spinlock_کلید_t کلید;
+	صحيح ret = 0;
 
-	CHECKIF(domain == NULL) {
+	CHECKIF(domain == عدم) {
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	CHECKIF(!check_add_partition(domain, part)) {
+	CHECKIF(!check_جمع_کن_افراز(domain, part)) {
 		LOG_ERR("invalid partition %p", part);
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	کلید = k_spin_قفل(&z_mem_domain_قفل);
 
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
+	لكل (p_idx = 0; p_idx < max_partitions; p_idx++) {
 		/* A zero-sized partition denotes it's a free partition */
-		if (domain->partitions[p_idx].size == 0U) {
-			break;
+		إذا (domain->partitions[p_idx].اندازه == 0U) {
+			اكسر;
 		}
 	}
 
 	CHECKIF(!(p_idx < max_partitions)) {
 		LOG_ERR("no free partition slots available");
 		ret = -ENOSPC;
-		goto unlock_out;
+		اذهب unlock_بیرون;
 	}
 
 	LOG_DBG("add partition base %lx size %zu to domain %p",
-		part->start, part->size, domain);
+		part->شروع, part->اندازه, domain);
 
-	domain->partitions[p_idx].start = part->start;
-	domain->partitions[p_idx].size = part->size;
+	domain->partitions[p_idx].شروع = part->شروع;
+	domain->partitions[p_idx].اندازه = part->اندازه;
 	domain->partitions[p_idx].attr = part->attr;
 
-	domain->num_partitions++;
+	domain->رقم_partitions++;
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-	ret = arch_mem_domain_partition_add(domain, p_idx);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+	ret = arch_mem_domain_افراز_جمع_کن(domain, p_idx);
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+unlock_بیرون:
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 
-out:
-	return ret;
+بیرون:
+	أرجع ret;
 }
 
-int k_mem_domain_remove_partition(struct k_mem_domain *domain,
-				  struct k_mem_partition *part)
+صحيح k_mem_domain_remove_افراز(بنية k_mem_domain *domain,
+				  بنية k_mem_افراز *part)
 {
-	int p_idx;
-	k_spinlock_key_t key;
-	int ret = 0;
+	صحيح p_idx;
+	k_spinlock_کلید_t کلید;
+	صحيح ret = 0;
 
-	CHECKIF((domain == NULL) || (part == NULL)) {
+	CHECKIF((domain == عدم) || (part == عدم)) {
 		ret = -EINVAL;
-		goto out;
+		اذهب بیرون;
 	}
 
-	key = k_spin_lock(&z_mem_domain_lock);
+	کلید = k_spin_قفل(&z_mem_domain_قفل);
 
 	/* find a partition that matches the given start and size */
-	for (p_idx = 0; p_idx < max_partitions; p_idx++) {
-		if ((domain->partitions[p_idx].start == part->start) &&
-		    (domain->partitions[p_idx].size == part->size)) {
-			break;
+	لكل (p_idx = 0; p_idx < max_partitions; p_idx++) {
+		إذا ((domain->partitions[p_idx].شروع == part->شروع) &&
+		    (domain->partitions[p_idx].اندازه == part->اندازه)) {
+			اكسر;
 		}
 	}
 
 	CHECKIF(!(p_idx < max_partitions)) {
 		LOG_ERR("no matching partition found");
 		ret = -ENOENT;
-		goto unlock_out;
+		اذهب unlock_بیرون;
 	}
 
 	LOG_DBG("remove partition base %lx size %zu from domain %p",
-		part->start, part->size, domain);
+		part->شروع, part->اندازه, domain);
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-	ret = arch_mem_domain_partition_remove(domain, p_idx);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+	ret = arch_mem_domain_افراز_remove(domain, p_idx);
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
 	/* A zero-sized partition denotes it's a free partition */
-	domain->partitions[p_idx].size = 0U;
+	domain->partitions[p_idx].اندازه = 0U;
 
-	domain->num_partitions--;
+	domain->رقم_partitions--;
 
-unlock_out:
-	k_spin_unlock(&z_mem_domain_lock, key);
+unlock_بیرون:
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 
-out:
-	return ret;
+بیرون:
+	أرجع ret;
 }
 
-static int add_thread_locked(struct k_mem_domain *domain,
+ساكن صحيح جمع_کن_thread_locked(بنية k_mem_domain *domain,
 			     k_tid_t thread)
 {
-	int ret = 0;
+	صحيح ret = 0;
 
-	__ASSERT_NO_MSG(domain != NULL);
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(domain != عدم);
+	__ASSERT_NO_MSG(thread != عدم);
 
 	LOG_DBG("add thread %p to domain %p", thread, domain);
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+#اگر_تعریف_شده CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
 	sys_dlist_append(&domain->thread_mem_domain_list,
-			 &thread->mem_domain_info.thread_mem_domain_node);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+			 &thread->mem_domain_info.thread_mem_domain_گره);
+#پایان_اگر /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
 	thread->mem_domain_info.mem_domain = domain;
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
-	ret = arch_mem_domain_thread_add(thread);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+	ret = arch_mem_domain_thread_جمع_کن(thread);
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	أرجع ret;
 }
 
-static int remove_thread_locked(struct k_thread *thread)
+ساكن صحيح remove_thread_locked(بنية k_thread *thread)
 {
-	int ret = 0;
+	صحيح ret = 0;
 
-	__ASSERT_NO_MSG(thread != NULL);
+	__ASSERT_NO_MSG(thread != عدم);
 	LOG_DBG("remove thread %p from memory domain %p",
 		thread, thread->mem_domain_info.mem_domain);
 
-#ifdef CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
-	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_node);
-#endif /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
+#اگر_تعریف_شده CONFIG_MEM_DOMAIN_HAS_THREAD_LIST
+	sys_dlist_remove(&thread->mem_domain_info.thread_mem_domain_گره);
+#پایان_اگر /* CONFIG_MEM_DOMAIN_HAS_THREAD_LIST */
 
-#ifdef CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
+#اگر_تعریف_شده CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API
 	ret = arch_mem_domain_thread_remove(thread);
-#endif /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
+#پایان_اگر /* CONFIG_ARCH_MEM_DOMAIN_SYNCHRONOUS_API */
 
-	return ret;
+	أرجع ret;
 }
 
 /* Called from thread object initialization */
-void z_mem_domain_init_thread(struct k_thread *thread)
+فراغ z_mem_domain_init_thread(بنية k_thread *thread)
 {
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	صحيح ret;
+	k_spinlock_کلید_t کلید = k_spin_قفل(&z_mem_domain_قفل);
 
 	/* New threads inherit memory domain configuration from parent */
-	ret = add_thread_locked(_current->mem_domain_info.mem_domain, thread);
+	ret = جمع_کن_thread_locked(_current->mem_domain_info.mem_domain, thread);
 	__ASSERT_NO_MSG(ret == 0);
-	ARG_UNUSED(ret);
+	ARG_استفادهنشده(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 }
 
 /* Called when thread aborts during teardown tasks. The scheduler's spinlock is held */
-void z_mem_domain_exit_thread(struct k_thread *thread)
+فراغ z_mem_domain_exit_thread(بنية k_thread *thread)
 {
-	int ret;
+	صحيح ret;
 
-	k_spinlock_key_t key = k_spin_lock(&z_mem_domain_lock);
+	k_spinlock_کلید_t کلید = k_spin_قفل(&z_mem_domain_قفل);
 
 	ret = remove_thread_locked(thread);
 	__ASSERT_NO_MSG(ret == 0);
-	ARG_UNUSED(ret);
+	ARG_استفادهنشده(ret);
 
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 }
 
-int k_mem_domain_add_thread(struct k_mem_domain *domain, k_tid_t thread)
+صحيح k_mem_domain_جمع_کن_thread(بنية k_mem_domain *domain, k_tid_t thread)
 {
-	int ret = 0;
-	k_spinlock_key_t key;
+	صحيح ret = 0;
+	k_spinlock_کلید_t کلید;
 
-	key = k_spin_lock(&z_mem_domain_lock);
-	if (thread->mem_domain_info.mem_domain != domain) {
+	کلید = k_spin_قفل(&z_mem_domain_قفل);
+	إذا (thread->mem_domain_info.mem_domain != domain) {
 		ret = remove_thread_locked(thread);
 
-		if (ret == 0) {
-			ret = add_thread_locked(domain, thread);
+		إذا (ret == 0) {
+			ret = جمع_کن_thread_locked(domain, thread);
 		}
 	}
-	k_spin_unlock(&z_mem_domain_lock, key);
+	k_spin_unlock(&z_mem_domain_قفل, کلید);
 
-	return ret;
+	أرجع ret;
 }
 
-static void init_mem_domain_module(void)
+ساكن فراغ init_mem_domain_module(فراغ)
 {
-	int ret;
+	صحيح ret;
 
-	ARG_UNUSED(ret);
+	ARG_استفادهنشده(ret);
 
 	max_partitions = arch_mem_domain_max_partitions_get();
 	/*
@@ -407,14 +407,14 @@ static void init_mem_domain_module(void)
 	 */
 	__ASSERT(max_partitions <= CONFIG_MAX_DOMAIN_PARTITIONS, "");
 
-	ret = k_mem_domain_init(&k_mem_domain_default, 0, NULL);
+	ret = k_mem_domain_init(&k_mem_domain_default, 0, عدم);
 	__ASSERT(ret == 0, "failed to init default mem domain");
 
-#ifdef Z_LIBC_PARTITION_EXISTS
-	ret = k_mem_domain_add_partition(&k_mem_domain_default,
-					 &z_libc_partition);
+#اگر_تعریف_شده Z_LIBC_افراز_EXISTS
+	ret = k_mem_domain_جمع_کن_افراز(&k_mem_domain_default,
+					 &z_libc_افراز);
 	__ASSERT(ret == 0, "failed to add default libc mem partition");
-#endif /* Z_LIBC_PARTITION_EXISTS */
+#پایان_اگر /* Z_LIBC_PARTITION_EXISTS */
 }
 
 K_KERNEL_INIT_PRE(init_mem_domain_module);

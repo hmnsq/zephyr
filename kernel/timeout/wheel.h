@@ -5,8 +5,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_
-#define ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_
+#اگر_تعریف_نشده ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_
+#تعریف_کن ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_
 
 /**
  * @file
@@ -34,57 +34,57 @@
  * per-node helpers live in kernel/include/timeout_q.h.
  */
 
-#include <zephyr/init.h>
-#include <zephyr/sys/dlist.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/sys/dlist.h>
 
 /* Per-node flag bits (struct _timeout's flags field): which tier the timeout
  * currently lives in, so removal can maintain the soon-list occupancy bitmap.
  */
-#define _TIMEOUT_FLAG_TIMER_WHEEL_SOON  BIT(0)
-#define _TIMEOUT_FLAG_TIMER_WHEEL_LATER BIT(1)
+#تعریف_کن _TIMEOUT_FLAG_TIMER_WHEEL_SOON  بیت(0)
+#تعریف_کن _TIMEOUT_FLAG_TIMER_WHEEL_LATER بیت(1)
 
 /* This backend supplies its own announce loop. */
-#define _TIMEOUT_BACKEND_OWNS_ANNOUNCE 1
+#تعریف_کن _TIMEOUT_BACKEND_OWNS_ANNOUNCE 1
 
-#define NUM_SOON_LISTS  32
-#define NUM_LATER_LISTS 32
+#تعریف_کن رقم_SOON_LISTS  32
+#تعریف_کن رقم_LATER_LISTS 32
 
-struct timeout_wheel {
-	sys_dlist_t soon[NUM_SOON_LISTS];   /* timeouts expiring soon lists */
-	sys_dlist_t later[NUM_LATER_LISTS]; /* timeouts expiring later lists */
+بنية timeout_wheel {
+	sys_dlist_t soon[رقم_SOON_LISTS];   /* timeouts expiring soon lists */
+	sys_dlist_t later[رقم_LATER_LISTS]; /* timeouts expiring later lists */
 	sys_dlist_t distant;                /* timeouts expiring far in future */
 	sys_dlist_t soon_defer;             /* special soon list */
-	uint32_t    soon_bits;              /* Set bit indicates list in use */
-	uint32_t    soon_index;             /* Current soon list index */
-	uint32_t    later_index;
+	uint32_t    soon_بیتها;              /* Set bit indicates list in use */
+	uint32_t    soon_شاخص;             /* Current soon list index */
+	uint32_t    later_شاخص;
 	uint32_t    announcing;             /* 1: Announcing soon_index, else 0 */
 	uint32_t    sifted;                 /* 1: Sifted, else 0 */
 };
 
-static struct timeout_wheel wheel;
+ساكن بنية timeout_wheel wheel;
 
-static int timeout_wheel_init(void)
+ساكن صحيح timeout_wheel_init(فراغ)
 {
-	unsigned int i;
+	بیعلامت صحيح i;
 
-	for (i = 0; i < NUM_SOON_LISTS; i++) {
+	لكل (i = 0; i < رقم_SOON_LISTS; i++) {
 		sys_dlist_init(&wheel.soon[i]);
 	}
 
-	for (i = 0; i < NUM_LATER_LISTS; i++) {
+	لكل (i = 0; i < رقم_LATER_LISTS; i++) {
 		sys_dlist_init(&wheel.later[i]);
 	}
 
 	sys_dlist_init(&wheel.distant);
 	sys_dlist_init(&wheel.soon_defer);
 
-	wheel.soon_bits = 0;
-	wheel.soon_index = NUM_SOON_LISTS - 1;
-	wheel.later_index = 0;
+	wheel.soon_بیتها = 0;
+	wheel.soon_شاخص = رقم_SOON_LISTS - 1;
+	wheel.later_شاخص = 0;
 	wheel.announcing = 0;
 	wheel.sifted = 1;
 
-	return 0;
+	أرجع 0;
 }
 
 /* Initialize the wheel before the timer driver (PRE_KERNEL_2) and before any
@@ -92,26 +92,26 @@ static int timeout_wheel_init(void)
  */
 SYS_INIT(timeout_wheel_init, PRE_KERNEL_1, 0);
 
-static inline void timeout_wheel_clear_flags(struct _timeout *to)
+ساكن مضمن فراغ timeout_wheel_clear_flags(بنية _timeout *مقصد)
 {
-	to->flags &= ~(_TIMEOUT_FLAG_TIMER_WHEEL_SOON |
+	مقصد->flags &= ~(_TIMEOUT_FLAG_TIMER_WHEEL_SOON |
 		       _TIMEOUT_FLAG_TIMER_WHEEL_LATER);
 }
 
 /* Return the last item in the specified list, or NULL if the list is empty. */
-static struct _timeout *timeout_wheel_last_in_list(sys_dlist_t *list)
+ساكن بنية _timeout *timeout_wheel_آخرین_درون_list(sys_dlist_t *list)
 {
-	sys_dnode_t *t = sys_dlist_peek_tail(list);
+	sys_dnode_t *t = sys_dlist_peek_دم(list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	أرجع (t == عدم) ? عدم : CONTAINER_از(t, بنية _timeout, گره);
 }
 
 /* Return the first timeout expiring in the specified list, or NULL. */
-static struct _timeout *timeout_wheel_first_in_list(sys_dlist_t *list)
+ساكن بنية _timeout *timeout_wheel_اولی_درون_list(sys_dlist_t *list)
 {
-	sys_dnode_t *t = sys_dlist_peek_head(list);
+	sys_dnode_t *t = sys_dlist_peek_سر(list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	أرجع (t == عدم) ? عدم : CONTAINER_از(t, بنية _timeout, گره);
 }
 
 /*
@@ -119,29 +119,29 @@ static struct _timeout *timeout_wheel_first_in_list(sys_dlist_t *list)
  * the first timeout is the sift operation which always implicitly exists
  * within the final 'soon' list.
  */
-static struct _timeout *timeout_wheel_first(void)
+ساكن بنية _timeout *timeout_wheel_اولی(فراغ)
 {
 	uint32_t bitmap;
-	unsigned int index;
+	بیعلامت صحيح شاخص;
 	sys_dnode_t *t;
 
-	bitmap = wheel.soon_bits | BIT(NUM_SOON_LISTS - 1);
-	if (wheel.sifted == 0) {
-		bitmap &= ~(BIT(wheel.soon_index) - 1);
+	bitmap = wheel.soon_بیتها | بیت(رقم_SOON_LISTS - 1);
+	إذا (wheel.sifted == 0) {
+		bitmap &= ~(بیت(wheel.soon_شاخص) - 1);
 	}
-	index = u32_count_trailing_zeros(bitmap);
+	شاخص = u32_شمار_trailing_zeros(bitmap);
 
-	t = sys_dlist_peek_head(&wheel.soon[index]);
+	t = sys_dlist_peek_سر(&wheel.soon[شاخص]);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	أرجع (t == عدم) ? عدم : CONTAINER_از(t, بنية _timeout, گره);
 }
 
 /* Return the timeout following @a t expiring "distantly". */
-static struct _timeout *timeout_wheel_next_distant(struct _timeout *t)
+ساكن بنية _timeout *timeout_wheel_بعدی_distant(بنية _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&wheel.distant, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_بعدی(&wheel.distant, &t->گره);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	أرجع (n == عدم) ? عدم : CONTAINER_از(n, بنية _timeout, گره);
 }
 
 /*
@@ -149,30 +149,30 @@ static struct _timeout *timeout_wheel_next_distant(struct _timeout *t)
  * after the timeout had been removed from a 'later' list, where its 'dticks'
  * field was a composite value. Prepending preserves time ordering.
  */
-static void timeout_wheel_prepend_soon(struct _timeout *to)
+ساكن فراغ timeout_wheel_prepend_soon(بنية _timeout *مقصد)
 {
-	unsigned int index = to->dticks & (NUM_SOON_LISTS - 1);
+	بیعلامت صحيح شاخص = مقصد->dticks & (رقم_SOON_LISTS - 1);
 
-	wheel.soon_bits |= BIT(index);
-	sys_dlist_prepend(&wheel.soon[index], &to->node);
-	to->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
-	to->dticks = index;
+	wheel.soon_بیتها |= بیت(شاخص);
+	sys_dlist_prepend(&wheel.soon[شاخص], &مقصد->گره);
+	مقصد->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
+	مقصد->dticks = شاخص;
 }
 
 /*
  * Append a timeout to the appropriate "soon" list, recording the list index
  * in the timeout's 'dticks' field.
  */
-static void timeout_wheel_append_soon(struct _timeout *to)
+ساكن فراغ timeout_wheel_append_soon(بنية _timeout *مقصد)
 {
-	unsigned int index;
+	بیعلامت صحيح شاخص;
 
-	index = (to->dticks + wheel.soon_index) & (NUM_SOON_LISTS - 1);
-	to->dticks = index;
+	شاخص = (مقصد->dticks + wheel.soon_شاخص) & (رقم_SOON_LISTS - 1);
+	مقصد->dticks = شاخص;
 
-	wheel.soon_bits |= BIT(index);
-	sys_dlist_append(&wheel.soon[index], &to->node);
-	to->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
+	wheel.soon_بیتها |= بیت(شاخص);
+	sys_dlist_append(&wheel.soon[شاخص], &مقصد->گره);
+	مقصد->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
 }
 
 /*
@@ -181,61 +181,61 @@ static void timeout_wheel_append_soon(struct _timeout *to)
  * they must not get mixed with the currently-expiring rotation. They move into
  * the appropriate 'soon' list at the end of the announce.
  */
-static void timeout_wheel_append_soon_defer(struct _timeout *to)
+ساكن فراغ timeout_wheel_append_soon_defer(بنية _timeout *مقصد)
 {
-	unsigned int index;
+	بیعلامت صحيح شاخص;
 
-	index = (to->dticks + wheel.soon_index) & (NUM_SOON_LISTS - 1);
-	to->dticks = index + NUM_SOON_LISTS;
+	شاخص = (مقصد->dticks + wheel.soon_شاخص) & (رقم_SOON_LISTS - 1);
+	مقصد->dticks = شاخص + رقم_SOON_LISTS;
 
-	sys_dlist_append(&wheel.soon_defer, &to->node);
-	to->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
+	sys_dlist_append(&wheel.soon_defer, &مقصد->گره);
+	مقصد->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_SOON;
 }
 
 /*
  * Append a timeout to the appropriate "later" list. The 'dticks' field is set
  * to identify both the eventual 'soon' list and the 'later' list it goes to.
  */
-static void timeout_wheel_append_later(struct _timeout *to)
+ساكن فراغ timeout_wheel_append_later(بنية _timeout *مقصد)
 {
 	uint32_t position;
 	uint32_t soon;
 	uint32_t later;
 
-	position = to->dticks + wheel.soon_index - NUM_SOON_LISTS;
+	position = مقصد->dticks + wheel.soon_شاخص - رقم_SOON_LISTS;
 
-	soon = position & (NUM_SOON_LISTS - 1);
-	later = ((position / NUM_SOON_LISTS) + wheel.later_index -
-		 wheel.sifted) & (NUM_LATER_LISTS - 1);
+	soon = position & (رقم_SOON_LISTS - 1);
+	later = ((position / رقم_SOON_LISTS) + wheel.later_شاخص -
+		 wheel.sifted) & (رقم_LATER_LISTS - 1);
 
-	to->dticks = (later * NUM_SOON_LISTS) + soon;
-	to->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_LATER;
+	مقصد->dticks = (later * رقم_SOON_LISTS) + soon;
+	مقصد->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_LATER;
 
-	sys_dlist_append(&wheel.later[later], &to->node);
+	sys_dlist_append(&wheel.later[later], &مقصد->گره);
 }
 
 /*
  * Insert a timeout into the "distant" list, an expiry-ordered delta list. For
  * good performance the distant list should stay short.
  */
-static void timeout_wheel_insert_distant(struct _timeout *to, uint32_t cutoff)
+ساكن فراغ timeout_wheel_درج_distant(بنية _timeout *مقصد, uint32_t cutoff)
 {
-	struct _timeout *t;
+	بنية _timeout *t;
 
-	to->dticks -= cutoff;
+	مقصد->dticks -= cutoff;
 
-	for (t = timeout_wheel_first_in_list(&wheel.distant);
-	     t != NULL; t = timeout_wheel_next_distant(t)) {
-		if (t->dticks > to->dticks) {
-			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
-			break;
+	لكل (t = timeout_wheel_اولی_درون_list(&wheel.distant);
+	     t != عدم; t = timeout_wheel_بعدی_distant(t)) {
+		إذا (t->dticks > مقصد->dticks) {
+			t->dticks -= مقصد->dticks;
+			sys_dlist_درج(&t->گره, &مقصد->گره);
+			اكسر;
 		}
-		to->dticks -= t->dticks;
+		مقصد->dticks -= t->dticks;
 	}
 
-	if (t == NULL) {
-		sys_dlist_append(&wheel.distant, &to->node);
+	إذا (t == عدم) {
+		sys_dlist_append(&wheel.distant, &مقصد->گره);
 	}
 }
 
@@ -243,110 +243,110 @@ static void timeout_wheel_insert_distant(struct _timeout *to, uint32_t cutoff)
  * Add a timeout to the wheel (with to->dticks already set to its tick delta
  * from curr_tick). It is never placed into the 'soon_index' list.
  */
-static void timeout_wheel_add_timeout(struct _timeout *to)
+ساكن فراغ timeout_wheel_جمع_کن_timeout(بنية _timeout *مقصد)
 {
-	__ASSERT_NO_MSG(to->dticks != 0);
+	__ASSERT_NO_MSG(مقصد->dticks != 0);
 
-	if (to->dticks <= (NUM_SOON_LISTS - wheel.announcing)) {
-		timeout_wheel_append_soon(to);
-		return;
+	إذا (مقصد->dticks <= (رقم_SOON_LISTS - wheel.announcing)) {
+		timeout_wheel_append_soon(مقصد);
+		أرجع;
 	}
 
-	if (to->dticks == NUM_SOON_LISTS) {
-		timeout_wheel_append_soon_defer(to);
-		return;
+	إذا (مقصد->dticks == رقم_SOON_LISTS) {
+		timeout_wheel_append_soon_defer(مقصد);
+		أرجع;
 	}
 
 	uint32_t cutoff;
 
-	cutoff = ((NUM_LATER_LISTS + wheel.sifted + 1) *
-		  NUM_SOON_LISTS) - wheel.soon_index - 1;
-	if (to->dticks <= cutoff) {
-		timeout_wheel_append_later(to);
-		return;
+	cutoff = ((رقم_LATER_LISTS + wheel.sifted + 1) *
+		  رقم_SOON_LISTS) - wheel.soon_شاخص - 1;
+	إذا (مقصد->dticks <= cutoff) {
+		timeout_wheel_append_later(مقصد);
+		أرجع;
 	}
 
-	timeout_wheel_insert_distant(to, cutoff);
+	timeout_wheel_درج_distant(مقصد, cutoff);
 }
 
 /* Remove the specified timeout. */
-static void timeout_wheel_remove_timeout(struct _timeout *to)
+ساكن فراغ timeout_wheel_remove_timeout(بنية _timeout *مقصد)
 {
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&مقصد->گره);
 
-	if (to->flags & _TIMEOUT_FLAG_TIMER_WHEEL_SOON) {
-		unsigned int index = to->dticks;
+	إذا (مقصد->flags & _TIMEOUT_FLAG_TIMER_WHEEL_SOON) {
+		بیعلامت صحيح شاخص = مقصد->dticks;
 
 		/* soon_defer entries carry index + NUM_SOON_LISTS and own no
 		 * soon_bits bit; only true soon-list entries do.
 		 */
-		if (index < NUM_SOON_LISTS &&
-		    sys_dlist_is_empty(&wheel.soon[index])) {
-			wheel.soon_bits &= ~BIT(index);
+		إذا (شاخص < رقم_SOON_LISTS &&
+		    sys_dlist_is_خالی(&wheel.soon[شاخص])) {
+			wheel.soon_بیتها &= ~بیت(شاخص);
 		}
 	}
 
-	timeout_wheel_clear_flags(to);
+	timeout_wheel_clear_flags(مقصد);
 }
 
 /* Calculate the number of ticks until the specified timeout expires. */
-static k_ticks_t timeout_wheel_remainder(const struct _timeout *to)
+ساكن k_ticks_t timeout_wheel_remainder(ثابت بنية _timeout *مقصد)
 {
-	if (to->flags & _TIMEOUT_FLAG_TIMER_WHEEL_SOON) {
-		uint32_t now = wheel.soon_index;
-		uint32_t idx = to->dticks;
+	إذا (مقصد->flags & _TIMEOUT_FLAG_TIMER_WHEEL_SOON) {
+		uint32_t now = wheel.soon_شاخص;
+		uint32_t idx = مقصد->dticks;
 
-		if (idx == now) {
-			return (1U - wheel.announcing) * NUM_SOON_LISTS;
-		} else if (idx >= NUM_SOON_LISTS) {
+		إذا (idx == now) {
+			أرجع (1U - wheel.announcing) * رقم_SOON_LISTS;
+		} وإلا إذا (idx >= رقم_SOON_LISTS) {
 			/* Special case if querying item in 'soon_defer' list */
-			return NUM_SOON_LISTS;
+			أرجع رقم_SOON_LISTS;
 		}
 
-		return (idx - now) & (NUM_SOON_LISTS - 1U);
+		أرجع (idx - now) & (رقم_SOON_LISTS - 1U);
 	}
 
-	if (to->flags & _TIMEOUT_FLAG_TIMER_WHEEL_LATER) {
-		uint32_t later_slot = to->dticks / NUM_SOON_LISTS;
-		uint32_t soon_index = to->dticks & (NUM_SOON_LISTS - 1U);
+	إذا (مقصد->flags & _TIMEOUT_FLAG_TIMER_WHEEL_LATER) {
+		uint32_t later_جایگاه = مقصد->dticks / رقم_SOON_LISTS;
+		uint32_t soon_شاخص = مقصد->dticks & (رقم_SOON_LISTS - 1U);
 
 		/* later slots ahead until the bucket is sifted */
-		uint32_t slots_ahead = ((later_slot - wheel.later_index) &
-					(NUM_LATER_LISTS - 1U)) + wheel.sifted;
+		uint32_t slots_ahead = ((later_جایگاه - wheel.later_شاخص) &
+					(رقم_LATER_LISTS - 1U)) + wheel.sifted;
 
-		return (k_ticks_t)((NUM_SOON_LISTS - wheel.soon_index) +
-				   (slots_ahead * NUM_SOON_LISTS) + soon_index);
+		أرجع (k_ticks_t)((رقم_SOON_LISTS - wheel.soon_شاخص) +
+				   (slots_ahead * رقم_SOON_LISTS) + soon_شاخص);
 	}
 
-	struct _timeout *t;
-	k_ticks_t remaining;
+	بنية _timeout *t;
+	k_ticks_t مانده;
 
-	remaining  = ((NUM_LATER_LISTS + wheel.sifted + 1) *
-		      NUM_SOON_LISTS) - wheel.soon_index - 1;
+	مانده  = ((رقم_LATER_LISTS + wheel.sifted + 1) *
+		      رقم_SOON_LISTS) - wheel.soon_شاخص - 1;
 
-	for (t = timeout_wheel_first_in_list(&wheel.distant);
-	     t != NULL; t = timeout_wheel_next_distant(t)) {
-		remaining += t->dticks;
-		if (t == to) {
-			break;
+	لكل (t = timeout_wheel_اولی_درون_list(&wheel.distant);
+	     t != عدم; t = timeout_wheel_بعدی_distant(t)) {
+		مانده += t->dticks;
+		إذا (t == مقصد) {
+			اكسر;
 		}
 	}
 
-	return remaining;
+	أرجع مانده;
 }
 
 /*
  * Sift from a 'later' list down into the appropriate 'soon' lists. Timeouts
  * are prepended to the 'soon' list to preserve time ordering.
  */
-static void timeout_wheel_sift_down_to_soon(void)
+ساكن فراغ timeout_wheel_غربال_پایین_مقصد_soon(فراغ)
 {
 	sys_dlist_t *list;
-	struct _timeout *t;
+	بنية _timeout *t;
 
-	list = &wheel.later[wheel.later_index];
-	while ((t = timeout_wheel_last_in_list(list)) != NULL) {
-		sys_dlist_remove(&t->node);
+	list = &wheel.later[wheel.later_شاخص];
+	طالما ((t = timeout_wheel_آخرین_درون_list(list)) != عدم) {
+		sys_dlist_remove(&t->گره);
 		timeout_wheel_clear_flags(t);
 		timeout_wheel_prepend_soon(t);
 	}
@@ -357,31 +357,31 @@ static void timeout_wheel_sift_down_to_soon(void)
  * steps: prepare (massage dticks/flags of the leading distant timeouts) then
  * move them en masse into the 'later' list.
  */
-static void timeout_wheel_sift_down_to_later(void)
+ساكن فراغ timeout_wheel_غربال_پایین_مقصد_later(فراغ)
 {
-	struct _timeout *t;
-	int64_t sift_ticks = NUM_SOON_LISTS;
-	struct _timeout *head = timeout_wheel_first_in_list(&wheel.distant);
-	struct _timeout *tail = NULL;
-	int new_dticks = wheel.later_index * NUM_SOON_LISTS;
+	بنية _timeout *t;
+	int64_t غربال_ticks = رقم_SOON_LISTS;
+	بنية _timeout *سر = timeout_wheel_اولی_درون_list(&wheel.distant);
+	بنية _timeout *دم = عدم;
+	صحيح new_dticks = wheel.later_شاخص * رقم_SOON_LISTS;
 
-	for (t = head; t != NULL; t = timeout_wheel_next_distant(t)) {
-		if (t->dticks >= sift_ticks) {
-			t->dticks -= sift_ticks;
-			break;
+	لكل (t = سر; t != عدم; t = timeout_wheel_بعدی_distant(t)) {
+		إذا (t->dticks >= غربال_ticks) {
+			t->dticks -= غربال_ticks;
+			اكسر;
 		}
 
-		sift_ticks -= t->dticks;
+		غربال_ticks -= t->dticks;
 		new_dticks += t->dticks;
 
 		t->flags |= _TIMEOUT_FLAG_TIMER_WHEEL_LATER;
 		t->dticks = new_dticks;
-		tail = t;
+		دم = t;
 	}
 
-	if (tail != NULL) {
-		sys_dlist_range_prepend(&wheel.later[wheel.later_index],
-					&head->node, &tail->node);
+	إذا (دم != عدم) {
+		sys_dlist_range_prepend(&wheel.later[wheel.later_شاخص],
+					&سر->گره, &دم->گره);
 	}
 }
 
@@ -390,15 +390,15 @@ static void timeout_wheel_sift_down_to_later(void)
  * into the 'soon' lists, freeing it to receive the next batch sifted from
  * 'distant'.
  */
-static void timeout_wheel_sift_down(void)
+ساكن فراغ timeout_wheel_غربال_پایین(فراغ)
 {
-	timeout_wheel_sift_down_to_soon();
+	timeout_wheel_غربال_پایین_مقصد_soon();
 
-	timeout_wheel_sift_down_to_later();
+	timeout_wheel_غربال_پایین_مقصد_later();
 
 	/* Advance to the next 'later' list */
-	wheel.later_index++;
-	wheel.later_index &= (NUM_LATER_LISTS - 1);
+	wheel.later_شاخص++;
+	wheel.later_شاخص &= (رقم_LATER_LISTS - 1);
 	wheel.sifted = 1;
 }
 
@@ -407,24 +407,24 @@ static void timeout_wheel_sift_down(void)
  * advanced. Handlers fire with the lock dropped; inflight_timeout tracks
  * the in-flight timeout so aborts race correctly.
  */
-static k_spinlock_key_t timeout_wheel_announce_now(k_spinlock_key_t key)
+ساكن k_spinlock_کلید_t timeout_wheel_announce_now(k_spinlock_کلید_t کلید)
 {
-	struct _timeout *t;
-	uint32_t index = wheel.soon_index;
+	بنية _timeout *t;
+	uint32_t شاخص = wheel.soon_شاخص;
 
 	wheel.sifted = 0;
 	wheel.announcing = 1;
-	for (t = timeout_wheel_first_in_list(&wheel.soon[index]);
-	     t != NULL;
-	     t = timeout_wheel_first_in_list(&wheel.soon[index])) {
-		sys_dlist_remove(&t->node);
+	لكل (t = timeout_wheel_اولی_درون_list(&wheel.soon[شاخص]);
+	     t != عدم;
+	     t = timeout_wheel_اولی_درون_list(&wheel.soon[شاخص])) {
+		sys_dlist_remove(&t->گره);
 		timeout_wheel_clear_flags(t);
 
 		inflight_timeout = t;
-		k_spin_unlock(&timeout_lock, key);
+		k_spin_unlock(&timeout_قفل, کلید);
 		t->fn(t);
-		key = k_spin_lock(&timeout_lock);
-		inflight_timeout = NULL;
+		کلید = k_spin_قفل(&timeout_قفل);
+		inflight_timeout = عدم;
 	}
 	wheel.announcing = 0;
 
@@ -432,47 +432,47 @@ static k_spinlock_key_t timeout_wheel_announce_now(k_spinlock_key_t key)
 	 * The 'soon_index' slot is now drained, so 'soon deferred' timeouts
 	 * (exactly NUM_SOON_LISTS into the future) can move into their slots.
 	 */
-	for (t = timeout_wheel_first_in_list(&wheel.soon_defer);
-	     t != NULL;
-	     t = timeout_wheel_first_in_list(&wheel.soon_defer)) {
-		sys_dlist_remove(&t->node);
+	لكل (t = timeout_wheel_اولی_درون_list(&wheel.soon_defer);
+	     t != عدم;
+	     t = timeout_wheel_اولی_درون_list(&wheel.soon_defer)) {
+		sys_dlist_remove(&t->گره);
 		/* Correct the dticks to be the appropriate 'soon' list index */
-		t->dticks &= (NUM_SOON_LISTS - 1);
-		wheel.soon_bits |= BIT(t->dticks);
-		sys_dlist_append(&wheel.soon[t->dticks], &t->node);
+		t->dticks &= (رقم_SOON_LISTS - 1);
+		wheel.soon_بیتها |= بیت(t->dticks);
+		sys_dlist_append(&wheel.soon[t->dticks], &t->گره);
 	}
 
-	if (index == (NUM_SOON_LISTS - 1)) {
-		timeout_wheel_sift_down();
+	إذا (شاخص == (رقم_SOON_LISTS - 1)) {
+		timeout_wheel_غربال_پایین();
 	}
 
-	return key;
+	أرجع کلید;
 }
 
 /*
  * Backend interface (see kernel/timeout.c).
  */
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ساكن bool z_timeout_q_درج(بنية _timeout *مقصد, k_ticks_t dticks)
 {
-	to->dticks = dticks;
-	timeout_wheel_add_timeout(to);
+	مقصد->dticks = dticks;
+	timeout_wheel_جمع_کن_timeout(مقصد);
 
-	return to == timeout_wheel_first();
+	أرجع مقصد == timeout_wheel_اولی();
 }
 
-static bool z_timeout_q_remove(struct _timeout *to)
+ساكن bool z_timeout_q_remove(بنية _timeout *مقصد)
 {
-	bool was_first = (to == timeout_wheel_first());
+	bool was_اولی = (مقصد == timeout_wheel_اولی());
 
-	timeout_wheel_remove_timeout(to);
+	timeout_wheel_remove_timeout(مقصد);
 
-	return was_first;
+	أرجع was_اولی;
 }
 
-static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ساكن k_ticks_t z_timeout_q_remainder(ثابت بنية _timeout *مقصد)
 {
-	return timeout_wheel_remainder(to);
+	أرجع timeout_wheel_remainder(مقصد);
 }
 
 /*
@@ -482,15 +482,15 @@ static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
  * wakes a tickless-idle CPU at least every NUM_SOON_LISTS ticks. The
  * announce-range cap is applied centrally by next_timeout() in timeout.c.
  */
-static k_ticks_t z_timeout_q_next_expiry(void)
+ساكن k_ticks_t z_timeout_q_بعدی_expiry(فراغ)
 {
-	struct _timeout *to = timeout_wheel_first();
-	int64_t dticks = (to != NULL) ? to->dticks : (NUM_SOON_LISTS - 1);
+	بنية _timeout *مقصد = timeout_wheel_اولی();
+	int64_t dticks = (مقصد != عدم) ? مقصد->dticks : (رقم_SOON_LISTS - 1);
 
-	dticks = ((NUM_SOON_LISTS - 1 - wheel.soon_index + dticks) &
-		  (NUM_SOON_LISTS - 1)) + 1;
+	dticks = ((رقم_SOON_LISTS - 1 - wheel.soon_شاخص + dticks) &
+		  (رقم_SOON_LISTS - 1)) + 1;
 
-	return (k_ticks_t)dticks;
+	أرجع (k_ticks_t)dticks;
 }
 
 /* Backend-owned announce loop (see _TIMEOUT_BACKEND_OWNS_ANNOUNCE). Drains all
@@ -498,46 +498,46 @@ static k_ticks_t z_timeout_q_next_expiry(void)
  * subsystem lock dropped; advances curr_tick and announce_remaining. Returns
  * the (possibly re-acquired) spinlock key.
  */
-static k_spinlock_key_t z_timeout_q_announce(k_spinlock_key_t key)
+ساكن k_spinlock_کلید_t z_timeout_q_announce(k_spinlock_کلید_t کلید)
 {
-	uint32_t mask;
-	int      next;    /* Index of next 'soon' list to expire */
-	int      num_ticks_to_advance;
-	int      correction;  /* NUM_SOON_LISTS or 0 */
-	uint32_t bits;
+	uint32_t ماسک;
+	صحيح      بعدی;    /* Index of next 'soon' list to expire */
+	صحيح      رقم_ticks_مقصد_advance;
+	صحيح      correction;  /* NUM_SOON_LISTS or 0 */
+	uint32_t بیتها;
 
-	while (announce_remaining > 0) {
+	طالما (announce_مانده > 0) {
 
-		mask = 0xFFFFFFFF << ((wheel.soon_index + 1) & (NUM_SOON_LISTS - 1));
-		bits = wheel.soon_bits | BIT(NUM_SOON_LISTS - 1);
-		next = u32_count_trailing_zeros(mask & bits);
-		correction = ((wheel.soon_index + 1) / NUM_SOON_LISTS) * NUM_SOON_LISTS;
-		num_ticks_to_advance = next + correction - wheel.soon_index;
+		ماسک = 0xFFFFFFFF << ((wheel.soon_شاخص + 1) & (رقم_SOON_LISTS - 1));
+		بیتها = wheel.soon_بیتها | بیت(رقم_SOON_LISTS - 1);
+		بعدی = u32_شمار_trailing_zeros(ماسک & بیتها);
+		correction = ((wheel.soon_شاخص + 1) / رقم_SOON_LISTS) * رقم_SOON_LISTS;
+		رقم_ticks_مقصد_advance = بعدی + correction - wheel.soon_شاخص;
 
-		if (num_ticks_to_advance > announce_remaining) {
-			curr_tick += announce_remaining;
+		إذا (رقم_ticks_مقصد_advance > announce_مانده) {
+			curr_tick += announce_مانده;
 			wheel.sifted = 0;
-			wheel.soon_index += announce_remaining;
-			wheel.soon_index &= (NUM_SOON_LISTS - 1);
+			wheel.soon_شاخص += announce_مانده;
+			wheel.soon_شاخص &= (رقم_SOON_LISTS - 1);
 
-			announce_remaining = 0;
-			break;
+			announce_مانده = 0;
+			اكسر;
 		}
 
 		/*
 		 * 1. Advance to the next tick to process.
 		 * 2. Clear its bit in the 'soon_bits'.
 		 */
-		wheel.soon_index += num_ticks_to_advance;
-		wheel.soon_index &= (NUM_SOON_LISTS - 1);
-		wheel.soon_bits &= ~BIT(wheel.soon_index);
+		wheel.soon_شاخص += رقم_ticks_مقصد_advance;
+		wheel.soon_شاخص &= (رقم_SOON_LISTS - 1);
+		wheel.soon_بیتها &= ~بیت(wheel.soon_شاخص);
 
-		curr_tick += num_ticks_to_advance;
-		key = timeout_wheel_announce_now(key);
-		announce_remaining -= num_ticks_to_advance;
+		curr_tick += رقم_ticks_مقصد_advance;
+		کلید = timeout_wheel_announce_now(کلید);
+		announce_مانده -= رقم_ticks_مقصد_advance;
 	}
 
-	return key;
+	أرجع کلید;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_ */
+#پایان_اگر /* ZEPHYR_KERNEL_TIMEOUT_WHEEL_H_ */

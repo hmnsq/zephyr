@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kernel_internal.h"
+#ضمن "kernel_internal.h"
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/sys/bitarray.h>
-#include <zephyr/sys/kobject.h>
-#include <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <ksched.h>
+#ضمن <zephyr/kernel/thread_stack.h>
+#ضمن <zephyr/logging/log.h>
+#ضمن <zephyr/sys/bitarray.h>
+#ضمن <zephyr/sys/kobject.h>
+#ضمن <zephyr/internal/syscall_handler.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#if CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0
-#define BA_SIZE CONFIG_DYNAMIC_THREAD_POOL_SIZE
-#else
-#define BA_SIZE 1
-#endif /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
+#إذا CONFIG_DYNAMIC_THREAD_POOL_اندازه > 0
+#تعریف_کن BA_اندازه CONFIG_DYNAMIC_THREAD_POOL_اندازه
+#وإلا
+#تعریف_کن BA_اندازه 1
+#پایان_اگر /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
 
-struct dyn_cb_data {
+بنية dyn_cb_داده {
 	k_tid_t tid;
-	k_thread_stack_t *stack;
+	k_thread_پشته_t *پشته;
 };
 
-static K_THREAD_STACK_ARRAY_DEFINE(dynamic_stack, CONFIG_DYNAMIC_THREAD_POOL_SIZE,
-				   K_THREAD_STACK_LEN(CONFIG_DYNAMIC_THREAD_STACK_SIZE));
-SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_SIZE);
+ساكن K_THREAD_پشته_ARRAY_DEFINE(dynamic_پشته, CONFIG_DYNAMIC_THREAD_POOL_اندازه,
+				   K_THREAD_پشته_LEN(CONFIG_DYNAMIC_THREAD_پشته_اندازه));
+SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_اندازه);
 
-static k_thread_stack_t *z_thread_stack_alloc_pool(size_t size, int flags)
+ساكن k_thread_پشته_t *z_thread_پشته_alloc_pool(size_t اندازه, صحيح flags)
 {
-	int rv;
-	size_t offset;
-	k_thread_stack_t *stack;
+	صحيح rv;
+	size_t جابه_جایی;
+	k_thread_پشته_t *پشته;
 
-	if (size > CONFIG_DYNAMIC_THREAD_STACK_SIZE) {
-		LOG_DBG("stack size %zu is > pool stack size %zu", size,
-			(size_t)CONFIG_DYNAMIC_THREAD_STACK_SIZE);
-		return NULL;
+	إذا (اندازه > CONFIG_DYNAMIC_THREAD_پشته_اندازه) {
+		LOG_DBG("stack size %zu is > pool stack size %zu", اندازه,
+			(size_t)CONFIG_DYNAMIC_THREAD_پشته_اندازه);
+		أرجع عدم;
 	}
 
-	rv = sys_bitarray_alloc(&dynamic_ba, 1, &offset);
-	if (rv < 0) {
+	rv = sys_bitarray_alloc(&dynamic_ba, 1, &جابه_جایی);
+	إذا (rv < 0) {
 		LOG_DBG("unable to allocate stack from pool");
-		return NULL;
+		أرجع عدم;
 	}
 
-	__ASSERT_NO_MSG(offset < CONFIG_DYNAMIC_THREAD_POOL_SIZE);
+	__ASSERT_NO_MSG(جابه_جایی < CONFIG_DYNAMIC_THREAD_POOL_اندازه);
 
-	stack = (k_thread_stack_t *)&dynamic_stack[offset];
+	پشته = (k_thread_پشته_t *)&dynamic_پشته[جابه_جایی];
 
-	return stack;
+	أرجع پشته;
 }
 
-static k_thread_stack_t *z_thread_stack_alloc_dyn(size_t size, int flags)
+ساكن k_thread_پشته_t *z_thread_پشته_alloc_dyn(size_t اندازه, صحيح flags)
 {
-	size_t stack_len;
+	size_t پشته_len;
 
-	if ((flags & K_USER) == K_USER) {
-#ifdef CONFIG_DYNAMIC_OBJECTS
-		return k_object_alloc_size(K_OBJ_THREAD_STACK_ELEMENT, size);
-#else
+	إذا ((flags & K_USER) == K_USER) {
+#اگر_تعریف_شده CONFIG_DYNAMIC_OBJECTS
+		أرجع k_object_alloc_اندازه(K_OBJ_THREAD_پشته_ELEMENT, اندازه);
+#وإلا
 		/* Dynamic user stack needs a kobject, so if this option is not
 		 * enabled we can't proceed.
 		 */
-		return NULL;
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+		أرجع عدم;
+#پایان_اگر /* CONFIG_DYNAMIC_OBJECTS */
 	}
 
-	stack_len = K_KERNEL_STACK_LEN(size);
-	if (stack_len < size) {
-		return NULL;
+	پشته_len = K_KERNEL_پشته_LEN(اندازه);
+	إذا (پشته_len < اندازه) {
+		أرجع عدم;
 	}
 
-	return z_thread_aligned_alloc(Z_KERNEL_STACK_OBJ_ALIGN, stack_len);
+	أرجع z_thread_aligned_alloc(Z_KERNEL_پشته_OBJ_ALIGN, پشته_len);
 }
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_پشته_t *z_impl_k_thread_پشته_alloc(size_t اندازه, صحيح flags)
 {
-	k_thread_stack_t *stack = NULL;
+	k_thread_پشته_t *پشته = عدم;
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
-		stack = z_thread_stack_alloc_dyn(size, flags);
-		if (stack == NULL && CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	إذا (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
+		پشته = z_thread_پشته_alloc_dyn(اندازه, flags);
+		إذا (پشته == عدم && CONFIG_DYNAMIC_THREAD_POOL_اندازه > 0) {
+			پشته = z_thread_پشته_alloc_pool(اندازه, flags);
 		}
-	} else if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
-		if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	} وإلا إذا (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
+		إذا (CONFIG_DYNAMIC_THREAD_POOL_اندازه > 0) {
+			پشته = z_thread_پشته_alloc_pool(اندازه, flags);
 		}
 
-		if ((stack == NULL) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-			stack = z_thread_stack_alloc_dyn(size, flags);
+		إذا ((پشته == عدم) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+			پشته = z_thread_پشته_alloc_dyn(اندازه, flags);
 		}
 	}
 
-	return stack;
+	أرجع پشته;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#اگر_تعریف_شده CONFIG_USERSPACE
+ساكن مضمن k_thread_پشته_t *z_vrfy_k_thread_پشته_alloc(size_t اندازه, صحيح flags)
 {
-	return z_impl_k_thread_stack_alloc(size, flags);
+	أرجع z_impl_k_thread_پشته_alloc(اندازه, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#پایان_اگر /* CONFIG_USERSPACE */
 
-static void dyn_cb(const struct k_thread *thread, void *user_data)
+ساكن فراغ dyn_cb(ثابت بنية k_thread *thread, فراغ *user_داده)
 {
-	struct dyn_cb_data *const data = (struct dyn_cb_data *)user_data;
+	بنية dyn_cb_داده *ثابت داده = (بنية dyn_cb_داده *)user_داده;
 
-	if (data->stack == (k_thread_stack_t *)thread->stack_info.start) {
-		__ASSERT(data->tid == NULL, "stack %p is associated with more than one thread!",
-			 (void *)thread->stack_info.start);
-		data->tid = (k_tid_t)thread;
+	إذا (داده->پشته == (k_thread_پشته_t *)thread->پشته_info.شروع) {
+		__ASSERT(داده->tid == عدم, "stack %p is associated with more than one thread!",
+			 (فراغ *)thread->پشته_info.شروع);
+		داده->tid = (k_tid_t)thread;
 	}
 }
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+صحيح z_impl_k_thread_پشته_free(k_thread_پشته_t *پشته)
 {
-	struct dyn_cb_data data = {.stack = stack};
+	بنية dyn_cb_داده داده = {.پشته = پشته};
 
 	/* Get a possible tid associated with stack */
-	k_thread_foreach(dyn_cb, &data);
+	k_thread_foreach(dyn_cb, &داده);
 
-	if (data.tid != NULL) {
-		if (!z_is_thread_state_set(data.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
-			LOG_ERR("tid %p is in use!", data.tid);
-			return -EBUSY;
+	إذا (داده.tid != عدم) {
+		إذا (!z_is_thread_state_مجموعه(داده.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
+			LOG_ERR("tid %p is in use!", داده.tid);
+			أرجع -EBUSY;
 		}
 	}
 
-	if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-		if (IS_ARRAY_ELEMENT(dynamic_stack, stack)) {
-			if (sys_bitarray_free(&dynamic_ba, 1, ARRAY_INDEX(dynamic_stack, stack))) {
-				LOG_ERR("stack %p is not allocated!", stack);
-				return -EINVAL;
+	إذا (CONFIG_DYNAMIC_THREAD_POOL_اندازه > 0) {
+		إذا (IS_ARRAY_ELEMENT(dynamic_پشته, پشته)) {
+			إذا (sys_bitarray_free(&dynamic_ba, 1, ARRAY_شاخص(dynamic_پشته, پشته))) {
+				LOG_ERR("stack %p is not allocated!", پشته);
+				أرجع -EINVAL;
 			}
 
-			return 0;
+			أرجع 0;
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-#ifdef CONFIG_USERSPACE
-		if (k_object_find(stack)) {
-			k_object_free(stack);
-		} else {
-			k_free(stack);
+	إذا (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+#اگر_تعریف_شده CONFIG_USERSPACE
+		إذا (k_object_پیدا_کن(پشته)) {
+			k_object_free(پشته);
+		} وإلا {
+			k_free(پشته);
 		}
-#else
-		k_free(stack);
-#endif /* CONFIG_USERSPACE */
-	} else {
-		LOG_DBG("Invalid stack %p", stack);
-		return -EINVAL;
+#وإلا
+		k_free(پشته);
+#پایان_اگر /* CONFIG_USERSPACE */
+	} وإلا {
+		LOG_DBG("Invalid stack %p", پشته);
+		أرجع -EINVAL;
 	}
 
-	return 0;
+	أرجع 0;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#اگر_تعریف_شده CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_thread_پشته_free(k_thread_پشته_t *پشته)
 {
 	/* The thread stack object must not be in initialized state.
 	 *
@@ -173,9 +173,9 @@ static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 	 * free a stack that is in use, we have to check that the caller
 	 * has access to the object but that it is not in use anymore.
 	 */
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_THREAD_STACK_ELEMENT));
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(پشته, K_OBJ_THREAD_پشته_ELEMENT));
 
-	return z_impl_k_thread_stack_free(stack);
+	أرجع z_impl_k_thread_پشته_free(پشته);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#پایان_اگر /* CONFIG_USERSPACE */

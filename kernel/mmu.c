@@ -6,27 +6,27 @@
  * Routines for managing virtual address spaces
  */
 
-#include <stdint.h>
-#include <kernel_arch_interface.h>
-#include <zephyr/spinlock.h>
-#include <mmu.h>
-#include <zephyr/init.h>
-#include <kernel_internal.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/bitarray.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/arch/common/init.h>
-#include <zephyr/logging/log.h>
+#ضمن <stdint.h>
+#ضمن <kernel_arch_interface.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <mmu.h>
+#ضمن <zephyr/init.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/linker/linker-defs.h>
+#ضمن <zephyr/sys/bitarray.h>
+#ضمن <zephyr/sys/check.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/sys/minmax.h>
+#ضمن <zephyr/timing/timing.h>
+#ضمن <zephyr/arch/common/init.h>
+#ضمن <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#ifdef CONFIG_DEMAND_PAGING
-#include <zephyr/kernel/mm/demand_paging.h>
-#endif /* CONFIG_DEMAND_PAGING */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+#ضمن <zephyr/kernel/mm/demand_paging.h>
+#پایان_اگر /* CONFIG_DEMAND_PAGING */
 
 /*
  * General terminology:
@@ -46,101 +46,101 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 /* Spinlock to protect any globals in this file and serialize page table
  * updates in arch code
  */
-struct k_spinlock z_mm_lock;
+بنية k_spinlock z_mm_قفل;
 
 /*
  * General page frame management
  */
 
 /* Database of all RAM page frames */
-struct k_mem_page_frame k_mem_page_frames[K_MEM_NUM_PAGE_FRAMES];
+بنية k_mem_صفحه_قاب k_mem_صفحه_قابها[K_MEM_رقم_صفحه_قابها];
 
-#ifdef CONFIG_ASSERT
+#اگر_تعریف_شده CONFIG_ASSERT
 /* Indicator that k_mem_page_frames has been initialized, many of these APIs do
  * not work before POST_KERNEL
  */
-static bool page_frames_initialized;
-#endif /* CONFIG_ASSERT */
+ساكن bool صفحه_قابها_initialized;
+#پایان_اگر /* CONFIG_ASSERT */
 
 /* Add colors to page table dumps to indicate mapping type */
-#define COLOR_PAGE_FRAMES	1
+#تعریف_کن COLOR_صفحه_قابها	1
 
-#if COLOR_PAGE_FRAMES
-#define ANSI_DEFAULT "\x1B" "[0m"
-#define ANSI_RED     "\x1B" "[1;31m"
-#define ANSI_GREEN   "\x1B" "[1;32m"
-#define ANSI_YELLOW  "\x1B" "[1;33m"
-#define ANSI_BLUE    "\x1B" "[1;34m"
-#define ANSI_MAGENTA "\x1B" "[1;35m"
-#define ANSI_CYAN    "\x1B" "[1;36m"
-#define ANSI_GREY    "\x1B" "[1;90m"
+#إذا COLOR_صفحه_قابها
+#تعریف_کن ANSI_DEFAULT "\x1B" "[0m"
+#تعریف_کن ANSI_RED     "\x1B" "[1;31m"
+#تعریف_کن ANSI_GREEN   "\x1B" "[1;32m"
+#تعریف_کن ANSI_YELLOW  "\x1B" "[1;33m"
+#تعریف_کن ANSI_BLUE    "\x1B" "[1;34m"
+#تعریف_کن ANSI_MAGENTA "\x1B" "[1;35m"
+#تعریف_کن ANSI_CYAN    "\x1B" "[1;36m"
+#تعریف_کن ANSI_GREY    "\x1B" "[1;90m"
 
-#define COLOR(x)	printk(_CONCAT(ANSI_, x))
-#else
-#define COLOR(x)	do { } while (false)
-#endif /* COLOR_PAGE_FRAMES */
+#تعریف_کن COLOR(x)	printk(_CONCAT(ANSI_, x))
+#وإلا
+#تعریف_کن COLOR(x)	افعل { } طالما (false)
+#پایان_اگر /* COLOR_PAGE_FRAMES */
 
 /* LCOV_EXCL_START */
-static void page_frame_dump(struct k_mem_page_frame *pf)
+ساكن فراغ صفحه_قاب_dump(بنية k_mem_صفحه_قاب *pf)
 {
-	if (k_mem_page_frame_is_free(pf)) {
+	إذا (k_mem_صفحه_قاب_is_free(pf)) {
 		COLOR(GREY);
 		printk("-");
-	} else if (k_mem_page_frame_is_reserved(pf)) {
+	} وإلا إذا (k_mem_صفحه_قاب_is_reserved(pf)) {
 		COLOR(CYAN);
 		printk("R");
-	} else if (k_mem_page_frame_is_busy(pf)) {
+	} وإلا إذا (k_mem_صفحه_قاب_is_busy(pf)) {
 		COLOR(MAGENTA);
 		printk("B");
-	} else if (k_mem_page_frame_is_pinned(pf)) {
+	} وإلا إذا (k_mem_صفحه_قاب_is_pinned(pf)) {
 		COLOR(YELLOW);
 		printk("P");
-	} else if (k_mem_page_frame_is_available(pf)) {
+	} وإلا إذا (k_mem_صفحه_قاب_is_موجود(pf)) {
 		COLOR(GREY);
 		printk(".");
-	} else if (k_mem_page_frame_is_mapped(pf)) {
+	} وإلا إذا (k_mem_صفحه_قاب_is_mapped(pf)) {
 		COLOR(DEFAULT);
 		printk("M");
-	} else {
+	} وإلا {
 		COLOR(RED);
 		printk("?");
 	}
 }
 
-void k_mem_page_frames_dump(void)
+فراغ k_mem_صفحه_قابها_dump(فراغ)
 {
-	int column = 0;
+	صحيح ستونی = 0;
 
-	__ASSERT(page_frames_initialized, "%s called too early", __func__);
+	__ASSERT(صفحه_قابها_initialized, "%s called too early", __func__);
 	printk("Physical memory from 0x%lx to 0x%lx\n",
-	       K_MEM_PHYS_RAM_START, K_MEM_PHYS_RAM_END);
+	       K_MEM_PHYS_RAM_شروع, K_MEM_PHYS_RAM_انتها);
 
-	for (int i = 0; i < K_MEM_NUM_PAGE_FRAMES; i++) {
-		struct k_mem_page_frame *pf = &k_mem_page_frames[i];
+	لكل (صحيح i = 0; i < K_MEM_رقم_صفحه_قابها; i++) {
+		بنية k_mem_صفحه_قاب *pf = &k_mem_صفحه_قابها[i];
 
-		page_frame_dump(pf);
+		صفحه_قاب_dump(pf);
 
-		column++;
-		if (column == 64) {
-			column = 0;
+		ستونی++;
+		إذا (ستونی == 64) {
+			ستونی = 0;
 			printk("\n");
 		}
 	}
 
 	COLOR(DEFAULT);
-	if (column != 0) {
+	إذا (ستونی != 0) {
 		printk("\n");
 	}
 }
 /* LCOV_EXCL_STOP */
 
-#define VIRT_FOREACH(_base, _size, _pos) \
-	for ((_pos) = (_base); \
-	     (_pos) < ((uint8_t *)(_base) + (_size)); (_pos) += CONFIG_MMU_PAGE_SIZE)
+#تعریف_کن VIRT_FOREACH(پایه_2, اندازه_2, _pos) \
+	لكل ((_pos) = (پایه_2); \
+	     (_pos) < ((uint8_t *)(پایه_2) + (اندازه_2)); (_pos) += CONFIG_MMU_صفحه_اندازه)
 
-#define PHYS_FOREACH(_base, _size, _pos) \
-	for ((_pos) = (_base); \
-	     (_pos) < ((uintptr_t)(_base) + (_size)); (_pos) += CONFIG_MMU_PAGE_SIZE)
+#تعریف_کن PHYS_FOREACH(پایه_2, اندازه_2, _pos) \
+	لكل ((_pos) = (پایه_2); \
+	     (_pos) < ((uintptr_t)(پایه_2) + (اندازه_2)); (_pos) += CONFIG_MMU_صفحه_اندازه)
 
 
 /*
@@ -193,130 +193,130 @@ void k_mem_page_frames_dump(void)
  * done in reverse from highest address.
  */
 SYS_BITARRAY_DEFINE_STATIC(virt_region_bitmap,
-			   CONFIG_KERNEL_VM_SIZE / CONFIG_MMU_PAGE_SIZE);
+			   CONFIG_KERNEL_VM_اندازه / CONFIG_MMU_صفحه_اندازه);
 
-static bool virt_region_inited;
+ساكن bool virt_region_inited;
 
-#define Z_VIRT_REGION_START_ADDR	K_MEM_VM_FREE_START
-#define Z_VIRT_REGION_END_ADDR		(K_MEM_VIRT_RAM_END - K_MEM_VM_RESERVED)
+#تعریف_کن Z_VIRT_REGION_شروع_ADDR	K_MEM_VM_FREE_شروع
+#تعریف_کن Z_VIRT_REGION_انتها_ADDR		(K_MEM_VIRT_RAM_انتها - K_MEM_VM_RESERVED)
 
-static inline uintptr_t virt_from_bitmap_offset(size_t offset, size_t size)
+ساكن مضمن uintptr_t virt_from_bitmap_جابه_جایی(size_t جابه_جایی, size_t اندازه)
 {
-	return POINTER_TO_UINT(K_MEM_VIRT_RAM_END)
-	       - (offset * CONFIG_MMU_PAGE_SIZE) - size;
+	أرجع اشاره_گر_مقصد_UINT(K_MEM_VIRT_RAM_انتها)
+	       - (جابه_جایی * CONFIG_MMU_صفحه_اندازه) - اندازه;
 }
 
-static inline size_t virt_to_bitmap_offset(void *vaddr, size_t size)
+ساكن مضمن size_t virt_مقصد_bitmap_جابه_جایی(فراغ *vaddr, size_t اندازه)
 {
-	return (POINTER_TO_UINT(K_MEM_VIRT_RAM_END)
-		- POINTER_TO_UINT(vaddr) - size) / CONFIG_MMU_PAGE_SIZE;
+	أرجع (اشاره_گر_مقصد_UINT(K_MEM_VIRT_RAM_انتها)
+		- اشاره_گر_مقصد_UINT(vaddr) - اندازه) / CONFIG_MMU_صفحه_اندازه;
 }
 
-static void virt_region_init(void)
+ساكن فراغ virt_region_init(فراغ)
 {
-	size_t offset, num_bits;
+	size_t جابه_جایی, رقم_بیتها;
 
 	/* There are regions where we should never map via
 	 * k_mem_map() and k_mem_map_phys_bare(). Mark them as
 	 * already allocated so they will never be used.
 	 */
 
-	if (K_MEM_VM_RESERVED > 0) {
+	إذا (K_MEM_VM_RESERVED > 0) {
 		/* Mark reserved region at end of virtual address space */
-		num_bits = K_MEM_VM_RESERVED / CONFIG_MMU_PAGE_SIZE;
-		(void)sys_bitarray_set_region(&virt_region_bitmap,
-					      num_bits, 0);
+		رقم_بیتها = K_MEM_VM_RESERVED / CONFIG_MMU_صفحه_اندازه;
+		(فراغ)sys_bitarray_مجموعه_region(&virt_region_bitmap,
+					      رقم_بیتها, 0);
 	}
 
 	/* Mark all bits up to Z_FREE_VM_START as allocated */
-	num_bits = POINTER_TO_UINT(K_MEM_VM_FREE_START)
-		   - POINTER_TO_UINT(K_MEM_VIRT_RAM_START);
-	offset = virt_to_bitmap_offset(K_MEM_VIRT_RAM_START, num_bits);
-	num_bits /= CONFIG_MMU_PAGE_SIZE;
-	(void)sys_bitarray_set_region(&virt_region_bitmap,
-				      num_bits, offset);
+	رقم_بیتها = اشاره_گر_مقصد_UINT(K_MEM_VM_FREE_شروع)
+		   - اشاره_گر_مقصد_UINT(K_MEM_VIRT_RAM_شروع);
+	جابه_جایی = virt_مقصد_bitmap_جابه_جایی(K_MEM_VIRT_RAM_شروع, رقم_بیتها);
+	رقم_بیتها /= CONFIG_MMU_صفحه_اندازه;
+	(فراغ)sys_bitarray_مجموعه_region(&virt_region_bitmap,
+				      رقم_بیتها, جابه_جایی);
 
 	virt_region_inited = true;
 }
 
-static void virt_region_free(void *vaddr, size_t size)
+ساكن فراغ virt_region_free(فراغ *vaddr, size_t اندازه)
 {
-	size_t offset, num_bits;
+	size_t جابه_جایی, رقم_بیتها;
 	uint8_t *vaddr_u8 = (uint8_t *)vaddr;
 
-	if (unlikely(!virt_region_inited)) {
+	إذا (unlikely(!virt_region_inited)) {
 		virt_region_init();
 	}
 
-#ifndef CONFIG_KERNEL_DIRECT_MAP
+#اگر_تعریف_نشده CONFIG_KERNEL_مستقیم_MAP
 	/* Without the need to support K_MEM_DIRECT_MAP, the region must be
 	 * able to be represented in the bitmap. So this case is
 	 * simple.
 	 */
 
-	__ASSERT((vaddr_u8 >= Z_VIRT_REGION_START_ADDR)
-		 && ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR),
-		 "invalid virtual address region %p (%zu)", vaddr_u8, size);
-	if (!((vaddr_u8 >= Z_VIRT_REGION_START_ADDR)
-	      && ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR))) {
-		return;
+	__ASSERT((vaddr_u8 >= Z_VIRT_REGION_شروع_ADDR)
+		 && ((vaddr_u8 + اندازه - 1) < Z_VIRT_REGION_انتها_ADDR),
+		 "invalid virtual address region %p (%zu)", vaddr_u8, اندازه);
+	إذا (!((vaddr_u8 >= Z_VIRT_REGION_شروع_ADDR)
+	      && ((vaddr_u8 + اندازه - 1) < Z_VIRT_REGION_انتها_ADDR))) {
+		أرجع;
 	}
 
-	offset = virt_to_bitmap_offset(vaddr, size);
-	num_bits = size / CONFIG_MMU_PAGE_SIZE;
-	(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
-#else /* !CONFIG_KERNEL_DIRECT_MAP */
+	جابه_جایی = virt_مقصد_bitmap_جابه_جایی(vaddr, اندازه);
+	رقم_بیتها = اندازه / CONFIG_MMU_صفحه_اندازه;
+	(فراغ)sys_bitarray_free(&virt_region_bitmap, رقم_بیتها, جابه_جایی);
+#وإلا /* !CONFIG_KERNEL_DIRECT_MAP */
 	/* With K_MEM_DIRECT_MAP, the region can be outside of the virtual
 	 * memory space, wholly within it, or overlap partially.
 	 * So additional processing is needed to make sure we only
 	 * mark the pages within the bitmap.
 	 */
-	if (((vaddr_u8 >= Z_VIRT_REGION_START_ADDR) &&
-	     (vaddr_u8 < Z_VIRT_REGION_END_ADDR)) ||
-	    (((vaddr_u8 + size - 1) >= Z_VIRT_REGION_START_ADDR) &&
-	     ((vaddr_u8 + size - 1) < Z_VIRT_REGION_END_ADDR))) {
-		uint8_t *adjusted_start = max(vaddr_u8, Z_VIRT_REGION_START_ADDR);
-		uint8_t *adjusted_end = min(vaddr_u8 + size,
-					    Z_VIRT_REGION_END_ADDR);
-		size_t adjusted_sz = adjusted_end - adjusted_start;
+	إذا (((vaddr_u8 >= Z_VIRT_REGION_شروع_ADDR) &&
+	     (vaddr_u8 < Z_VIRT_REGION_انتها_ADDR)) ||
+	    (((vaddr_u8 + اندازه - 1) >= Z_VIRT_REGION_شروع_ADDR) &&
+	     ((vaddr_u8 + اندازه - 1) < Z_VIRT_REGION_انتها_ADDR))) {
+		uint8_t *adjusted_شروع = max(vaddr_u8, Z_VIRT_REGION_شروع_ADDR);
+		uint8_t *adjusted_انتها = min(vaddr_u8 + اندازه,
+					    Z_VIRT_REGION_انتها_ADDR);
+		size_t adjusted_sz = adjusted_انتها - adjusted_شروع;
 
-		offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
-		num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
+		جابه_جایی = virt_مقصد_bitmap_جابه_جایی(adjusted_شروع, adjusted_sz);
+		رقم_بیتها = adjusted_sz / CONFIG_MMU_صفحه_اندازه;
+		(فراغ)sys_bitarray_free(&virt_region_bitmap, رقم_بیتها, جابه_جایی);
 	}
-#endif /* !CONFIG_KERNEL_DIRECT_MAP */
+#پایان_اگر /* !CONFIG_KERNEL_DIRECT_MAP */
 }
 
-static void *virt_region_alloc(size_t size, size_t align)
+ساكن فراغ *virt_region_alloc(size_t اندازه, size_t align)
 {
 	uintptr_t dest_addr;
-	size_t alloc_size;
-	size_t offset;
-	size_t num_bits;
-	int ret;
+	size_t alloc_اندازه;
+	size_t جابه_جایی;
+	size_t رقم_بیتها;
+	صحيح ret;
 
-	if (unlikely(!virt_region_inited)) {
+	إذا (unlikely(!virt_region_inited)) {
 		virt_region_init();
 	}
 
 	/* Possibly request more pages to ensure we can get an aligned virtual address */
-	num_bits = (size + align - CONFIG_MMU_PAGE_SIZE) / CONFIG_MMU_PAGE_SIZE;
-	alloc_size = num_bits * CONFIG_MMU_PAGE_SIZE;
-	ret = sys_bitarray_alloc(&virt_region_bitmap, num_bits, &offset);
-	if (ret != 0) {
+	رقم_بیتها = (اندازه + align - CONFIG_MMU_صفحه_اندازه) / CONFIG_MMU_صفحه_اندازه;
+	alloc_اندازه = رقم_بیتها * CONFIG_MMU_صفحه_اندازه;
+	ret = sys_bitarray_alloc(&virt_region_bitmap, رقم_بیتها, &جابه_جایی);
+	إذا (ret != 0) {
 		LOG_ERR("insufficient virtual address space (requested %zu)",
-			size);
-		return NULL;
+			اندازه);
+		أرجع عدم;
 	}
 
 	/* Remember that bit #0 in bitmap corresponds to the highest
 	 * virtual address. So here we need to go downwards (backwards?)
 	 * to get the starting address of the allocated region.
 	 */
-	dest_addr = virt_from_bitmap_offset(offset, alloc_size);
+	dest_addr = virt_from_bitmap_جابه_جایی(جابه_جایی, alloc_اندازه);
 
-	if (alloc_size > size) {
-		uintptr_t aligned_dest_addr = ROUND_UP(dest_addr, align);
+	إذا (alloc_اندازه > اندازه) {
+		uintptr_t aligned_dest_addr = دور_به_بالا(dest_addr, align);
 
 		/* Here is the memory organization when trying to get an aligned
 		 * virtual address:
@@ -350,23 +350,23 @@ static void *virt_region_alloc(size_t size, size_t align)
 		 */
 
 		/* Free the two unused regions */
-		virt_region_free(UINT_TO_POINTER(dest_addr),
+		virt_region_free(UINT_مقصد_اشاره_گر(dest_addr),
 				 aligned_dest_addr - dest_addr);
-		if (((dest_addr + alloc_size) - (aligned_dest_addr + size)) > 0) {
-			virt_region_free(UINT_TO_POINTER(aligned_dest_addr + size),
-					 (dest_addr + alloc_size) - (aligned_dest_addr + size));
+		إذا (((dest_addr + alloc_اندازه) - (aligned_dest_addr + اندازه)) > 0) {
+			virt_region_free(UINT_مقصد_اشاره_گر(aligned_dest_addr + اندازه),
+					 (dest_addr + alloc_اندازه) - (aligned_dest_addr + اندازه));
 		}
 
 		dest_addr = aligned_dest_addr;
 	}
 
 	/* Need to make sure this does not step into kernel memory */
-	if (dest_addr < POINTER_TO_UINT(Z_VIRT_REGION_START_ADDR)) {
-		(void)sys_bitarray_free(&virt_region_bitmap, num_bits, offset);
-		return NULL;
+	إذا (dest_addr < اشاره_گر_مقصد_UINT(Z_VIRT_REGION_شروع_ADDR)) {
+		(فراغ)sys_bitarray_free(&virt_region_bitmap, رقم_بیتها, جابه_جایی);
+		أرجع عدم;
 	}
 
-	return UINT_TO_POINTER(dest_addr);
+	أرجع UINT_مقصد_اشاره_گر(dest_addr);
 }
 
 /*
@@ -386,57 +386,57 @@ static void *virt_region_alloc(size_t size, size_t align)
  * This implies in the future there may be multiple slists managing physical
  * pages. Each page frame will still just have one snode link.
  */
-BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "MMU free-page list needs one sflist flag bit");
+BUILD_ASSERT(SYS_SFLIST_FLAG_بیتها >= 1, "MMU free-page list needs one sflist flag bit");
 
-static sys_sflist_t free_page_frame_list;
+ساكن sys_sflist_t free_صفحه_قاب_list;
 
 /* Number of unused and available free page frames.
  * This information may go stale immediately.
  */
-static size_t z_free_page_count;
+ساكن size_t z_free_صفحه_شمار;
 
-#define PF_ASSERT(pf, expr, fmt, ...) \
-	__ASSERT(expr, "page frame 0x%lx: " fmt, k_mem_page_frame_to_phys(pf), \
+#تعریف_کن PF_ASSERT(pf, عبارت, fmt, ...) \
+	__ASSERT(عبارت, "page frame 0x%lx: " fmt, k_mem_صفحه_قاب_مقصد_phys(pf), \
 		 ##__VA_ARGS__)
 
 /* Get an unused page frame. don't care which one, or NULL if there are none */
-static struct k_mem_page_frame *free_page_frame_list_get(void)
+ساكن بنية k_mem_صفحه_قاب *free_صفحه_قاب_list_get(فراغ)
 {
-	sys_sfnode_t *node;
-	struct k_mem_page_frame *pf = NULL;
+	sys_sfnode_t *گره;
+	بنية k_mem_صفحه_قاب *pf = عدم;
 
-	node = sys_sflist_get(&free_page_frame_list);
-	if (node != NULL) {
-		z_free_page_count--;
-		pf = CONTAINER_OF(node, struct k_mem_page_frame, node);
-		PF_ASSERT(pf, k_mem_page_frame_is_free(pf),
+	گره = sys_sflist_get(&free_صفحه_قاب_list);
+	إذا (گره != عدم) {
+		z_free_صفحه_شمار--;
+		pf = CONTAINER_از(گره, بنية k_mem_صفحه_قاب, گره);
+		PF_ASSERT(pf, k_mem_صفحه_قاب_is_free(pf),
 			 "on free list but not free");
 		pf->va_and_flags = 0;
 	}
 
-	return pf;
+	أرجع pf;
 }
 
 /* Release a page frame back into the list of free pages */
-static void free_page_frame_list_put(struct k_mem_page_frame *pf)
+ساكن فراغ free_صفحه_قاب_list_put(بنية k_mem_صفحه_قاب *pf)
 {
-	PF_ASSERT(pf, k_mem_page_frame_is_available(pf),
+	PF_ASSERT(pf, k_mem_صفحه_قاب_is_موجود(pf),
 		 "unavailable page put on free list");
 
-	sys_sfnode_init(&pf->node, K_MEM_PAGE_FRAME_FREE);
-	sys_sflist_append(&free_page_frame_list, &pf->node);
-	z_free_page_count++;
+	sys_sfnode_init(&pf->گره, K_MEM_صفحه_قاب_FREE);
+	sys_sflist_append(&free_صفحه_قاب_list, &pf->گره);
+	z_free_صفحه_شمار++;
 }
 
-static void free_page_frame_list_init(void)
+ساكن فراغ free_صفحه_قاب_list_init(فراغ)
 {
-	sys_sflist_init(&free_page_frame_list);
+	sys_sflist_init(&free_صفحه_قاب_list);
 }
 
-static void page_frame_free_locked(struct k_mem_page_frame *pf)
+ساكن فراغ صفحه_قاب_free_locked(بنية k_mem_صفحه_قاب *pf)
 {
 	pf->va_and_flags = 0;
-	free_page_frame_list_put(pf);
+	free_صفحه_قاب_list_put(pf);
 }
 
 /*
@@ -446,11 +446,11 @@ static void page_frame_free_locked(struct k_mem_page_frame *pf)
 /* Called after the frame is mapped in the arch layer, to update our
  * local ontology (and do some assertions while we're at it)
  */
-static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
+ساكن فراغ قاب_mapped_مجموعه(بنية k_mem_صفحه_قاب *pf, فراغ *addr)
 {
-	PF_ASSERT(pf, !k_mem_page_frame_is_free(pf),
+	PF_ASSERT(pf, !k_mem_صفحه_قاب_is_free(pf),
 		  "attempted to map a page frame on the free list");
-	PF_ASSERT(pf, !k_mem_page_frame_is_reserved(pf),
+	PF_ASSERT(pf, !k_mem_صفحه_قاب_is_reserved(pf),
 		  "attempted to map a reserved page frame");
 
 	/* We do allow multiple mappings for pinned page frames
@@ -458,15 +458,15 @@ static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
 	 * This is uncommon, use-cases are for things like the
 	 * Zephyr equivalent of VSDOs
 	 */
-	PF_ASSERT(pf, !k_mem_page_frame_is_mapped(pf) || k_mem_page_frame_is_pinned(pf),
+	PF_ASSERT(pf, !k_mem_صفحه_قاب_is_mapped(pf) || k_mem_صفحه_قاب_is_pinned(pf),
 		 "non-pinned and already mapped to %p",
-		 k_mem_page_frame_to_virt(pf));
+		 k_mem_صفحه_قاب_مقصد_virt(pf));
 
-	uintptr_t flags_mask = CONFIG_MMU_PAGE_SIZE - 1;
-	uintptr_t va = (uintptr_t)addr & ~flags_mask;
+	uintptr_t flags_ماسک = CONFIG_MMU_صفحه_اندازه - 1;
+	uintptr_t va = (uintptr_t)addr & ~flags_ماسک;
 
-	pf->va_and_flags &= flags_mask;
-	pf->va_and_flags |= va | K_MEM_PAGE_FRAME_MAPPED;
+	pf->va_and_flags &= flags_ماسک;
+	pf->va_and_flags |= va | K_MEM_صفحه_قاب_MAPPED;
 }
 
 /* LCOV_EXCL_START */
@@ -480,37 +480,37 @@ static void frame_mapped_set(struct k_mem_page_frame *pf, void *addr)
  * @retval 0 if mapping is found and valid
  * @retval -EFAULT if virtual address is not mapped
  */
-static int virt_to_page_frame(void *virt, uintptr_t *phys)
+ساكن صحيح virt_مقصد_صفحه_قاب(فراغ *virt, uintptr_t *phys)
 {
 	uintptr_t paddr;
-	struct k_mem_page_frame *pf;
-	int ret = -EFAULT;
+	بنية k_mem_صفحه_قاب *pf;
+	صحيح ret = -EFAULT;
 
-	K_MEM_PAGE_FRAME_FOREACH(paddr, pf) {
-		if (k_mem_page_frame_is_mapped(pf)) {
-			if (virt == k_mem_page_frame_to_virt(pf)) {
+	K_MEM_صفحه_قاب_FOREACH(paddr, pf) {
+		إذا (k_mem_صفحه_قاب_is_mapped(pf)) {
+			إذا (virt == k_mem_صفحه_قاب_مقصد_virt(pf)) {
 				ret = 0;
-				if (phys != NULL) {
-					*phys = k_mem_page_frame_to_phys(pf);
+				إذا (phys != عدم) {
+					*phys = k_mem_صفحه_قاب_مقصد_phys(pf);
 				}
-				break;
+				اكسر;
 			}
 		}
 	}
 
-	return ret;
+	أرجع ret;
 }
 /* LCOV_EXCL_STOP */
 
-__weak FUNC_ALIAS(virt_to_page_frame, arch_page_phys_get, int);
+__weak FUNC_ALIAS(virt_مقصد_صفحه_قاب, arch_صفحه_phys_get, صحيح);
 
-#ifdef CONFIG_DEMAND_PAGING
-static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_ptr,
-				     bool page_in, uintptr_t *location_ptr);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+ساكن صحيح صفحه_قاب_prepare_locked(بنية k_mem_صفحه_قاب *pf, bool *dirty_ptr,
+				     bool صفحه_درون, uintptr_t *location_ptr);
 
-static inline void do_backing_store_page_in(uintptr_t location);
-static inline void do_backing_store_page_out(uintptr_t location);
-#endif /* CONFIG_DEMAND_PAGING */
+ساكن مضمن فراغ do_backing_store_صفحه_درون(uintptr_t location);
+ساكن مضمن فراغ do_backing_store_صفحه_بیرون(uintptr_t location);
+#پایان_اگر /* CONFIG_DEMAND_PAGING */
 
 /* Allocate a free page frame, and map it to a specified virtual address
  *
@@ -530,85 +530,85 @@ static inline void do_backing_store_page_out(uintptr_t location);
  * @retval 0 On success
  * @retval -errno On failure
  */
-static int map_anon_page(void *addr, uint32_t flags, bool *recovered)
+ساكن صحيح map_anon_صفحه(فراغ *addr, uint32_t flags, bool *recovered)
 {
-	struct k_mem_page_frame *pf;
+	بنية k_mem_صفحه_قاب *pf;
 	uintptr_t phys;
-	bool lock = (flags & K_MEM_MAP_LOCK) != 0U;
-	int ret;
+	bool قفل = (flags & K_MEM_MAP_قفل) != 0U;
+	صحيح ret;
 
 	*recovered = true;
 
-	pf = free_page_frame_list_get();
-	if (pf == NULL) {
-#ifdef CONFIG_DEMAND_PAGING
+	pf = free_صفحه_قاب_list_get();
+	إذا (pf == عدم) {
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
 		uintptr_t location;
 		bool dirty;
 
 		pf = k_mem_paging_eviction_select(&dirty);
-		if (pf == NULL) {
+		إذا (pf == عدم) {
 			/* Every evictable page frame is pinned or busy */
-			return -ENOMEM;
+			أرجع -ENOMEM;
 		}
 		LOG_DBG("evicting %p at 0x%lx",
-			k_mem_page_frame_to_virt(pf),
-			k_mem_page_frame_to_phys(pf));
-		ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-		if (ret != 0) {
-			return -ENOMEM;
+			k_mem_صفحه_قاب_مقصد_virt(pf),
+			k_mem_صفحه_قاب_مقصد_phys(pf));
+		ret = صفحه_قاب_prepare_locked(pf, &dirty, false, &location);
+		إذا (ret != 0) {
+			أرجع -ENOMEM;
 		}
-		if (dirty) {
-			do_backing_store_page_out(location);
+		إذا (dirty) {
+			do_backing_store_صفحه_بیرون(location);
 		}
 		pf->va_and_flags = 0;
-#else
-		return -ENOMEM;
-#endif /* CONFIG_DEMAND_PAGING */
+#وإلا
+		أرجع -ENOMEM;
+#پایان_اگر /* CONFIG_DEMAND_PAGING */
 	}
 
-	phys = k_mem_page_frame_to_phys(pf);
-	ret = arch_mem_map(addr, phys, CONFIG_MMU_PAGE_SIZE, flags);
+	phys = k_mem_صفحه_قاب_مقصد_phys(pf);
+	ret = arch_mem_map(addr, phys, CONFIG_MMU_صفحه_اندازه, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-	if (ret != 0) {
-#ifdef CONFIG_USERSPACE
+	إذا (ret != 0) {
+#اگر_تعریف_شده CONFIG_USERSPACE
 		/* The mapping above may have already succeeded in some
 		 * memory domains but failing in the middle. So we need to
 		 * unmap those first before returning the page frame back
 		 * to the list.
 		 */
-		int unmap_ret = arch_mem_unmap(addr, CONFIG_MMU_PAGE_SIZE);
+		صحيح unmap_ret = arch_mem_unmap(addr, CONFIG_MMU_صفحه_اندازه);
 
 		__ASSERT(unmap_ret == 0, "%s: cannot undo failed mapping %d\n", __func__,
 			 unmap_ret);
 
-		if (unmap_ret != 0) {
+		إذا (unmap_ret != 0) {
 			/* The page may still be mapped in some memory domains,
 			 * so the page frame cannot be given back to the free
 			 * list for reuse.
 			 */
 			*recovered = false;
-			return ret;
+			أرجع ret;
 		}
-#endif
+#پایان_اگر
 
 		/* Mapping failed: give the page frame back before bailing out. */
-		page_frame_free_locked(pf);
-		return ret;
+		صفحه_قاب_free_locked(pf);
+		أرجع ret;
 	}
 
-	if (lock) {
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+	إذا (قفل) {
+		k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_PINNED);
 	}
-	frame_mapped_set(pf, addr);
-#ifdef CONFIG_DEMAND_PAGING
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!lock)) {
-		k_mem_paging_eviction_add(pf);
+	قاب_mapped_مجموعه(pf, addr);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+	إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!قفل)) {
+		k_mem_paging_eviction_جمع_کن(pf);
 	}
-#endif
+#پایان_اگر
 
 	LOG_DBG("memory mapping anon page %p -> 0x%lx", addr, phys);
 
-	return 0;
+	أرجع 0;
 }
 
 /**
@@ -624,38 +624,38 @@ static int map_anon_page(void *addr, uint32_t flags, bool *recovered)
  * @retval 0 On success
  * @retval -errno On failure
  */
-static int unmap_anon_pages(void *virt, size_t sz)
+ساكن صحيح unmap_anon_صفحات(فراغ *virt, size_t sz)
 {
 	uint8_t *pos;
 	uintptr_t phys;
-	struct k_mem_page_frame *pf;
-	int ret = 0;
+	بنية k_mem_صفحه_قاب *pf;
+	صحيح ret = 0;
 
 	VIRT_FOREACH(virt, sz, pos) {
-#ifdef CONFIG_DEMAND_PAGING
-		enum arch_page_location status;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+		تعداد arch_صفحه_location وضعیت;
 		uintptr_t location;
 
-		status = arch_page_location_get(pos, &location);
-		switch (status) {
-		case ARCH_PAGE_LOCATION_PAGED_OUT:
+		وضعیت = arch_صفحه_location_get(pos, &location);
+		بدل (وضعیت) {
+		حالة ARCH_صفحه_LOCATION_PAGED_بیرون:
 			/*
 			 * No pf is associated with this mapping.
 			 * Simply get rid of the MMU entry and free
 			 * corresponding backing store.
 			 */
-			ret = arch_mem_unmap(pos, CONFIG_MMU_PAGE_SIZE);
+			ret = arch_mem_unmap(pos, CONFIG_MMU_صفحه_اندازه);
 			__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__,
 				 ret);
 
 			k_mem_paging_backing_store_location_free(location);
 
-			if (ret != 0) {
-				goto unmap_anon_out;
+			إذا (ret != 0) {
+				اذهب unmap_anon_بیرون;
 			}
 
-			continue;
-		case ARCH_PAGE_LOCATION_PAGED_IN:
+			استمر;
+		حالة ARCH_صفحه_LOCATION_PAGED_درون:
 			/*
 			 * The page is in memory but it may not be
 			 * accessible in order to manage tracking
@@ -665,67 +665,67 @@ static int unmap_anon_pages(void *virt, size_t sz)
 			 */
 			phys = location;
 			ret = 0;
-			break;
-		default:
-			ret = arch_page_phys_get(pos, &phys);
-			break;
+			اكسر;
+		افتراضي:
+			ret = arch_صفحه_phys_get(pos, &phys);
+			اكسر;
 		}
-#else
-		ret = arch_page_phys_get(pos, &phys);
-#endif
+#وإلا
+		ret = arch_صفحه_phys_get(pos, &phys);
+#پایان_اگر
 		__ASSERT(ret == 0, "%s: cannot unmap an unmapped address %p", __func__, pos);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			/* Found an address not mapped. Do not continue. */
-			goto unmap_anon_out;
+			اذهب unmap_anon_بیرون;
 		}
 
-		__ASSERT(k_mem_is_page_frame(phys), "%s: 0x%lx is not a page frame", __func__,
+		__ASSERT(k_mem_is_صفحه_قاب(phys), "%s: 0x%lx is not a page frame", __func__,
 			 phys);
-		if (!k_mem_is_page_frame(phys)) {
+		إذا (!k_mem_is_صفحه_قاب(phys)) {
 			/* Physical address has no corresponding page frame
 			 * description in the page frame array.
 			 * This should not happen. Do not continue.
 			 */
-			goto unmap_anon_out;
+			اذهب unmap_anon_بیرون;
 		}
 
 		/* Grab the corresponding page frame from physical address */
-		pf = k_mem_phys_to_page_frame(phys);
+		pf = k_mem_phys_مقصد_صفحه_قاب(phys);
 
-		__ASSERT(k_mem_page_frame_is_mapped(pf), "%s: 0x%lx is not a mapped page frame",
+		__ASSERT(k_mem_صفحه_قاب_is_mapped(pf), "%s: 0x%lx is not a mapped page frame",
 			 __func__, phys);
-		if (!k_mem_page_frame_is_mapped(pf)) {
+		إذا (!k_mem_صفحه_قاب_is_mapped(pf)) {
 			/* Page frame is not marked mapped.
 			 * This should not happen. Do not continue.
 			 */
-			goto unmap_anon_out;
+			اذهب unmap_anon_بیرون;
 		}
 
-		ret = arch_mem_unmap(pos, CONFIG_MMU_PAGE_SIZE);
+		ret = arch_mem_unmap(pos, CONFIG_MMU_صفحه_اندازه);
 		__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as the page is still mapped.
 			 */
-			goto unmap_anon_out;
+			اذهب unmap_anon_بیرون;
 		}
 
-#ifdef CONFIG_DEMAND_PAGING
-		if (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
-		    (!k_mem_page_frame_is_pinned(pf))) {
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+		إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
+		    (!k_mem_صفحه_قاب_is_pinned(pf))) {
 			k_mem_paging_eviction_remove(pf);
 		}
-#endif
+#پایان_اگر
 
 		/* Put the page frame back into free list */
-		page_frame_free_locked(pf);
+		صفحه_قاب_free_locked(pf);
 	}
 
-unmap_anon_out:
-	return ret;
+unmap_anon_بیرون:
+	أرجع ret;
 }
 
-#ifdef CONFIG_DEMAND_MAPPING
+#اگر_تعریف_شده CONFIG_DEMAND_MAPPING
 /**
  * Undo demand mapped pages previously established by map_anon_page().
  *
@@ -739,74 +739,74 @@ unmap_anon_out:
  * @retval true When able to unmap all pages.
  * @retval false When fails to unmap some pages.
  */
-static bool undo_demand_mapped_pages(void *virt, size_t sz)
+ساكن bool undo_demand_mapped_صفحات(فراغ *virt, size_t sz)
 {
 	uint8_t *undo_pos;
 	bool success = true;
-	int ret;
+	صحيح ret;
 
 	/* Undo the pages mapped before the failure. */
 	VIRT_FOREACH(virt, sz, undo_pos) {
-		ret = arch_mem_unmap(undo_pos, CONFIG_MMU_PAGE_SIZE);
+		ret = arch_mem_unmap(undo_pos, CONFIG_MMU_صفحه_اندازه);
 		__ASSERT(ret == 0, "%s: cannot undo mapped pages %d", __func__, ret);
 
 		/* Failed to undo one mapped page. Though we still
 		 * want to continue unmapping the remaining mapped
 		 * pages to reclaim them.
 		 */
-		if (ret != 0) {
+		إذا (ret != 0) {
 			success = false;
 		}
 	}
 
-	return success;
+	أرجع success;
 }
-#endif
+#پایان_اگر
 
-void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_anon)
+فراغ *k_mem_map_phys_guard(uintptr_t phys, size_t اندازه, uint32_t flags, bool is_anon)
 {
 	uint8_t *dst;
 	uint8_t *region;
-	size_t total_size;
-	int ret;
-	k_spinlock_key_t key;
+	size_t مجموع_اندازه;
+	صحيح ret;
+	k_spinlock_کلید_t کلید;
 	uint8_t *pos;
 	bool uninit = (flags & K_MEM_MAP_UNINIT) != 0U;
 
-	__ASSERT(!is_anon || (is_anon && page_frames_initialized),
+	__ASSERT(!is_anon || (is_anon && صفحه_قابها_initialized),
 		 "%s called too early", __func__);
-	__ASSERT((flags & K_MEM_CACHE_MASK) == 0U,
+	__ASSERT((flags & K_MEM_CACHE_ماسک) == 0U,
 		 "%s does not support explicit cache settings", __func__);
 
-	if (((flags & K_MEM_PERM_USER) != 0U) &&
+	إذا (((flags & K_MEM_PERM_USER) != 0U) &&
 	    ((flags & K_MEM_MAP_UNINIT) != 0U)) {
 		LOG_ERR("user access to anonymous uninitialized pages is forbidden");
-		return NULL;
+		أرجع عدم;
 	}
-	if ((size % CONFIG_MMU_PAGE_SIZE) != 0U) {
-		LOG_ERR("unaligned size %zu passed to %s", size, __func__);
-		return NULL;
+	إذا ((اندازه % CONFIG_MMU_صفحه_اندازه) != 0U) {
+		LOG_ERR("unaligned size %zu passed to %s", اندازه, __func__);
+		أرجع عدم;
 	}
-	if (size == 0) {
+	إذا (اندازه == 0) {
 		LOG_ERR("zero sized memory mapping");
-		return NULL;
+		أرجع عدم;
 	}
 
 	/* Need extra for the guard pages (before and after) which we
 	 * won't map.
 	 */
-	if (size_add_overflow(size, CONFIG_MMU_PAGE_SIZE * 2, &total_size)) {
-		LOG_ERR("too large size %zu passed to %s", size, __func__);
-		return NULL;
+	إذا (اندازه_جمع_کن_سرریز(اندازه, CONFIG_MMU_صفحه_اندازه * 2, &مجموع_اندازه)) {
+		LOG_ERR("too large size %zu passed to %s", اندازه, __func__);
+		أرجع عدم;
 	}
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 
-	region = virt_region_alloc(total_size, CONFIG_MMU_PAGE_SIZE);
-	if (region == NULL) {
+	region = virt_region_alloc(مجموع_اندازه, CONFIG_MMU_صفحه_اندازه);
+	إذا (region == عدم) {
 		/* Address space has no free region */
-		dst = NULL;
-		goto out;
+		dst = عدم;
+		اذهب بیرون;
 	}
 
 	/* Unmap both guard pages to make sure accessing them
@@ -816,39 +816,39 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 	 * some memory domains, so the virtual region cannot be freed for
 	 * reuse.
 	 */
-	ret = arch_mem_unmap(region, CONFIG_MMU_PAGE_SIZE);
+	ret = arch_mem_unmap(region, CONFIG_MMU_صفحه_اندازه);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
-		dst = NULL;
-		goto out;
+	إذا (ret != 0) {
+		dst = عدم;
+		اذهب بیرون;
 	}
 
-	ret = arch_mem_unmap(region + CONFIG_MMU_PAGE_SIZE + size, CONFIG_MMU_PAGE_SIZE);
+	ret = arch_mem_unmap(region + CONFIG_MMU_صفحه_اندازه + اندازه, CONFIG_MMU_صفحه_اندازه);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
-		dst = NULL;
-		goto out;
+	إذا (ret != 0) {
+		dst = عدم;
+		اذهب بیرون;
 	}
 
 	/* Skip over the "before" guard page in returned address. */
-	dst = region + CONFIG_MMU_PAGE_SIZE;
+	dst = region + CONFIG_MMU_صفحه_اندازه;
 
-	if (is_anon) {
+	إذا (is_anon) {
 		/* Mapping from anonymous memory */
 		flags |= K_MEM_CACHE_WB;
-#ifdef CONFIG_DEMAND_MAPPING
-		if ((flags & K_MEM_MAP_LOCK) == 0) {
+#اگر_تعریف_شده CONFIG_DEMAND_MAPPING
+		إذا ((flags & K_MEM_MAP_قفل) == 0) {
 			flags |= K_MEM_MAP_UNPAGED;
-			VIRT_FOREACH(dst, size, pos) {
+			VIRT_FOREACH(dst, اندازه, pos) {
 				ret = arch_mem_map(pos,
 						   uninit ? ARCH_UNPAGED_ANON_UNINIT
 							  : ARCH_UNPAGED_ANON_ZERO,
-						   CONFIG_MMU_PAGE_SIZE, flags);
+						   CONFIG_MMU_صفحه_اندازه, flags);
 				__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-				if (ret != 0) {
+				إذا (ret != 0) {
 					size_t unmap_sz = pos - dst;
 
-					if (IS_ENABLED(CONFIG_USERSPACE)) {
+					إذا (IS_ENABLED(CONFIG_USERSPACE)) {
 						/* Note that it is unmapping an extra page due to
 						 * the possibility that the mapping above has
 						 * already updated some memory domains but fail in
@@ -856,145 +856,145 @@ void *k_mem_map_phys_guard(uintptr_t phys, size_t size, uint32_t flags, bool is_
 						 * page to unmap those that have been mapped so
 						 * far.
 						 */
-						unmap_sz += CONFIG_MMU_PAGE_SIZE;
+						unmap_sz += CONFIG_MMU_صفحه_اندازه;
 					}
 
-					bool success = undo_demand_mapped_pages(dst, unmap_sz);
+					bool success = undo_demand_mapped_صفحات(dst, unmap_sz);
 
-					dst = NULL;
+					dst = عدم;
 
-					if (success) {
-						goto fail;
-					} else {
+					إذا (success) {
+						اذهب fail;
+					} وإلا {
 						/* Cannot fully recover from mapping
 						 * failure. We cannot free the allocated
 						 * virtual memory region since some of
 						 * the page may still be mapped.
 						 */
-						goto out;
+						اذهب بیرون;
 					}
 				}
 			}
 			LOG_DBG("memory mapping anon pages %p to %p unpaged", dst, pos-1);
 			/* skip the memset() below */
 			uninit = true;
-		} else
-#endif
+		} وإلا
+#پایان_اگر
 		{
-			VIRT_FOREACH(dst, size, pos) {
+			VIRT_FOREACH(dst, اندازه, pos) {
 				bool recovered;
 
-				ret = map_anon_page(pos, flags, &recovered);
+				ret = map_anon_صفحه(pos, flags, &recovered);
 
-				if (ret != 0) {
-					int unmap_ret = unmap_anon_pages(dst, pos - dst);
+				إذا (ret != 0) {
+					صحيح unmap_ret = unmap_anon_صفحات(dst, pos - dst);
 
-					dst = NULL;
+					dst = عدم;
 
-					if ((unmap_ret == 0) && recovered) {
-						goto fail;
-					} else {
+					إذا ((unmap_ret == 0) && recovered) {
+						اذهب fail;
+					} وإلا {
 						/* Cannot fully recover from mapping
 						 * failure. We cannot free the allocated
 						 * virtual memory region since some of
 						 * the page may still be mapped.
 						 */
-						goto out;
+						اذهب بیرون;
 					}
 				}
 			}
 		}
-	} else {
+	} وإلا {
 		/* Mapping known physical memory. */
-		ret = arch_mem_map(dst, phys, size, flags);
+		ret = arch_mem_map(dst, phys, اندازه, flags);
 		__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			/* Clean up any partial mapping left behind. */
-			ret = arch_mem_unmap(dst, size);
+			ret = arch_mem_unmap(dst, اندازه);
 			__ASSERT(ret == 0, "%s: cannot undo mapped pages %d", __func__, ret);
 
-			dst = NULL;
+			dst = عدم;
 
-			if (ret != 0) {
+			إذا (ret != 0) {
 				/* Cannot fully undo all the mappings. There might still be pages
 				 * mapped. So we cannot free the allocated virtual memory region.
 				 */
-				goto out;
-			} else {
-				goto fail;
+				اذهب بیرون;
+			} وإلا {
+				اذهب fail;
 			}
 		}
 	}
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
 
-	if (dst != NULL && !uninit) {
+	إذا (dst != عدم && !uninit) {
 		/* If we later implement mappings to a copy-on-write
 		 * zero page, won't need this step
 		 */
-		memset(dst, 0, size);
+		memset(dst, 0, اندازه);
 	}
 
-	return dst;
+	أرجع dst;
 
 fail:
 	/* Release the whole region, including the guard pages. */
-	virt_region_free(region, total_size);
+	virt_region_free(region, مجموع_اندازه);
 
-	goto out;
+	اذهب بیرون;
 }
 
-void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
+فراغ k_mem_unmap_phys_guard(فراغ *addr, size_t اندازه, bool is_anon)
 {
 	uint8_t *pos;
-	k_spinlock_key_t key;
-	size_t total_size;
-	int ret;
+	k_spinlock_کلید_t کلید;
+	size_t مجموع_اندازه;
+	صحيح ret;
 
 	/* Need space for the "before" guard page */
-	__ASSERT_NO_MSG(POINTER_TO_UINT(addr) >= CONFIG_MMU_PAGE_SIZE);
+	__ASSERT_NO_MSG(اشاره_گر_مقصد_UINT(addr) >= CONFIG_MMU_صفحه_اندازه);
 
 	/* Make sure address range is still valid after accounting
 	 * for two guard pages.
 	 */
-	pos = (uint8_t *)addr - CONFIG_MMU_PAGE_SIZE;
-	k_mem_assert_virtual_region(pos, size + (CONFIG_MMU_PAGE_SIZE * 2));
+	pos = (uint8_t *)addr - CONFIG_MMU_صفحه_اندازه;
+	k_mem_assert_virtual_region(pos, اندازه + (CONFIG_MMU_صفحه_اندازه * 2));
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 
 	/* Check if both guard pages are unmapped.
 	 * Bail if not, as this is probably a region not mapped
 	 * using k_mem_map().
 	 */
 	pos = addr;
-	ret = arch_page_phys_get(pos - CONFIG_MMU_PAGE_SIZE, NULL);
+	ret = arch_صفحه_phys_get(pos - CONFIG_MMU_صفحه_اندازه, عدم);
 	__ASSERT(ret != 0,
 		 "%s: cannot find preceding guard page for (%p, %zu)",
-		 __func__, addr, size);
-	if (ret == 0) {
-		goto out;
+		 __func__, addr, اندازه);
+	إذا (ret == 0) {
+		اذهب بیرون;
 	}
 
-	ret = arch_page_phys_get(pos + size, NULL);
+	ret = arch_صفحه_phys_get(pos + اندازه, عدم);
 	__ASSERT(ret != 0,
 		 "%s: cannot find succeeding guard page for (%p, %zu)",
-		 __func__, addr, size);
-	if (ret == 0) {
-		goto out;
+		 __func__, addr, اندازه);
+	إذا (ret == 0) {
+		اذهب بیرون;
 	}
 
-	if (is_anon) {
+	إذا (is_anon) {
 		/* Unmapping anonymous memory */
-		ret = unmap_anon_pages(addr, size);
+		ret = unmap_anon_صفحات(addr, اندازه);
 		__ASSERT(ret == 0, "%s: unmap_anon_pages() returned %d", __func__, ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as some pages are still be mapped.
 			 */
-			goto out;
+			اذهب بیرون;
 		}
-	} else {
+	} وإلا {
 		/*
 		 * Unmapping previous mapped memory with specific physical address.
 		 *
@@ -1002,83 +1002,83 @@ void k_mem_unmap_phys_guard(void *addr, size_t size, bool is_anon)
 		 * have been unmapped. We just need to unmapped the in-between
 		 * region [addr, (addr + size)).
 		 */
-		ret = arch_mem_unmap(addr, size);
+		ret = arch_mem_unmap(addr, اندازه);
 		__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			/* Fail to unmap. Must bail without releasing any resources
 			 * as some pages are still be mapped.
 			 */
-			goto out;
+			اذهب بیرون;
 		}
 	}
 
 	/* There are guard pages just before and after the mapped
 	 * region. So we also need to free them from the bitmap.
 	 */
-	pos = (uint8_t *)addr - CONFIG_MMU_PAGE_SIZE;
-	total_size = size + (CONFIG_MMU_PAGE_SIZE * 2);
-	virt_region_free(pos, total_size);
+	pos = (uint8_t *)addr - CONFIG_MMU_صفحه_اندازه;
+	مجموع_اندازه = اندازه + (CONFIG_MMU_صفحه_اندازه * 2);
+	virt_region_free(pos, مجموع_اندازه);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
 }
 
-int k_mem_update_flags(void *addr, size_t size, uint32_t flags)
+صحيح k_mem_update_flags(فراغ *addr, size_t اندازه, uint32_t flags)
 {
 	uintptr_t phys;
-	k_spinlock_key_t key;
-	int ret;
+	k_spinlock_کلید_t کلید;
+	صحيح ret;
 
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, اندازه);
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 
 	/*
 	 * We can achieve desired result without explicit architecture support
 	 * by unmapping and remapping the same physical memory using new flags.
 	 */
 
-	ret = arch_page_phys_get(addr, &phys);
-	if (ret < 0) {
-		goto out;
+	ret = arch_صفحه_phys_get(addr, &phys);
+	إذا (ret < 0) {
+		اذهب بیرون;
 	}
 
 	/* TODO: detect and handle paged-out memory as well */
 
-	ret = arch_mem_unmap(addr, size);
+	ret = arch_mem_unmap(addr, اندازه);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap failed %d\n", __func__, ret);
-	if (ret != 0) {
-		goto out;
+	إذا (ret != 0) {
+		اذهب بیرون;
 	}
 
-	ret = arch_mem_map(addr, phys, size, flags);
+	ret = arch_mem_map(addr, phys, اندازه, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
-	return ret;
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
+	أرجع ret;
 }
 
-size_t k_mem_free_get(void)
+size_t k_mem_free_get(فراغ)
 {
 	size_t ret;
-	k_spinlock_key_t key;
+	k_spinlock_کلید_t کلید;
 
-	__ASSERT(page_frames_initialized, "%s called too early", __func__);
+	__ASSERT(صفحه_قابها_initialized, "%s called too early", __func__);
 
-	key = k_spin_lock(&z_mm_lock);
-#ifdef CONFIG_DEMAND_PAGING
-	if (z_free_page_count > CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE) {
-		ret = z_free_page_count - CONFIG_DEMAND_PAGING_PAGE_FRAMES_RESERVE;
-	} else {
+	کلید = k_spin_قفل(&z_mm_قفل);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+	إذا (z_free_صفحه_شمار > CONFIG_DEMAND_PAGING_صفحه_قابها_RESERVE) {
+		ret = z_free_صفحه_شمار - CONFIG_DEMAND_PAGING_صفحه_قابها_RESERVE;
+	} وإلا {
 		ret = 0;
 	}
-#else
-	ret = z_free_page_count;
-#endif /* CONFIG_DEMAND_PAGING */
-	k_spin_unlock(&z_mm_lock, key);
+#وإلا
+	ret = z_free_صفحه_شمار;
+#پایان_اگر /* CONFIG_DEMAND_PAGING */
+	k_spin_unlock(&z_mm_قفل, کلید);
 
-	return ret * (size_t)CONFIG_MMU_PAGE_SIZE;
+	أرجع ret * (size_t)CONFIG_MMU_صفحه_اندازه;
 }
 
 /* Get the default virtual region alignment, here the default MMU page size
@@ -1088,12 +1088,12 @@ size_t k_mem_free_get(void)
  *
  * @return alignment to apply on the virtual address of this region
  */
-static size_t virt_region_align(uintptr_t phys, size_t size)
+ساكن size_t virt_region_align(uintptr_t phys, size_t اندازه)
 {
-	ARG_UNUSED(phys);
-	ARG_UNUSED(size);
+	ARG_استفادهنشده(phys);
+	ARG_استفادهنشده(اندازه);
 
-	return CONFIG_MMU_PAGE_SIZE;
+	أرجع CONFIG_MMU_صفحه_اندازه;
 }
 
 __weak FUNC_ALIAS(virt_region_align, arch_virt_region_align, size_t);
@@ -1102,33 +1102,33 @@ __weak FUNC_ALIAS(virt_region_align, arch_virt_region_align, size_t);
  * Data will be copied and BSS zeroed, but this must not rely on any
  * initialization functions being called prior to work correctly.
  */
-void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32_t flags)
+فراغ k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t اندازه, uint32_t flags)
 {
-	uintptr_t aligned_phys, addr_offset;
-	size_t aligned_size, align_boundary;
-	k_spinlock_key_t key;
+	uintptr_t aligned_phys, addr_جابه_جایی;
+	size_t aligned_اندازه, align_boundary;
+	k_spinlock_کلید_t کلید;
 	uint8_t *dest_addr;
-	size_t num_bits;
-	size_t offset;
-	int ret;
+	size_t رقم_بیتها;
+	size_t جابه_جایی;
+	صحيح ret;
 
-#ifndef CONFIG_KERNEL_DIRECT_MAP
-	__ASSERT(!(flags & K_MEM_DIRECT_MAP), "The direct-map is not enabled");
-#endif /* CONFIG_KERNEL_DIRECT_MAP */
-	addr_offset = k_mem_region_align(&aligned_phys, &aligned_size,
-					 phys, size,
-					 CONFIG_MMU_PAGE_SIZE);
-	__ASSERT(aligned_size != 0U, "0-length mapping at 0x%lx", aligned_phys);
-	__ASSERT(aligned_size - 1 <= (UINTPTR_MAX - aligned_phys),
+#اگر_تعریف_نشده CONFIG_KERNEL_مستقیم_MAP
+	__ASSERT(!(flags & K_MEM_مستقیم_MAP), "The direct-map is not enabled");
+#پایان_اگر /* CONFIG_KERNEL_DIRECT_MAP */
+	addr_جابه_جایی = k_mem_region_align(&aligned_phys, &aligned_اندازه,
+					 phys, اندازه,
+					 CONFIG_MMU_صفحه_اندازه);
+	__ASSERT(aligned_اندازه != 0U, "0-length mapping at 0x%lx", aligned_phys);
+	__ASSERT(aligned_اندازه - 1 <= (UINTPTR_MAX - aligned_phys),
 		 "wraparound for physical address 0x%lx (size %zu)",
-		 aligned_phys, aligned_size);
+		 aligned_phys, aligned_اندازه);
 
-	align_boundary = arch_virt_region_align(aligned_phys, aligned_size);
+	align_boundary = arch_virt_region_align(aligned_phys, aligned_اندازه);
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 
-	if (IS_ENABLED(CONFIG_KERNEL_DIRECT_MAP) &&
-	    (flags & K_MEM_DIRECT_MAP)) {
+	إذا (IS_ENABLED(CONFIG_KERNEL_مستقیم_MAP) &&
+	    (flags & K_MEM_مستقیم_MAP)) {
 		dest_addr = (uint8_t *)aligned_phys;
 
 		/* Mark the region of virtual memory bitmap as used
@@ -1138,50 +1138,50 @@ void k_mem_map_phys_bare(uint8_t **virt_ptr, uintptr_t phys, size_t size, uint32
 		 * virtual memory space, we need to mark the bits.
 		 */
 
-		if (IN_RANGE(aligned_phys,
-			      (uintptr_t)K_MEM_VIRT_RAM_START,
-			      (uintptr_t)(K_MEM_VIRT_RAM_END - 1)) ||
-		    IN_RANGE(aligned_phys + aligned_size - 1,
-			      (uintptr_t)K_MEM_VIRT_RAM_START,
-			      (uintptr_t)(K_MEM_VIRT_RAM_END - 1))) {
-			uint8_t *adjusted_start = max(dest_addr, K_MEM_VIRT_RAM_START);
-			uint8_t *adjusted_end = min(dest_addr + aligned_size,
-						    K_MEM_VIRT_RAM_END);
-			size_t adjusted_sz = adjusted_end - adjusted_start;
+		إذا (درون_RANGE(aligned_phys,
+			      (uintptr_t)K_MEM_VIRT_RAM_شروع,
+			      (uintptr_t)(K_MEM_VIRT_RAM_انتها - 1)) ||
+		    درون_RANGE(aligned_phys + aligned_اندازه - 1,
+			      (uintptr_t)K_MEM_VIRT_RAM_شروع,
+			      (uintptr_t)(K_MEM_VIRT_RAM_انتها - 1))) {
+			uint8_t *adjusted_شروع = max(dest_addr, K_MEM_VIRT_RAM_شروع);
+			uint8_t *adjusted_انتها = min(dest_addr + aligned_اندازه,
+						    K_MEM_VIRT_RAM_انتها);
+			size_t adjusted_sz = adjusted_انتها - adjusted_شروع;
 
-			num_bits = adjusted_sz / CONFIG_MMU_PAGE_SIZE;
-			offset = virt_to_bitmap_offset(adjusted_start, adjusted_sz);
-			if (sys_bitarray_test_and_set_region(
-			    &virt_region_bitmap, num_bits, offset, true)) {
-				goto fail;
+			رقم_بیتها = adjusted_sz / CONFIG_MMU_صفحه_اندازه;
+			جابه_جایی = virt_مقصد_bitmap_جابه_جایی(adjusted_شروع, adjusted_sz);
+			إذا (sys_bitarray_test_and_مجموعه_region(
+			    &virt_region_bitmap, رقم_بیتها, جابه_جایی, true)) {
+				اذهب fail;
 			}
 		}
-	} else {
+	} وإلا {
 		/* Obtain an appropriately sized chunk of virtual memory */
-		dest_addr = virt_region_alloc(aligned_size, align_boundary);
-		if (!dest_addr) {
-			goto fail;
+		dest_addr = virt_region_alloc(aligned_اندازه, align_boundary);
+		إذا (!dest_addr) {
+			اذهب fail;
 		}
 	}
 
 	/* If this fails there's something amiss with virt_region_get */
 	__ASSERT((uintptr_t)dest_addr <
-		 ((uintptr_t)dest_addr + (size - 1)),
+		 ((uintptr_t)dest_addr + (اندازه - 1)),
 		 "wraparound for virtual address %p (size %zu)",
-		 dest_addr, size);
+		 dest_addr, اندازه);
 
-	LOG_DBG("arch_mem_map(%p, 0x%lx, %zu, %x) offset %lu", (void *)dest_addr,
-		aligned_phys, aligned_size, flags, addr_offset);
+	LOG_DBG("arch_mem_map(%p, 0x%lx, %zu, %x) offset %lu", (فراغ *)dest_addr,
+		aligned_phys, aligned_اندازه, flags, addr_جابه_جایی);
 
-	ret = arch_mem_map(dest_addr, aligned_phys, aligned_size, flags);
+	ret = arch_mem_map(dest_addr, aligned_phys, aligned_اندازه, flags);
 	__ASSERT(ret == 0, "%s: arch_mem_map failed %d\n", __func__, ret);
-	if (ret != 0) {
-		goto fail;
+	إذا (ret != 0) {
+		اذهب fail;
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_قفل, کلید);
 
-	*virt_ptr = dest_addr + addr_offset;
-	return;
+	*virt_ptr = dest_addr + addr_جابه_جایی;
+	أرجع;
 fail:
 	/* May re-visit this in the future, but for now running out of
 	 * virtual address space or failing the arch_mem_map() call is
@@ -1191,309 +1191,309 @@ fail:
 	 * assertions since they are clearly programming mistakes.
 	 */
 	LOG_ERR("memory mapping 0x%lx (size %zu, flags 0x%x) failed",
-		phys, size, flags);
+		phys, اندازه, flags);
 	k_panic();
 }
 
-void k_mem_unmap_phys_bare(uint8_t *virt, size_t size)
+فراغ k_mem_unmap_phys_bare(uint8_t *virt, size_t اندازه)
 {
-	uintptr_t aligned_virt, addr_offset;
-	size_t aligned_size;
-	k_spinlock_key_t key;
-	int ret;
+	uintptr_t aligned_virt, addr_جابه_جایی;
+	size_t aligned_اندازه;
+	k_spinlock_کلید_t کلید;
+	صحيح ret;
 
-	addr_offset = k_mem_region_align(&aligned_virt, &aligned_size,
-					 POINTER_TO_UINT(virt), size,
-					 CONFIG_MMU_PAGE_SIZE);
-	__ASSERT(aligned_size != 0U, "0-length mapping at 0x%lx", aligned_virt);
-	__ASSERT(aligned_size - 1 <= (UINTPTR_MAX - aligned_virt),
+	addr_جابه_جایی = k_mem_region_align(&aligned_virt, &aligned_اندازه,
+					 اشاره_گر_مقصد_UINT(virt), اندازه,
+					 CONFIG_MMU_صفحه_اندازه);
+	__ASSERT(aligned_اندازه != 0U, "0-length mapping at 0x%lx", aligned_virt);
+	__ASSERT(aligned_اندازه - 1 <= (UINTPTR_MAX - aligned_virt),
 		 "wraparound for virtual address 0x%lx (size %zu)",
-		 aligned_virt, aligned_size);
+		 aligned_virt, aligned_اندازه);
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 
 	LOG_DBG("arch_mem_unmap(0x%lx, %zu) offset %lu",
-		aligned_virt, aligned_size, addr_offset);
+		aligned_virt, aligned_اندازه, addr_جابه_جایی);
 
-	ret = arch_mem_unmap(UINT_TO_POINTER(aligned_virt), aligned_size);
+	ret = arch_mem_unmap(UINT_مقصد_اشاره_گر(aligned_virt), aligned_اندازه);
 	__ASSERT(ret == 0, "%s: arch_mem_unmap() returned %d", __func__, ret);
-	if (ret != 0) {
+	إذا (ret != 0) {
 		/* Fail to unmap. We cannot free the virtual memory region
 		 * as some pages are still be mapped.
 		 */
-		goto out;
+		اذهب بیرون;
 	}
 
-	virt_region_free(UINT_TO_POINTER(aligned_virt), aligned_size);
+	virt_region_free(UINT_مقصد_اشاره_گر(aligned_virt), aligned_اندازه);
 
-out:
-	k_spin_unlock(&z_mm_lock, key);
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
 }
 
 /*
  * Miscellaneous
  */
 
-size_t k_mem_region_align(uintptr_t *aligned_addr, size_t *aligned_size,
-			  uintptr_t addr, size_t size, size_t align)
+size_t k_mem_region_align(uintptr_t *aligned_addr, size_t *aligned_اندازه,
+			  uintptr_t addr, size_t اندازه, size_t align)
 {
-	size_t addr_offset;
+	size_t addr_جابه_جایی;
 
 	/* The actual mapped region must be page-aligned. Round down the
 	 * physical address and pad the region size appropriately
 	 */
-	*aligned_addr = ROUND_DOWN(addr, align);
-	addr_offset = addr - *aligned_addr;
-	*aligned_size = ROUND_UP(size + addr_offset, align);
+	*aligned_addr = دور_پایین(addr, align);
+	addr_جابه_جایی = addr - *aligned_addr;
+	*aligned_اندازه = دور_به_بالا(اندازه + addr_جابه_جایی, align);
 
-	return addr_offset;
+	أرجع addr_جابه_جایی;
 }
 
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
-static void mark_linker_section_pinned(void *start_addr, void *end_addr,
+#اگر_تعریف_شده CONFIG_LINKER_USE_BOOT_SECTION
+ساكن فراغ mark_linker_section_pinned(فراغ *شروع_addr, فراغ *انتها_addr,
 				       bool pin)
 {
-	struct k_mem_page_frame *pf;
+	بنية k_mem_صفحه_قاب *pf;
 	uint8_t *addr;
 
-	uintptr_t pinned_start = ROUND_DOWN(POINTER_TO_UINT(start_addr),
-					    CONFIG_MMU_PAGE_SIZE);
-	uintptr_t pinned_end = ROUND_UP(POINTER_TO_UINT(end_addr),
-					CONFIG_MMU_PAGE_SIZE);
-	size_t pinned_size = pinned_end - pinned_start;
+	uintptr_t pinned_شروع = دور_پایین(اشاره_گر_مقصد_UINT(شروع_addr),
+					    CONFIG_MMU_صفحه_اندازه);
+	uintptr_t pinned_انتها = دور_به_بالا(اشاره_گر_مقصد_UINT(انتها_addr),
+					CONFIG_MMU_صفحه_اندازه);
+	size_t pinned_اندازه = pinned_انتها - pinned_شروع;
 
-	VIRT_FOREACH(UINT_TO_POINTER(pinned_start), pinned_size, addr)
+	VIRT_FOREACH(UINT_مقصد_اشاره_گر(pinned_شروع), pinned_اندازه, addr)
 	{
-		pf = k_mem_phys_to_page_frame(K_MEM_BOOT_VIRT_TO_PHYS(addr));
-		frame_mapped_set(pf, addr);
+		pf = k_mem_phys_مقصد_صفحه_قاب(K_MEM_BOOT_VIRT_مقصد_PHYS(addr));
+		قاب_mapped_مجموعه(pf, addr);
 
-		if (pin) {
-			k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
-		} else {
-			k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_PINNED);
-#ifdef CONFIG_DEMAND_PAGING
-			if (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
-			    k_mem_page_frame_is_evictable(pf)) {
-				k_mem_paging_eviction_add(pf);
+		إذا (pin) {
+			k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_PINNED);
+		} وإلا {
+			k_mem_صفحه_قاب_clear(pf, K_MEM_صفحه_قاب_PINNED);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+			إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING) &&
+			    k_mem_صفحه_قاب_is_evictable(pf)) {
+				k_mem_paging_eviction_جمع_کن(pf);
 			}
-#endif
+#پایان_اگر
 		}
 	}
 }
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+#پایان_اگر /* CONFIG_LINKER_USE_BOOT_SECTION */
 
-#ifdef CONFIG_LINKER_USE_ONDEMAND_SECTION
-static void z_paging_ondemand_section_map(void)
+#اگر_تعریف_شده CONFIG_LINKER_USE_ONDEMAND_SECTION
+ساكن فراغ z_paging_ondemand_section_map(فراغ)
 {
 	uint8_t *addr;
-	size_t size;
+	size_t اندازه;
 	uintptr_t location;
 	uint32_t flags;
-	int ret;
+	صحيح ret;
 
-	size = (uintptr_t)lnkr_ondemand_text_size;
+	اندازه = (uintptr_t)lnkr_ondemand_متن_اندازه;
 	flags = K_MEM_MAP_UNPAGED | K_MEM_PERM_EXEC | K_MEM_CACHE_WB;
-	VIRT_FOREACH(lnkr_ondemand_text_start, size, addr) {
+	VIRT_FOREACH(lnkr_ondemand_متن_شروع, اندازه, addr) {
 		k_mem_paging_backing_store_location_query(addr, &location);
 
-		ret = arch_mem_map(addr, location, CONFIG_MMU_PAGE_SIZE, flags);
+		ret = arch_mem_map(addr, location, CONFIG_MMU_صفحه_اندازه, flags);
 		__ASSERT(ret == 0, "arch_mem_map() returned %d", ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			k_panic();
 		}
 
-		sys_bitarray_set_region(&virt_region_bitmap, 1,
-					virt_to_bitmap_offset(addr, CONFIG_MMU_PAGE_SIZE));
+		sys_bitarray_مجموعه_region(&virt_region_bitmap, 1,
+					virt_مقصد_bitmap_جابه_جایی(addr, CONFIG_MMU_صفحه_اندازه));
 	}
 
-	size = (uintptr_t)lnkr_ondemand_rodata_size;
+	اندازه = (uintptr_t)lnkr_ondemand_rodata_اندازه;
 	flags = K_MEM_MAP_UNPAGED | K_MEM_CACHE_WB;
-	VIRT_FOREACH(lnkr_ondemand_rodata_start, size, addr) {
+	VIRT_FOREACH(lnkr_ondemand_rodata_شروع, اندازه, addr) {
 		k_mem_paging_backing_store_location_query(addr, &location);
 
-		ret = arch_mem_map(addr, location, CONFIG_MMU_PAGE_SIZE, flags);
+		ret = arch_mem_map(addr, location, CONFIG_MMU_صفحه_اندازه, flags);
 		__ASSERT(ret == 0, "arch_mem_map() returned %d", ret);
-		if (ret != 0) {
+		إذا (ret != 0) {
 			k_panic();
 		}
 
-		sys_bitarray_set_region(&virt_region_bitmap, 1,
-					virt_to_bitmap_offset(addr, CONFIG_MMU_PAGE_SIZE));
+		sys_bitarray_مجموعه_region(&virt_region_bitmap, 1,
+					virt_مقصد_bitmap_جابه_جایی(addr, CONFIG_MMU_صفحه_اندازه));
 	}
 }
-#endif /* CONFIG_LINKER_USE_ONDEMAND_SECTION */
+#پایان_اگر /* CONFIG_LINKER_USE_ONDEMAND_SECTION */
 
-void z_mem_manage_init(void)
+فراغ z_mem_manage_init(فراغ)
 {
 	uintptr_t phys;
 	uint8_t *addr;
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key = k_spin_lock(&z_mm_lock);
+	بنية k_mem_صفحه_قاب *pf;
+	k_spinlock_کلید_t کلید = k_spin_قفل(&z_mm_قفل);
 
-	free_page_frame_list_init();
+	free_صفحه_قاب_list_init();
 
-	ARG_UNUSED(addr);
+	ARG_استفادهنشده(addr);
 
-#ifdef CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES
+#اگر_تعریف_شده CONFIG_ARCH_HAS_RESERVED_صفحه_قابها
 	/* If some page frames are unavailable for use as memory, arch
 	 * code will mark K_MEM_PAGE_FRAME_RESERVED in their flags
 	 */
-	arch_reserved_pages_update();
-#endif /* CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES */
+	arch_reserved_صفحات_update();
+#پایان_اگر /* CONFIG_ARCH_HAS_RESERVED_PAGE_FRAMES */
 
 	/* The entire Zephyr image is mapped and pinned at boot. Demand
 	 * paging applies only to anonymous mappings created via k_mem_map()
 	 * and to memory placed in explicit __ondemand_* linker sections;
 	 * the kernel image itself is never a candidate for eviction.
 	 */
-	VIRT_FOREACH(K_MEM_KERNEL_VIRT_START, K_MEM_KERNEL_VIRT_SIZE, addr)
+	VIRT_FOREACH(K_MEM_KERNEL_VIRT_شروع, K_MEM_KERNEL_VIRT_اندازه, addr)
 	{
-		pf = k_mem_phys_to_page_frame(K_MEM_BOOT_VIRT_TO_PHYS(addr));
-		frame_mapped_set(pf, addr);
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+		pf = k_mem_phys_مقصد_صفحه_قاب(K_MEM_BOOT_VIRT_مقصد_PHYS(addr));
+		قاب_mapped_مجموعه(pf, addr);
+		k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_PINNED);
 	}
 
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
+#اگر_تعریف_شده CONFIG_LINKER_USE_BOOT_SECTION
 	/* Pin the boot section to prevent it from being swapped out during
 	 * boot process. Will be un-pinned once boot process completes.
 	 */
-	mark_linker_section_pinned(lnkr_boot_start, lnkr_boot_end, true);
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+	mark_linker_section_pinned(lnkr_boot_شروع, lnkr_boot_انتها, true);
+#پایان_اگر /* CONFIG_LINKER_USE_BOOT_SECTION */
 
 	/* Any remaining pages that aren't mapped, reserved, or pinned get
 	 * added to the free pages list
 	 */
-	K_MEM_PAGE_FRAME_FOREACH(phys, pf) {
-		if (k_mem_page_frame_is_available(pf)) {
-			free_page_frame_list_put(pf);
+	K_MEM_صفحه_قاب_FOREACH(phys, pf) {
+		إذا (k_mem_صفحه_قاب_is_موجود(pf)) {
+			free_صفحه_قاب_list_put(pf);
 		}
 	}
-	LOG_DBG("free page frames: %zu", z_free_page_count);
+	LOG_DBG("free page frames: %zu", z_free_صفحه_شمار);
 
-#ifdef CONFIG_DEMAND_PAGING
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
 	z_paging_histogram_init();
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 	k_mem_paging_backing_store_init();
 	k_mem_paging_eviction_init();
 
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+	إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 		/* start tracking evictable page installed above if any */
-		K_MEM_PAGE_FRAME_FOREACH(phys, pf) {
-			if (k_mem_page_frame_is_evictable(pf)) {
-				k_mem_paging_eviction_add(pf);
+		K_MEM_صفحه_قاب_FOREACH(phys, pf) {
+			إذا (k_mem_صفحه_قاب_is_evictable(pf)) {
+				k_mem_paging_eviction_جمع_کن(pf);
 			}
 		}
 	}
-#endif /* CONFIG_DEMAND_PAGING */
+#پایان_اگر /* CONFIG_DEMAND_PAGING */
 
-#ifdef CONFIG_LINKER_USE_ONDEMAND_SECTION
+#اگر_تعریف_شده CONFIG_LINKER_USE_ONDEMAND_SECTION
 	z_paging_ondemand_section_map();
-#endif
+#پایان_اگر
 
-#ifdef CONFIG_ASSERT
-	page_frames_initialized = true;
-#endif /* CONFIG_ASSERT */
+#اگر_تعریف_شده CONFIG_ASSERT
+	صفحه_قابها_initialized = true;
+#پایان_اگر /* CONFIG_ASSERT */
 
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_قفل, کلید);
 }
 
-void z_mem_manage_boot_finish(void)
+فراغ z_mem_manage_boot_پایان(فراغ)
 {
-#ifdef CONFIG_LINKER_USE_BOOT_SECTION
+#اگر_تعریف_شده CONFIG_LINKER_USE_BOOT_SECTION
 	/* At the end of boot process, unpin the boot sections
 	 * as they don't need to be in memory all the time anymore.
 	 */
-	mark_linker_section_pinned(lnkr_boot_start, lnkr_boot_end, false);
-#endif /* CONFIG_LINKER_USE_BOOT_SECTION */
+	mark_linker_section_pinned(lnkr_boot_شروع, lnkr_boot_انتها, false);
+#پایان_اگر /* CONFIG_LINKER_USE_BOOT_SECTION */
 }
 
-#ifdef CONFIG_DEMAND_PAGING
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING
 
-#ifdef CONFIG_DEMAND_PAGING_STATS
-struct k_mem_paging_stats_t paging_stats;
-extern struct k_mem_paging_histogram_t z_paging_histogram_eviction;
-extern struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
-extern struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS
+بنية k_mem_paging_stats_t paging_stats;
+خارجي بنية k_mem_paging_histogram_t z_paging_histogram_eviction;
+خارجي بنية k_mem_paging_histogram_t z_paging_histogram_backing_store_صفحه_درون;
+خارجي بنية k_mem_paging_histogram_t z_paging_histogram_backing_store_صفحه_بیرون;
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS */
 
-static inline void do_backing_store_page_in(uintptr_t location)
+ساكن مضمن فراغ do_backing_store_صفحه_درون(uintptr_t location)
 {
-#ifdef CONFIG_DEMAND_MAPPING
+#اگر_تعریف_شده CONFIG_DEMAND_MAPPING
 	/* Check for special cases */
-	switch (location) {
-	case ARCH_UNPAGED_ANON_ZERO:
-		memset(K_MEM_SCRATCH_PAGE, 0, CONFIG_MMU_PAGE_SIZE);
+	بدل (location) {
+	حالة ARCH_UNPAGED_ANON_ZERO:
+		memset(K_MEM_SCRATCH_صفحه, 0, CONFIG_MMU_صفحه_اندازه);
 		__fallthrough;
-	case ARCH_UNPAGED_ANON_UNINIT:
+	حالة ARCH_UNPAGED_ANON_UNINIT:
 		/* nothing else to do */
-		return;
-	default:
-		break;
+		أرجع;
+	افتراضي:
+		اكسر;
 	}
-#endif /* CONFIG_DEMAND_MAPPING */
+#پایان_اگر /* CONFIG_DEMAND_MAPPING */
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t زمان_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t زمان_شروع, زمان_انتها;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	زمان_شروع = timing_counter_get();
+#وإلا
+	uint32_t زمان_شروع;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	زمان_شروع = k_چرخه_get_32();
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	k_mem_paging_backing_store_page_in(location);
+	k_mem_paging_backing_store_صفحه_درون(location);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	زمان_انتها = timing_counter_get();
+	زمان_diff = (uint32_t)timing_چرخهها_get(&زمان_شروع, &زمان_انتها);
+#وإلا
+	زمان_diff = k_چرخه_get_32() - زمان_شروع;
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_backing_store_page_in,
-			       time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_backing_store_صفحه_درون,
+			       زمان_diff);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 }
 
-static inline void do_backing_store_page_out(uintptr_t location)
+ساكن مضمن فراغ do_backing_store_صفحه_بیرون(uintptr_t location)
 {
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t زمان_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t زمان_شروع, زمان_انتها;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	زمان_شروع = timing_counter_get();
+#وإلا
+	uint32_t زمان_شروع;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	زمان_شروع = k_چرخه_get_32();
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	k_mem_paging_backing_store_page_out(location);
+	k_mem_paging_backing_store_صفحه_بیرون(location);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	زمان_انتها = timing_counter_get();
+	زمان_diff = (uint32_t)timing_چرخهها_get(&زمان_شروع, &زمان_انتها);
+#وإلا
+	زمان_diff = k_چرخه_get_32() - زمان_شروع;
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_backing_store_page_out,
-			       time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_backing_store_صفحه_بیرون,
+			       زمان_diff);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 }
 
-#if defined(CONFIG_SMP) && defined(CONFIG_DEMAND_PAGING_ALLOW_IRQ)
+#إذا defined(CONFIG_SMP) && defined(CONFIG_DEMAND_PAGING_ALLOW_IRQ)
 /*
  * SMP support is very simple. Some resources such as the scratch page could
  * be made per CPU, backing store driver execution be confined to the faulting
@@ -1503,16 +1503,16 @@ static inline void do_backing_store_page_out(uintptr_t location)
  * So let's simply enforce global demand paging serialization across all CPUs
  * with a mutex as there is no real gain from added parallelism here.
  */
-static K_MUTEX_DEFINE(z_mm_paging_lock);
-#endif
+ساكن K_MUTEX_DEFINE(z_mm_paging_قفل);
+#پایان_اگر
 
-static void virt_region_foreach(void *addr, size_t size,
-				void (*func)(void *vaddr))
+ساكن فراغ virt_region_foreach(فراغ *addr, size_t اندازه,
+				فراغ (*func)(فراغ *vaddr))
 {
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, اندازه);
 
-	for (size_t offset = 0; offset < size; offset += CONFIG_MMU_PAGE_SIZE) {
-		func((uint8_t *)addr + offset);
+	لكل (size_t جابه_جایی = 0; جابه_جایی < اندازه; جابه_جایی += CONFIG_MMU_صفحه_اندازه) {
+		func((uint8_t *)addr + جابه_جایی);
 	}
 }
 
@@ -1532,15 +1532,15 @@ static void virt_region_foreach(void *addr, size_t size,
  *
  * Returns -ENOMEM if the backing store is full
  */
-static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_ptr,
-				     bool page_fault, uintptr_t *location_ptr)
+ساكن صحيح صفحه_قاب_prepare_locked(بنية k_mem_صفحه_قاب *pf, bool *dirty_ptr,
+				     bool صفحه_fault, uintptr_t *location_ptr)
 {
 	uintptr_t phys;
-	int ret;
+	صحيح ret;
 	bool dirty = *dirty_ptr;
 
-	phys = k_mem_page_frame_to_phys(pf);
-	__ASSERT(!k_mem_page_frame_is_pinned(pf), "page frame 0x%lx is pinned",
+	phys = k_mem_صفحه_قاب_مقصد_phys(pf);
+	__ASSERT(!k_mem_صفحه_قاب_is_pinned(pf), "page frame 0x%lx is pinned",
 		 phys);
 
 	/* If the backing store doesn't have a copy of the page, even if it
@@ -1554,291 +1554,291 @@ static int page_frame_prepare_locked(struct k_mem_page_frame *pf, bool *dirty_pt
 	 *    evicted from the backing store to make room for other evicted
 	 *    pages.
 	 */
-	if (k_mem_page_frame_is_mapped(pf)) {
-		dirty = dirty || !k_mem_page_frame_is_backed(pf);
+	إذا (k_mem_صفحه_قاب_is_mapped(pf)) {
+		dirty = dirty || !k_mem_صفحه_قاب_is_backed(pf);
 	}
 
-	if (dirty || page_fault) {
+	إذا (dirty || صفحه_fault) {
 		arch_mem_scratch(phys);
 	}
 
-	if (k_mem_page_frame_is_mapped(pf)) {
+	إذا (k_mem_صفحه_قاب_is_mapped(pf)) {
 		ret = k_mem_paging_backing_store_location_get(pf, location_ptr,
-							      page_fault);
-		if (ret != 0) {
+							      صفحه_fault);
+		إذا (ret != 0) {
 			LOG_ERR("out of backing store memory");
-			return -ENOMEM;
+			أرجع -ENOMEM;
 		}
-		arch_mem_page_out(k_mem_page_frame_to_virt(pf), *location_ptr);
+		arch_mem_صفحه_بیرون(k_mem_صفحه_قاب_مقصد_virt(pf), *location_ptr);
 
-		if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+		إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 			k_mem_paging_eviction_remove(pf);
 		}
-	} else {
+	} وإلا {
 		/* Shouldn't happen unless this function is mis-used */
 		__ASSERT(!dirty, "un-mapped page determined to be dirty");
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
 	/* Mark as busy so that k_mem_page_frame_is_evictable() returns false */
-	__ASSERT(!k_mem_page_frame_is_busy(pf), "page frame 0x%lx is already busy",
+	__ASSERT(!k_mem_صفحه_قاب_is_busy(pf), "page frame 0x%lx is already busy",
 		 phys);
-	k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_BUSY);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_BUSY);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 	/* Update dirty parameter, since we set to true if it wasn't backed
 	 * even if otherwise clean
 	 */
 	*dirty_ptr = dirty;
 
-	return 0;
+	أرجع 0;
 }
 
-static int do_mem_evict(void *addr)
+ساكن صحيح do_mem_evict(فراغ *addr)
 {
 	bool dirty;
-	struct k_mem_page_frame *pf;
+	بنية k_mem_صفحه_قاب *pf;
 	uintptr_t location;
-	k_spinlock_key_t key;
+	k_spinlock_کلید_t کلید;
 	uintptr_t flags, phys;
-	int ret;
+	صحيح ret;
 
-#if CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	__ASSERT(!k_is_in_isr(),
+#إذا CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	__ASSERT(!k_is_درون_isr(),
 		 "%s is unavailable in ISRs with CONFIG_DEMAND_PAGING_ALLOW_IRQ",
 		 __func__);
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
-	flags = arch_page_info_get(addr, &phys, false);
-	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_قفل(&z_mm_paging_قفل, K_FOREVER);
+#وإلا
+	k_sched_قفل();
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	کلید = k_spin_قفل(&z_mm_قفل);
+	flags = arch_صفحه_info_get(addr, &phys, false);
+	__ASSERT((flags & ARCH_داده_صفحه_NOT_MAPPED) == 0,
 		 "address %p isn't mapped", addr);
-	if ((flags & ARCH_DATA_PAGE_LOADED) == 0) {
+	إذا ((flags & ARCH_داده_صفحه_LOADED) == 0) {
 		/* Un-mapped or already evicted. Nothing to do */
 		ret = 0;
-		goto out;
+		اذهب بیرون;
 	}
 
-	dirty = (flags & ARCH_DATA_PAGE_DIRTY) != 0;
-	pf = k_mem_phys_to_page_frame(phys);
-	__ASSERT(k_mem_page_frame_to_virt(pf) == addr, "page frame address mismatch");
-	ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-	if (ret != 0) {
-		goto out;
+	dirty = (flags & ARCH_داده_صفحه_DIRTY) != 0;
+	pf = k_mem_phys_مقصد_صفحه_قاب(phys);
+	__ASSERT(k_mem_صفحه_قاب_مقصد_virt(pf) == addr, "page frame address mismatch");
+	ret = صفحه_قاب_prepare_locked(pf, &dirty, false, &location);
+	إذا (ret != 0) {
+		اذهب بیرون;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(location);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_قفل, کلید);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	إذا (dirty) {
+		do_backing_store_صفحه_بیرون(location);
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	page_frame_free_locked(pf);
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	کلید = k_spin_قفل(&z_mm_قفل);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	صفحه_قاب_free_locked(pf);
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_قفل);
+#وإلا
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	return ret;
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	أرجع ret;
 }
 
-int k_mem_page_out(void *addr, size_t size)
+صحيح k_mem_صفحه_بیرون(فراغ *addr, size_t اندازه)
 {
-	__ASSERT(page_frames_initialized, "%s called on %p too early", __func__,
+	__ASSERT(صفحه_قابها_initialized, "%s called on %p too early", __func__,
 		 addr);
-	k_mem_assert_virtual_region(addr, size);
+	k_mem_assert_virtual_region(addr, اندازه);
 
-	for (size_t offset = 0; offset < size; offset += CONFIG_MMU_PAGE_SIZE) {
-		void *pos = (uint8_t *)addr + offset;
-		int ret;
+	لكل (size_t جابه_جایی = 0; جابه_جایی < اندازه; جابه_جایی += CONFIG_MMU_صفحه_اندازه) {
+		فراغ *pos = (uint8_t *)addr + جابه_جایی;
+		صحيح ret;
 
 		ret = do_mem_evict(pos);
-		if (ret != 0) {
-			return ret;
+		إذا (ret != 0) {
+			أرجع ret;
 		}
 	}
 
-	return 0;
+	أرجع 0;
 }
 
-int k_mem_page_frame_evict(uintptr_t phys)
+صحيح k_mem_صفحه_قاب_evict(uintptr_t phys)
 {
-	k_spinlock_key_t key;
-	struct k_mem_page_frame *pf;
+	k_spinlock_کلید_t کلید;
+	بنية k_mem_صفحه_قاب *pf;
 	bool dirty;
 	uintptr_t flags;
 	uintptr_t location;
-	int ret;
+	صحيح ret;
 
-	__ASSERT(page_frames_initialized, "%s called on 0x%lx too early",
+	__ASSERT(صفحه_قابها_initialized, "%s called on 0x%lx too early",
 		 __func__, phys);
 
 	/* Implementation is similar to do_page_fault() except there is no
 	 * data page to page-in, see comments in that function.
 	 */
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	__ASSERT(!k_is_in_isr(),
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	__ASSERT(!k_is_درون_isr(),
 		 "%s is unavailable in ISRs with CONFIG_DEMAND_PAGING_ALLOW_IRQ",
 		 __func__);
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	key = k_spin_lock(&z_mm_lock);
-	pf = k_mem_phys_to_page_frame(phys);
-	if (!k_mem_page_frame_is_mapped(pf)) {
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_قفل(&z_mm_paging_قفل, K_FOREVER);
+#وإلا
+	k_sched_قفل();
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	کلید = k_spin_قفل(&z_mm_قفل);
+	pf = k_mem_phys_مقصد_صفحه_قاب(phys);
+	إذا (!k_mem_صفحه_قاب_is_mapped(pf)) {
 		/* Nothing to do, free page */
 		ret = 0;
-		goto out;
+		اذهب بیرون;
 	}
-	flags = arch_page_info_get(k_mem_page_frame_to_virt(pf), NULL, false);
+	flags = arch_صفحه_info_get(k_mem_صفحه_قاب_مقصد_virt(pf), عدم, false);
 	/* Shouldn't ever happen */
-	__ASSERT((flags & ARCH_DATA_PAGE_LOADED) != 0, "data page not loaded");
-	dirty = (flags & ARCH_DATA_PAGE_DIRTY) != 0;
-	ret = page_frame_prepare_locked(pf, &dirty, false, &location);
-	if (ret != 0) {
-		goto out;
+	__ASSERT((flags & ARCH_داده_صفحه_LOADED) != 0, "data page not loaded");
+	dirty = (flags & ARCH_داده_صفحه_DIRTY) != 0;
+	ret = صفحه_قاب_prepare_locked(pf, &dirty, false, &location);
+	إذا (ret != 0) {
+		اذهب بیرون;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(location);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_قفل, کلید);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	إذا (dirty) {
+		do_backing_store_صفحه_بیرون(location);
 	}
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	page_frame_free_locked(pf);
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	کلید = k_spin_قفل(&z_mm_قفل);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	صفحه_قاب_free_locked(pf);
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_قفل);
+#وإلا
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	return ret;
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	أرجع ret;
 }
 
-static inline void paging_stats_faults_inc(struct k_thread *faulting_thread,
-					   int key)
+ساكن مضمن فراغ paging_stats_خطاها_inc(بنية k_thread *faulting_thread,
+					   صحيح کلید)
 {
-#ifdef CONFIG_DEMAND_PAGING_STATS
-	bool is_irq_unlocked = arch_irq_unlocked(key);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS
+	bool is_irq_unlocked = arch_irq_unlocked(کلید);
 
 	paging_stats.pagefaults.cnt++;
 
-	if (is_irq_unlocked) {
+	إذا (is_irq_unlocked) {
 		paging_stats.pagefaults.irq_unlocked++;
-	} else {
+	} وإلا {
 		paging_stats.pagefaults.irq_locked++;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_THREAD_STATS
 	faulting_thread->paging_stats.pagefaults.cnt++;
 
-	if (is_irq_unlocked) {
+	إذا (is_irq_unlocked) {
 		faulting_thread->paging_stats.pagefaults.irq_unlocked++;
-	} else {
+	} وإلا {
 		faulting_thread->paging_stats.pagefaults.irq_locked++;
 	}
-#else
-	ARG_UNUSED(faulting_thread);
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#وإلا
+	ARG_استفادهنشده(faulting_thread);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 
-#ifndef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	if (k_is_in_isr()) {
-		paging_stats.pagefaults.in_isr++;
+#اگر_تعریف_نشده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	إذا (k_is_درون_isr()) {
+		paging_stats.pagefaults.درون_isr++;
 
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-		faulting_thread->paging_stats.pagefaults.in_isr++;
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_THREAD_STATS
+		faulting_thread->paging_stats.pagefaults.درون_isr++;
+#پایان_اگر /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 	}
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS */
 }
 
-static inline void paging_stats_eviction_inc(struct k_thread *faulting_thread,
+ساكن مضمن فراغ paging_stats_eviction_inc(بنية k_thread *faulting_thread,
 					     bool dirty)
 {
-#ifdef CONFIG_DEMAND_PAGING_STATS
-	if (dirty) {
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS
+	إذا (dirty) {
 		paging_stats.eviction.dirty++;
-	} else {
+	} وإلا {
 		paging_stats.eviction.clean++;
 	}
-#ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-	if (dirty) {
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_THREAD_STATS
+	إذا (dirty) {
 		faulting_thread->paging_stats.eviction.dirty++;
-	} else {
+	} وإلا {
 		faulting_thread->paging_stats.eviction.clean++;
 	}
-#else
-	ARG_UNUSED(faulting_thread);
-#endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
-#endif /* CONFIG_DEMAND_PAGING_STATS */
+#وإلا
+	ARG_استفادهنشده(faulting_thread);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_THREAD_STATS */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS */
 }
 
-static inline struct k_mem_page_frame *do_eviction_select(bool *dirty)
+ساكن مضمن بنية k_mem_صفحه_قاب *do_eviction_select(bool *dirty)
 {
-	struct k_mem_page_frame *pf;
+	بنية k_mem_صفحه_قاب *pf;
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-	uint32_t time_diff;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+	uint32_t زمان_diff;
 
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	timing_t time_start, time_end;
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	timing_t زمان_شروع, زمان_انتها;
 
-	time_start = timing_counter_get();
-#else
-	uint32_t time_start;
+	زمان_شروع = timing_counter_get();
+#وإلا
+	uint32_t زمان_شروع;
 
-	time_start = k_cycle_get_32();
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	زمان_شروع = k_چرخه_get_32();
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
 	pf = k_mem_paging_eviction_select(dirty);
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-#ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
-	time_end = timing_counter_get();
-	time_diff = (uint32_t)timing_cycles_get(&time_start, &time_end);
-#else
-	time_diff = k_cycle_get_32() - time_start;
-#endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
+	زمان_انتها = timing_counter_get();
+	زمان_diff = (uint32_t)timing_چرخهها_get(&زمان_شروع, &زمان_انتها);
+#وإلا
+	زمان_diff = k_چرخه_get_32() - زمان_شروع;
+#پایان_اگر /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 
-	z_paging_histogram_inc(&z_paging_histogram_eviction, time_diff);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+	z_paging_histogram_inc(&z_paging_histogram_eviction, زمان_diff);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-	return pf;
+	أرجع pf;
 }
 
-static bool do_page_fault(void *addr, bool pin)
+ساكن bool do_صفحه_fault(فراغ *addr, bool pin)
 {
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
-	uintptr_t page_in_location, page_out_location;
-	enum arch_page_location status;
-	bool result;
+	بنية k_mem_صفحه_قاب *pf;
+	k_spinlock_کلید_t کلید;
+	uintptr_t صفحه_درون_location, صفحه_بیرون_location;
+	تعداد arch_صفحه_location وضعیت;
+	bool نتیجه;
 	bool dirty = false;
-	struct k_thread *faulting_thread;
-	int ret;
+	بنية k_thread *faulting_thread;
+	صحيح ret;
 
-	__ASSERT(page_frames_initialized, "page fault at %p happened too early",
+	__ASSERT(صفحه_قابها_initialized, "page fault at %p happened too early",
 		 addr);
 
 	LOG_DBG("page fault at %p", addr);
@@ -1849,7 +1849,7 @@ static bool do_page_fault(void *addr, bool pin)
 	 *   * periodic timer execution time histogram (if implemented)
 	 */
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
 	/*
 	 * We do re-enable interrupts during the page-in/page-out operation
 	 * if and only if interrupts were enabled when the exception was
@@ -1882,36 +1882,36 @@ static bool do_page_fault(void *addr, bool pin)
 	 * and k_sched_lock()  is equivalent to a no-op on SMP anyway.
 	 * As a result, sleeping/rescheduling in the SMP case is fine.
 	 */
-	__ASSERT(!k_is_in_isr(), "ISR page faults are forbidden");
-#ifdef CONFIG_SMP
-	k_mutex_lock(&z_mm_paging_lock, K_FOREVER);
-#else
-	k_sched_lock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	__ASSERT(!k_is_درون_isr(), "ISR page faults are forbidden");
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_قفل(&z_mm_paging_قفل, K_FOREVER);
+#وإلا
+	k_sched_قفل();
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 
-	key = k_spin_lock(&z_mm_lock);
+	کلید = k_spin_قفل(&z_mm_قفل);
 	faulting_thread = _current;
 
-	status = arch_page_location_get(addr, &page_in_location);
-	if (status == ARCH_PAGE_LOCATION_BAD) {
+	وضعیت = arch_صفحه_location_get(addr, &صفحه_درون_location);
+	إذا (وضعیت == ARCH_صفحه_LOCATION_BAD) {
 		/* Return false to treat as a fatal error */
-		result = false;
-		goto out;
+		نتیجه = false;
+		اذهب بیرون;
 	}
-	result = true;
+	نتیجه = true;
 
-	if (status == ARCH_PAGE_LOCATION_PAGED_IN) {
-		if (pin) {
+	إذا (وضعیت == ARCH_صفحه_LOCATION_PAGED_درون) {
+		إذا (pin) {
 			/* It's a physical memory address */
-			uintptr_t phys = page_in_location;
+			uintptr_t phys = صفحه_درون_location;
 
-			pf = k_mem_phys_to_page_frame(phys);
-			if (!k_mem_page_frame_is_pinned(pf)) {
-				if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+			pf = k_mem_phys_مقصد_صفحه_قاب(phys);
+			إذا (!k_mem_صفحه_قاب_is_pinned(pf)) {
+				إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
 					k_mem_paging_eviction_remove(pf);
 				}
-				k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+				k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_PINNED);
 			}
 		}
 
@@ -1920,85 +1920,85 @@ static bool do_page_fault(void *addr, bool pin)
 		 * no need to go through the following code to
 		 * pull in the data pages. So skip to the end.
 		 */
-		goto out;
+		اذهب بیرون;
 	}
-	__ASSERT(status == ARCH_PAGE_LOCATION_PAGED_OUT,
-		 "unexpected status value %d", status);
+	__ASSERT(وضعیت == ARCH_صفحه_LOCATION_PAGED_بیرون,
+		 "unexpected status value %d", وضعیت);
 
-	paging_stats_faults_inc(faulting_thread, key.key);
+	paging_stats_خطاها_inc(faulting_thread, کلید.کلید);
 
-	pf = free_page_frame_list_get();
-	if (pf == NULL) {
+	pf = free_صفحه_قاب_list_get();
+	إذا (pf == عدم) {
 		/* Need to evict a page frame */
 		pf = do_eviction_select(&dirty);
-		if (pf == NULL) {
+		إذا (pf == عدم) {
 			/* Every evictable page frame is pinned or busy.
 			 * Fail the fault so it is reported as fatal.
 			 */
-			result = false;
-			goto out;
+			نتیجه = false;
+			اذهب بیرون;
 		}
 		LOG_DBG("evicting %p at 0x%lx",
-			k_mem_page_frame_to_virt(pf),
-			k_mem_page_frame_to_phys(pf));
+			k_mem_صفحه_قاب_مقصد_virt(pf),
+			k_mem_صفحه_قاب_مقصد_phys(pf));
 
 		paging_stats_eviction_inc(faulting_thread, dirty);
 	}
-	ret = page_frame_prepare_locked(pf, &dirty, true, &page_out_location);
-	if (ret != 0) {
+	ret = صفحه_قاب_prepare_locked(pf, &dirty, true, &صفحه_بیرون_location);
+	إذا (ret != 0) {
 		/* Backing store is full. Fail the fault so it is
 		 * reported as fatal.
 		 */
-		result = false;
-		goto out;
+		نتیجه = false;
+		اذهب بیرون;
 	}
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	k_spin_unlock(&z_mm_lock, key);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	k_spin_unlock(&z_mm_قفل, کلید);
 	/* Interrupts are now unlocked if they were not locked when we entered
 	 * this function, and we may service ISRs. The scheduler is still
 	 * locked.
 	 */
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	if (dirty) {
-		do_backing_store_page_out(page_out_location);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	إذا (dirty) {
+		do_backing_store_صفحه_بیرون(صفحه_بیرون_location);
 	}
-	do_backing_store_page_in(page_in_location);
+	do_backing_store_صفحه_درون(صفحه_درون_location);
 
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-	key = k_spin_lock(&z_mm_lock);
-	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_BUSY);
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
-	k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_MAPPED);
-	frame_mapped_set(pf, addr);
-	if (pin) {
-		k_mem_page_frame_set(pf, K_MEM_PAGE_FRAME_PINNED);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+	کلید = k_spin_قفل(&z_mm_قفل);
+	k_mem_صفحه_قاب_clear(pf, K_MEM_صفحه_قاب_BUSY);
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+	k_mem_صفحه_قاب_clear(pf, K_MEM_صفحه_قاب_MAPPED);
+	قاب_mapped_مجموعه(pf, addr);
+	إذا (pin) {
+		k_mem_صفحه_قاب_مجموعه(pf, K_MEM_صفحه_قاب_PINNED);
 	}
 
-	arch_mem_page_in(addr, k_mem_page_frame_to_phys(pf));
-	k_mem_paging_backing_store_page_finalize(pf, page_in_location);
-	if (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!pin)) {
-		k_mem_paging_eviction_add(pf);
+	arch_mem_صفحه_درون(addr, k_mem_صفحه_قاب_مقصد_phys(pf));
+	k_mem_paging_backing_store_صفحه_finalize(pf, صفحه_درون_location);
+	إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING) && (!pin)) {
+		k_mem_paging_eviction_جمع_کن(pf);
 	}
-out:
-	k_spin_unlock(&z_mm_lock, key);
-#ifdef CONFIG_DEMAND_PAGING_ALLOW_IRQ
-#ifdef CONFIG_SMP
-	k_mutex_unlock(&z_mm_paging_lock);
-#else
+بیرون:
+	k_spin_unlock(&z_mm_قفل, کلید);
+#اگر_تعریف_شده CONFIG_DEMAND_PAGING_ALLOW_IRQ
+#اگر_تعریف_شده CONFIG_SMP
+	k_mutex_unlock(&z_mm_paging_قفل);
+#وإلا
 	k_sched_unlock();
-#endif
-#endif /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
+#پایان_اگر
+#پایان_اگر /* CONFIG_DEMAND_PAGING_ALLOW_IRQ */
 
-	return result;
+	أرجع نتیجه;
 }
 
-static void do_page_in(void *addr)
+ساكن فراغ do_صفحه_درون(فراغ *addr)
 {
 	bool ret;
 
-	ret = do_page_fault(addr, false);
-	if (!ret) {
+	ret = do_صفحه_fault(addr, false);
+	إذا (!ret) {
 		/* There is no error reporting channel to the caller, and
 		 * continuing would defer the failure to an arbitrary later
 		 * access.
@@ -2008,20 +2008,20 @@ static void do_page_in(void *addr)
 	}
 }
 
-void k_mem_page_in(void *addr, size_t size)
+فراغ k_mem_صفحه_درون(فراغ *addr, size_t اندازه)
 {
-	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_in_isr(),
+	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_درون_isr(),
 		 "%s may not be called in ISRs if CONFIG_DEMAND_PAGING_ALLOW_IRQ is enabled",
 		 __func__);
-	virt_region_foreach(addr, size, do_page_in);
+	virt_region_foreach(addr, اندازه, do_صفحه_درون);
 }
 
-static void do_mem_pin(void *addr)
+ساكن فراغ do_mem_pin(فراغ *addr)
 {
 	bool ret;
 
-	ret = do_page_fault(addr, true);
-	if (!ret) {
+	ret = do_صفحه_fault(addr, true);
+	إذا (!ret) {
 		/* There is no error reporting channel to the caller, and
 		 * continuing with the memory not actually pinned would
 		 * defer the failure to an arbitrary later access, possibly
@@ -2032,47 +2032,47 @@ static void do_mem_pin(void *addr)
 	}
 }
 
-void k_mem_pin(void *addr, size_t size)
+فراغ k_mem_pin(فراغ *addr, size_t اندازه)
 {
-	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_in_isr(),
+	__ASSERT(!IS_ENABLED(CONFIG_DEMAND_PAGING_ALLOW_IRQ) || !k_is_درون_isr(),
 		 "%s may not be called in ISRs if CONFIG_DEMAND_PAGING_ALLOW_IRQ is enabled",
 		 __func__);
-	virt_region_foreach(addr, size, do_mem_pin);
+	virt_region_foreach(addr, اندازه, do_mem_pin);
 }
 
-bool k_mem_page_fault(void *addr)
+bool k_mem_صفحه_fault(فراغ *addr)
 {
-	return do_page_fault(addr, false);
+	أرجع do_صفحه_fault(addr, false);
 }
 
-static void do_mem_unpin(void *addr)
+ساكن فراغ do_mem_unpin(فراغ *addr)
 {
-	struct k_mem_page_frame *pf;
-	k_spinlock_key_t key;
+	بنية k_mem_صفحه_قاب *pf;
+	k_spinlock_کلید_t کلید;
 	uintptr_t flags, phys;
 
-	key = k_spin_lock(&z_mm_lock);
-	flags = arch_page_info_get(addr, &phys, false);
-	__ASSERT((flags & ARCH_DATA_PAGE_NOT_MAPPED) == 0,
+	کلید = k_spin_قفل(&z_mm_قفل);
+	flags = arch_صفحه_info_get(addr, &phys, false);
+	__ASSERT((flags & ARCH_داده_صفحه_NOT_MAPPED) == 0,
 		 "invalid data page at %p", addr);
-	if ((flags & ARCH_DATA_PAGE_LOADED) != 0) {
-		pf = k_mem_phys_to_page_frame(phys);
-		if (k_mem_page_frame_is_pinned(pf)) {
-			k_mem_page_frame_clear(pf, K_MEM_PAGE_FRAME_PINNED);
+	إذا ((flags & ARCH_داده_صفحه_LOADED) != 0) {
+		pf = k_mem_phys_مقصد_صفحه_قاب(phys);
+		إذا (k_mem_صفحه_قاب_is_pinned(pf)) {
+			k_mem_صفحه_قاب_clear(pf, K_MEM_صفحه_قاب_PINNED);
 
-			if (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
-				k_mem_paging_eviction_add(pf);
+			إذا (IS_ENABLED(CONFIG_EVICTION_TRACKING)) {
+				k_mem_paging_eviction_جمع_کن(pf);
 			}
 		}
 	}
-	k_spin_unlock(&z_mm_lock, key);
+	k_spin_unlock(&z_mm_قفل, کلید);
 }
 
-void k_mem_unpin(void *addr, size_t size)
+فراغ k_mem_unpin(فراغ *addr, size_t اندازه)
 {
-	__ASSERT(page_frames_initialized, "%s called on %p too early", __func__,
+	__ASSERT(صفحه_قابها_initialized, "%s called on %p too early", __func__,
 		 addr);
-	virt_region_foreach(addr, size, do_mem_unpin);
+	virt_region_foreach(addr, اندازه, do_mem_unpin);
 }
 
-#endif /* CONFIG_DEMAND_PAGING */
+#پایان_اگر /* CONFIG_DEMAND_PAGING */

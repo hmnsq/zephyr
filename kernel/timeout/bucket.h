@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
-#define ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
+#اگر_تعریف_نشده ZEPHYR_KERNEL_TIMEOUT_سطل_H
+#تعریف_کن ZEPHYR_KERNEL_TIMEOUT_سطل_H
 
 /**
  * @file
@@ -40,176 +40,176 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/init.h>
-#include <zephyr/sys/dlist.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/sys/dlist.h>
 
-#define BUCKET_LISTS CONFIG_TIMEOUT_BUCKET_LISTS
-#define BUCKET_MASK  (BUCKET_LISTS - 1)
+#تعریف_کن سطل_LISTS CONFIG_TIMEOUT_سطل_LISTS
+#تعریف_کن سطل_ماسک  (سطل_LISTS - 1)
 
-BUILD_ASSERT((BUCKET_LISTS & BUCKET_MASK) == 0,
+BUILD_ASSERT((سطل_LISTS & سطل_ماسک) == 0,
 	     "CONFIG_TIMEOUT_BUCKET_LISTS must be a power of two");
-BUILD_ASSERT(BUCKET_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
+BUILD_ASSERT(سطل_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
 
 /* Occupancy bitmap, one bit per bucket. Stay 32-bit for the common (and
  * smallest, cheapest-to-scan on 32-bit targets) window and only widen to
  * 64-bit when more than 32 buckets are configured.
  */
-#if BUCKET_LISTS <= 32
-typedef uint32_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u32_count_trailing_zeros(x)
-#else
-typedef uint64_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u64_count_trailing_zeros(x)
-#endif
-#define BUCKET_BIT(n) ((bucket_bitmap_t)1 << (n))
+#إذا سطل_LISTS <= 32
+تعريفنوع uint32_t سطل_bitmap_t;
+#تعریف_کن سطل_بیتها_ctz(x) u32_شمار_trailing_zeros(x)
+#وإلا
+تعريفنوع uint64_t سطل_bitmap_t;
+#تعریف_کن سطل_بیتها_ctz(x) u64_شمار_trailing_zeros(x)
+#پایان_اگر
+#تعریف_کن سطل_بیت(n) ((سطل_bitmap_t)1 << (n))
 
-static sys_dlist_t bucket[BUCKET_LISTS];
-static sys_dlist_t overflow;        /* sorted ascending by absolute expiry */
-static bucket_bitmap_t bucket_bits; /* bit p set => bucket[p] is non-empty */
-static uint64_t cursor_base;        /* window start, aligned to BUCKET_LISTS */
+ساكن sys_dlist_t سطل[سطل_LISTS];
+ساكن sys_dlist_t سرریز;        /* sorted ascending by absolute expiry */
+ساكن سطل_bitmap_t سطل_بیتها; /* bit p set => bucket[p] is non-empty */
+ساكن uint64_t cursor_پایه;        /* window start, aligned to BUCKET_LISTS */
 
-static int timeout_bucket_init(void)
+ساكن صحيح timeout_سطل_init(فراغ)
 {
-	for (unsigned int i = 0; i < BUCKET_LISTS; i++) {
-		sys_dlist_init(&bucket[i]);
+	لكل (بیعلامت صحيح i = 0; i < سطل_LISTS; i++) {
+		sys_dlist_init(&سطل[i]);
 	}
-	sys_dlist_init(&overflow);
-	bucket_bits = 0U;
-	cursor_base = 0U;
+	sys_dlist_init(&سرریز);
+	سطل_بیتها = 0U;
+	cursor_پایه = 0U;
 
-	return 0;
+	أرجع 0;
 }
 
 /* Runs before the timer driver (PRE_KERNEL_2) and before any timeout is added.
  * Priority 0 keeps it ahead of other PRE_KERNEL_1 initialisation.
  */
-SYS_INIT(timeout_bucket_init, PRE_KERNEL_1, 0);
+SYS_INIT(timeout_سطل_init, PRE_KERNEL_1, 0);
 
-static struct _timeout *overflow_head(void)
+ساكن بنية _timeout *سرریز_سر(فراغ)
 {
-	sys_dnode_t *n = sys_dlist_peek_head(&overflow);
+	sys_dnode_t *n = sys_dlist_peek_سر(&سرریز);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	أرجع (n == عدم) ? عدم : CONTAINER_از(n, بنية _timeout, گره);
 }
 
 /* Ticks from curr_tick to the earliest pending expiry, or INT64_MAX if none. */
-static int64_t earliest_gap(void)
+ساكن int64_t earliest_gap(فراغ)
 {
 	int64_t gap = INT64_MAX;
-	unsigned int cur_off = (unsigned int)(curr_tick & BUCKET_MASK);
+	بیعلامت صحيح cur_off = (بیعلامت صحيح)(curr_tick & سطل_ماسک);
 
 	/* Nearest non-empty bucket strictly ahead of curr_tick in the window.
 	 * cursor_base is aligned, so bucket index == window offset.
 	 */
-	if (cur_off < (BUCKET_LISTS - 1)) {
-		bucket_bitmap_t ahead = bucket_bits & (~(bucket_bitmap_t)0 << (cur_off + 1));
+	إذا (cur_off < (سطل_LISTS - 1)) {
+		سطل_bitmap_t ahead = سطل_بیتها & (~(سطل_bitmap_t)0 << (cur_off + 1));
 
-		if (ahead != 0U) {
-			gap = (int64_t)bucket_bits_ctz(ahead) - cur_off;
+		إذا (ahead != 0U) {
+			gap = (int64_t)سطل_بیتها_ctz(ahead) - cur_off;
 		}
 	}
 
-	if (gap == INT64_MAX) {
-		struct _timeout *t = overflow_head();
+	إذا (gap == INT64_MAX) {
+		بنية _timeout *t = سرریز_سر();
 
-		if (t != NULL) {
+		إذا (t != عدم) {
 			gap = (int64_t)t->dticks - (int64_t)curr_tick;
 		}
 	}
 
-	return gap;
+	أرجع gap;
 }
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ساكن bool z_timeout_q_درج(بنية _timeout *مقصد, k_ticks_t dticks)
 {
 	uint64_t expiry = curr_tick + (uint64_t)dticks;
 	int64_t old_gap = earliest_gap();
 
-	if (expiry < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)(expiry & BUCKET_MASK);
+	إذا (expiry < cursor_پایه + سطل_LISTS) {
+		بیعلامت صحيح idx = (بیعلامت صحيح)(expiry & سطل_ماسک);
 
-		to->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &to->node);
-	} else {
+		مقصد->dticks = idx;
+		سطل_بیتها |= سطل_بیت(idx);
+		sys_dlist_append(&سطل[idx], &مقصد->گره);
+	} وإلا {
 		/* Overflow: keep sorted ascending by absolute expiry. Insert
 		 * after any equal-keyed entries so same-tick order stays FIFO.
 		 */
-		struct _timeout *t;
+		بنية _timeout *t;
 
-		to->dticks = (k_ticks_t)expiry;
-		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, node) {
-			if ((uint64_t)t->dticks > expiry) {
-				sys_dlist_insert(&t->node, &to->node);
-				return (int64_t)dticks < old_gap;
+		مقصد->dticks = (k_ticks_t)expiry;
+		SYS_DLIST_FOR_EACH_CONTAINER(&سرریز, t, گره) {
+			إذا ((uint64_t)t->dticks > expiry) {
+				sys_dlist_درج(&t->گره, &مقصد->گره);
+				أرجع (int64_t)dticks < old_gap;
 			}
 		}
-		sys_dlist_append(&overflow, &to->node);
+		sys_dlist_append(&سرریز, &مقصد->گره);
 	}
 
-	return (int64_t)dticks < old_gap;
+	أرجع (int64_t)dticks < old_gap;
 }
 
-static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ساكن k_ticks_t z_timeout_q_remainder(ثابت بنية _timeout *مقصد)
 {
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
+	إذا ((uint64_t)مقصد->dticks < سطل_LISTS) {
 		/* Bucket entry: reconstruct its absolute expiry, the unique
 		 * tick in the window whose low bits are the bucket index.
 		 */
-		uint64_t off = ((uint64_t)to->dticks - cursor_base) & BUCKET_MASK;
+		uint64_t off = ((uint64_t)مقصد->dticks - cursor_پایه) & سطل_ماسک;
 
-		return (k_ticks_t)((cursor_base + off) - curr_tick);
+		أرجع (k_ticks_t)((cursor_پایه + off) - curr_tick);
 	}
 
-	return (k_ticks_t)((uint64_t)to->dticks - curr_tick);
+	أرجع (k_ticks_t)((uint64_t)مقصد->dticks - curr_tick);
 }
 
-static bool z_timeout_q_remove(struct _timeout *to)
+ساكن bool z_timeout_q_remove(بنية _timeout *مقصد)
 {
-	bool was_first = (z_timeout_q_remainder(to) <= earliest_gap());
+	bool was_اولی = (z_timeout_q_remainder(مقصد) <= earliest_gap());
 
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)to->dticks;
+	إذا ((uint64_t)مقصد->dticks < سطل_LISTS) {
+		بیعلامت صحيح idx = (بیعلامت صحيح)مقصد->dticks;
 
-		sys_dlist_remove(&to->node);
-		if (sys_dlist_is_empty(&bucket[idx])) {
-			bucket_bits &= ~BUCKET_BIT(idx);
+		sys_dlist_remove(&مقصد->گره);
+		إذا (sys_dlist_is_خالی(&سطل[idx])) {
+			سطل_بیتها &= ~سطل_بیت(idx);
 		}
-	} else {
+	} وإلا {
 		/* Overflow stores absolute expiry (not a delta), so removal
 		 * needs no successor fix-up.
 		 */
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&مقصد->گره);
 	}
 
-	return was_first;
+	أرجع was_اولی;
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * none. The announce-range cap is applied centrally by next_timeout() in
  * timeout.c.
  */
-static k_ticks_t z_timeout_q_next_expiry(void)
+ساكن k_ticks_t z_timeout_q_بعدی_expiry(فراغ)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
+	أرجع (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
 }
 
-static int32_t z_timeout_q_next_gap(void)
+ساكن int32_t z_timeout_q_بعدی_gap(فراغ)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	أرجع (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static void z_timeout_q_advance(int32_t dt)
+ساكن فراغ z_timeout_q_advance(int32_t dt)
 {
 	uint64_t new_curr = curr_tick + (uint64_t)dt;
 
-	if (new_curr < cursor_base + BUCKET_LISTS) {
+	إذا (new_curr < cursor_پایه + سطل_LISTS) {
 		/* Still inside the current window: nothing to migrate. */
-		return;
+		أرجع;
 	}
 
 	/* Crossed the window. The loop only advances past the boundary when no
@@ -217,40 +217,40 @@ static void z_timeout_q_advance(int32_t dt)
 	 * is empty here. Re-base the window onto curr_tick's new position and
 	 * migrate the overflow entries that have come within range.
 	 */
-	cursor_base = new_curr & ~(uint64_t)BUCKET_MASK;
-	bucket_bits = 0U;
+	cursor_پایه = new_curr & ~(uint64_t)سطل_ماسک;
+	سطل_بیتها = 0U;
 
-	struct _timeout *t;
+	بنية _timeout *t;
 
-	while ((t = overflow_head()) != NULL &&
-	       (uint64_t)t->dticks < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)((uint64_t)t->dticks & BUCKET_MASK);
+	طالما ((t = سرریز_سر()) != عدم &&
+	       (uint64_t)t->dticks < cursor_پایه + سطل_LISTS) {
+		بیعلامت صحيح idx = (بیعلامت صحيح)((uint64_t)t->dticks & سطل_ماسک);
 
-		sys_dlist_remove(&t->node);
+		sys_dlist_remove(&t->گره);
 		t->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &t->node);
+		سطل_بیتها |= سطل_بیت(idx);
+		sys_dlist_append(&سطل[idx], &t->گره);
 	}
 }
 
-static struct _timeout *z_timeout_q_pop_due(void)
+ساكن بنية _timeout *z_timeout_q_برداشت_due(فراغ)
 {
-	unsigned int idx = (unsigned int)(curr_tick & BUCKET_MASK);
-	sys_dnode_t *n = sys_dlist_peek_head(&bucket[idx]);
-	struct _timeout *t;
+	بیعلامت صحيح idx = (بیعلامت صحيح)(curr_tick & سطل_ماسک);
+	sys_dnode_t *n = sys_dlist_peek_سر(&سطل[idx]);
+	بنية _timeout *t;
 
-	if (n == NULL) {
-		return NULL;
+	إذا (n == عدم) {
+		أرجع عدم;
 	}
 
 	/* All entries in bucket[curr_tick & MASK] expire exactly at curr_tick. */
-	t = CONTAINER_OF(n, struct _timeout, node);
-	sys_dlist_remove(&t->node);
-	if (sys_dlist_is_empty(&bucket[idx])) {
-		bucket_bits &= ~BUCKET_BIT(idx);
+	t = CONTAINER_از(n, بنية _timeout, گره);
+	sys_dlist_remove(&t->گره);
+	إذا (sys_dlist_is_خالی(&سطل[idx])) {
+		سطل_بیتها &= ~سطل_بیت(idx);
 	}
 
-	return t;
+	أرجع t;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */
+#پایان_اگر /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */

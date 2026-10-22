@@ -4,58 +4,58 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
-#define ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#اگر_تعریف_نشده ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#تعریف_کن ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
 
-#include <zephyr/offsets.h>
-#include <offsets_short_arch.h>
+#ضمن <zephyr/offsets.h>
+#ضمن <offsets_short_arch.h>
 
 /* kernel */
 
 /* main */
-#ifndef CONFIG_SMP
+#اگر_تعریف_نشده CONFIG_SMP
 /* Relies on _kernel.cpu being the first member of _kernel and having 1 element
  */
-#define _kernel_offset_to_nested \
+#تعریف_کن kernel_جابه_جایی_مقصد_nested \
 	(___cpu_t_nested_OFFSET)
 
-#define _kernel_offset_to_irq_stack \
+#تعریف_کن kernel_جابه_جایی_مقصد_irq_پشته \
 	(___cpu_t_irq_stack_OFFSET)
 
-#define _kernel_offset_to_current \
+#تعریف_کن kernel_جابه_جایی_مقصد_current \
 	(___cpu_t_current_OFFSET)
 
-#if defined(CONFIG_FPU_SHARING)
-#define _kernel_offset_to_fp_ctx \
+#إذا defined(CONFIG_FPU_SHARING)
+#تعریف_کن kernel_جابه_جایی_مقصد_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
-#endif /* CONFIG_FPU_SHARING */
-#endif /* CONFIG_SMP */
+#پایان_اگر /* CONFIG_FPU_SHARING */
+#پایان_اگر /* CONFIG_SMP */
 
-#define _kernel_offset_to_idle \
+#تعریف_کن kernel_جابه_جایی_مقصد_idle \
 	(___kernel_t_idle_OFFSET)
 
-#define _kernel_offset_to_ready_q_cache \
+#تعریف_کن kernel_جابه_جایی_مقصد_ready_q_cache \
 	(___kernel_t_ready_q_OFFSET + ___ready_q_t_cache_OFFSET)
 
 /* end - kernel */
 
-/* threads */
+/*نخها*/
 
 /* main */
 
-#define _thread_offset_to_callee_saved \
+#تعریف_کن thread_جابه_جایی_مقصد_callee_saved \
 	(___thread_t_callee_saved_OFFSET)
 
-#ifdef CONFIG_THREAD_LOCAL_STORAGE
-#define _thread_offset_to_tls \
+#اگر_تعریف_شده CONFIG_THREAD_LOCAL_STORAGE
+#تعریف_کن thread_جابه_جایی_مقصد_tls \
 	(___thread_t_tls_OFFSET)
-#endif /* CONFIG_THREAD_LOCAL_STORAGE */
+#پایان_اگر /* CONFIG_THREAD_LOCAL_STORAGE */
 
-/* base */
+/*پایه*/
 
-#define _thread_offset_to_user_options \
+#تعریف_کن thread_جابه_جایی_مقصد_user_options \
 	(___thread_t_base_OFFSET + ___thread_base_t_user_options_OFFSET)
 
 /* end - threads */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */
+#پایان_اگر /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */

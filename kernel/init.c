@@ -11,83 +11,83 @@
  * This module contains routines that are used to initialize the kernel.
  */
 
-#include <ctype.h>
-#include <stdbool.h>
-#include <string.h>
-#include <offsets_short.h>
-#include <zephyr/kernel.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/debug/stack.h>
-#include <zephyr/random/random.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/device.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/platform/hooks.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <ipi.h>
-#include <zephyr/sys/dlist.h>
-#include <kernel_internal.h>
-#include <zephyr/drivers/entropy.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/debug/gcov.h>
-#include <kswap.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/arch/common/init.h>
-#include <scheduler.h>
+#ضمن <ctype.h>
+#ضمن <stdbool.h>
+#ضمن <string.h>
+#ضمن <offsets_short.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/sys/minmax.h>
+#ضمن <zephyr/sys/printk.h>
+#ضمن <zephyr/debug/stack.h>
+#ضمن <zephyr/random/random.h>
+#ضمن <zephyr/linker/sections.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/device.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/linker/linker-defs.h>
+#ضمن <zephyr/platform/hooks.h>
+#ضمن <ksched.h>
+#ضمن <kthread.h>
+#ضمن <ipi.h>
+#ضمن <zephyr/sys/dlist.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/drivers/entropy.h>
+#ضمن <zephyr/logging/log_ctrl.h>
+#ضمن <zephyr/tracing/tracing.h>
+#ضمن <zephyr/debug/gcov.h>
+#ضمن <kswap.h>
+#ضمن <zephyr/timing/timing.h>
+#ضمن <zephyr/logging/log.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/arch/common/init.h>
+#ضمن <scheduler.h>
 
-LOG_MODULE_REGISTER(os, CONFIG_KERNEL_LOG_LEVEL);
+LOG_MODULE_ثبات(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* the only struct z_kernel instance */
-struct z_kernel _kernel;
+بنية z_kernel _kernel;
 
-#ifdef CONFIG_PM
-atomic_t _cpus_active;
-#endif
+#اگر_تعریف_شده CONFIG_PM
+atomic_t cpus_فعال;
+#پایان_اگر
 
 /* init/main and idle threads */
-K_THREAD_STACK_DEFINE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_THREAD_پشته_DEFINE(z_main_پشته, CONFIG_MAIN_پشته_اندازه);
 
-#ifdef CONFIG_MULTITHREADING
-struct k_thread z_main_thread;
-struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
+#اگر_تعریف_شده CONFIG_MULTITHREADING
+بنية k_thread z_main_thread;
+بنية k_thread z_idle_نخها[CONFIG_MP_MAX_رقم_CPUS];
 
-static K_KERNEL_STACK_ARRAY_DEFINE(z_idle_stacks,
-					  CONFIG_MP_MAX_NUM_CPUS,
-					  CONFIG_IDLE_STACK_SIZE);
+ساكن K_KERNEL_پشته_ARRAY_DEFINE(z_idle_stacks,
+					  CONFIG_MP_MAX_رقم_CPUS,
+					  CONFIG_IDLE_پشته_اندازه);
 
-static void z_init_static_threads(void)
+ساكن فراغ z_init_static_نخها(فراغ)
 {
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
-		z_setup_new_thread(
-			thread_data->init_thread,
-			thread_data->init_stack,
-			thread_data->init_stack_size,
-			thread_data->init_entry,
-			thread_data->init_p1,
-			thread_data->init_p2,
-			thread_data->init_p3,
-			thread_data->init_prio,
-			thread_data->init_options,
-			thread_data->init_name);
+	STRUCT_SECTION_FOREACH(static_thread_داده, thread_داده) {
+		z_راهاندازی_new_thread(
+			thread_داده->init_thread,
+			thread_داده->init_پشته,
+			thread_داده->init_پشته_اندازه,
+			thread_داده->init_مدخل,
+			thread_داده->init_p1,
+			thread_داده->init_p2,
+			thread_داده->init_p3,
+			thread_داده->init_prio,
+			thread_داده->init_options,
+			thread_داده->init_name);
 
-		thread_data->init_thread->init_data = thread_data;
+		thread_داده->init_thread->init_داده = thread_داده;
 	}
 
-#ifdef CONFIG_USERSPACE
+#اگر_تعریف_شده CONFIG_USERSPACE
 	STRUCT_SECTION_FOREACH(k_object_assignment, pos) {
-		for (int i = 0; pos->objects[i] != NULL; i++) {
+		لكل (صحيح i = 0; pos->objects[i] != عدم; i++) {
 			k_object_access_grant(pos->objects[i],
 					      pos->thread);
 		}
 	}
-#endif /* CONFIG_USERSPACE */
+#پایان_اگر /* CONFIG_USERSPACE */
 
 	/*
 	 * Static threads may be started immediately or
@@ -96,40 +96,40 @@ static void z_init_static_threads(void)
 	 * processed. Take a sched lock to prevent them from running
 	 * until they are all started.
 	 */
-	k_sched_lock();
-	STRUCT_SECTION_FOREACH(_static_thread_data, thread_data) {
-		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_data);
+	k_sched_قفل();
+	STRUCT_SECTION_FOREACH(static_thread_داده, thread_داده) {
+		k_timeout_t init_delay = Z_THREAD_INIT_DELAY(thread_داده);
 
-		thread_schedule_new(thread_data->init_thread, init_delay);
+		thread_زمانبندی_new(thread_داده->init_thread, init_delay);
 	}
 	k_sched_unlock();
 }
-#else
-#define z_init_static_threads() do { } while (false)
-#endif /* CONFIG_MULTITHREADING */
+#وإلا
+#تعریف_کن z_init_static_نخها() افعل { } طالما (false)
+#پایان_اگر /* CONFIG_MULTITHREADING */
 
-extern const struct init_entry __init_start[];
-extern const struct init_entry __init_EARLY_start[];
-extern const struct init_entry __init_PRE_KERNEL_1_start[];
-extern const struct init_entry __init_PRE_KERNEL_2_start[];
-extern const struct init_entry __init_POST_KERNEL_start[];
-extern const struct init_entry __init_APPLICATION_start[];
-extern const struct init_entry __init_end[];
+خارجي ثابت بنية init_مدخل __init_start[];
+خارجي ثابت بنية init_مدخل __init_EARLY_start[];
+خارجي ثابت بنية init_مدخل __init_PRE_KERNEL_1_start[];
+خارجي ثابت بنية init_مدخل __init_PRE_KERNEL_2_start[];
+خارجي ثابت بنية init_مدخل __init_POST_KERNEL_start[];
+خارجي ثابت بنية init_مدخل __init_APPLICATION_start[];
+خارجي ثابت بنية init_مدخل __init_end[];
 
-enum init_level {
+تعداد init_level {
 	INIT_LEVEL_EARLY = 0,
 	INIT_LEVEL_PRE_KERNEL_1,
 	INIT_LEVEL_PRE_KERNEL_2,
 	INIT_LEVEL_POST_KERNEL,
 	INIT_LEVEL_APPLICATION,
-#ifdef CONFIG_SMP
+#اگر_تعریف_شده CONFIG_SMP
 	INIT_LEVEL_SMP,
-#endif /* CONFIG_SMP */
+#پایان_اگر /* CONFIG_SMP */
 };
 
-#ifdef CONFIG_SMP
-extern const struct init_entry __init_SMP_start[];
-#endif /* CONFIG_SMP */
+#اگر_تعریف_شده CONFIG_SMP
+خارجي ثابت بنية init_مدخل __init_SMP_start[];
+#پایان_اگر /* CONFIG_SMP */
 
 /*
  * storage space for the interrupt stack
@@ -139,22 +139,22 @@ extern const struct init_entry __init_SMP_start[];
  * of this area is safe since interrupts are disabled until the kernel context
  * switches to the init thread.
  */
-K_KERNEL_STACK_ARRAY_DEFINE(z_interrupt_stacks,
-				   CONFIG_MP_MAX_NUM_CPUS,
-				   CONFIG_ISR_STACK_SIZE);
+K_KERNEL_پشته_ARRAY_DEFINE(z_وقفه_stacks,
+				   CONFIG_MP_MAX_رقم_CPUS,
+				   CONFIG_ISR_پشته_اندازه);
 
-extern void idle(void *unused1, void *unused2, void *unused3);
+خارجي فراغ idle(فراغ *unused1, فراغ *unused2, فراغ *unused3);
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc  cpu_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats),
-	.query_size = sizeof(struct k_thread_runtime_stats),
+#اگر_تعریف_شده CONFIG_OBJ_CORE_SYSTEM
+#اگر_تعریف_شده CONFIG_OBJ_CORE_STATS_SYSTEM
+ساكن بنية k_obj_core_stats_desc  cpu_stats_desc = {
+	.raw_اندازه = حجم(بنية k_چرخه_stats),
+	.query_اندازه = حجم(بنية k_thread_runtime_stats),
 	.raw   = z_cpu_stats_raw,
 	.query = z_cpu_stats_query,
-	.reset = NULL,
-	.disable = NULL,
-	.enable  = NULL,
+	.reset = عدم,
+	.disable = عدم,
+	.enable  = عدم,
 };
 
 /* CPU object cores have no static instances to walk; each CPU links its own
@@ -162,23 +162,23 @@ static struct k_obj_core_stats_desc  cpu_stats_desc = {
  */
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID,
 			    &cpu_stats_desc);
-#else
-K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
-#endif /* CONFIG_OBJ_CORE_SYSTEM */
+#وإلا
+K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, عدم);
+#پایان_اگر /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#پایان_اگر /* CONFIG_OBJ_CORE_SYSTEM */
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-#ifdef CONFIG_STACK_CANARIES_TLS
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-extern volatile uintptr_t __stack_chk_guard;
-#endif /* CONFIG_STACK_CANARIES_TLS */
-#endif /* CONFIG_REQUIRES_STACK_CANARIES */
+#اگر_تعریف_شده CONFIG_REQUIRES_پشته_CANARIES
+#اگر_تعریف_شده CONFIG_پشته_CANARIES_TLS
+خارجي Z_THREAD_LOCAL متطاير uintptr_t __stack_chk_guard;
+#وإلا
+خارجي متطاير uintptr_t __stack_chk_guard;
+#پایان_اگر /* CONFIG_STACK_CANARIES_TLS */
+#پایان_اگر /* CONFIG_REQUIRES_STACK_CANARIES */
 
 bool z_sys_post_kernel;
 
 /* defined in device.c */
-extern int do_device_init(const struct device *dev);
+خارجي صحيح do_device_init(ثابت بنية device *dev);
 
 /**
  * @brief Initialize state for all static devices.
@@ -186,7 +186,7 @@ extern int do_device_init(const struct device *dev);
  * The state object is always zero-initialized, but this may not be
  * sufficient.
  */
-static void z_device_state_init(void)
+ساكن فراغ z_device_state_init(فراغ)
 {
 	STRUCT_SECTION_FOREACH(device, dev) {
 		k_object_init(dev);
@@ -204,57 +204,57 @@ static void z_device_state_init(void)
  *
  * @param level init level to run.
  */
-static void z_sys_init_run_level(enum init_level level)
+ساكن فراغ z_sys_init_پیاپی_level(تعداد init_level level)
 {
-	static const struct init_entry *levels[] = {
+	ساكن ثابت بنية init_مدخل *سطوح[] = {
 		__init_EARLY_start,
 		__init_PRE_KERNEL_1_start,
 		__init_PRE_KERNEL_2_start,
 		__init_POST_KERNEL_start,
 		__init_APPLICATION_start,
-#ifdef CONFIG_SMP
+#اگر_تعریف_شده CONFIG_SMP
 		__init_SMP_start,
-#endif /* CONFIG_SMP */
+#پایان_اگر /* CONFIG_SMP */
 		/* End marker */
 		__init_end,
 	};
-	const struct init_entry *entry;
+	ثابت بنية init_مدخل *مدخل;
 
-	for (entry = levels[level]; entry < levels[level+1]; entry++) {
-		const struct device *dev = entry->dev;
-		int result = 0;
+	لكل (مدخل = سطوح[level]; مدخل < سطوح[level+1]; مدخل++) {
+		ثابت بنية device *dev = مدخل->dev;
+		صحيح نتیجه = 0;
 
-		sys_trace_sys_init_enter(entry, level);
-		if (dev != NULL) {
-			if ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
-				result = do_device_init(dev);
+		sys_trace_sys_init_enter(مدخل, level);
+		إذا (dev != عدم) {
+			إذا ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
+				نتیجه = do_device_init(dev);
 			}
-		} else {
-			result = entry->init_fn();
+		} وإلا {
+			نتیجه = مدخل->init_fn();
 		}
-		sys_trace_sys_init_exit(entry, level, result);
+		sys_trace_sys_init_exit(مدخل, level, نتیجه);
 	}
 }
 
-#ifdef CONFIG_STATIC_INIT_GNU
+#اگر_تعریف_شده CONFIG_STATIC_INIT_GNU
 
-extern void (*__zephyr_init_array_start[])();
-extern void (*__zephyr_init_array_end[])();
+خارجي فراغ (*__zephyr_init_array_start[])();
+خارجي فراغ (*__zephyr_init_array_end[])();
 
-static void z_static_init_gnu(void)
+ساكن فراغ z_static_init_gnu(فراغ)
 {
-	void	(**fn)();
+	فراغ	(**fn)();
 
-	for (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
+	لكل (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
 		/* MWDT toolchain sticks a NULL at the end of the array */
-		if (*fn == NULL) {
-			break;
+		إذا (*fn == عدم) {
+			اكسر;
 		}
 		(**fn)();
 	}
 }
 
-#endif
+#پایان_اگر
 
 /**
  * @brief Mainline for kernel's background thread
@@ -263,163 +263,163 @@ static void z_static_init_gnu(void)
  * init functions, then invokes application's main() routine.
  */
 __boot_func
-static void bg_thread_main(void *unused1, void *unused2, void *unused3)
+ساكن فراغ bg_thread_main(فراغ *unused1, فراغ *unused2, فراغ *unused3)
 {
-	ARG_UNUSED(unused1);
-	ARG_UNUSED(unused2);
-	ARG_UNUSED(unused3);
+	ARG_استفادهنشده(unused1);
+	ARG_استفادهنشده(unused2);
+	ARG_استفادهنشده(unused3);
 
-#ifdef CONFIG_MMU
+#اگر_تعریف_شده CONFIG_MMU
 	/* Invoked here such that backing store or eviction algorithms may
 	 * initialize kernel objects, and that all POST_KERNEL and later tasks
 	 * may perform memory management tasks (except for
 	 * k_mem_map_phys_bare() which is allowed at any time)
 	 */
 	z_mem_manage_init();
-#endif /* CONFIG_MMU */
+#پایان_اگر /* CONFIG_MMU */
 	z_sys_post_kernel = true;
 
-#if CONFIG_IRQ_OFFLOAD
+#إذا CONFIG_IRQ_OFFLOAD
 	arch_irq_offload_init();
-#endif
+#پایان_اگر
 
 	/* Run kernel post-init hooks before POST_KERNEL device init, so that
 	 * drivers initialized there may use them (e.g. submit to the system
 	 * work queue). Entries are present only for subsystems that are linked
 	 * in (pay-per-use); the walk references only the section bounds.
 	 */
-	STRUCT_SECTION_FOREACH(k_kernel_init_post_entry, entry) {
-		entry->init_fn();
+	STRUCT_SECTION_FOREACH(k_kernel_init_post_مدخل, مدخل) {
+		مدخل->init_fn();
 	}
 
-	z_sys_init_run_level(INIT_LEVEL_POST_KERNEL);
+	z_sys_init_پیاپی_level(INIT_LEVEL_POST_KERNEL);
 
 	soc_late_init_hook();
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-	z_stack_adjust_initialized = 1;
-#endif /* CONFIG_STACK_POINTER_RANDOM */
+#إذا defined(CONFIG_پشته_اشاره_گر_RANDOM) && (CONFIG_پشته_اشاره_گر_RANDOM != 0)
+	z_پشته_adjust_initialized = 1;
+#پایان_اگر /* CONFIG_STACK_POINTER_RANDOM */
 
-#ifdef CONFIG_STATIC_INIT_GNU
+#اگر_تعریف_شده CONFIG_STATIC_INIT_GNU
 	z_static_init_gnu();
-#endif /* CONFIG_STATIC_INIT_GNU */
+#پایان_اگر /* CONFIG_STATIC_INIT_GNU */
 
 	/* Final init level before app starts */
-	z_sys_init_run_level(INIT_LEVEL_APPLICATION);
+	z_sys_init_پیاپی_level(INIT_LEVEL_APPLICATION);
 
-	z_init_static_threads();
+	z_init_static_نخها();
 
-#ifdef CONFIG_KERNEL_COHERENCE
+#اگر_تعریف_شده CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(&_kernel));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#پایان_اگر /* CONFIG_KERNEL_COHERENCE */
 
-#ifdef CONFIG_SMP
+#اگر_تعریف_شده CONFIG_SMP
 	/* Start the secondary CPUs; CPUs whose devicetree node carries
 	 * zephyr,deferred-start are skipped and left for a run-time
 	 * k_smp_cpu_start()/k_smp_cpu_resume().
 	 */
 	z_smp_init();
-	z_sys_init_run_level(INIT_LEVEL_SMP);
-#endif /* CONFIG_SMP */
+	z_sys_init_پیاپی_level(INIT_LEVEL_SMP);
+#پایان_اگر /* CONFIG_SMP */
 
-#ifdef CONFIG_MMU
-	z_mem_manage_boot_finish();
-#endif /* CONFIG_MMU */
+#اگر_تعریف_شده CONFIG_MMU
+	z_mem_manage_boot_پایان();
+#پایان_اگر /* CONFIG_MMU */
 
-#ifdef CONFIG_BOOTARGS
-	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+#اگر_تعریف_شده CONFIG_BOOTARGS
+	خارجي صحيح اصلی(صحيح argc, حرف **argv);
+	خارجي حرف **sys_boot_prepare_main_آرگومانها(صحيح *argc);
 
-	int argc = 0;
-	char **argv = sys_boot_prepare_main_args(&argc);
-	(void)main(argc, argv);
-#else
-	extern int main(void);
+	صحيح argc = 0;
+	حرف **argv = sys_boot_prepare_main_آرگومانها(&argc);
+	(فراغ)اصلی(argc, argv);
+#وإلا
+	خارجي صحيح اصلی(فراغ);
 
-	(void)main();
-#endif /* CONFIG_BOOTARGS */
+	(فراغ)اصلی();
+#پایان_اگر /* CONFIG_BOOTARGS */
 
-#ifdef CONFIG_MULTITHREADING
+#اگر_تعریف_شده CONFIG_MULTITHREADING
 	/* Mark non-essential since main() has no more work to do */
 	z_thread_essential_clear(&z_main_thread);
-#endif
+#پایان_اگر
 
-#ifdef CONFIG_COVERAGE_DUMP
+#اگر_تعریف_شده CONFIG_COVERAGE_DUMP
 	/* Dump coverage data once the main() has exited. */
 	gcov_coverage_dump();
-#elif defined(CONFIG_COVERAGE_SEMIHOST)
+#وإلاإذا defined(CONFIG_COVERAGE_SEMIHOST)
 	gcov_coverage_semihost();
-#endif /* CONFIG_COVERAGE_DUMP */
+#پایان_اگر /* CONFIG_COVERAGE_DUMP */
 } /* LCOV_EXCL_LINE ... because we just dumped final coverage data */
 
-#if defined(CONFIG_MULTITHREADING)
+#إذا defined(CONFIG_MULTITHREADING)
 __boot_func
-static void init_idle_thread(int i)
+ساكن فراغ init_idle_thread(صحيح i)
 {
-	struct k_thread *thread = &z_idle_threads[i];
-	k_thread_stack_t *stack = z_idle_stacks[i];
-	size_t stack_size = K_KERNEL_STACK_SIZEOF(z_idle_stacks[i]);
+	بنية k_thread *thread = &z_idle_نخها[i];
+	k_thread_پشته_t *پشته = z_idle_stacks[i];
+	size_t پشته_اندازه = K_KERNEL_پشته_SIZEOF(z_idle_stacks[i]);
 
-#ifdef CONFIG_THREAD_NAME
+#اگر_تعریف_شده CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
-	char tname[8];
+#إذا CONFIG_MP_MAX_رقم_CPUS > 1
+	حرف tname[8];
 	snprintk(tname, 8, "idle %02d", i);
-#else
-	char *tname = "idle";
-#endif /* CONFIG_MP_MAX_NUM_CPUS */
+#وإلا
+	حرف *tname = "idle";
+#پایان_اگر /* CONFIG_MP_MAX_NUM_CPUS */
 
-#else
-	char *tname = NULL;
-#endif /* CONFIG_THREAD_NAME */
+#وإلا
+	حرف *tname = عدم;
+#پایان_اگر /* CONFIG_THREAD_NAME */
 
-	z_setup_new_thread(thread, stack,
-			  stack_size, idle, &_kernel.cpus[i],
-			  NULL, NULL, K_IDLE_PRIO, K_ESSENTIAL,
+	z_راهاندازی_new_thread(thread, پشته,
+			  پشته_اندازه, idle, &_kernel.cpus[i],
+			  عدم, عدم, K_IDLE_PRIO, K_ESSENTIAL,
 			  tname);
 	z_mark_thread_as_not_sleeping(thread);
 
-#ifdef CONFIG_SMP
-	thread->base.is_idle = 1U;
-#endif /* CONFIG_SMP */
+#اگر_تعریف_شده CONFIG_SMP
+	thread->پایه.is_idle = 1U;
+#پایان_اگر /* CONFIG_SMP */
 }
 
-void z_init_cpu(int id)
+فراغ z_init_cpu(صحيح id)
 {
 	init_idle_thread(id);
-	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
+	_kernel.cpus[id].idle_thread = &z_idle_نخها[id];
 	_kernel.cpus[id].id = id;
-	_kernel.cpus[id].irq_stack =
-		(K_KERNEL_STACK_BUFFER(z_interrupt_stacks[id]) +
-		 K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[id]));
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
+	_kernel.cpus[id].irq_پشته =
+		(K_KERNEL_پشته_میانگیر(z_وقفه_stacks[id]) +
+		 K_KERNEL_پشته_SIZEOF(z_وقفه_stacks[id]));
+#اگر_تعریف_شده CONFIG_SCHED_THREAD_USAGE_ALL
 	_kernel.cpus[id].usage = &_kernel.usage[id];
 	_kernel.cpus[id].usage->track_usage =
 		CONFIG_SCHED_THREAD_USAGE_AUTO_ENABLE;
-#endif
+#پایان_اگر
 
-#ifdef CONFIG_PM
+#اگر_تعریف_شده CONFIG_PM
 	/*
 	 * Increment number of CPUs active. The pm subsystem
 	 * will keep track of this from here.
 	 */
-	atomic_inc(&_cpus_active);
-#endif
+	atomic_inc(&cpus_فعال);
+#پایان_اگر
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
+#اگر_تعریف_شده CONFIG_OBJ_CORE_SYSTEM
 	k_obj_core_init_and_link(K_OBJ_CORE(&_kernel.cpus[id]), &obj_type_cpu);
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-	k_obj_core_stats_register(K_OBJ_CORE(&_kernel.cpus[id]),
+#اگر_تعریف_شده CONFIG_OBJ_CORE_STATS_SYSTEM
+	k_obj_core_stats_ثبات(K_OBJ_CORE(&_kernel.cpus[id]),
 				  _kernel.cpus[id].usage,
-				  sizeof(struct k_cycle_stats));
-#endif
-#endif
+				  حجم(بنية k_چرخه_stats));
+#پایان_اگر
+#پایان_اگر
 
-#ifdef CONFIG_SCHED_IPI_SUPPORTED
+#اگر_تعریف_شده CONFIG_SCHED_IPI_SUPPORTED
 	sys_dlist_init(&_kernel.cpus[id].ipi_workq);
-#endif
+#پایان_اگر
 }
 
 /**
@@ -435,14 +435,14 @@ void z_init_cpu(int id)
  * @return initial stack pointer for the main thread
  */
 __boot_func
-static char *prepare_multithreading(void)
+ساكن حرف *prepare_multithreading(فراغ)
 {
-	char *stack_ptr;
+	حرف *پشته_ptr;
 
 	/* _kernel.ready_q is all zeroes */
 	z_sched_init();
 
-#ifndef CONFIG_SMP
+#اگر_تعریف_نشده CONFIG_SMP
 	/*
 	 * prime the cache with the main thread since:
 	 *
@@ -453,69 +453,69 @@ static char *prepare_multithreading(void)
 	 *   to work as intended
 	 */
 	_kernel.ready_q.cache = &z_main_thread;
-#endif /* CONFIG_SMP */
-	stack_ptr = z_setup_new_thread(&z_main_thread, z_main_stack,
-				       K_THREAD_STACK_SIZEOF(z_main_stack),
+#پایان_اگر /* CONFIG_SMP */
+	پشته_ptr = z_راهاندازی_new_thread(&z_main_thread, z_main_پشته,
+				       K_THREAD_پشته_SIZEOF(z_main_پشته),
 				       bg_thread_main,
-				       NULL, NULL, NULL,
-				       CONFIG_MAIN_THREAD_PRIORITY,
+				       عدم, عدم, عدم,
+				       CONFIG_MAIN_THREAD_اولویت,
 				       K_ESSENTIAL, "main");
 	z_mark_thread_as_not_sleeping(&z_main_thread);
 	z_ready_thread(&z_main_thread);
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	أرجع پشته_ptr;
 }
 
 __boot_func
-static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
+ساكن FUNC_NORETURN فراغ switch_مقصد_main_thread(حرف *پشته_ptr)
 {
-#ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
-	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
-#else
-	ARG_UNUSED(stack_ptr);
+#اگر_تعریف_شده CONFIG_ARCH_HAS_CUSTOM_جابجا_مقصد_MAIN
+	arch_switch_مقصد_main_thread(&z_main_thread, پشته_ptr, bg_thread_main);
+#وإلا
+	ARG_استفادهنشده(پشته_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
 	 * current fake thread is not on a wait queue or ready queue, so it
 	 * will never be rescheduled in.
 	 */
-	z_swap_unlocked();
-#endif /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	z_جابجا_unlocked();
+#پایان_اگر /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
+	کد_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
-#endif /* CONFIG_MULTITHREADING */
+#پایان_اگر /* CONFIG_MULTITHREADING */
 
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-void __weak z_early_rand_get(uint8_t *buf, size_t length)
+FUNC_NO_پشته_PROTECTOR
+فراغ __weak z_early_rand_get(uint8_t *buf, size_t درازی)
 {
-	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
-	int rc;
+	ساكن uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
+	صحيح rc;
 
-#ifdef CONFIG_ENTROPY_HAS_DRIVER
-	const struct device *const entropy = entropy_get_default_device();
+#اگر_تعریف_شده CONFIG_ENTROPY_HAS_DRIVER
+	ثابت بنية device *ثابت entropy = entropy_get_default_device();
 
-	if ((entropy != NULL) && device_is_ready(entropy)) {
+	إذا ((entropy != عدم) && device_is_ready(entropy)) {
 		/* Try to see if driver provides an ISR-specific API */
-		rc = entropy_get_entropy_isr(entropy, buf, length, ENTROPY_BUSYWAIT);
-		if (rc > 0) {
-			length -= rc;
+		rc = entropy_get_entropy_isr(entropy, buf, درازی, ENTROPY_BUSYWAIT);
+		إذا (rc > 0) {
+			درازی -= rc;
 			buf += rc;
 		}
 	}
-#endif /* CONFIG_ENTROPY_HAS_DRIVER */
+#پایان_اگر /* CONFIG_ENTROPY_HAS_DRIVER */
 
-	while (length > 0) {
+	طالما (درازی > 0) {
 		uint32_t val;
 
-		state = state + k_cycle_get_32();
+		state = state + k_چرخه_get_32();
 		state = state * 2862933555777941757ULL + 3037000493ULL;
 		val = (uint32_t)(state >> 32);
-		rc = min(length, sizeof(val));
-		arch_early_memcpy((void *)buf, &val, rc);
+		rc = min(درازی, حجم(val));
+		arch_early_memcpy((فراغ *)buf, &val, rc);
 
-		length -= rc;
+		درازی -= rc;
 		buf += rc;
 	}
 }
@@ -531,23 +531,23 @@ void __weak z_early_rand_get(uint8_t *buf, size_t length)
  * @return Does not return
  */
 __boot_func
-FUNC_NO_STACK_PROTECTOR
-FUNC_NORETURN void z_cstart(void)
+FUNC_NO_پشته_PROTECTOR
+FUNC_NORETURN فراغ z_cstart(فراغ)
 {
 	/* gcov hook needed to get the coverage report.*/
 	gcov_static_init();
 
 	/* initialize early init calls */
-	z_sys_init_run_level(INIT_LEVEL_EARLY);
+	z_sys_init_پیاپی_level(INIT_LEVEL_EARLY);
 
 	/* perform any architecture-specific initialization */
 	arch_kernel_init();
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
+#إذا defined(CONFIG_MULTITHREADING)
 	z_dummy_thread_init(&_thread_dummy);
-#endif /* CONFIG_MULTITHREADING */
+#پایان_اگر /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
 	z_device_state_init();
 
@@ -560,51 +560,51 @@ FUNC_NORETURN void z_cstart(void)
 	 * present only for subsystems that are linked in (pay-per-use); the
 	 * walk references only the section bounds.
 	 */
-	STRUCT_SECTION_FOREACH(k_kernel_init_pre_entry, entry) {
-		entry->init_fn();
+	STRUCT_SECTION_FOREACH(k_kernel_init_pre_مدخل, مدخل) {
+		مدخل->init_fn();
 	}
 
 	/* perform basic hardware initialization */
-	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+	z_sys_init_پیاپی_level(INIT_LEVEL_PRE_KERNEL_1);
+#إذا defined(CONFIG_SMP)
 	arch_smp_init();
-#endif
-	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
+#پایان_اگر
+	z_sys_init_پیاپی_level(INIT_LEVEL_PRE_KERNEL_2);
 
-#ifdef CONFIG_REQUIRES_STACK_CANARIES
-	uintptr_t stack_guard;
+#اگر_تعریف_شده CONFIG_REQUIRES_پشته_CANARIES
+	uintptr_t پشته_guard;
 
-	z_early_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	z_early_rand_get((uint8_t *)&پشته_guard, حجم(پشته_guard));
+	__stack_chk_guard = پشته_guard;
 	__stack_chk_guard <<= 8;
-#endif	/* CONFIG_REQUIRES_STACK_CANARIES */
+#پایان_اگر	/* CONFIG_REQUIRES_STACK_CANARIES */
 
-#ifdef CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT
+#اگر_تعریف_شده CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT
 	timing_init();
-	timing_start();
-#endif /* CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT */
+	timing_شروع();
+#پایان_اگر /* CONFIG_TIMING_FUNCTIONS_NEED_AT_BOOT */
 
-#ifdef CONFIG_MULTITHREADING
-	switch_to_main_thread(prepare_multithreading());
-#else
-#ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
+#اگر_تعریف_شده CONFIG_MULTITHREADING
+	switch_مقصد_main_thread(prepare_multithreading());
+#وإلا
+#اگر_تعریف_شده ARCH_SWITCH_مقصد_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
 	 * in the case of no multi-threading.
 	 */
-	ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING(bg_thread_main,
-		NULL, NULL, NULL);
-#else
-	bg_thread_main(NULL, NULL, NULL);
+	ARCH_SWITCH_مقصد_MAIN_NO_MULTITHREADING(bg_thread_main,
+		عدم, عدم, عدم);
+#وإلا
+	bg_thread_main(عدم, عدم, عدم);
 
 	/* LCOV_EXCL_START
 	 * We've already dumped coverage data at this point.
 	 */
-	irq_lock();
-	while (true) {
+	irq_قفل();
+	طالما (true) {
 	}
 	/* LCOV_EXCL_STOP */
-#endif /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */
-#endif /* CONFIG_MULTITHREADING */
+#پایان_اگر /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */
+#پایان_اگر /* CONFIG_MULTITHREADING */
 
 	/*
 	 * Compiler can't tell that the above routines won't return and issues
@@ -612,5 +612,5 @@ FUNC_NORETURN void z_cstart(void)
 	 * far.
 	 */
 
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	کد_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
