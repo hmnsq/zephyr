@@ -3,19 +3,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kernel_internal.h>
 
 /* We are not building thread.c when MULTITHREADING=n, so we
  * need to provide a few stubs here.
  */
-bool k_is_in_isr(void)
+bool k_is_in_isr(فراغ)
 {
-	return arch_is_in_isr();
+	أرجع arch_is_in_isr();
 }
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
-static K_TIMER_DEFINE(sleep_timer, NULL, NULL);
+ساكن K_TIMER_DEFINE(sleep_timer, عدم, عدم);
 #endif
 
 /* This is a fallback implementation of k_sleep_ticks() for when
@@ -28,12 +28,12 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, sleep_ticks, timeout);
 
 	/* in case of K_FOREVER, we suspend */
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+	إذا (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
 		/* In Single Thread, just wait for an interrupt saving power */
 		k_cpu_idle();
 		SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, K_TICKS_FOREVER);
 
-		return K_TICKS_FOREVER;
+		أرجع K_TICKS_FOREVER;
 	}
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
@@ -50,23 +50,23 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	 * Therefore, unlike its multithreaded counterpart, it shall always
 	 * sleep for the entire timeout duration (no thread to awake).
 	 */
-	return 0;
-#else
+	أرجع 0;
+#وإلا
 	/* Fallback to busy-wait when no system clock is available */
 	k_ticks_t ticks;
 	uint32_t ticks_to_wait;
 
 	ticks = timeout.ticks;
-	if (Z_IS_TIMEOUT_RELATIVE(timeout)) {
+	إذا (Z_IS_TIMEOUT_RELATIVE(timeout)) {
 		/* ticks is delta timeout */
 		ticks_to_wait = ticks;
-	} else {
+	} وإلا {
 		/* ticks is absolute timeout expiration */
 		uint32_t curr_ticks = sys_clock_tick_get_32();
 
-		if (Z_TICK_ABS(ticks) > curr_ticks) {
+		إذا (Z_TICK_ABS(ticks) > curr_ticks) {
 			ticks_to_wait = Z_TICK_ABS(ticks) - curr_ticks;
-		} else {
+		} وإلا {
 			ticks_to_wait = 0;
 		}
 	}
@@ -76,6 +76,6 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, 0);
 
-	return 0;
+	أرجع 0;
 #endif
 }
