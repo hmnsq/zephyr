@@ -32,7 +32,7 @@ extern "C" {
  * operations and the backend instance) is private to kernel/timeout.c, which
  * includes the matching backend implementation header directly.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#якщо defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 
 static inline void z_init_timeout(struct _timeout *to)
 {
@@ -42,7 +42,7 @@ static inline void z_init_timeout(struct _timeout *to)
 
 static inline bool z_is_inactive_timeout(const struct _timeout *to)
 {
-	return to->heap_handle.idx == 0U;
+	повернути to->heap_handle.idx == 0U;
 }
 
 #elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
@@ -56,7 +56,7 @@ static inline void z_init_timeout(struct _timeout *to)
 
 static inline bool z_is_inactive_timeout(const struct _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	повернути !sys_dnode_is_linked(&to->node);
 }
 
 #elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
@@ -68,17 +68,17 @@ static inline void z_init_timeout(struct _timeout *to)
 	to->height = 0;
 	to->abs_ticks = 0;
 
-	for (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
+	для (i = 0; i < CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL; i++) {
 		to->forward[i] = NULL;
 	}
 }
 
 static inline bool z_is_inactive_timeout(const struct _timeout *to)
 {
-	return to->height == 0;
+	повернути to->height == 0;
 }
 
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
+#інакше /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
 
 static inline void z_init_timeout(struct _timeout *to)
 {
@@ -88,7 +88,7 @@ static inline void z_init_timeout(struct _timeout *to)
 
 static inline bool z_is_inactive_timeout(const struct _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	повернути !sys_dnode_is_linked(&to->node);
 }
 
 #endif
@@ -118,7 +118,7 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
  * On -EAGAIN, the only correct response is to drop outer locks and call again.
  * After a non-EAGAIN return, the handler is guaranteed not to be in flight.
  */
-int z_try_abort_timeout(struct _timeout *to);
+ціле z_try_abort_timeout(struct _timeout *to);
 
 /* True if @to is the currently in-flight timeout and a same-CPU aborter
  * has marked the slot as superseded. Handlers with non-idempotent side
@@ -136,32 +136,32 @@ extern void z_thread_timeout(struct _timeout *timeout);
 
 static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
 {
-	return z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
+	повернути z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
 }
 
-static inline int z_try_abort_thread_timeout(struct k_thread *thread)
+static inline ціле z_try_abort_thread_timeout(struct k_thread *thread)
 {
-	return z_try_abort_timeout(&thread->base.timeout);
+	повернути z_try_abort_timeout(&thread->base.timeout);
 }
 
 uint32_t z_get_next_timeout_expiry(void);
 
 k_ticks_t z_timeout_remaining(const struct _timeout *timeout);
 
-#else
+#інакше
 
 /* Stubs when !CONFIG_SYS_CLOCK_EXISTS */
-#define z_init_thread_timeout(thread_base) do {} while (false)
+#define z_init_thread_timeout(thread_base) do {} поки (false)
 #define z_try_abort_thread_timeout(to) 0
 #define z_is_inactive_timeout(to) 1
 #define z_get_next_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
-#define z_set_timeout_expiry(ticks, is_idle) do {} while (false)
+#define z_set_timeout_expiry(ticks, is_idle) do {} поки (false)
 
 static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
 {
 	ARG_UNUSED(thread);
 	ARG_UNUSED(ticks);
-	return 0;
+	повернути 0;
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */

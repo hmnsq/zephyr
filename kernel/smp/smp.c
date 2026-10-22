@@ -55,28 +55,28 @@ static struct cpu_start_cb {
 
 static struct k_spinlock cpu_start_lock;
 
-unsigned int z_smp_global_lock(void)
+unsigned ціле z_smp_global_lock(void)
 {
-	unsigned int key = arch_irq_lock();
+	unsigned ціле key = arch_irq_lock();
 
-	if (!_current->base.global_lock_count) {
-		while (!atomic_cas(&global_lock, 0, 1)) {
+	якщо (!_current->base.global_lock_count) {
+		поки (!atomic_cas(&global_lock, 0, 1)) {
 			arch_spin_relax();
 		}
 	}
 
 	_current->base.global_lock_count++;
 
-	return key;
+	повернути key;
 }
 EXPORT_SYMBOL(z_smp_global_lock);
 
-void z_smp_global_unlock(unsigned int key)
+void z_smp_global_unlock(unsigned ціле key)
 {
-	if (_current->base.global_lock_count != 0U) {
+	якщо (_current->base.global_lock_count != 0U) {
 		_current->base.global_lock_count--;
 
-		if (!_current->base.global_lock_count) {
+		якщо (!_current->base.global_lock_count) {
 			(void)atomic_clear(&global_lock);
 		}
 	}
@@ -88,7 +88,7 @@ EXPORT_SYMBOL(z_smp_global_unlock);
 /* Called from within z_swap(), so assumes lock already held */
 void z_smp_release_global_lock(struct k_thread *thread)
 {
-	if (!thread->base.global_lock_count) {
+	якщо (!thread->base.global_lock_count) {
 		(void)atomic_clear(&global_lock);
 	}
 }
@@ -98,14 +98,14 @@ void z_smp_release_global_lock(struct k_thread *thread)
  */
 static inline void local_delay(void)
 {
-	for (volatile int i = 0; i < 1000; i++) {
+	для (volatile ціле i = 0; i < 1000; i++) {
 	}
 }
 
 static void wait_for_start_signal(atomic_t *start_flag)
 {
 	/* Wait for the signal to begin scheduling */
-	while (!atomic_get(start_flag)) {
+	поки (!atomic_get(start_flag)) {
 		local_delay();
 	}
 }
@@ -122,7 +122,7 @@ static inline void smp_init_top(void *arg)
 	 */
 	wait_for_start_signal(&cpu_start_flag);
 
-	if ((arg == NULL) || csc.invoke_sched) {
+	якщо ((arg == NULL) || csc.invoke_sched) {
 		/* Initialize the dummy thread struct so that
 		 * the scheduler can schedule actual threads to run.
 		 */
@@ -130,19 +130,19 @@ static inline void smp_init_top(void *arg)
 	}
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
-	if ((arg == NULL) || csc.reinit_timer) {
+	якщо ((arg == NULL) || csc.reinit_timer) {
 		smp_timer_init();
 	}
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 
 	/* Do additional initialization steps if needed. */
-	if (csc.fn != NULL) {
+	якщо (csc.fn != NULL) {
 		csc.fn(csc.arg);
 	}
 
-	if ((arg != NULL) && !csc.invoke_sched) {
+	якщо ((arg != NULL) && !csc.invoke_sched) {
 		/* Don't invoke scheduler. */
-		return;
+		повернути;
 	}
 
 	/* Let scheduler decide what thread to run next. */
@@ -151,7 +151,7 @@ static inline void smp_init_top(void *arg)
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static void start_cpu(int id, struct cpu_start_cb *csc)
+static void start_cpu(ціле id, struct cpu_start_cb *csc)
 {
 	/* Clear the ready flag so the newly powered up CPU can
 	 * signal that it has powered up.
@@ -165,12 +165,12 @@ static void start_cpu(int id, struct cpu_start_cb *csc)
 	/* Wait until the newly powered up CPU to signal that
 	 * it has powered up.
 	 */
-	while (!atomic_get(&ready_flag)) {
+	поки (!atomic_get(&ready_flag)) {
 		local_delay();
 	}
 }
 
-void k_smp_cpu_start(int id, smp_init_fn fn, void *arg)
+void k_smp_cpu_start(ціле id, smp_init_fn fn, void *arg)
 {
 	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
 
@@ -196,7 +196,7 @@ void k_smp_cpu_start(int id, smp_init_fn fn, void *arg)
 	k_spin_unlock(&cpu_start_lock, key);
 }
 
-void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
+void k_smp_cpu_resume(ціле id, smp_init_fn fn, void *arg,
 		      bool reinit_timer, bool invoke_sched)
 {
 	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
@@ -207,7 +207,7 @@ void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
 	cpu_start_fn.reinit_timer = reinit_timer;
-#else
+#інакше
 	ARG_UNUSED(reinit_timer);
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 
@@ -227,7 +227,7 @@ void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
  * zephyr,deferred-start is not started during kernel boot; it is brought up
  * at run time with k_smp_cpu_start() or k_smp_cpu_resume().
  */
-#if DT_NODE_EXISTS(DT_PATH(cpus))
+#якщо DT_NODE_EXISTS(DT_PATH(cpus))
 /* DT_PROP_OR: a cpu node without a binding covering the property simply
  * cannot be deferred, rather than failing to compile.
  */
@@ -236,9 +236,9 @@ static const bool cpu_deferred_start[] = {
 	DT_FOREACH_CPU(CPU_DEFERRED_START_FLAG)
 };
 #define CPU_START_DEFERRED(i)                                                  \
-	(((unsigned int)(i) < ARRAY_SIZE(cpu_deferred_start)) &&               \
+	(((unsigned ціле)(i) < ARRAY_SIZE(cpu_deferred_start)) &&               \
 	 cpu_deferred_start[i])
-#else
+#інакше
 #define CPU_START_DEFERRED(i) false
 #endif
 
@@ -252,10 +252,10 @@ void z_smp_init(void)
 	/* Just start CPUs one by one, skipping those the devicetree defers
 	 * to a later, run-time start.
 	 */
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned ціле num_cpus = arch_num_cpus();
 
-	for (int i = 1; i < num_cpus; i++) {
-		if (CPU_START_DEFERRED(i)) {
+	для (ціле i = 1; i < num_cpus; i++) {
+		якщо (CPU_START_DEFERRED(i)) {
 			continue;
 		}
 		z_init_cpu(i);
@@ -270,7 +270,7 @@ void z_smp_init(void)
 
 bool z_smp_cpu_mobile(void)
 {
-	return !arch_is_in_isr() && arch_cpu_irqs_are_enabled();
+	повернути !arch_is_in_isr() && arch_cpu_irqs_are_enabled();
 }
 
 __attribute_const__ struct k_thread *z_smp_current_get(void)
@@ -279,9 +279,9 @@ __attribute_const__ struct k_thread *z_smp_current_get(void)
 	 * _raw_current can race with preemption before it is read.  We
 	 * must lock local interrupts when reading it.
 	 */
-	unsigned int key = arch_irq_lock();
+	unsigned ціле key = arch_irq_lock();
 	struct k_thread *t = _raw_current;
 
 	arch_irq_unlock(key);
-	return t;
+	повернути t;
 }

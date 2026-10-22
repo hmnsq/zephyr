@@ -31,38 +31,38 @@ static struct obj_core_slot registry[CONFIG_OBJ_CORE_MAX_DYNAMIC_OBJECTS];
 
 static struct k_obj_core *slot_core(const struct obj_core_slot *slot)
 {
-	return atomic_ptr_get(&slot->core);
+	повернути atomic_ptr_get(&slot->core);
 }
 
 static bool range_contains(const struct k_obj_range *range, const void *ptr)
 {
-	if (range->indirect) {
-		for (const void *const *pp = range->start; pp < (const void *const *)range->end;
+	якщо (range->indirect) {
+		для (const void *const *pp = range->start; pp < (const void *const *)range->end;
 		     pp = (const void *const *)((const uint8_t *)pp + range->stride)) {
-			if (*pp == ptr) {
-				return true;
+			якщо (*pp == ptr) {
+				повернути true;
 			}
 		}
-		return false;
+		повернути false;
 	}
 
-	return (ptr >= range->start) && (ptr < range->end);
+	повернути (ptr >= range->start) && (ptr < range->end);
 }
 
 static bool type_ranges_contain(const struct k_obj_type *type, const void *ptr)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(type->statics); i++) {
+	для (size_t i = 0; i < ARRAY_SIZE(type->statics); i++) {
 		const struct k_obj_range *range = &type->statics[i];
 
-		if (range->stride == 0U) {
+		якщо (range->stride == 0U) {
 			break;
 		}
-		if (range_contains(range, ptr)) {
-			return true;
+		якщо (range_contains(range, ptr)) {
+			повернути true;
 		}
 	}
 
-	return false;
+	повернути false;
 }
 
 /* Object core of the range element */
@@ -71,7 +71,7 @@ static struct k_obj_core *range_core(const struct k_obj_type *type,
 {
 	const uint8_t *obj = range->indirect ? *(const uint8_t *const *)elem : elem;
 
-	return (struct k_obj_core *)(obj + type->obj_core_offset);
+	повернути (struct k_obj_core *)(obj + type->obj_core_offset);
 }
 
 /* Objects in the running thread's stack or in the interrupt stack are
@@ -88,24 +88,24 @@ static bool in_stack_storage(const void *ptr)
 	uintptr_t irq_stack_end =
 		irq_stack + K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[0]);
 
-	if ((thread != NULL) && (thread->stack_info.size != 0U) &&
+	якщо ((thread != NULL) && (thread->stack_info.size != 0U) &&
 	    (addr >= thread->stack_info.start) &&
 	    (addr < thread->stack_info.start + thread->stack_info.size)) {
-		return true;
+		повернути true;
 	}
 
-	return (addr >= irq_stack) && (addr < irq_stack_end);
+	повернути (addr >= irq_stack) && (addr < irq_stack_end);
 }
 
 static struct obj_core_slot *slot_find(const struct k_obj_core *core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (slot_core(&registry[i]) == core) {
-			return &registry[i];
+	для (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
+		якщо (slot_core(&registry[i]) == core) {
+			повернути &registry[i];
 		}
 	}
 
-	return NULL;
+	повернути NULL;
 }
 
 /* A registered object whose storage no longer carries its type is stale.
@@ -114,29 +114,29 @@ static struct obj_core_slot *slot_find(const struct k_obj_core *core)
  */
 static bool slot_stale(const struct obj_core_slot *slot, const struct k_obj_core *core)
 {
-	return core->type != slot->type;
+	повернути core->type != slot->type;
 }
 
 static struct obj_core_slot *slot_alloc(void)
 {
 	struct obj_core_slot *slot = slot_find(NULL);
 
-	if (slot != NULL) {
-		return slot;
+	якщо (slot != NULL) {
+		повернути slot;
 	}
 
 	/* Full: reap every stale entry and reuse one of them */
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
+	для (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
 		struct k_obj_core *core = slot_core(&registry[i]);
 
-		if ((core != NULL) && slot_stale(&registry[i], core)) {
+		якщо ((core != NULL) && slot_stale(&registry[i], core)) {
 			atomic_ptr_set(&registry[i].core, NULL);
 			slot = &registry[i];
 		}
 	}
 
-	return slot;
+	повернути slot;
 }
 
 struct k_obj_type *z_obj_type_init(struct k_obj_type *type,
@@ -149,7 +149,7 @@ struct k_obj_type *z_obj_type_init(struct k_obj_type *type,
 	type->dropped = 0;
 	type->skipped = 0;
 
-	return type;
+	повернути type;
 }
 
 void k_obj_type_init_range(struct k_obj_type *type, const void *start,
@@ -174,26 +174,26 @@ void k_obj_core_link(struct k_obj_core *obj_core)
 	struct k_obj_type *type = obj_core->type;
 	struct obj_core_slot *slot;
 
-	if (type_ranges_contain(type, (const uint8_t *)obj_core - type->obj_core_offset)) {
-		return;
+	якщо (type_ranges_contain(type, (const uint8_t *)obj_core - type->obj_core_offset)) {
+		повернути;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
-	if (in_stack_storage(obj_core)) {
+	якщо (in_stack_storage(obj_core)) {
 		type->skipped++;
 		k_spin_unlock(&obj_core_lock, key);
-		return;
+		повернути;
 	}
 
 	slot = slot_find(obj_core);
-	if (slot == NULL) {
+	якщо (slot == NULL) {
 		slot = slot_alloc();
 	}
 
-	if (slot == NULL) {
+	якщо (slot == NULL) {
 		type->dropped++;
-	} else {
+	} інакше {
 		slot->type = type;
 		atomic_ptr_set(&slot->core, obj_core);
 	}
@@ -210,8 +210,8 @@ void k_obj_core_init_and_link(struct k_obj_core *obj_core,
 
 void k_obj_core_unlink(struct k_obj_core *obj_core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (atomic_ptr_cas(&registry[i].core, obj_core, NULL)) {
+	для (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
+		якщо (atomic_ptr_cas(&registry[i].core, obj_core, NULL)) {
 			break;
 		}
 	}
@@ -222,10 +222,10 @@ void k_obj_core_evict_range(const void *addr, size_t len)
 	const uint8_t *start = addr;
 	const uint8_t *end = start + len;
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
+	для (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
 		struct k_obj_core *core = slot_core(&registry[i]);
 
-		if ((core != NULL) && ((const uint8_t *)core >= start) &&
+		якщо ((core != NULL) && ((const uint8_t *)core >= start) &&
 		    ((const uint8_t *)core < end)) {
 			(void)atomic_ptr_cas(&registry[i].core, core, NULL);
 		}
@@ -238,8 +238,8 @@ void sys_heap_release_hook(void *mem, size_t bytes)
 	/* The registry is kernel data; user mode releases never hold
 	 * registered objects.
 	 */
-	if (k_is_user_context()) {
-		return;
+	якщо (k_is_user_context()) {
+		повернути;
 	}
 
 	k_obj_core_evict_range(mem, bytes);
@@ -254,20 +254,20 @@ static void obj_core_init_all(void)
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
 		sys_slist_append(&z_obj_type_list, &type->node);
 
-		for (size_t r = 0; r < ARRAY_SIZE(type->statics); r++) {
+		для (size_t r = 0; r < ARRAY_SIZE(type->statics); r++) {
 			const struct k_obj_range *range = &type->statics[r];
 
-			if (range->stride == 0U) {
+			якщо (range->stride == 0U) {
 				break;
 			}
 
-			for (const uint8_t *elem = range->start;
+			для (const uint8_t *elem = range->start;
 			     elem < (const uint8_t *)range->end; elem += range->stride) {
 				struct k_obj_core *obj_core = range_core(type, range, elem);
 
 				k_obj_core_init(obj_core, type);
 #ifdef CONFIG_OBJ_CORE_STATS
-				if ((type->stats_desc != NULL) && (type->stats_size != 0)) {
+				якщо ((type->stats_desc != NULL) && (type->stats_size != 0)) {
 					k_obj_core_stats_register(
 						obj_core,
 						(void *)((uint8_t *)obj_core -
@@ -291,8 +291,8 @@ struct k_obj_type *k_obj_type_find(uint32_t type_id)
 	/* Types defined at build time are valid before the type list is */
 
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		if (type->id == type_id) {
-			return type;
+		якщо (type->id == type_id) {
+			повернути type;
 		}
 	}
 
@@ -301,7 +301,7 @@ struct k_obj_type *k_obj_type_find(uint32_t type_id)
 	SYS_SLIST_FOR_EACH_NODE(&z_obj_type_list, node) {
 		struct k_obj_type *type = CONTAINER_OF(node, struct k_obj_type, node);
 
-		if (type->id == type_id) {
+		якщо (type->id == type_id) {
 			rv = type;
 			break;
 		}
@@ -309,66 +309,66 @@ struct k_obj_type *k_obj_type_find(uint32_t type_id)
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
 /* Invoke func on every permanent object of the type that carries its type
  * tag. Objects of a zero-initialized array that were never initialized do
  * not.
  */
-static int walk_statics(struct k_obj_type *type,
-			int (*func)(struct k_obj_core *obj_core, void *data),
+static ціле walk_statics(struct k_obj_type *type,
+			ціле (*func)(struct k_obj_core *obj_core, void *data),
 			void *data)
 {
-	int status = 0;
+	ціле status = 0;
 
-	for (size_t r = 0; (status == 0) && (r < ARRAY_SIZE(type->statics)); r++) {
+	для (size_t r = 0; (status == 0) && (r < ARRAY_SIZE(type->statics)); r++) {
 		const struct k_obj_range *range = &type->statics[r];
 
-		if (range->stride == 0U) {
+		якщо (range->stride == 0U) {
 			break;
 		}
 
-		for (const uint8_t *elem = range->start; elem < (const uint8_t *)range->end;
+		для (const uint8_t *elem = range->start; elem < (const uint8_t *)range->end;
 		     elem += range->stride) {
 			struct k_obj_core *obj_core = range_core(type, range, elem);
 
-			if (obj_core->type != type) {
+			якщо (obj_core->type != type) {
 				continue;
 			}
 
 			status = func(obj_core, data);
-			if (status != 0) {
+			якщо (status != 0) {
 				break;
 			}
 		}
 	}
 
-	return status;
+	повернути status;
 }
 
-int k_obj_type_walk_locked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
+ціле k_obj_type_walk_locked(struct k_obj_type *type,
+			   ціле (*func)(struct k_obj_core *obj_core, void *data),
 			   void *data)
 {
-	int  status;
+	ціле  status;
 
 	status = walk_statics(type, func, data);
 
 	/* The lock covers reading and reaping each entry, not the callback,
 	 * so the callback is free to use any kernel or object core function.
 	 */
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
+	для (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
 		struct obj_core_slot *slot = &registry[i];
 		k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 		struct k_obj_core *core = slot_core(slot);
 
-		if ((core == NULL) || (slot->type != type)) {
+		якщо ((core == NULL) || (slot->type != type)) {
 			k_spin_unlock(&obj_core_lock, key);
 			continue;
 		}
 
-		if (slot_stale(slot, core)) {
+		якщо (slot_stale(slot, core)) {
 			atomic_ptr_set(&slot->core, NULL);
 			k_spin_unlock(&obj_core_lock, key);
 			continue;
@@ -379,21 +379,21 @@ int k_obj_type_walk_locked(struct k_obj_type *type,
 		status = func(core, data);
 	}
 
-	return status;
+	повернути status;
 }
 
-int k_obj_type_walk_unlocked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
+ціле k_obj_type_walk_unlocked(struct k_obj_type *type,
+			   ціле (*func)(struct k_obj_core *obj_core, void *data),
 			   void *data)
 {
-	int  status;
+	ціле  status;
 
 	status = walk_statics(type, func, data);
 
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
+	для (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
 		struct k_obj_core *core = slot_core(&registry[i]);
 
-		if ((core == NULL) || (registry[i].type != type) ||
+		якщо ((core == NULL) || (registry[i].type != type) ||
 		    (core->type != type)) {
 			continue;
 		}
@@ -401,171 +401,171 @@ int k_obj_type_walk_unlocked(struct k_obj_type *type,
 		status = func(core, data);
 	}
 
-	return status;
+	повернути status;
 }
 
 #ifdef CONFIG_OBJ_CORE_STATS
-int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
+ціле k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
 			      size_t stats_len)
 {
-	int rv;
+	ціле rv;
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
-	if (obj_core->type->stats_desc == NULL) {
+	якщо (obj_core->type->stats_desc == NULL) {
 		/* Object type not configured for statistics. */
 		rv = -ENOTSUP;
-	} else if (obj_core->type->stats_desc->raw_size != stats_len) {
+	} інакше якщо (obj_core->type->stats_desc->raw_size != stats_len) {
 		/* Buffer size mismatch */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		obj_core->stats = stats;
 		rv = 0;
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_deregister(struct k_obj_core *obj_core)
+ціле k_obj_core_stats_deregister(struct k_obj_core *obj_core)
 {
-	int rv;
+	ціле rv;
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
-	if (obj_core->type->stats_desc == NULL) {
+	якщо (obj_core->type->stats_desc == NULL) {
 		/* Object type not configured  for statistics. */
 		rv = -ENOTSUP;
-	} else {
+	} інакше {
 		obj_core->stats = NULL;
 		rv = 0;
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
+ціле k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
 			 size_t stats_len)
 {
-	int rv;
+	ціле rv;
 	struct k_obj_core_stats_desc *desc;
 
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->raw == NULL)) {
+	якщо ((desc == NULL) || (desc->raw == NULL)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->raw_size != stats_len) || (obj_core->stats == NULL)) {
+	} інакше якщо ((desc->raw_size != stats_len) || (obj_core->stats == NULL)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		rv = desc->raw(obj_core, stats);
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
+ціле k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
 			   size_t stats_len)
 {
-	int rv;
+	ціле rv;
 	struct k_obj_core_stats_desc *desc;
 
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->query == NULL)) {
+	якщо ((desc == NULL) || (desc->query == NULL)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->query_size != stats_len) || (obj_core->stats == NULL)) {
+	} інакше якщо ((desc->query_size != stats_len) || (obj_core->stats == NULL)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		rv = desc->query(obj_core, stats);
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_reset(struct k_obj_core *obj_core)
+ціле k_obj_core_stats_reset(struct k_obj_core *obj_core)
 {
-	int rv;
+	ціле rv;
 	struct k_obj_core_stats_desc *desc;
 
 	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->reset == NULL)) {
+	якщо ((desc == NULL) || (desc->reset == NULL)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} інакше якщо (obj_core->stats == NULL) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		rv = desc->reset(obj_core);
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_disable(struct k_obj_core *obj_core)
+ціле k_obj_core_stats_disable(struct k_obj_core *obj_core)
 {
-	int rv;
+	ціле rv;
 	struct k_obj_core_stats_desc *desc;
 
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->disable == NULL)) {
+	якщо ((desc == NULL) || (desc->disable == NULL)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} інакше якщо (obj_core->stats == NULL) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		rv = desc->disable(obj_core);
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 
-int k_obj_core_stats_enable(struct k_obj_core *obj_core)
+ціле k_obj_core_stats_enable(struct k_obj_core *obj_core)
 {
-	int rv;
+	ціле rv;
 	struct k_obj_core_stats_desc *desc;
 
 	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->enable == NULL)) {
+	якщо ((desc == NULL) || (desc->enable == NULL)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} інакше якщо (obj_core->stats == NULL) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} інакше {
 		rv = desc->enable(obj_core);
 	}
 
 	k_spin_unlock(&obj_core_lock, key);
 
-	return rv;
+	повернути rv;
 }
 #endif /* CONFIG_OBJ_CORE_STATS */
 

@@ -82,7 +82,7 @@ static void z_init_static_threads(void)
 
 #ifdef CONFIG_USERSPACE
 	STRUCT_SECTION_FOREACH(k_object_assignment, pos) {
-		for (int i = 0; pos->objects[i] != NULL; i++) {
+		для (ціле i = 0; pos->objects[i] != NULL; i++) {
 			k_object_access_grant(pos->objects[i],
 					      pos->thread);
 		}
@@ -104,8 +104,8 @@ static void z_init_static_threads(void)
 	}
 	k_sched_unlock();
 }
-#else
-#define z_init_static_threads() do { } while (false)
+#інакше
+#define z_init_static_threads() do { } поки (false)
 #endif /* CONFIG_MULTITHREADING */
 
 extern const struct init_entry __init_start[];
@@ -162,7 +162,7 @@ static struct k_obj_core_stats_desc  cpu_stats_desc = {
  */
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID,
 			    &cpu_stats_desc);
-#else
+#інакше
 K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 #endif /* CONFIG_OBJ_CORE_SYSTEM */
@@ -170,7 +170,7 @@ K_OBJ_TYPE_DEFINE_TYPE_ONLY(obj_type_cpu, _cpu, K_OBJ_TYPE_CPU_ID, NULL);
 #ifdef CONFIG_REQUIRES_STACK_CANARIES
 #ifdef CONFIG_STACK_CANARIES_TLS
 extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
+#інакше
 extern volatile uintptr_t __stack_chk_guard;
 #endif /* CONFIG_STACK_CANARIES_TLS */
 #endif /* CONFIG_REQUIRES_STACK_CANARIES */
@@ -178,7 +178,7 @@ extern volatile uintptr_t __stack_chk_guard;
 bool z_sys_post_kernel;
 
 /* defined in device.c */
-extern int do_device_init(const struct device *dev);
+extern ціле do_device_init(const struct device *dev);
 
 /**
  * @brief Initialize state for all static devices.
@@ -220,16 +220,16 @@ static void z_sys_init_run_level(enum init_level level)
 	};
 	const struct init_entry *entry;
 
-	for (entry = levels[level]; entry < levels[level+1]; entry++) {
+	для (entry = levels[level]; entry < levels[level+1]; entry++) {
 		const struct device *dev = entry->dev;
-		int result = 0;
+		ціле result = 0;
 
 		sys_trace_sys_init_enter(entry, level);
-		if (dev != NULL) {
-			if ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
+		якщо (dev != NULL) {
+			якщо ((dev->flags & DEVICE_FLAG_INIT_DEFERRED) == 0U) {
 				result = do_device_init(dev);
 			}
-		} else {
+		} інакше {
 			result = entry->init_fn();
 		}
 		sys_trace_sys_init_exit(entry, level, result);
@@ -245,9 +245,9 @@ static void z_static_init_gnu(void)
 {
 	void	(**fn)();
 
-	for (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
+	для (fn = __zephyr_init_array_start; fn != __zephyr_init_array_end; fn++) {
 		/* MWDT toolchain sticks a NULL at the end of the array */
-		if (*fn == NULL) {
+		якщо (*fn == NULL) {
 			break;
 		}
 		(**fn)();
@@ -279,7 +279,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 	z_sys_post_kernel = true;
 
-#if CONFIG_IRQ_OFFLOAD
+#якщо CONFIG_IRQ_OFFLOAD
 	arch_irq_offload_init();
 #endif
 
@@ -298,7 +298,7 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 
 	board_late_init_hook();
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+#якщо defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
 	z_stack_adjust_initialized = 1;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
@@ -329,14 +329,14 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_MMU */
 
 #ifdef CONFIG_BOOTARGS
-	extern int main(int argc, char **argv);
-	extern char **sys_boot_prepare_main_args(int *argc);
+	extern ціле main(ціле argc, char **argv);
+	extern char **sys_boot_prepare_main_args(ціле *argc);
 
-	int argc = 0;
+	ціле argc = 0;
 	char **argv = sys_boot_prepare_main_args(&argc);
 	(void)main(argc, argv);
-#else
-	extern int main(void);
+#інакше
+	extern ціле main(void);
 
 	(void)main();
 #endif /* CONFIG_BOOTARGS */
@@ -354,9 +354,9 @@ static void bg_thread_main(void *unused1, void *unused2, void *unused3)
 #endif /* CONFIG_COVERAGE_DUMP */
 } /* LCOV_EXCL_LINE ... because we just dumped final coverage data */
 
-#if defined(CONFIG_MULTITHREADING)
+#якщо defined(CONFIG_MULTITHREADING)
 __boot_func
-static void init_idle_thread(int i)
+static void init_idle_thread(ціле i)
 {
 	struct k_thread *thread = &z_idle_threads[i];
 	k_thread_stack_t *stack = z_idle_stacks[i];
@@ -364,14 +364,14 @@ static void init_idle_thread(int i)
 
 #ifdef CONFIG_THREAD_NAME
 
-#if CONFIG_MP_MAX_NUM_CPUS > 1
+#якщо CONFIG_MP_MAX_NUM_CPUS > 1
 	char tname[8];
 	snprintk(tname, 8, "idle %02d", i);
-#else
+#інакше
 	char *tname = "idle";
 #endif /* CONFIG_MP_MAX_NUM_CPUS */
 
-#else
+#інакше
 	char *tname = NULL;
 #endif /* CONFIG_THREAD_NAME */
 
@@ -386,7 +386,7 @@ static void init_idle_thread(int i)
 #endif /* CONFIG_SMP */
 }
 
-void z_init_cpu(int id)
+void z_init_cpu(ціле id)
 {
 	init_idle_thread(id);
 	_kernel.cpus[id].idle_thread = &z_idle_threads[id];
@@ -465,7 +465,7 @@ static char *prepare_multithreading(void)
 
 	z_init_cpu(0);
 
-	return stack_ptr;
+	повернути stack_ptr;
 }
 
 __boot_func
@@ -473,7 +473,7 @@ static FUNC_NORETURN void switch_to_main_thread(char *stack_ptr)
 {
 #ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
 	arch_switch_to_main_thread(&z_main_thread, stack_ptr, bg_thread_main);
-#else
+#інакше
 	ARG_UNUSED(stack_ptr);
 	/*
 	 * Context switch to main task (entry function is _main()): the
@@ -491,22 +491,22 @@ FUNC_NO_STACK_PROTECTOR
 void __weak z_early_rand_get(uint8_t *buf, size_t length)
 {
 	static uint64_t state = (uint64_t)CONFIG_TIMER_RANDOM_INITIAL_STATE;
-	int rc;
+	ціле rc;
 
 #ifdef CONFIG_ENTROPY_HAS_DRIVER
 	const struct device *const entropy = entropy_get_default_device();
 
-	if ((entropy != NULL) && device_is_ready(entropy)) {
+	якщо ((entropy != NULL) && device_is_ready(entropy)) {
 		/* Try to see if driver provides an ISR-specific API */
 		rc = entropy_get_entropy_isr(entropy, buf, length, ENTROPY_BUSYWAIT);
-		if (rc > 0) {
+		якщо (rc > 0) {
 			length -= rc;
 			buf += rc;
 		}
 	}
 #endif /* CONFIG_ENTROPY_HAS_DRIVER */
 
-	while (length > 0) {
+	поки (length > 0) {
 		uint32_t val;
 
 		state = state + k_cycle_get_32();
@@ -545,7 +545,7 @@ FUNC_NORETURN void z_cstart(void)
 
 	LOG_CORE_INIT();
 
-#if defined(CONFIG_MULTITHREADING)
+#якщо defined(CONFIG_MULTITHREADING)
 	z_dummy_thread_init(&_thread_dummy);
 #endif /* CONFIG_MULTITHREADING */
 	/* do any necessary initialization of static devices */
@@ -566,7 +566,7 @@ FUNC_NORETURN void z_cstart(void)
 
 	/* perform basic hardware initialization */
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_1);
-#if defined(CONFIG_SMP)
+#якщо defined(CONFIG_SMP)
 	arch_smp_init();
 #endif
 	z_sys_init_run_level(INIT_LEVEL_PRE_KERNEL_2);
@@ -586,21 +586,21 @@ FUNC_NORETURN void z_cstart(void)
 
 #ifdef CONFIG_MULTITHREADING
 	switch_to_main_thread(prepare_multithreading());
-#else
+#інакше
 #ifdef ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING
 	/* Custom ARCH-specific routine to switch to main()
 	 * in the case of no multi-threading.
 	 */
 	ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING(bg_thread_main,
 		NULL, NULL, NULL);
-#else
+#інакше
 	bg_thread_main(NULL, NULL, NULL);
 
 	/* LCOV_EXCL_START
 	 * We've already dumped coverage data at this point.
 	 */
 	irq_lock();
-	while (true) {
+	поки (true) {
 	}
 	/* LCOV_EXCL_STOP */
 #endif /* ARCH_SWITCH_TO_MAIN_NO_MULTITHREADING */

@@ -16,9 +16,9 @@
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#if CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0
+#якщо CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0
 #define BA_SIZE CONFIG_DYNAMIC_THREAD_POOL_SIZE
-#else
+#інакше
 #define BA_SIZE 1
 #endif /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
 
@@ -31,80 +31,80 @@ static K_THREAD_STACK_ARRAY_DEFINE(dynamic_stack, CONFIG_DYNAMIC_THREAD_POOL_SIZ
 				   K_THREAD_STACK_LEN(CONFIG_DYNAMIC_THREAD_STACK_SIZE));
 SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_SIZE);
 
-static k_thread_stack_t *z_thread_stack_alloc_pool(size_t size, int flags)
+static k_thread_stack_t *z_thread_stack_alloc_pool(size_t size, ціле flags)
 {
-	int rv;
+	ціле rv;
 	size_t offset;
 	k_thread_stack_t *stack;
 
-	if (size > CONFIG_DYNAMIC_THREAD_STACK_SIZE) {
+	якщо (size > CONFIG_DYNAMIC_THREAD_STACK_SIZE) {
 		LOG_DBG("stack size %zu is > pool stack size %zu", size,
 			(size_t)CONFIG_DYNAMIC_THREAD_STACK_SIZE);
-		return NULL;
+		повернути NULL;
 	}
 
 	rv = sys_bitarray_alloc(&dynamic_ba, 1, &offset);
-	if (rv < 0) {
+	якщо (rv < 0) {
 		LOG_DBG("unable to allocate stack from pool");
-		return NULL;
+		повернути NULL;
 	}
 
 	__ASSERT_NO_MSG(offset < CONFIG_DYNAMIC_THREAD_POOL_SIZE);
 
 	stack = (k_thread_stack_t *)&dynamic_stack[offset];
 
-	return stack;
+	повернути stack;
 }
 
-static k_thread_stack_t *z_thread_stack_alloc_dyn(size_t size, int flags)
+static k_thread_stack_t *z_thread_stack_alloc_dyn(size_t size, ціле flags)
 {
 	size_t stack_len;
 
-	if ((flags & K_USER) == K_USER) {
+	якщо ((flags & K_USER) == K_USER) {
 #ifdef CONFIG_DYNAMIC_OBJECTS
-		return k_object_alloc_size(K_OBJ_THREAD_STACK_ELEMENT, size);
-#else
+		повернути k_object_alloc_size(K_OBJ_THREAD_STACK_ELEMENT, size);
+#інакше
 		/* Dynamic user stack needs a kobject, so if this option is not
 		 * enabled we can't proceed.
 		 */
-		return NULL;
+		повернути NULL;
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 	}
 
 	stack_len = K_KERNEL_STACK_LEN(size);
-	if (stack_len < size) {
-		return NULL;
+	якщо (stack_len < size) {
+		повернути NULL;
 	}
 
-	return z_thread_aligned_alloc(Z_KERNEL_STACK_OBJ_ALIGN, stack_len);
+	повернути z_thread_aligned_alloc(Z_KERNEL_STACK_OBJ_ALIGN, stack_len);
 }
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, ціле flags)
 {
 	k_thread_stack_t *stack = NULL;
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
+	якщо (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
 		stack = z_thread_stack_alloc_dyn(size, flags);
-		if (stack == NULL && CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
+		якщо (stack == NULL && CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
 			stack = z_thread_stack_alloc_pool(size, flags);
 		}
-	} else if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
-		if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
+	} інакше якщо (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
+		якщо (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
 			stack = z_thread_stack_alloc_pool(size, flags);
 		}
 
-		if ((stack == NULL) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+		якщо ((stack == NULL) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
 			stack = z_thread_stack_alloc_dyn(size, flags);
 		}
 	}
 
-	return stack;
+	повернути stack;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, ціле flags)
 {
-	return z_impl_k_thread_stack_alloc(size, flags);
+	повернути z_impl_k_thread_stack_alloc(size, flags);
 }
 #include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -113,58 +113,58 @@ static void dyn_cb(const struct k_thread *thread, void *user_data)
 {
 	struct dyn_cb_data *const data = (struct dyn_cb_data *)user_data;
 
-	if (data->stack == (k_thread_stack_t *)thread->stack_info.start) {
+	якщо (data->stack == (k_thread_stack_t *)thread->stack_info.start) {
 		__ASSERT(data->tid == NULL, "stack %p is associated with more than one thread!",
 			 (void *)thread->stack_info.start);
 		data->tid = (k_tid_t)thread;
 	}
 }
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+ціле z_impl_k_thread_stack_free(k_thread_stack_t *stack)
 {
 	struct dyn_cb_data data = {.stack = stack};
 
 	/* Get a possible tid associated with stack */
 	k_thread_foreach(dyn_cb, &data);
 
-	if (data.tid != NULL) {
-		if (!z_is_thread_state_set(data.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
+	якщо (data.tid != NULL) {
+		якщо (!z_is_thread_state_set(data.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
 			LOG_ERR("tid %p is in use!", data.tid);
-			return -EBUSY;
+			повернути -EBUSY;
 		}
 	}
 
-	if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-		if (IS_ARRAY_ELEMENT(dynamic_stack, stack)) {
-			if (sys_bitarray_free(&dynamic_ba, 1, ARRAY_INDEX(dynamic_stack, stack))) {
+	якщо (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
+		якщо (IS_ARRAY_ELEMENT(dynamic_stack, stack)) {
+			якщо (sys_bitarray_free(&dynamic_ba, 1, ARRAY_INDEX(dynamic_stack, stack))) {
 				LOG_ERR("stack %p is not allocated!", stack);
-				return -EINVAL;
+				повернути -EINVAL;
 			}
 
-			return 0;
+			повернути 0;
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+	якщо (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
 #ifdef CONFIG_USERSPACE
-		if (k_object_find(stack)) {
+		якщо (k_object_find(stack)) {
 			k_object_free(stack);
-		} else {
+		} інакше {
 			k_free(stack);
 		}
-#else
+#інакше
 		k_free(stack);
 #endif /* CONFIG_USERSPACE */
-	} else {
+	} інакше {
 		LOG_DBG("Invalid stack %p", stack);
-		return -EINVAL;
+		повернути -EINVAL;
 	}
 
-	return 0;
+	повернути 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+static inline ціле z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 {
 	/* The thread stack object must not be in initialized state.
 	 *
@@ -175,7 +175,7 @@ static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 	 */
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_THREAD_STACK_ELEMENT));
 
-	return z_impl_k_thread_stack_free(stack);
+	повернути z_impl_k_thread_stack_free(stack);
 }
 #include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
 #endif /* CONFIG_USERSPACE */

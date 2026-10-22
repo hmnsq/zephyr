@@ -19,12 +19,12 @@ bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b)
 
 	cmp = z_sched_prio_cmp(thread_a, thread_b);
 
-	if (cmp > 0) {
-		return true;
-	} else if (cmp < 0) {
-		return false;
-	} else {
-		return thread_a->base.order_key < thread_b->base.order_key
+	якщо (cmp > 0) {
+		повернути true;
+	} інакше якщо (cmp < 0) {
+		повернути false;
+	} інакше {
+		повернути thread_a->base.order_key < thread_b->base.order_key
 			? 1 : 0;
 	}
 }

@@ -56,15 +56,15 @@ static struct k_spinlock lists_lock;       /* kobj dlist */
  * stack and other for the user stack, so we need to account the
  * worst alignment scenario and reserve space for that.
  */
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+#якщо defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
 #define STACK_ELEMENT_DATA_SIZE(size) \
 	(sizeof(struct z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
 	Z_THREAD_STACK_OBJ_ALIGN(size) + K_THREAD_STACK_LEN(size))
-#else
+#інакше
 #define STACK_ELEMENT_DATA_SIZE(size) (sizeof(struct z_stack_data) + \
 	K_THREAD_STACK_LEN(size))
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-#else
+#інакше
 #define STACK_ELEMENT_DATA_SIZE(size) K_THREAD_STACK_LEN(size)
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
@@ -76,9 +76,9 @@ static struct k_spinlock obj_lock;         /* kobj struct data */
 #ifdef CONFIG_DYNAMIC_OBJECTS
 extern uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
 
-extern int z_msgq_cleanup(struct k_msgq *q, bool locked);
-extern int z_stack_cleanup(struct k_stack *stack, bool locked);
-extern int z_timer_cleanup(struct k_timer *timer, bool locked);
+extern ціле z_msgq_cleanup(struct k_msgq *q, bool locked);
+extern ціле z_stack_cleanup(struct k_stack *stack, bool locked);
+extern ціле z_timer_cleanup(struct k_timer *timer, bool locked);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
 static void unref_check(struct k_object *ko, uintptr_t index, bool locked);
@@ -106,16 +106,16 @@ const char *otype_to_str(enum k_objects otype)
 		ret = "?";
 		break;
 	}
-#else
+#інакше
 	ARG_UNUSED(otype);
 	ret = NULL;
 #endif /* CONFIG_LOG */
-	return ret;
+	повернути ret;
 }
 
 struct perm_ctx {
-	int parent_id;
-	int child_id;
+	ціле parent_id;
+	ціле child_id;
 	struct k_thread *parent;
 };
 
@@ -132,7 +132,7 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
 	__ASSERT(obj->type == K_OBJ_THREAD_STACK_ELEMENT,
 		 "bad stack object");
 
-	return obj->data.stack_data->priv;
+	повернути obj->data.stack_data->priv;
 }
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
@@ -152,19 +152,19 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
  */
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 #define DYN_OBJ_DATA_ALIGN_K_THREAD	(ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT)
-#else
+#інакше
 #define DYN_OBJ_DATA_ALIGN_K_THREAD	(sizeof(void *))
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 
 #ifdef CONFIG_DYNAMIC_THREAD_STACK_SIZE
-#if defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
+#якщо defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_STACK_SIZE)
-#else
+#інакше
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_PRIVILEGED_STACK_SIZE)
 #endif /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
-#else
+#інакше
 #define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
 	Z_THREAD_STACK_OBJ_ALIGN(ARCH_STACK_PTR_ALIGN)
 #endif /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
@@ -205,7 +205,7 @@ static size_t obj_size_get(enum k_objects otype)
 		break;
 	}
 
-	return ret;
+	повернути ret;
 }
 
 static size_t obj_align_get(enum k_objects otype)
@@ -216,7 +216,7 @@ static size_t obj_align_get(enum k_objects otype)
 	case K_OBJ_THREAD:
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 		ret = ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT;
-#else
+#інакше
 		ret = __alignof(struct dyn_obj);
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 		break;
@@ -225,7 +225,7 @@ static size_t obj_align_get(enum k_objects otype)
 		break;
 	}
 
-	return ret;
+	повернути ret;
 }
 
 static struct dyn_obj *dyn_object_find_locked(const void *obj)
@@ -238,12 +238,12 @@ static struct dyn_obj *dyn_object_find_locked(const void *obj)
 	 * corresponding struct rbnode
 	 */
 	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, node, dobj_list) {
-		if (node->kobj.name == obj) {
-			return node;
+		якщо (node->kobj.name == obj) {
+			повернути node;
 		}
 	}
 
-	return NULL;
+	повернути NULL;
 }
 
 static struct dyn_obj *dyn_object_find(const void *obj)
@@ -255,7 +255,7 @@ static struct dyn_obj *dyn_object_find(const void *obj)
 	node = dyn_object_find_locked(obj);
 	k_spin_unlock(&lists_lock, key);
 
-	return node;
+	повернути node;
 }
 
 static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
@@ -283,18 +283,18 @@ static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
  **/
 static bool thread_idx_alloc(uintptr_t *tidx)
 {
-	int i;
-	int idx;
-	int base;
+	ціле i;
+	ціле idx;
+	ціле base;
 	bool ret = false;
 	k_spinlock_key_t key;
 
 	base = 0;
 	key = k_spin_lock(&lists_lock);
-	for (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+	для (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
 		idx = find_lsb_set(_thread_idx_map[i]);
 
-		if (idx != 0) {
+		якщо (idx != 0) {
 			struct dyn_obj *obj, *next;
 
 			*tidx = base + (idx - 1);
@@ -320,7 +320,7 @@ static bool thread_idx_alloc(uintptr_t *tidx)
 	}
 
 	k_spin_unlock(&lists_lock, key);
-	return ret;
+	повернути ret;
 }
 
 /**
@@ -349,8 +349,8 @@ static void thread_idx_free(uintptr_t tidx)
 	}
 
 	/* Figure out which bits to set in _thread_idx_map[] and set it. */
-	int base = tidx / NUM_BITS(_thread_idx_map[0]);
-	int offset = tidx % NUM_BITS(_thread_idx_map[0]);
+	ціле base = tidx / NUM_BITS(_thread_idx_map[0]);
+	ціле offset = tidx % NUM_BITS(_thread_idx_map[0]);
 
 	_thread_idx_map[base] |= BIT(offset);
 
@@ -363,32 +363,32 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 	struct dyn_obj *dyn;
 
 	dyn = z_thread_aligned_alloc(align, sizeof(struct dyn_obj));
-	if (dyn == NULL) {
-		return NULL;
+	якщо (dyn == NULL) {
+		повернути NULL;
 	}
 
-	if (otype == K_OBJ_THREAD_STACK_ELEMENT) {
+	якщо (otype == K_OBJ_THREAD_STACK_ELEMENT) {
 		size_t adjusted_size;
 
-		if (size == 0) {
+		якщо (size == 0) {
 			k_free(dyn);
-			return NULL;
+			повернути NULL;
 		}
 
 		adjusted_size = STACK_ELEMENT_DATA_SIZE(size);
-		if (adjusted_size < size) {
+		якщо (adjusted_size < size) {
 			/* The size adjustment above overflowed, which would
 			 * hand out an allocation smaller than requested.
 			 */
 			k_free(dyn);
-			return NULL;
+			повернути NULL;
 		}
 
 		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_STACK,
 						     adjusted_size);
-		if (dyn->data == NULL) {
+		якщо (dyn->data == NULL) {
 			k_free(dyn);
-			return NULL;
+			повернути NULL;
 		}
 
 #ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
@@ -399,7 +399,7 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 		 * cached area such that the thread object will have its stack
 		 * inside cached area.
 		 */
-		if (sys_cache_is_ptr_uncached(dyn->data)) {
+		якщо (sys_cache_is_ptr_uncached(dyn->data)) {
 			dyn->data = sys_cache_cached_ptr_get(dyn->data);
 		}
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
@@ -407,31 +407,31 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 #ifdef CONFIG_GEN_PRIV_STACKS
 		struct z_stack_data *stack_data = (struct z_stack_data *)
 			((uint8_t *)dyn->data + adjusted_size - sizeof(*stack_data));
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+#якщо defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
 		stack_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
 			  Z_THREAD_STACK_OBJ_ALIGN(size));
-#else
+#інакше
 		stack_data->priv = (uint8_t *)dyn->data;
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
 		stack_data->size = adjusted_size;
 		dyn->kobj.data.stack_data = stack_data;
 		dyn->kobj.name = dyn->data;
-#else
+#інакше
 		dyn->kobj.name = dyn->data;
 		dyn->kobj.data.stack_size = adjusted_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
-	} else {
+	} інакше {
 		size_t total_size = obj_size_get(otype) + size;
 
-		if (total_size < size) {
+		якщо (total_size < size) {
 			k_free(dyn);
-			return NULL;
+			повернути NULL;
 		}
 
 		dyn->data = z_thread_aligned_alloc(align, total_size);
-		if (dyn->data == NULL) {
+		якщо (dyn->data == NULL) {
 			k_free(dyn);
-			return NULL;
+			повернути NULL;
 		}
 		dyn->kobj.name = dyn->data;
 	}
@@ -445,18 +445,18 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 	sys_dlist_append(&obj_list, &dyn->dobj_list);
 	k_spin_unlock(&lists_lock, key);
 
-	return &dyn->kobj;
+	повернути &dyn->kobj;
 }
 
 struct k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
 {
 	struct k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
 
-	if (obj == NULL) {
+	якщо (obj == NULL) {
 		LOG_ERR("could not allocate kernel object, out of memory");
 	}
 
-	return obj;
+	повернути obj;
 }
 
 static void *z_object_alloc(enum k_objects otype, size_t size)
@@ -464,16 +464,16 @@ static void *z_object_alloc(enum k_objects otype, size_t size)
 	struct k_object *zo;
 	uintptr_t tidx = 0;
 
-	if ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
+	якщо ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
 		LOG_ERR("bad object type %d requested", otype);
-		return NULL;
+		повернути NULL;
 	}
 
 	switch (otype) {
 	case K_OBJ_THREAD:
-		if (!thread_idx_alloc(&tidx)) {
+		якщо (!thread_idx_alloc(&tidx)) {
 			LOG_ERR("out of free thread indexes");
-			return NULL;
+			повернути NULL;
 		}
 		break;
 	/* The following are currently not allowed at all */
@@ -481,21 +481,21 @@ static void *z_object_alloc(enum k_objects otype, size_t size)
 	case K_OBJ_NET_SOCKET:			/* Indeterminate size */
 		LOG_ERR("forbidden object type '%s' requested",
 			otype_to_str(otype));
-		return NULL;
+		повернути NULL;
 	default:
 		/* Remainder within bounds are permitted */
 		break;
 	}
 
 	zo = dynamic_object_create(otype, obj_align_get(otype), size);
-	if (zo == NULL) {
-		if (otype == K_OBJ_THREAD) {
+	якщо (zo == NULL) {
+		якщо (otype == K_OBJ_THREAD) {
 			thread_idx_free(tidx);
 		}
-		return NULL;
+		повернути NULL;
 	}
 
-	if (otype == K_OBJ_THREAD) {
+	якщо (otype == K_OBJ_THREAD) {
 		zo->data.thread_id = tidx;
 	}
 
@@ -509,17 +509,17 @@ static void *z_object_alloc(enum k_objects otype, size_t size)
 	 */
 	zo->flags |= K_OBJ_FLAG_ALLOC;
 
-	return zo->name;
+	повернути zo->name;
 }
 
 void *z_impl_k_object_alloc(enum k_objects otype)
 {
-	return z_object_alloc(otype, 0);
+	повернути z_object_alloc(otype, 0);
 }
 
 void *z_impl_k_object_alloc_size(enum k_objects otype, size_t size)
 {
-	return z_object_alloc(otype, size);
+	повернути z_object_alloc(otype, size);
 }
 
 void k_object_free(void *obj)
@@ -541,10 +541,10 @@ void k_object_free(void *obj)
 
 	dyn = dyn_object_find_locked(obj);
 
-	if (dyn != NULL) {
+	якщо (dyn != NULL) {
 		sys_dlist_remove(&dyn->dobj_list);
 
-		if (dyn->kobj.type == K_OBJ_THREAD) {
+		якщо (dyn->kobj.type == K_OBJ_THREAD) {
 			free_thread_idx = true;
 			thread_idx = dyn->kobj.data.thread_id;
 		}
@@ -555,13 +555,13 @@ void k_object_free(void *obj)
 	 * non-atomic bitmap update against concurrent frees, so it must
 	 * run with the lock dropped here.
 	 */
-	if (free_thread_idx) {
+	якщо (free_thread_idx) {
 		thread_idx_free(thread_idx);
 	}
 
-	if (dyn != NULL) {
+	якщо (dyn != NULL) {
 #ifdef CONFIG_OBJ_CORE
-		if (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
+		якщо (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
 			k_obj_core_evict_range(obj, obj_size_get(dyn->kobj.type));
 		}
 #endif /* CONFIG_OBJ_CORE */
@@ -571,17 +571,17 @@ void k_object_free(void *obj)
 		 * stack object. So we need to restore the uncached one before
 		 * freeing it.
 		 */
-		if (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
+		якщо (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
 			uint8_t *stack;
 
-			if (sys_cache_is_ptr_cached(dyn->data)) {
+			якщо (sys_cache_is_ptr_cached(dyn->data)) {
 				stack = sys_cache_uncached_ptr_get(dyn->data);
-			} else {
+			} інакше {
 				stack = dyn->data;
 			}
 
 			k_free(stack);
-		} else
+		} інакше
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 		{
 			k_free(dyn->data);
@@ -596,7 +596,7 @@ struct k_object *k_object_find(const void *obj)
 
 	ret = z_object_gperf_find(obj);
 
-	if (ret == NULL) {
+	якщо (ret == NULL) {
 		struct dyn_obj *dyn;
 
 		/* The cast to pointer-to-non-const violates MISRA
@@ -604,12 +604,12 @@ struct k_object *k_object_find(const void *obj)
 		 * were not declared with a const qualifier.
 		 */
 		dyn = dyn_object_find(obj);
-		if (dyn != NULL) {
+		якщо (dyn != NULL) {
 			ret = &dyn->kobj;
 		}
 	}
 
-	return ret;
+	повернути ret;
 }
 
 void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
@@ -637,7 +637,7 @@ Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak struct k_object *z_object_gperf_find(const void *obj)
 {
 	ARG_UNUSED(obj);
-	return NULL;
+	повернути NULL;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *context)
@@ -645,11 +645,11 @@ __weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *cont
 	ARG_UNUSED(func);
 	ARG_UNUSED(context);
 }
-#else
+#інакше
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak struct k_object *k_object_find(const void *obj)
 {
-	return NULL;
+	повернути NULL;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
 __weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
@@ -657,17 +657,17 @@ __weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
 }
 #endif
 
-static unsigned int thread_index_get(struct k_thread *thread)
+static unsigned ціле thread_index_get(struct k_thread *thread)
 {
 	struct k_object *ko;
 
 	ko = k_object_find(thread);
 
-	if (ko == NULL) {
-		return -1;
+	якщо (ko == NULL) {
+		повернути -1;
 	}
 
-	return ko->data.thread_id;
+	повернути ko->data.thread_id;
 }
 
 /* Caller must hold lists_lock for the duration of this call so that the
@@ -684,7 +684,7 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 
 #ifdef CONFIG_DYNAMIC_OBJECTS
-	if ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
+	якщо ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
 		/* skip unref check for static kernel object */
 		goto out;
 	}
@@ -695,8 +695,8 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 
 	__ASSERT(IS_PTR_ALIGNED(dyn, struct dyn_obj), "unaligned z_object");
 
-	for (int i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
-		if (ko->perms[i] != 0U) {
+	для (ціле i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+		якщо (ko->perms[i] != 0U) {
 			goto out;
 		}
 	}
@@ -719,7 +719,7 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 		 * would read garbage from an uninitialized dnode. Guard
 		 * explicitly here.
 		 */
-		if ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
+		якщо ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
 			(void)z_timer_cleanup((struct k_timer *)ko->name, locked);
 		}
 		break;
@@ -740,7 +740,7 @@ static void wordlist_cb(struct k_object *ko, void *ctx_ptr)
 {
 	struct perm_ctx *ctx = (struct perm_ctx *)ctx_ptr;
 
-	if (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
+	якщо (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
 				  ((struct k_thread *)ko->name != ctx->parent)) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, ctx->child_id);
 	}
@@ -754,25 +754,25 @@ void k_thread_perms_inherit(struct k_thread *parent, struct k_thread *child)
 		parent
 	};
 
-	if ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
+	якщо ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
 		k_object_wordlist_foreach(wordlist_cb, &ctx);
 	}
 }
 
 void k_thread_perms_set(struct k_object *ko, struct k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	ціле index = thread_index_get(thread);
 
-	if (index != -1) {
+	якщо (index != -1) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, index);
 	}
 }
 
 void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	ціле index = thread_index_get(thread);
 
-	if (index != -1) {
+	якщо (index != -1) {
 		sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 		/* unref_check() requires lists_lock so its dlist remove is
 		 * SMP-safe.
@@ -782,7 +782,7 @@ void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
 
 		unref_check(ko, index, false);
 		k_spin_unlock(&lists_lock, key);
-#else
+#інакше
 		unref_check(ko, index, false);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 	}
@@ -806,44 +806,44 @@ void k_thread_perms_all_clear(struct k_thread *thread)
 {
 	uintptr_t index = thread_index_get(thread);
 
-	if ((int)index != -1) {
+	якщо ((ціле)index != -1) {
 		k_object_wordlist_foreach(clear_perms_cb_locked, (void *)index);
 	}
 }
 
-static int thread_perms_test(struct k_object *ko)
+static ціле thread_perms_test(struct k_object *ko)
 {
-	int index;
+	ціле index;
 
-	if ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
-		return 1;
+	якщо ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
+		повернути 1;
 	}
 
 	index = thread_index_get(_current);
-	if (index != -1) {
-		return sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
+	якщо (index != -1) {
+		повернути sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
 	}
-	return 0;
+	повернути 0;
 }
 
 static void dump_permission_error(struct k_object *ko)
 {
-	int index = thread_index_get(_current);
+	ціле index = thread_index_get(_current);
 	LOG_ERR("thread %p (%d) does not have permission on %s %p",
 		_current, index,
 		otype_to_str(ko->type), ko->name);
 	LOG_HEXDUMP_ERR(ko->perms, sizeof(ko->perms), "permission bitmap");
 }
 
-void k_object_dump_error(int retval, const void *obj, struct k_object *ko,
+void k_object_dump_error(ціле retval, const void *obj, struct k_object *ko,
 			enum k_objects otype)
 {
 	switch (retval) {
 	case -EBADF:
 		LOG_ERR("%p is not a valid %s", obj, otype_to_str(otype));
-		if (ko == NULL) {
+		якщо (ko == NULL) {
 			LOG_ERR("address is not a known kernel object");
-		} else {
+		} інакше {
 			LOG_ERR("address is actually a %s",
 				otype_to_str(ko->type));
 		}
@@ -867,7 +867,7 @@ void z_impl_k_object_access_grant(const void *object, struct k_thread *thread)
 {
 	struct k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	якщо (ko != NULL) {
 		k_thread_perms_set(ko, thread);
 	}
 }
@@ -876,7 +876,7 @@ void k_object_access_revoke(const void *object, struct k_thread *thread)
 {
 	struct k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	якщо (ko != NULL) {
 		k_thread_perms_clear(ko, thread);
 	}
 }
@@ -885,7 +885,7 @@ void k_object_access_revoke_others(const void *object)
 {
 	struct k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	якщо (ko != NULL) {
 		(void)memset(ko->perms, 0, sizeof(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags &= ~K_OBJ_FLAG_PUBLIC;
@@ -901,54 +901,54 @@ void k_object_access_all_grant(const void *object)
 {
 	struct k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	якщо (ko != NULL) {
 		ko->flags |= K_OBJ_FLAG_PUBLIC;
 	}
 }
 
-int k_object_validate(struct k_object *ko, enum k_objects otype,
+ціле k_object_validate(struct k_object *ko, enum k_objects otype,
 		       enum _obj_init_check init)
 {
-	if (unlikely(ko == NULL)) {
-		return -EBADF;
+	якщо (unlikely(ko == NULL)) {
+		повернути -EBADF;
 	}
 
-	if (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
-		if ((otype != K_OBJ_DRIVER_ANY) ||
+	якщо (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
+		якщо ((otype != K_OBJ_DRIVER_ANY) ||
 		    (ko->type < K_OBJ_DRIVER_FIRST) ||
 		    (ko->type > K_OBJ_DRIVER_LAST)) {
-			return -EBADF;
+			повернути -EBADF;
 		}
 	}
 
 	/* Manipulation of any kernel objects by a user thread requires that
 	 * thread be granted access first, even for uninitialized objects
 	 */
-	if (unlikely(thread_perms_test(ko) == 0)) {
-		return -EPERM;
+	якщо (unlikely(thread_perms_test(ko) == 0)) {
+		повернути -EPERM;
 	}
 
 	/* Initialization state checks. _OBJ_INIT_ANY, we don't care */
-	if (likely(init == _OBJ_INIT_TRUE)) {
+	якщо (likely(init == _OBJ_INIT_TRUE)) {
 		/* Object MUST be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
-			return -EINVAL;
+		якщо (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
+			повернути -EINVAL;
 		}
-	} else if (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
+	} інакше якщо (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
 		/* Object MUST NOT be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
-			return -EADDRINUSE;
+		якщо (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
+			повернути -EADDRINUSE;
 		}
-	} else {
+	} інакше {
 		/* _OBJ_INIT_ANY */
 	}
 
-	return 0;
+	повернути 0;
 }
 
-int z_impl_k_object_access_check(const void *object)
+ціле z_impl_k_object_access_check(const void *object)
 {
-	return k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
+	повернути k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
 void k_object_init(const void *obj)
@@ -964,12 +964,12 @@ void k_object_init(const void *obj)
 	 */
 
 	ko = k_object_find(obj);
-	if (ko == NULL) {
+	якщо (ko == NULL) {
 		/* Supervisor threads can ignore rules about kernel objects
 		 * and may declare them on stacks, etc. Such objects will never
 		 * be usable from userspace, but we shouldn't explode.
 		 */
-		return;
+		повернути;
 	}
 
 	/* Allows non-initialization system calls to be made on this object */
@@ -980,7 +980,7 @@ void k_object_recycle(const void *obj)
 {
 	struct k_object *ko = k_object_find(obj);
 
-	if (ko != NULL) {
+	якщо (ko != NULL) {
 		(void)memset(ko->perms, 0, sizeof(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags |= K_OBJ_FLAG_INITIALIZED;
@@ -993,8 +993,8 @@ void k_object_uninit(const void *obj)
 
 	/* See comments in k_object_init() */
 	ko = k_object_find(obj);
-	if (ko == NULL) {
-		return;
+	якщо (ko == NULL) {
+		повернути;
 	}
 
 	ko->flags &= ~K_OBJ_FLAG_INITIALIZED;
@@ -1008,27 +1008,27 @@ void *k_usermode_alloc_from_copy(const void *src, size_t size)
 	void *dst = NULL;
 
 	/* Does the caller in user mode have access to read this memory? */
-	if (K_SYSCALL_MEMORY_READ(src, size)) {
+	якщо (K_SYSCALL_MEMORY_READ(src, size)) {
 		goto out_err;
 	}
 
 	dst = z_thread_malloc(size);
-	if (dst == NULL) {
+	якщо (dst == NULL) {
 		LOG_ERR("out of thread resource pool memory (%zu)", size);
 		goto out_err;
 	}
 
 	(void)memcpy(dst, src, size);
 out_err:
-	return dst;
+	повернути dst;
 }
 
-static int user_copy(void *dst, const void *src, size_t size, bool to_user)
+static ціле user_copy(void *dst, const void *src, size_t size, bool to_user)
 {
-	int ret = EFAULT;
+	ціле ret = EFAULT;
 
 	/* Does the caller in user mode have access to this memory? */
-	if (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
+	якщо (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
 			K_SYSCALL_MEMORY_READ(src, size)) {
 		goto out_err;
 	}
@@ -1036,35 +1036,35 @@ static int user_copy(void *dst, const void *src, size_t size, bool to_user)
 	(void)memcpy(dst, src, size);
 	ret = 0;
 out_err:
-	return ret;
+	повернути ret;
 }
 
-int k_usermode_from_copy(void *dst, const void *src, size_t size)
+ціле k_usermode_from_copy(void *dst, const void *src, size_t size)
 {
-	return user_copy(dst, src, size, false);
+	повернути user_copy(dst, src, size, false);
 }
 
-int k_usermode_to_copy(void *dst, const void *src, size_t size)
+ціле k_usermode_to_copy(void *dst, const void *src, size_t size)
 {
-	return user_copy(dst, src, size, true);
+	повернути user_copy(dst, src, size, true);
 }
 
 char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
 {
 	size_t actual_len;
-	int err;
+	ціле err;
 	char *ret = NULL;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	якщо (err != 0) {
 		goto out;
 	}
-	if (actual_len == maxlen) {
+	якщо (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		goto out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	якщо (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		goto out;
 	}
@@ -1075,30 +1075,30 @@ char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
 	 * checks. Ensure what we actually copied is still terminated
 	 * properly.
 	 */
-	if (ret != NULL) {
+	якщо (ret != NULL) {
 		ret[actual_len - 1U] = '\0';
 	}
 out:
-	return ret;
+	повернути ret;
 }
 
-int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
+ціле k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
 {
 	size_t actual_len;
-	int ret, err;
+	ціле ret, err;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	якщо (err != 0) {
 		ret = EFAULT;
 		goto out;
 	}
-	if (actual_len == maxlen) {
+	якщо (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		ret = EINVAL;
 		goto out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	якщо (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		ret = EINVAL;
 		goto out;
@@ -1109,7 +1109,7 @@ int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
 	/* See comment above in k_usermode_string_alloc_copy() */
 	dst[actual_len - 1] = '\0';
 out:
-	return ret;
+	повернути ret;
 }
 
 /*
@@ -1127,7 +1127,7 @@ static void app_shmem_bss_zero(void)
 	end = (struct z_app_region *)&__app_shmem_regions_end[0];
 	region = (struct z_app_region *)&__app_shmem_regions_start[0];
 
-	for ( ; region < end; region++) {
+	для ( ; region < end; region++) {
 		(void)memset(region->bss_start, 0, region->bss_size);
 	}
 }
