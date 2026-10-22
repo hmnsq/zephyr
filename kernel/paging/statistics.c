@@ -35,7 +35,7 @@ extern unsigned long
 k_mem_paging_backing_store_histogram_bounds[
 	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
 
-#else
+#否则
 #define NS_TO_CYC(ns)		(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000U * ns)
 
 /*
@@ -79,19 +79,19 @@ k_mem_paging_backing_store_histogram_bounds[
 unsigned long k_mem_num_pagefaults_get(void)
 {
 	unsigned long ret;
-	unsigned int key;
+	unsigned 整数 key;
 
 	key = irq_lock();
 	ret = paging_stats.pagefaults.cnt;
 	irq_unlock(key);
 
-	return ret;
+	戻る ret;
 }
 
 void z_impl_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
 {
-	if (stats == NULL) {
-		return;
+	もし (stats == NULL) {
+		戻る;
 	}
 
 	/* Copy statistics */
@@ -112,8 +112,8 @@ void z_vrfy_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
 void z_impl_k_mem_paging_thread_stats_get(struct k_thread *thread,
 					  struct k_mem_paging_stats_t *stats)
 {
-	if ((thread == NULL) || (stats == NULL)) {
-		return;
+	もし ((thread == NULL) || (stats == NULL)) {
+		戻る;
 	}
 
 	/* Copy statistics */
@@ -171,12 +171,12 @@ void z_paging_histogram_init(void)
 void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
 			    uint32_t cycles)
 {
-	int idx;
+	整数 idx;
 
-	for (idx = 0;
+	ために (idx = 0;
 	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS;
 	     idx++) {
-		if (cycles <= hist->bounds[idx]) {
+		もし (cycles <= hist->bounds[idx]) {
 			hist->counts[idx]++;
 			break;
 		}
@@ -186,8 +186,8 @@ void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
 void z_impl_k_mem_paging_histogram_eviction_get(
 	struct k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	もし (hist == NULL) {
+		戻る;
 	}
 
 	/* Copy statistics */
@@ -198,8 +198,8 @@ void z_impl_k_mem_paging_histogram_eviction_get(
 void z_impl_k_mem_paging_histogram_backing_store_page_in_get(
 	struct k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	もし (hist == NULL) {
+		戻る;
 	}
 
 	/* Copy histogram */
@@ -210,8 +210,8 @@ void z_impl_k_mem_paging_histogram_backing_store_page_in_get(
 void z_impl_k_mem_paging_histogram_backing_store_page_out_get(
 	struct k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	もし (hist == NULL) {
+		戻る;
 	}
 
 	/* Copy histogram */

@@ -33,7 +33,7 @@ struct mbox_walk_data {
 K_OBJ_TYPE_DEFINE(obj_type_mailbox, k_mbox, K_OBJ_TYPE_MBOX_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_MAILBOX */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 
 /* asynchronous message descriptor type */
 struct k_mbox_async {
@@ -76,9 +76,9 @@ static void init_mbox_module(void)
 	 * that governs access to them.
 	 */
 
-	int i;
+	整数 i;
 
-	for (i = 0; i < CONFIG_NUM_MBOX_ASYNC_MSGS; i++) {
+	ために (i = 0; i < CONFIG_NUM_MBOX_ASYNC_MSGS; i++) {
 		z_init_thread_base(&async_msg[i].thread, 0, _THREAD_DUMMY, 0);
 		k_stack_push(&async_msg_free, (stack_data_t)&async_msg[i]);
 	}
@@ -116,12 +116,12 @@ void k_mbox_init(struct k_mbox *mbox)
  * @retval 0 Success.
  * @retval -1 Not matched.
  */
-static int mbox_message_match(struct k_mbox_msg *tx_msg,
+static 整数 mbox_message_match(struct k_mbox_msg *tx_msg,
 			       struct k_mbox_msg *rx_msg)
 {
 	uint32_t temp_info;
 
-	if (((tx_msg->tx_target_thread == (k_tid_t)K_ANY) ||
+	もし (((tx_msg->tx_target_thread == (k_tid_t)K_ANY) ||
 	     (tx_msg->tx_target_thread == rx_msg->tx_target_thread)) &&
 	    ((rx_msg->rx_source_thread == (k_tid_t)K_ANY) ||
 	     (rx_msg->rx_source_thread == tx_msg->rx_source_thread))) {
@@ -136,7 +136,7 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
 		tx_msg->info = temp_info;
 
 		/* update data size field for receiver only */
-		if (rx_msg->size > tx_msg->size) {
+		もし (rx_msg->size > tx_msg->size) {
 			rx_msg->size = tx_msg->size;
 		}
 
@@ -146,10 +146,10 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
 		/* update syncing thread field for receiver only */
 		rx_msg->_syncing_thread = tx_msg->_syncing_thread;
 
-		return 0;
+		戻る 0;
 	}
 
-	return -1;
+	戻る -1;
 }
 
 /**
@@ -165,8 +165,8 @@ static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
 	struct k_mbox_msg *tx_msg;
 
 	/* do nothing if message was disposed of when it was received */
-	if (rx_msg->_syncing_thread == NULL) {
-		return;
+	もし (rx_msg->_syncing_thread == NULL) {
+		戻る;
 	}
 
 	/* recover sender info */
@@ -177,19 +177,19 @@ static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
 	/* update data size field for sender */
 	tx_msg->size = rx_msg->size;
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 	/*
 	 * asynchronous send: free asynchronous message descriptor +
 	 * dummy thread pair, then give semaphore (if needed)
 	 */
-	if (is_thread_dummy(sending_thread)) {
+	もし (is_thread_dummy(sending_thread)) {
 		struct k_sem *async_sem = tx_msg->_async_sem;
 
 		mbox_async_free((struct k_mbox_async *)sending_thread);
-		if (async_sem != NULL) {
+		もし (async_sem != NULL) {
 			k_sem_give(async_sem);
 		}
-		return;
+		戻る;
 	}
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 
@@ -207,16 +207,16 @@ static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
 	z_reschedule(&_sched_spinlock, key);
 }
 
-static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
+static 整数 mbox_message_put_walk_op(struct k_thread *thread, void *data)
 {
 	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
 	struct k_mbox_msg *rx_msg;
 
 	rx_msg = (struct k_mbox_msg *)thread->base.swap_data;
 
-	if (mbox_message_match(walk_data->msg, rx_msg) != 0) {
+	もし (mbox_message_match(walk_data->msg, rx_msg) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		戻る 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
@@ -226,13 +226,13 @@ static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
 	arch_thread_return_value_set(thread, 0);
 	z_sched_ready_locked(thread);
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (is_thread_dummy(walk_data->thread)) {
-		return ASYNCHRONOUS_MATCH_FOUND;
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+	もし (is_thread_dummy(walk_data->thread)) {
+		戻る ASYNCHRONOUS_MATCH_FOUND;
 	}
 #endif
 
-	return SYNCHRONOUS_MATCH_FOUND;
+	戻る SYNCHRONOUS_MATCH_FOUND;
 }
 
 /**
@@ -251,7 +251,7 @@ static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
  * @retval -ENOMSG Failed immediately.
  * @retval -EAGAIN Timed out.
  */
-static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+static 整数 mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 			     k_timeout_t timeout)
 {
 	struct k_thread *sending_thread;
@@ -270,7 +270,7 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, message_put, mbox, timeout);
 
 	struct mbox_walk_data walk_data;
-	int status;
+	整数 status;
 
 	walk_data.thread = sending_thread;
 	walk_data.msg = tx_msg;
@@ -288,8 +288,8 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	 *   0                        - no match found
 	 */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (status == ASYNCHRONOUS_MATCH_FOUND) {
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+	もし (status == ASYNCHRONOUS_MATCH_FOUND) {
 		/*
 		 * Swap out current thread if receiver has priority, otherwise
 		 * let it continue. Note that the dummy sending thread sits
@@ -299,11 +299,11 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 		z_reschedule(&mbox->lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
 					       timeout, 0);
-		return 0;
+		戻る 0;
 	}
 #endif
 
-	if (status == SYNCHRONOUS_MATCH_FOUND) {
+	もし (status == SYNCHRONOUS_MATCH_FOUND) {
 		/*
 		 * Pend current thread until the receiver
 		 * consumes the message.
@@ -312,41 +312,41 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox,
 						   timeout);
 
-		int ret = z_pend_curr(&mbox->lock, key, NULL, K_FOREVER);
+		整数 ret = z_pend_curr(&mbox->lock, key, NULL, K_FOREVER);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
 					       timeout, ret);
 
-		return ret;
+		戻る ret;
 	}
 
 	/* didn't find a matching receiver: don't wait for one */
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	もし (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, -ENOMSG);
 
 		k_spin_unlock(&mbox->lock, key);
-		return -ENOMSG;
+		戻る -ENOMSG;
 	}
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 	/* asynchronous send: dummy thread waits on tx queue for receiver */
-	if (is_thread_dummy(sending_thread)) {
+	もし (is_thread_dummy(sending_thread)) {
 		z_pend_thread(sending_thread, &mbox->tx_msg_queue, K_FOREVER);
 		k_spin_unlock(&mbox->lock, key);
-		return 0;
+		戻る 0;
 	}
 #endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox, timeout);
 
 	/* synchronous send: sender waits on tx queue for receiver or timeout */
-	int ret = z_pend_curr(&mbox->lock, key, &mbox->tx_msg_queue, timeout);
+	整数 ret = z_pend_curr(&mbox->lock, key, &mbox->tx_msg_queue, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, ret);
 
-	return ret;
+	戻る ret;
 }
 
-int k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+整数 k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	       k_timeout_t timeout)
 {
 	/* configure things for a synchronous send, then send the message */
@@ -354,14 +354,14 @@ int k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, put, mbox, timeout);
 
-	int ret = mbox_message_put(mbox, tx_msg, timeout);
+	整数 ret = mbox_message_put(mbox, tx_msg, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, put, mbox, timeout, ret);
 
-	return ret;
+	戻る ret;
 }
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#もし (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
 void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 		      struct k_sem *sem)
 {
@@ -389,14 +389,14 @@ void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
 {
 	/* handle case where data is to be discarded */
-	if (buffer == NULL) {
+	もし (buffer == NULL) {
 		rx_msg->size = 0;
 		mbox_message_dispose(rx_msg);
-		return;
+		戻る;
 	}
 
 	/* copy message data to buffer, then dispose of message */
-	if ((rx_msg->tx_data != NULL) && (rx_msg->size > 0U)) {
+	もし ((rx_msg->tx_data != NULL) && (rx_msg->size > 0U)) {
 		(void)memcpy(buffer, rx_msg->tx_data, rx_msg->size);
 	}
 	mbox_message_dispose(rx_msg);
@@ -418,31 +418,31 @@ void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
  *
  * @retval 0 Always returns 0.
  */
-static int mbox_message_data_check(struct k_mbox_msg *rx_msg, void *buffer)
+static 整数 mbox_message_data_check(struct k_mbox_msg *rx_msg, void *buffer)
 {
-	if (buffer != NULL) {
+	もし (buffer != NULL) {
 		/* retrieve data now, then dispose of message */
 		k_mbox_data_get(rx_msg, buffer);
-	} else if (rx_msg->size == 0U) {
+	} 否则 もし (rx_msg->size == 0U) {
 		/* there is no data to get, so just dispose of message */
 		mbox_message_dispose(rx_msg);
-	} else {
+	} 否则 {
 		/* keep message around for later data retrieval */
 	}
 
-	return 0;
+	戻る 0;
 }
 
-static int mbox_get_walk_op(struct k_thread *thread, void *data)
+static 整数 mbox_get_walk_op(struct k_thread *thread, void *data)
 {
 	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
 	struct k_mbox_msg *tx_msg;
 
 	tx_msg = (struct k_mbox_msg *)thread->base.swap_data;
 
-	if (mbox_message_match(tx_msg, walk_data->msg) != 0) {
+	もし (mbox_message_match(tx_msg, walk_data->msg) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		戻る 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
@@ -451,14 +451,14 @@ static int mbox_get_walk_op(struct k_thread *thread, void *data)
 
 	(void)z_try_abort_thread_timeout(thread);
 
-	return 1;
+	戻る 1;
 }
 
-int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
+整数 k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 	       k_timeout_t timeout)
 {
 	k_spinlock_key_t key;
-	int result;
+	整数 result;
 
 	/* save receiver id so it can be used during message matching */
 	rx_msg->tx_target_thread = _current;
@@ -469,7 +469,7 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, get, mbox, timeout);
 
 	struct mbox_walk_data walk_data;
-	int status;
+	整数 status;
 
 	walk_data.thread = NULL;   /* Unused by walk operation */
 	walk_data.msg = rx_msg;
@@ -479,7 +479,7 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 	status = z_sched_waitq_walk(&mbox->tx_msg_queue,
 				    mbox_get_walk_op, NULL, &walk_data);
 
-	if (status != 0) {
+	もし (status != 0) {
 		/* Matching sender found */
 		k_spin_unlock(&mbox->lock, key);
 		result = 0;
@@ -489,7 +489,7 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 
 	/* didn't find a matching sender */
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	もし (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a matching sender to appear */
 		k_spin_unlock(&mbox->lock, key);
 
@@ -505,11 +505,11 @@ int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
 
 out:
 	/* consume message data immediately, if needed */
-	if (result == 0) {
+	もし (result == 0) {
 		result = mbox_message_data_check(rx_msg, buffer);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, get, mbox, timeout, result);
 
-	return result;
+	戻る result;
 }

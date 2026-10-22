@@ -34,7 +34,7 @@ static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
 {
 	void *ret;
 
-	if ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
+	もし ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
 		/* If the flag is set, then the enqueue operation for this item
 		 * did a behind-the scenes memory allocation of an alloc_node
 		 * struct, which is what got put in the queue. Free it and pass
@@ -44,10 +44,10 @@ static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
 
 		anode = CONTAINER_OF(node, struct alloc_node, node);
 		ret = anode->data;
-		if (needs_free) {
+		もし (needs_free) {
 			k_free(anode);
 		}
-	} else {
+	} 否则 {
 		/* Data was directly placed in the queue, the first word
 		 * reserved for the linked list. User mode isn't allowed to
 		 * do this, although it can get data sent this way.
@@ -55,7 +55,7 @@ static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
 		ret = (void *)node;
 	}
 
-	return ret;
+	戻る ret;
 }
 
 #ifdef CONFIG_OBJ_CORE_QUEUE
@@ -80,7 +80,7 @@ void z_impl_k_queue_init(struct k_queue *queue)
 	sys_sflist_init(&queue->data_q);
 	queue->lock = (struct k_spinlock) {};
 	z_waitq_init(&queue->wait_q);
-#if defined(CONFIG_POLL)
+#もし defined(CONFIG_POLL)
 	sys_dlist_init(&queue->poll_events);
 #endif
 
@@ -105,12 +105,12 @@ static inline void z_vrfy_k_queue_init(struct k_queue *queue)
 static inline bool queue_handle_poll_events(struct k_queue *queue, uint32_t state)
 {
 #ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&queue->poll_events, state);
-#else
+	戻る z_handle_obj_poll_events(&queue->poll_events, state);
+#否则
 	ARG_UNUSED(queue);
 	ARG_UNUSED(state);
 
-	return false;
+	戻る false;
 #endif /* CONFIG_POLL */
 }
 
@@ -121,15 +121,15 @@ void z_impl_k_queue_cancel_wait(struct k_queue *queue)
 	k_spinlock_key_t key = k_spin_lock(&queue->lock);
 	bool resched = false;
 
-	if (z_sched_wake(&queue->wait_q, 0, NULL)) {
+	もし (z_sched_wake(&queue->wait_q, 0, NULL)) {
 		resched = true;
 	}
 
 	resched = queue_handle_poll_events(queue, K_POLL_STATE_CANCELLED) || resched;
 
-	if (resched) {
+	もし (resched) {
 		z_reschedule(&queue->lock, key);
-	} else {
+	} 否则 {
 		k_spin_unlock(&queue->lock, key);
 	}
 }
@@ -156,29 +156,29 @@ static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_insert, queue, alloc);
 
-	if (is_append) {
+	もし (is_append) {
 		prev = sys_sflist_peek_tail(&queue->data_q);
 	}
 
-	if (z_sched_wake(&queue->wait_q, 0, data)) {
+	もし (z_sched_wake(&queue->wait_q, 0, data)) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_insert, queue, alloc, K_FOREVER);
 		resched = true;
 		goto out;
 	}
 
 	/* Only need to actually allocate if no threads are pending */
-	if (alloc) {
+	もし (alloc) {
 		struct alloc_node *anode;
 
 		anode = z_thread_malloc(sizeof(*anode));
-		if (anode == NULL) {
+		もし (anode == NULL) {
 			result = -ENOMEM;
 			goto out;
 		}
 		anode->data = data;
 		sys_sfnode_init(&anode->node, 0x1);
 		data = anode;
-	} else {
+	} 否则 {
 		sys_sfnode_init(data, 0x0);
 	}
 
@@ -186,15 +186,15 @@ static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
 	resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE);
 
 out:
-	if (resched) {
+	もし (resched) {
 		z_reschedule(&queue->lock, key);
-	} else {
+	} 否则 {
 		k_spin_unlock(&queue->lock, key);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_insert, queue, alloc, result);
 
-	return result;
+	戻る result;
 }
 
 void k_queue_insert(struct k_queue *queue, void *prev, void *data)
@@ -236,7 +236,7 @@ int32_t z_impl_k_queue_alloc_append(struct k_queue *queue, void *data)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_append, queue, ret);
 
-	return ret;
+	戻る ret;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -244,7 +244,7 @@ static inline int32_t z_vrfy_k_queue_alloc_append(struct k_queue *queue,
 						  void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_append(queue, data);
+	戻る z_impl_k_queue_alloc_append(queue, data);
 }
 #include <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
 #endif /* CONFIG_USERSPACE */
@@ -258,7 +258,7 @@ int32_t z_impl_k_queue_alloc_prepend(struct k_queue *queue, void *data)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_prepend, queue, ret);
 
-	return ret;
+	戻る ret;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -266,12 +266,12 @@ static inline int32_t z_vrfy_k_queue_alloc_prepend(struct k_queue *queue,
 						   void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_prepend(queue, data);
+	戻る z_impl_k_queue_alloc_prepend(queue, data);
 }
 #include <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
+整数 k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append_list, queue);
 	bool resched = false;
@@ -280,17 +280,17 @@ int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 	CHECKIF((head == NULL) || (tail == NULL)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, -EINVAL);
 
-		return -EINVAL;
+		戻る -EINVAL;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&queue->lock);
 
-	while ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
+	ながら ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
 		resched = true;
 		head = *(void **)head;
 	}
 
-	if (head != NULL) {
+	もし (head != NULL) {
 		sys_sflist_append_list(&queue->data_q, head, tail);
 
 		resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE) || resched;
@@ -298,18 +298,18 @@ int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, 0);
 
-	if (resched) {
+	もし (resched) {
 		z_reschedule(&queue->lock, key);
-	} else {
+	} 否则 {
 		k_spin_unlock(&queue->lock, key);
 	}
 
-	return 0;
+	戻る 0;
 }
 
-int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
+整数 k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 {
-	int ret;
+	整数 ret;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, merge_slist, queue);
 
@@ -317,7 +317,7 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 	CHECKIF(sys_slist_is_empty(list)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, -EINVAL);
 
-		return -EINVAL;
+		戻る -EINVAL;
 	}
 
 	/*
@@ -333,13 +333,13 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 	CHECKIF(ret != 0) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, ret);
 
-		return ret;
+		戻る ret;
 	}
 	sys_slist_init(list);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, 0);
 
-	return 0;
+	戻る 0;
 }
 
 void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
@@ -349,7 +349,7 @@ void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, get, queue, timeout);
 
-	if (likely(!sys_sflist_is_empty(&queue->data_q))) {
+	もし (likely(!sys_sflist_is_empty(&queue->data_q))) {
 		sys_sfnode_t *node;
 
 		node = sys_sflist_get_not_empty(&queue->data_q);
@@ -358,25 +358,25 @@ void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, data);
 
-		return data;
+		戻る data;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	もし (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		k_spin_unlock(&queue->lock, key);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, NULL);
 
-		return NULL;
+		戻る NULL;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, get, queue, timeout);
 
-	int ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
+	整数 ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout,
 		(ret != 0) ? NULL : _current->base.swap_data);
 
-	return (ret != 0) ? NULL : _current->base.swap_data;
+	戻る (ret != 0) ? NULL : _current->base.swap_data;
 }
 
 /* Remove a queue item by its data pointer and free any wrapper node. */
@@ -388,10 +388,10 @@ bool k_queue_remove(struct k_queue *queue, void *data)
 	sys_sfnode_t *node = sys_sflist_peek_head(&queue->data_q);
 	bool ret = false;
 
-	while (node != NULL) {
+	ながら (node != NULL) {
 		void *peeked = z_queue_node_peek(node, false);
 
-		if (peeked == data) {
+		もし (peeked == data) {
 			sys_sflist_remove(&queue->data_q, prev, node);
 			(void)z_queue_node_peek(node, true);
 			ret = true;
@@ -405,7 +405,7 @@ bool k_queue_remove(struct k_queue *queue, void *data)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, remove, queue, ret);
 
-	return ret;
+	戻る ret;
 }
 
 bool k_queue_unique_append(struct k_queue *queue, void *data)
@@ -416,11 +416,11 @@ bool k_queue_unique_append(struct k_queue *queue, void *data)
 	sys_sfnode_t *test;
 
 	SYS_SFLIST_FOR_EACH_NODE(&queue->data_q, test) {
-		if (test == (sys_sfnode_t *) data) {
+		もし (test == (sys_sfnode_t *) data) {
 			k_spin_unlock(&queue->lock, key);
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, false);
 
-			return false;
+			戻る false;
 		}
 	}
 
@@ -428,7 +428,7 @@ bool k_queue_unique_append(struct k_queue *queue, void *data)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, true);
 
-	return true;
+	戻る true;
 }
 
 void *z_impl_k_queue_peek_head(struct k_queue *queue)
@@ -440,7 +440,7 @@ void *z_impl_k_queue_peek_head(struct k_queue *queue)
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_head, queue, ret);
 
-	return ret;
+	戻る ret;
 }
 
 void *z_impl_k_queue_peek_tail(struct k_queue *queue)
@@ -452,7 +452,7 @@ void *z_impl_k_queue_peek_tail(struct k_queue *queue)
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_tail, queue, ret);
 
-	return ret;
+	戻る ret;
 }
 
 #ifdef CONFIG_USERSPACE
@@ -460,28 +460,28 @@ static inline void *z_vrfy_k_queue_get(struct k_queue *queue,
 				       k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_get(queue, timeout);
+	戻る z_impl_k_queue_get(queue, timeout);
 }
 #include <zephyr/syscalls/k_queue_get_mrsh.c>
 
-static inline int z_vrfy_k_queue_is_empty(struct k_queue *queue)
+static inline 整数 z_vrfy_k_queue_is_empty(struct k_queue *queue)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_is_empty(queue);
+	戻る z_impl_k_queue_is_empty(queue);
 }
 #include <zephyr/syscalls/k_queue_is_empty_mrsh.c>
 
 static inline void *z_vrfy_k_queue_peek_head(struct k_queue *queue)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_head(queue);
+	戻る z_impl_k_queue_peek_head(queue);
 }
 #include <zephyr/syscalls/k_queue_peek_head_mrsh.c>
 
 static inline void *z_vrfy_k_queue_peek_tail(struct k_queue *queue)
 {
 	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_tail(queue);
+	戻る z_impl_k_queue_peek_tail(queue);
 }
 #include <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
 

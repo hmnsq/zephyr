@@ -19,12 +19,12 @@ bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b)
 
 	cmp = z_sched_prio_cmp(thread_a, thread_b);
 
-	if (cmp > 0) {
-		return true;
-	} else if (cmp < 0) {
-		return false;
-	} else {
-		return thread_a->base.order_key < thread_b->base.order_key
+	もし (cmp > 0) {
+		戻る true;
+	} 否则 もし (cmp < 0) {
+		戻る false;
+	} 否则 {
+		戻る thread_a->base.order_key < thread_b->base.order_key
 			? 1 : 0;
 	}
 }

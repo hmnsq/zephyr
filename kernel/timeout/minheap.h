@@ -24,16 +24,16 @@
 
 #include <zephyr/sys/min_heap_ref.h>
 
-static int timeout_cmp(const struct min_heap_handle *a, const struct min_heap_handle *b)
+static 整数 timeout_cmp(const struct min_heap_handle *a, const struct min_heap_handle *b)
 {
 	const struct _timeout *ta = CONTAINER_OF(a, struct _timeout, heap_handle);
 	const struct _timeout *tb = CONTAINER_OF(b, struct _timeout, heap_handle);
 
-	if (ta->abs_ticks < tb->abs_ticks) {
-		return -1;
+	もし (ta->abs_ticks < tb->abs_ticks) {
+		戻る -1;
 	}
 
-	return (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
+	戻る (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
 }
 
 MIN_HEAP_REF_DEFINE_STATIC(timeout_heap_inst, CONFIG_TIMEOUT_HEAP_MAX_ENTRIES, timeout_cmp);
@@ -42,7 +42,7 @@ static inline struct _timeout *z_timeout_q_root(void)
 {
 	const struct min_heap_handle *h = min_heap_ref_peek(&timeout_heap_inst);
 
-	return (h == NULL) ? NULL : CONTAINER_OF(h, struct _timeout, heap_handle);
+	戻る (h == NULL) ? NULL : CONTAINER_OF(h, struct _timeout, heap_handle);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
@@ -52,7 +52,7 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 {
 	to->abs_ticks = (int64_t)curr_tick + dticks;
 
-	if (unlikely(min_heap_ref_push(&timeout_heap_inst, &to->heap_handle) != 0)) {
+	もし (unlikely(min_heap_ref_push(&timeout_heap_inst, &to->heap_handle) != 0)) {
 		/*
 		 * Heap overflow is always a configuration error: there is no
 		 * graceful way to drop a kernel timeout. Increase
@@ -61,7 +61,7 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 		k_panic();
 	}
 
-	return to->heap_handle.idx == 1U;
+	戻る to->heap_handle.idx == 1U;
 }
 
 /* Remove an arbitrary timeout from the heap. Returns true if it was the
@@ -73,7 +73,7 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
 
 	(void)min_heap_ref_remove(&timeout_heap_inst, &to->heap_handle);
 
-	return was_first;
+	戻る was_first;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
@@ -81,7 +81,7 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
  */
 static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	戻る (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
@@ -92,7 +92,7 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
 {
 	struct _timeout *t = z_timeout_q_root();
 
-	return (t == NULL) ? K_TICKS_FOREVER
+	戻る (t == NULL) ? K_TICKS_FOREVER
 			   : (k_ticks_t)(t->abs_ticks - (int64_t)curr_tick);
 }
 
@@ -105,11 +105,11 @@ static inline int32_t z_timeout_q_next_gap(void)
 {
 	struct _timeout *t = z_timeout_q_root();
 
-	if (t == NULL) {
-		return INT32_MAX;
+	もし (t == NULL) {
+		戻る INT32_MAX;
 	}
 
-	return (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
+	戻る (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. The heap stores absolute expiry ticks,
@@ -128,11 +128,11 @@ static inline struct _timeout *z_timeout_q_pop_due(void)
 {
 	struct _timeout *t = z_timeout_q_root();
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	もし ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
+		戻る NULL;
 	}
 
-	return CONTAINER_OF(min_heap_ref_pop(&timeout_heap_inst), struct _timeout, heap_handle);
+	戻る CONTAINER_OF(min_heap_ref_pop(&timeout_heap_inst), struct _timeout, heap_handle);
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_ */
