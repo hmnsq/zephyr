@@ -4,102 +4,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/sem.h>
-#include <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/sys/sem.h>
+#شامل <zephyr/internal/syscall_handler.h>
 
-#define SYS_SEM_MINIMUM      0
-#define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
+#تعریف_کرو SYS_SEM_MINIMUM      0
+#تعریف_کرو SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+ساکن اندرونی atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_قدر, new_قدر;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+	کرو {
+		old_قدر = atomic_get(val);
+		اگر (old_قدر < minimum) {
+			توڑو;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_قدر = old_قدر - 1;
+	} جب (atomic_cas(val, old_قدر, new_قدر) == 0);
 
-	return old_value;
+	واپس old_قدر;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
-				   atomic_t maximum)
+ساکن اندرونی atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+				   atomic_t زیادہ_سے_زیادہ)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_قدر, new_قدر;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+	کرو {
+		old_قدر = atomic_get(val);
+		اگر (old_قدر >= زیادہ_سے_زیادہ) {
+			توڑو;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_قدر = ((old_قدر < minimum) ? minimum : old_قدر) + 1;
+	} جب (atomic_cas(val, old_قدر, new_قدر) == 0U);
 
-	return old_value;
+	واپس old_قدر;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+صحیح sys_sem_init(ساخت sys_sem *sem, غیرعلامتی صحیح initial_گنتی,
+		 غیرعلامتی صحیح حد_بندی)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+	اگر ((sem == تہی) || (حد_بندی == SYS_SEM_MINIMUM) ||
+	    (initial_گنتی > حد_بندی) || (حد_بندی > زیادہ_سے_زیادہ_عدد)) {
+		واپس -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
-	sem->limit = limit;
+	(خالی)atomic_سیٹ(&sem->futex.val, initial_گنتی);
+	sem->حد_بندی = حد_بندی;
 
-	return 0;
+	واپس 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+صحیح sys_sem_give(ساخت sys_sem *sem)
 {
-	int ret = 0;
-	atomic_t old_value;
+	صحیح ret = 0;
+	atomic_t old_قدر;
 
-	old_value = bounded_inc(&sem->futex.val,
-				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	old_قدر = bounded_inc(&sem->futex.val,
+				SYS_SEM_MINIMUM, sem->حد_بندی);
+	اگر (old_قدر < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		اگر (ret > 0) {
+			واپس 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} ورنہ اگر (old_قدر >= sem->حد_بندی) {
+		واپس -EAGAIN;
+	} ورنہ {
 		;
 	}
-	return ret;
+	واپس ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+صحیح sys_sem_take(ساخت sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
-	atomic_t old_value;
+	صحیح ret = 0;
+	atomic_t old_قدر;
 
-	do {
-		old_value = bounded_dec(&sem->futex.val,
+	کرو {
+		old_قدر = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		اگر (old_قدر > 0) {
+			واپس 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} جب (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	واپس ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+غیرعلامتی صحیح sys_sem_گنتی_get(ساخت sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	صحیح قدر = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	واپس (قدر > SYS_SEM_MINIMUM) ? قدر : SYS_SEM_MINIMUM;
 }

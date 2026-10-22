@@ -4,68 +4,68 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
-#define ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
+#اگر_غیر_تعریف_شدہ ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
+#تعریف_کرو ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
 
-#include <zephyr/kernel_structs.h>
-#include <kspinlock.h>
-#include <kernel_internal.h>
-#include <timeout_q.h>
-#include <kthread.h>
-#include <zephyr/tracing/tracing.h>
-#include <stdbool.h>
-#include <priority_q.h>
+#شامل <zephyr/kernel_structs.h>
+#شامل <kspinlock.h>
+#شامل <kernel_internal.h>
+#شامل <timeout_q.h>
+#شامل <kthread.h>
+#شامل <zephyr/tracing/tracing.h>
+#شامل <stdbool.h>
+#شامل <priority_q.h>
 
-BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
+BUILD_ASSERT(K_سب_سے_نیچا_APPLICATION_THREAD_PRIO
 	     >= K_HIGHEST_APPLICATION_THREAD_PRIO);
 
-#ifdef CONFIG_MULTITHREADING
-#define Z_VALID_PRIO(prio, entry_point)				     \
-	(((prio) == K_IDLE_PRIO && z_is_idle_thread_entry(entry_point)) || \
-	 ((K_LOWEST_APPLICATION_THREAD_PRIO			     \
+#اگر_تعریف_شدہ CONFIG_MULTITHREADING
+#تعریف_کرو Z_VALID_PRIO(prio, اندراج_نقطہ)				     \
+	(((prio) == K_IDLE_PRIO && z_is_idle_thread_اندراج(اندراج_نقطہ)) || \
+	 ((K_سب_سے_نیچا_APPLICATION_THREAD_PRIO			     \
 	   >= K_HIGHEST_APPLICATION_THREAD_PRIO)		     \
 	  && (prio) >= K_HIGHEST_APPLICATION_THREAD_PRIO	     \
-	  && (prio) <= K_LOWEST_APPLICATION_THREAD_PRIO))
+	  && (prio) <= K_سب_سے_نیچا_APPLICATION_THREAD_PRIO))
 
-#define Z_ASSERT_VALID_PRIO(prio, entry_point) do { \
-	__ASSERT(Z_VALID_PRIO((prio), (entry_point)), \
+#تعریف_کرو Z_ASSERT_VALID_PRIO(prio, اندراج_نقطہ) کرو { \
+	__ASSERT(Z_VALID_PRIO((prio), (اندراج_نقطہ)), \
 		 "invalid priority (%d); allowed range: %d to %d", \
 		 (prio), \
-		 K_LOWEST_APPLICATION_THREAD_PRIO, \
+		 K_سب_سے_نیچا_APPLICATION_THREAD_PRIO, \
 		 K_HIGHEST_APPLICATION_THREAD_PRIO); \
-	} while (false)
-#else
-#define Z_VALID_PRIO(prio, entry_point) ((prio) == -1)
-#define Z_ASSERT_VALID_PRIO(prio, entry_point) __ASSERT((prio) == -1, "")
-#endif /* CONFIG_MULTITHREADING */
+	} جب (false)
+#ورنہ
+#تعریف_کرو Z_VALID_PRIO(prio, اندراج_نقطہ) ((prio) == -1)
+#تعریف_کرو Z_ASSERT_VALID_PRIO(prio, اندراج_نقطہ) __ASSERT((prio) == -1, "")
+#اگر_ختم /* CONFIG_MULTITHREADING */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#اگر_تعریف_شدہ __cplusplus
+خارجی "C" {
+#اگر_ختم
 
-extern struct k_thread _thread_dummy;
+خارجی ساخت k_thread _thread_dummy;
 
 /**
  * @brief Unpend thread, do not abort its timeout (if it exists).
  */
-void z_unpend_thread_no_timeout(struct k_thread *thread);
+خالی z_unpend_thread_no_timeout(ساخت k_thread *thread);
 
 /**
  * @brief Unpend thread and abort its timeout (if it exists).
  */
-void z_unpend_thread(struct k_thread *thread);
-struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+خالی z_unpend_thread(ساخت k_thread *thread);
+ساخت k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
+صحیح z_pend_curr(ساخت k_spinlock *تالا, k_spinlock_کلید_t کلید,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
-void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
+خالی z_pend_thread(ساخت k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
-void z_reschedule_locked(k_spinlock_key_t key);
-void z_reschedule_irqlock(uint32_t key);
-int z_unpend_all(_wait_q_t *wait_q);
-bool z_thread_prio_set(struct k_thread *thread, int prio);
-void *z_get_next_switch_handle(void *interrupted);
-void z_thread_suspend_current(struct k_thread *thread);
+خالی z_reschedule(ساخت k_spinlock *تالا, k_spinlock_کلید_t کلید);
+خالی z_reschedule_locked(k_spinlock_کلید_t کلید);
+خالی z_reschedule_irqlock(uint32_t کلید);
+صحیح z_unpend_all(_wait_q_t *wait_q);
+bool z_thread_prio_سیٹ(ساخت k_thread *thread, صحیح prio);
+خالی *z_get_اگلا_switch_handle(خالی *interrupted);
+خالی z_thread_suspend_current(ساخت k_thread *thread);
 
 /* Wrapper around z_get_next_switch_handle() for the benefit of
  * non-SMP platforms that always pass a NULL interrupted handle.
@@ -77,20 +77,20 @@ void z_thread_suspend_current(struct k_thread *thread);
  * Mystic arts for cycle nerds, basically.  Replace with
  * z_get_next_switch_handle() if this becomes a maintenance hassle.
  */
-static ALWAYS_INLINE void *z_sched_next_handle(struct k_thread *curr)
+ساکن ALWAYS_INLINE خالی *z_sched_اگلا_handle(ساخت k_thread *curr)
 {
-#ifndef CONFIG_SMP
-	if (curr == _kernel.ready_q.cache) {
-		return NULL;
+#اگر_غیر_تعریف_شدہ CONFIG_SMP
+	اگر (curr == _kernel.ready_q.cache) {
+		واپس تہی;
 	}
-#endif
-	return z_get_next_switch_handle(NULL);
+#اگر_ختم
+	واپس z_get_اگلا_switch_handle(تہی);
 }
 
-void z_sched_start(struct k_thread *thread);
-void z_ready_thread(struct k_thread *thread);
-struct k_thread *z_swap_next_thread(void);
-void move_current_to_end_of_prio_q(void);
+خالی z_sched_آغاز(ساخت k_thread *thread);
+خالی z_ready_thread(ساخت k_thread *thread);
+ساخت k_thread *z_تبادلہ_اگلا_thread(خالی);
+خالی move_current_مقصد_انتہا_کا_prio_q(خالی);
 
 /*
  * Internal scheduler functions exposed for use by thread lifecycle code
@@ -109,7 +109,7 @@ void move_current_to_end_of_prio_q(void);
  * @param key     Scheduler spinlock key held by the caller.
  * @param terminate true to abort (kill) the thread, false to suspend it.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate);
+خالی z_thread_halt(ساخت k_thread *thread, k_spinlock_کلید_t کلید, bool terminate);
 
 /**
  * @brief Ready a thread while the scheduler spinlock is already held.
@@ -119,7 +119,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate
  *
  * @param thread Thread to make ready.
  */
-void z_sched_ready_locked(struct k_thread *thread);
+خالی z_sched_ready_locked(ساخت k_thread *thread);
 
 /**
  * @brief Add a thread to a wait queue while the scheduler spinlock is held.
@@ -130,7 +130,7 @@ void z_sched_ready_locked(struct k_thread *thread);
  * @param thread  Thread to pend.
  * @param wait_q  Wait queue to add the thread to (may be NULL).
  */
-void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
+خالی z_sched_جوڑو_مقصد_waitq_locked(ساخت k_thread *thread, _wait_q_t *wait_q);
 
 /**
  * @brief Remove a thread from the run queue (scheduler spinlock must be held).
@@ -140,7 +140,7 @@ void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
  *
  * @param thread Thread to remove from the run queue.
  */
-void z_sched_unready_locked(struct k_thread *thread);
+خالی z_sched_unready_locked(ساخت k_thread *thread);
 
 /**
  * @brief Yield the current thread's remaining time slice.
@@ -150,85 +150,85 @@ void z_sched_unready_locked(struct k_thread *thread);
  * of k_yield(); exposed so that thread.c can implement k_yield() without
  * depending on sched.c internals.
  */
-void z_sched_yield(void);
+خالی z_sched_yield(خالی);
 
-static inline void z_reschedule_unlocked(void)
+ساکن اندرونی خالی z_reschedule_unlocked(خالی)
 {
-	(void) z_reschedule_irqlock(arch_irq_lock());
+	(خالی) z_reschedule_irqlock(arch_irq_تالا());
 }
 
-static inline bool z_is_under_prio_ceiling(int prio)
+ساکن اندرونی bool z_is_under_prio_ceiling(صحیح prio)
 {
-	return prio >= CONFIG_PRIORITY_CEILING;
+	واپس prio >= CONFIG_ترجیح_CEILING;
 }
 
-static inline int z_get_new_prio_with_ceiling(int prio)
+ساکن اندرونی صحیح z_get_new_prio_with_ceiling(صحیح prio)
 {
-	return z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
+	واپس z_is_under_prio_ceiling(prio) ? prio : CONFIG_ترجیح_CEILING;
 }
 
-static inline bool z_is_prio1_higher_than_or_equal_to_prio2(int prio1, int prio2)
+ساکن اندرونی bool z_is_prio1_higher_than_or_equal_مقصد_prio2(صحیح prio1, صحیح prio2)
 {
-	return prio1 <= prio2;
+	واپس prio1 <= prio2;
 }
 
-static inline bool z_is_prio_higher_or_equal(int prio1, int prio2)
+ساکن اندرونی bool z_is_prio_higher_or_equal(صحیح prio1, صحیح prio2)
 {
-	return z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
+	واپس z_is_prio1_higher_than_or_equal_مقصد_prio2(prio1, prio2);
 }
 
-static inline bool z_is_prio1_lower_than_or_equal_to_prio2(int prio1, int prio2)
+ساکن اندرونی bool z_is_prio1_زیریں_than_or_equal_مقصد_prio2(صحیح prio1, صحیح prio2)
 {
-	return prio1 >= prio2;
+	واپس prio1 >= prio2;
 }
 
-static inline bool z_is_prio1_higher_than_prio2(int prio1, int prio2)
+ساکن اندرونی bool z_is_prio1_higher_than_prio2(صحیح prio1, صحیح prio2)
 {
-	return prio1 < prio2;
+	واپس prio1 < prio2;
 }
 
-static inline bool z_is_prio_higher(int prio, int test_prio)
+ساکن اندرونی bool z_is_prio_higher(صحیح prio, صحیح test_prio)
 {
-	return z_is_prio1_higher_than_prio2(prio, test_prio);
+	واپس z_is_prio1_higher_than_prio2(prio, test_prio);
 }
 
-static inline bool z_is_prio_lower_or_equal(int prio1, int prio2)
+ساکن اندرونی bool z_is_prio_زیریں_or_equal(صحیح prio1, صحیح prio2)
 {
-	return z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
+	واپس z_is_prio1_زیریں_than_or_equal_مقصد_prio2(prio1, prio2);
 }
 
-static inline bool _is_valid_prio(int prio, k_thread_entry_t entry_point)
+ساکن اندرونی bool _is_valid_prio(صحیح prio, k_thread_اندراج_t اندراج_نقطہ)
 {
-	if ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
-		return true;
+	اگر ((prio == K_IDLE_PRIO) && z_is_idle_thread_اندراج(اندراج_نقطہ)) {
+		واپس true;
 	}
 
-	if (!z_is_prio_higher_or_equal(prio,
-				       K_LOWEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+	اگر (!z_is_prio_higher_or_equal(prio,
+				       K_سب_سے_نیچا_APPLICATION_THREAD_PRIO)) {
+		واپس false;
 	}
 
-	if (!z_is_prio_lower_or_equal(prio,
+	اگر (!z_is_prio_زیریں_or_equal(prio,
 				      K_HIGHEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		واپس false;
 	}
 
-	return true;
+	واپس true;
 }
 
-static ALWAYS_INLINE _wait_q_t *pended_on_thread(struct k_thread *thread)
+ساکن ALWAYS_INLINE _wait_q_t *pended_on_thread(ساخت k_thread *thread)
 {
-	__ASSERT_NO_MSG(thread->base.pended_on);
+	__ASSERT_NO_MSG(thread->بنیاد.pended_on);
 
-	return thread->base.pended_on;
+	واپس thread->بنیاد.pended_on;
 }
 
 
-static inline void unpend_thread_no_timeout(struct k_thread *thread)
+ساکن اندرونی خالی unpend_thread_no_timeout(ساخت k_thread *thread)
 {
 	_priq_wait_remove(&pended_on_thread(thread)->waitq, thread);
 	z_mark_thread_as_not_pending(thread);
-	thread->base.pended_on = NULL;
+	thread->بنیاد.pended_on = تہی;
 }
 
 /*
@@ -247,11 +247,11 @@ static inline void unpend_thread_no_timeout(struct k_thread *thread)
  * z_sched_wake() is the convenient wrapper for the common case of
  * "wake one waiter with this retval and this swap_data".
  */
-static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
+ساکن ALWAYS_INLINE ساخت k_thread *z_unpend_پہلا_thread_locked(_wait_q_t *wait_q)
 {
-	struct k_thread *thread = _priq_wait_best(&wait_q->waitq);
+	ساخت k_thread *thread = priq_wait_بہترین(&wait_q->waitq);
 
-	if (unlikely(thread != NULL)) {
+	اگر (unlikely(thread != تہی)) {
 		unpend_thread_no_timeout(thread);
 		/* Abort the thread's timeout. If its handler is in flight on
 		 * another CPU it is blocked on the sched lock; the abort flags
@@ -259,9 +259,9 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 		 * it finally runs -- so it won't wake the thread from whatever
 		 * it has since re-pended on. We don't wait for it here.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
+		(خالی)z_try_abort_thread_timeout(thread);
 	}
-	return thread;
+	واپس thread;
 }
 
 /**
@@ -290,27 +290,27 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
  * @retval true If a thread was woken up
  * @retval false If the wait_q was empty
  */
-static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
+ساکن ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, صحیح تبادلہ_retval, خالی *تبادلہ_ڈیٹا)
 {
-	struct k_thread *thread;
+	ساخت k_thread *thread;
 	bool ret = false;
 
-	LOCK_SCHED_SPINLOCK {
-		thread = z_unpend_first_thread_locked(wait_q);
-		if (thread != NULL) {
-			z_thread_return_value_set_with_data(thread,
-							    swap_retval,
-							    swap_data);
+	تالا_SCHED_SPINLOCK {
+		thread = z_unpend_پہلا_thread_locked(wait_q);
+		اگر (thread != تہی) {
+			z_thread_return_قدر_سیٹ_with_ڈیٹا(thread,
+							    تبادلہ_retval,
+							    تبادلہ_ڈیٹا);
 			z_sched_ready_locked(thread);
 			ret = true;
 		}
 	}
 
-	return ret;
+	واپس ret;
 }
 
-#ifdef __cplusplus
+#اگر_تعریف_شدہ __cplusplus
 }
-#endif
+#اگر_ختم
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KSCHED_H_ */
+#اگر_ختم /* ZEPHYR_KERNEL_INCLUDE_KSCHED_H_ */

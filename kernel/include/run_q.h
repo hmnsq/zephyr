@@ -2,107 +2,107 @@
  * Copyright (c) Intel Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
+#اگر_غیر_تعریف_شدہ ZEPHYR_KERNEL_INCLUDE_تسلسل_Q_H
+#تعریف_کرو ZEPHYR_KERNEL_INCLUDE_تسلسل_Q_H
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <wait_q.h>
-#include <kthread.h>
-#include <priority_q.h>
-#include <ipi.h>
+#شامل <zephyr/kernel.h>
+#شامل <ksched.h>
+#شامل <zephyr/spinlock.h>
+#شامل <wait_q.h>
+#شامل <kthread.h>
+#شامل <priority_q.h>
+#شامل <ipi.h>
 
 
-static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
+ساکن ALWAYS_INLINE خالی *thread_runq(ساخت k_thread *thread)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	uint32_t cpu_mask = thread->base.cpu_mask;
+#اگر_تعریف_شدہ CONFIG_SCHED_CPU_نقاب_PIN_ONLY
+	uint32_t cpu_نقاب = thread->بنیاد.cpu_نقاب;
 
-	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
+	__ASSERT(cpu_نقاب != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	غیرعلامتی صحیح cpu = (غیرعلامتی صحیح)u32_گنتی_trailing_zeros(cpu_نقاب);
 
-	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
+	__ASSERT(cpu < ARRAY_سائز(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",
-		 cpu, ARRAY_SIZE(_kernel.cpus));
+		 cpu, ARRAY_سائز(_kernel.cpus));
 
 	/* Clamp so static-analysis tools that cannot see the assert
 	 * above do not flag the array access as out-of-bounds.
 	 */
-	cpu = MIN(cpu, (unsigned int)(ARRAY_SIZE(_kernel.cpus) - 1U));
+	cpu = MIN(cpu, (غیرعلامتی صحیح)(ARRAY_سائز(_kernel.cpus) - 1U));
 
-	return &_kernel.cpus[cpu].ready_q.runq;
-#else
-	ARG_UNUSED(thread);
-	return &_kernel.ready_q.runq;
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+	واپس &_kernel.cpus[cpu].ready_q.runq;
+#ورنہ
+	ARG_غیر_مستعمل(thread);
+	واپس &_kernel.ready_q.runq;
+#اگر_ختم /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void *curr_cpu_runq(void)
+ساکن ALWAYS_INLINE خالی *curr_cpu_runq(خالی)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	return &arch_curr_cpu()->ready_q.runq;
-#else
-	return &_kernel.ready_q.runq;
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#اگر_تعریف_شدہ CONFIG_SCHED_CPU_نقاب_PIN_ONLY
+	واپس &arch_curr_cpu()->ready_q.runq;
+#ورنہ
+	واپس &_kernel.ready_q.runq;
+#اگر_ختم /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void runq_add(struct k_thread *thread)
-{
-	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
-	__ASSERT_NO_MSG(!is_thread_dummy(thread));
-
-	_priq_run_add(thread_runq(thread), thread);
-}
-
-static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
+ساکن ALWAYS_INLINE خالی runq_جوڑو(ساخت k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
 
-	_priq_run_remove(thread_runq(thread), thread);
+	priq_تسلسل_جوڑو(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_yield(void)
+ساکن ALWAYS_INLINE خالی runq_remove(ساخت k_thread *thread)
 {
-	_priq_run_yield(curr_cpu_runq());
+	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
+	__ASSERT_NO_MSG(!is_thread_dummy(thread));
+
+	priq_تسلسل_remove(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE struct k_thread *runq_best(void)
+ساکن ALWAYS_INLINE خالی runq_yield(خالی)
 {
-	return _priq_run_best(curr_cpu_runq());
+	priq_تسلسل_yield(curr_cpu_runq());
+}
+
+ساکن ALWAYS_INLINE ساخت k_thread *runq_بہترین(خالی)
+{
+	واپس priq_تسلسل_بہترین(curr_cpu_runq());
 }
 
 /*
  * _current is never in the run queue until context switch on
  * SMP configurations.
  */
-static inline bool should_queue_thread(struct k_thread *thread)
+ساکن اندرونی bool should_قطار_thread(ساخت k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	واپس !IS_ENABLED(CONFIG_SMP) || (thread != _current);
 }
 
-static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
+ساکن ALWAYS_INLINE خالی قطار_thread(ساخت k_thread *thread)
 {
 	z_mark_thread_as_queued(thread);
-	if (should_queue_thread(thread)) {
-		runq_add(thread);
+	اگر (should_قطار_thread(thread)) {
+		runq_جوڑو(thread);
 	}
-#ifdef CONFIG_SMP
-	if (thread == _current) {
+#اگر_تعریف_شدہ CONFIG_SMP
+	اگر (thread == _current) {
 		/* add current to end of queue means "yield" */
-		_current_cpu->swap_ok = true;
+		_current_cpu->تبادلہ_ok = true;
 	}
-#endif /* CONFIG_SMP */
+#اگر_ختم /* CONFIG_SMP */
 }
 
-static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
+ساکن ALWAYS_INLINE خالی قطار_سے_نکالو_thread(ساخت k_thread *thread)
 {
 	z_mark_thread_as_not_queued(thread);
-	if (should_queue_thread(thread)) {
+	اگر (should_قطار_thread(thread)) {
 		runq_remove(thread);
 	}
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_ */
+#اگر_ختم /* ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_ */

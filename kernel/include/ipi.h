@@ -4,37 +4,37 @@
  */
 
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_IPI_H_
-#define ZEPHYR_KERNEL_INCLUDE_IPI_H_
+#اگر_غیر_تعریف_شدہ ZEPHYR_KERNEL_INCLUDE_IPI_H_
+#تعریف_کرو ZEPHYR_KERNEL_INCLUDE_IPI_H_
 
-#include <zephyr/kernel.h>
-#include <stdint.h>
-#include <zephyr/sys/atomic.h>
+#شامل <zephyr/kernel.h>
+#شامل <stdint.h>
+#شامل <zephyr/sys/atomic.h>
 
-#define IPI_ALL_CPUS_MASK  (UINT32_MAX >> (32 - CONFIG_MP_MAX_NUM_CPUS))
+#تعریف_کرو IPI_ALL_CPUS_نقاب  (UINT32_MAX >> (32 - CONFIG_MP_MAX_عدد_CPUS))
 
-#define IPI_CPU_MASK(cpu_id)   \
-	(IS_ENABLED(CONFIG_IPI_OPTIMIZE) ? BIT(cpu_id) : IPI_ALL_CPUS_MASK)
+#تعریف_کرو IPI_CPU_نقاب(cpu_id)   \
+	(IS_ENABLED(CONFIG_IPI_OPTIMIZE) ? ثنائی_ہندسہ(cpu_id) : IPI_ALL_CPUS_نقاب)
 
 
-void z_sched_ipi(void);
+خالی z_sched_ipi(خالی);
 
 /* defined in ipi.c when CONFIG_SMP=y */
-#ifdef CONFIG_SMP
-void flag_ipi(uint32_t ipi_mask);
-void signal_pending_ipi(void);
-atomic_val_t ipi_mask_create(struct k_thread *thread);
-#else
-#define flag_ipi(ipi_mask) do { } while (false)
-#define signal_pending_ipi() do { } while (false)
-#endif /* CONFIG_SMP */
+#اگر_تعریف_شدہ CONFIG_SMP
+خالی flag_ipi(uint32_t ipi_نقاب);
+خالی signal_pending_ipi(خالی);
+atomic_val_t ipi_نقاب_create(ساخت k_thread *thread);
+#ورنہ
+#تعریف_کرو flag_ipi(ipi_نقاب) کرو { } جب (false)
+#تعریف_کرو signal_pending_ipi() کرو { } جب (false)
+#اگر_ختم /* CONFIG_SMP */
 
-#ifdef CONFIG_IPI_OPTIMIZE_IDLE
+#اگر_تعریف_شدہ CONFIG_IPI_OPTIMIZE_IDLE
 /*
  * Consume and return the thread covered by the current CPU's reservation.
  * Returns NULL if no reservation exists. Caller must hold _sched_spinlock.
  */
-struct k_thread *ipi_idle_reserved_take(void);
+ساخت k_thread *ipi_idle_reserved_take(خالی);
 
 /*
  * Remove a thread's reservation before it leaves the run queue or changes
@@ -44,7 +44,7 @@ struct k_thread *ipi_idle_reserved_take(void);
  * Caller must hold _sched_spinlock. Safe if no reservation exists; does not
  * cancel a pending IPI.
  */
-void ipi_idle_thread_unreserve(struct k_thread *thread);
+خالی ipi_idle_thread_unreserve(ساخت k_thread *thread);
 
 /*
  * Transfer coverage from old_thread to new_thread using an outstanding idle
@@ -53,14 +53,14 @@ void ipi_idle_thread_unreserve(struct k_thread *thread);
  *
  * Caller must hold _sched_spinlock.
  */
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread);
-#else
-#define ipi_idle_reserved_take() NULL
-#define ipi_idle_thread_unreserve(thread) do { \
-	ARG_UNUSED(thread); \
-} while (false)
-#define ipi_idle_thread_rebind(old_thread, new_thread) false
-#endif /* CONFIG_IPI_OPTIMIZE_IDLE */
+bool ipi_idle_thread_rebind(ساخت k_thread *old_thread,
+			    ساخت k_thread *new_thread);
+#ورنہ
+#تعریف_کرو ipi_idle_reserved_take() تہی
+#تعریف_کرو ipi_idle_thread_unreserve(thread) کرو { \
+	ARG_غیر_مستعمل(thread); \
+} جب (false)
+#تعریف_کرو ipi_idle_thread_rebind(old_thread, new_thread) false
+#اگر_ختم /* CONFIG_IPI_OPTIMIZE_IDLE */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_IPI_H_ */
+#اگر_ختم /* ZEPHYR_KERNEL_INCLUDE_IPI_H_ */

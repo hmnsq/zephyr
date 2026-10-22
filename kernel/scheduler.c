@@ -2,99 +2,99 @@
  * Copyright The Zephyr Project Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <run_q.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#شامل <zephyr/kernel.h>
+#شامل <kspinlock.h>
+#شامل <ksched.h>
+#شامل <zephyr/sys/__assert.h>
+#شامل <zephyr/spinlock.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <run_q.h>
+#شامل <wait_q.h>
+#شامل <scheduler.h>
 
 
-void z_sched_init(void)
+خالی z_sched_init(خالی)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
-		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
+#اگر_تعریف_شدہ CONFIG_SCHED_CPU_نقاب_PIN_ONLY
+	برائے (صحیح i = 0; i < CONFIG_MP_MAX_عدد_CPUS; i++) {
+		priq_تسلسل_init(&_kernel.cpus[i].ready_q.runq);
 	}
-#else
-	_priq_run_init(&_kernel.ready_q.runq);
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#ورنہ
+	priq_تسلسل_init(&_kernel.ready_q.runq);
+#اگر_ختم /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-void k_sched_lock(void)
+خالی k_sched_تالا(خالی)
 {
 	Z_SCHED_SPINLOCK {
-		SYS_PORT_TRACING_FUNC(k_thread, sched_lock);
+		SYS_پورٹ_TRACING_FUNC(k_thread, sched_تالا);
 
-		__ASSERT(!arch_is_in_isr(), "");
-		__ASSERT(_current->base.sched_locked != 1U, "");
+		__ASSERT(!arch_is_اندر_isr(), "");
+		__ASSERT(_current->بنیاد.sched_locked != 1U, "");
 
-		--_current->base.sched_locked;
+		--_current->بنیاد.sched_locked;
 
 		compiler_barrier();
 	}
 }
 
-void k_sched_unlock(void)
+خالی k_sched_unlock(خالی)
 {
-	SYS_PORT_TRACING_FUNC(k_thread, sched_unlock);
+	SYS_پورٹ_TRACING_FUNC(k_thread, sched_unlock);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_کلید_t کلید = z_sched_spinlock_تالا();
 
-	__ASSERT(_current->base.sched_locked != 0U, "");
-	__ASSERT(!arch_is_in_isr(), "");
-	++_current->base.sched_locked;
-	z_sched_lock_reschedule(key);
+	__ASSERT(_current->بنیاد.sched_locked != 0U, "");
+	__ASSERT(!arch_is_اندر_isr(), "");
+	++_current->بنیاد.sched_locked;
+	z_sched_تالا_reschedule(کلید);
 }
 
-void z_impl_k_reschedule(void)
+خالی z_impl_k_reschedule(خالی)
 {
-	k_spinlock_key_t key;
+	k_spinlock_کلید_t کلید;
 
-	key = z_sched_spinlock_lock();
+	کلید = z_sched_spinlock_تالا();
 
-	z_sched_lock_reschedule(key);
+	z_sched_تالا_reschedule(کلید);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_reschedule(void)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی خالی z_vrfy_k_reschedule(خالی)
 {
 	z_impl_k_reschedule();
 }
-#include <zephyr/syscalls/k_reschedule_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_reschedule_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
-k_tid_t z_impl_k_sched_current_thread_query(void)
+k_tid_t z_impl_k_sched_current_thread_query(خالی)
 {
-	return _current;
+	واپس _current;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_tid_t z_vrfy_k_sched_current_thread_query(void)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی k_tid_t z_vrfy_k_sched_current_thread_query(خالی)
 {
-	return z_impl_k_sched_current_thread_query();
+	واپس z_impl_k_sched_current_thread_query();
 }
-#include <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
 
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
-		       _waitq_post_walk_cb_t post_func, void *data)
+صحیح z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+		       _waitq_post_walk_cb_t post_func, خالی *ڈیٹا)
 {
-	struct k_thread *thread;
-	int  status = 0;
+	ساخت k_thread *thread;
+	صحیح  حالت_2 = 0;
 
 	Z_SCHED_SPINLOCK {
-#ifndef CONFIG_WAITQ_SCALABLE
-		struct k_thread *tmp;
+#اگر_غیر_تعریف_شدہ CONFIG_WAITQ_SCALABLE
+		ساخت k_thread *tmp;
 
-		_WAIT_Q_FOR_EACH_SAFE(wait_q, thread, tmp)
-#else /* !CONFIG_WAITQ_SCALABLE */
+		WAIT_Q_FOR_EACH_محفوظ(wait_q, thread, tmp)
+#ورنہ /* !CONFIG_WAITQ_SCALABLE */
 		_WAIT_Q_FOR_EACH(wait_q, thread)
-#endif /* !CONFIG_WAITQ_SCALABLE */
+#اگر_ختم /* !CONFIG_WAITQ_SCALABLE */
 		{
 
 			/*
@@ -103,9 +103,9 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 			 * it returns 0.
 			 */
 
-			status = walk_func(thread, data);
-			if (status != 0) {
-				break;
+			حالت_2 = walk_func(thread, ڈیٹا);
+			اگر (حالت_2 != 0) {
+				توڑو;
 			}
 		}
 
@@ -114,12 +114,12 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		 * still holding the scheduler spinlock to enable atomic
 		 * operations (from the scheduler's point of view).
 		 */
-		if (post_func != NULL) {
-			post_func(status, data);
+		اگر (post_func != تہی) {
+			post_func(حالت_2, ڈیٹا);
 		}
 	}
 
-	return status;
+	واپس حالت_2;
 }
 
 
@@ -127,13 +127,13 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
-		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
+صحیح z_sched_wait(ساخت k_spinlock *تالا, k_spinlock_کلید_t کلید,
+		 _wait_q_t *wait_q, k_timeout_t timeout, خالی **ڈیٹا)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	صحیح ret = z_pend_curr(تالا, کلید, wait_q, timeout);
 
-	if (data != NULL) {
-		*data = _current->base.swap_data;
+	اگر (ڈیٹا != تہی) {
+		*ڈیٹا = _current->بنیاد.تبادلہ_ڈیٹا;
 	}
-	return ret;
+	واپس ret;
 }

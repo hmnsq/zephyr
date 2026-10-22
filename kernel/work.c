@@ -10,74 +10,74 @@
  * Second generation work queue implementation
  */
 
-#include <zephyr/kernel.h>
-#include <wait_q.h>
-#include <zephyr/spinlock.h>
-#include <errno.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/logging/log.h>
+#شامل <zephyr/kernel.h>
+#شامل <wait_q.h>
+#شامل <zephyr/spinlock.h>
+#شامل <errno.h>
+#شامل <ksched.h>
+#شامل <scheduler.h>
+#شامل <zephyr/sys/printk.h>
+#شامل <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-static inline void flag_clear(uint32_t *flagp,
-			      uint32_t bit)
+ساکن اندرونی خالی flag_clear(uint32_t *flagp,
+			      uint32_t ثنائی_ہندسہ_2)
 {
-	*flagp &= ~BIT(bit);
+	*flagp &= ~ثنائی_ہندسہ(ثنائی_ہندسہ_2);
 }
 
-static inline void flag_set(uint32_t *flagp,
-			    uint32_t bit)
+ساکن اندرونی خالی flag_سیٹ(uint32_t *flagp,
+			    uint32_t ثنائی_ہندسہ_2)
 {
-	*flagp |= BIT(bit);
+	*flagp |= ثنائی_ہندسہ(ثنائی_ہندسہ_2);
 }
 
-static inline bool flag_test(const uint32_t *flagp,
-			     uint32_t bit)
+ساکن اندرونی bool flag_test(ثابت uint32_t *flagp,
+			     uint32_t ثنائی_ہندسہ_2)
 {
-	return (*flagp & BIT(bit)) != 0U;
+	واپس (*flagp & ثنائی_ہندسہ(ثنائی_ہندسہ_2)) != 0U;
 }
 
-static inline bool flag_test_and_clear(uint32_t *flagp,
-				       int bit)
+ساکن اندرونی bool flag_test_and_clear(uint32_t *flagp,
+				       صحیح ثنائی_ہندسہ_2)
 {
-	bool ret = flag_test(flagp, bit);
+	bool ret = flag_test(flagp, ثنائی_ہندسہ_2);
 
-	flag_clear(flagp, bit);
+	flag_clear(flagp, ثنائی_ہندسہ_2);
 
-	return ret;
+	واپس ret;
 }
 
-static inline void flags_set(uint32_t *flagp,
+ساکن اندرونی خالی flags_سیٹ(uint32_t *flagp,
 			     uint32_t flags)
 {
 	*flagp = flags;
 }
 
-static inline uint32_t flags_get(const uint32_t *flagp)
+ساکن اندرونی uint32_t flags_get(ثابت uint32_t *flagp)
 {
-	return *flagp;
+	واپس *flagp;
 }
 
 /* Lock to protect the internal state of all work items, work queues,
  * and pending_cancels.
  */
-static struct k_spinlock work_lock;
+ساکن ساخت k_spinlock work_تالا;
 
 /* Invoked by work thread */
-static void handle_flush(struct k_work *work) { }
+ساکن خالی handle_flush(ساخت k_work *work) { }
 
-static inline void init_flusher(struct z_work_flusher *flusher)
+ساکن اندرونی خالی init_flusher(ساخت z_work_flusher *flusher)
 {
-	struct k_work *work = &flusher->work;
+	ساخت k_work *work = &flusher->work;
 	k_sem_init(&flusher->sem, 0, 1);
 	k_work_init(&flusher->work, handle_flush);
-	flag_set(&work->flags, K_WORK_FLUSHING_BIT);
+	flag_سیٹ(&work->flags, K_WORK_FLUSHING_ثنائی_ہندسہ);
 }
 
 /* List of pending cancellations. */
-static sys_slist_t pending_cancels;
+ساکن sys_slist_t pending_cancels;
 
 /* Initialize a canceler record and add it to the list of pending
  * cancels.
@@ -87,12 +87,12 @@ static sys_slist_t pending_cancels;
  * @param canceler the structure used to notify a waiting process.
  * @param work the work structure that is to be canceled
  */
-static inline void init_work_cancel(struct z_work_canceller *canceler,
-				    struct k_work *work)
+ساکن اندرونی خالی init_work_cancel(ساخت z_work_canceller *canceler,
+				    ساخت k_work *work)
 {
 	k_sem_init(&canceler->sem, 0, 1);
 	canceler->work = work;
-	sys_slist_append(&pending_cancels, &canceler->node);
+	sys_slist_append(&pending_cancels, &canceler->گرہ);
 }
 
 /* Complete flushing of a work item.
@@ -105,12 +105,12 @@ static inline void init_work_cancel(struct z_work_canceller *canceler,
  *
  * @param work the work structure that has completed flushing.
  */
-static void finalize_flush_locked(struct k_work *work)
+ساکن خالی finalize_flush_locked(ساخت k_work *work)
 {
-	struct z_work_flusher *flusher
-		= CONTAINER_OF(work, struct z_work_flusher, work);
+	ساخت z_work_flusher *flusher
+		= CONTAINER_کا(work, ساخت z_work_flusher, work);
 
-	flag_clear(&work->flags, K_WORK_FLUSHING_BIT);
+	flag_clear(&work->flags, K_WORK_FLUSHING_ثنائی_ہندسہ);
 
 	k_sem_give(&flusher->sem);
 };
@@ -125,55 +125,55 @@ static void finalize_flush_locked(struct k_work *work)
  *
  * @param work the work structure that has completed cancellation
  */
-static void finalize_cancel_locked(struct k_work *work)
+ساکن خالی finalize_cancel_locked(ساخت k_work *work)
 {
-	struct z_work_canceller *wc, *tmp;
-	sys_snode_t *prev = NULL;
+	ساخت z_work_canceller *wc, *tmp;
+	sys_snode_t *پچھلا = تہی;
 
 	/* Clear this first, so released high-priority threads don't
 	 * see it when doing things.
 	 */
-	flag_clear(&work->flags, K_WORK_CANCELING_BIT);
+	flag_clear(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ);
 
 	/* Search for and remove matching containers, and release
 	 * what's waiting for the completion.  The same work item can
 	 * appear multiple times in the list if multiple threads
 	 * attempt to cancel it; each waiter must be woken.
 	 */
-	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, node) {
-		if (wc->work == work) {
-			sys_slist_remove(&pending_cancels, prev, &wc->node);
+	SYS_SLIST_FOR_EACH_CONTAINER_محفوظ(&pending_cancels, wc, tmp, گرہ) {
+		اگر (wc->work == work) {
+			sys_slist_remove(&pending_cancels, پچھلا, &wc->گرہ);
 			k_sem_give(&wc->sem);
-		} else {
-			prev = &wc->node;
+		} ورنہ {
+			پچھلا = &wc->گرہ;
 		}
 	}
 }
 
-void k_work_init(struct k_work *work,
+خالی k_work_init(ساخت k_work *work,
 		  k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(work != تہی);
+	__ASSERT_NO_MSG(handler != تہی);
 
-	*work = (struct k_work)Z_WORK_INITIALIZER(handler);
+	*work = (ساخت k_work)Z_WORK_INITIALIZER(handler);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work, work);
+	SYS_پورٹ_TRACING_OBJ_INIT(k_work, work);
 }
 
-static inline int work_busy_get_locked(const struct k_work *work)
+ساکن اندرونی صحیح work_busy_get_locked(ثابت ساخت k_work *work)
 {
-	return flags_get(&work->flags) & K_WORK_MASK;
+	واپس flags_get(&work->flags) & K_WORK_نقاب;
 }
 
-int k_work_busy_get(const struct k_work *work)
+صحیح k_work_busy_get(ثابت ساخت k_work *work)
 {
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_busy_get_locked(work);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
+	صحیح ret = work_busy_get_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	return ret;
+	واپس ret;
 }
 
 /* Add a flusher work item to the queue.
@@ -187,17 +187,17 @@ int k_work_busy_get(const struct k_work *work)
  * queue
  * @param flusher an uninitialized/unused flusher object
  */
-static void queue_flusher_locked(struct k_work_q *queue,
-				 struct k_work *work,
-				 struct z_work_flusher *flusher)
+ساکن خالی قطار_flusher_locked(ساخت k_work_q *قطار,
+				 ساخت k_work *work,
+				 ساخت z_work_flusher *flusher)
 {
 	init_flusher(flusher);
 
-	if ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
-		sys_slist_insert(&queue->pending, &work->node,
-				 &flusher->work.node);
-	} else {
-		sys_slist_prepend(&queue->pending, &flusher->work.node);
+	اگر ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
+		sys_slist_داخل_کرو(&قطار->pending, &work->گرہ,
+				 &flusher->work.گرہ);
+	} ورنہ {
+		sys_slist_prepend(&قطار->pending, &flusher->work.گرہ);
 	}
 }
 
@@ -208,11 +208,11 @@ static void queue_flusher_locked(struct k_work_q *queue,
  * @param queue the queue from which the work should be removed
  * @param work work that may be on the queue
  */
-static inline void queue_remove_locked(struct k_work_q *queue,
-				       struct k_work *work)
+ساکن اندرونی خالی قطار_remove_locked(ساخت k_work_q *قطار,
+				       ساخت k_work *work)
 {
-	if (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
-		(void)sys_slist_find_and_remove(&queue->pending, &work->node);
+	اگر (flag_test_and_clear(&work->flags, K_WORK_QUEUED_ثنائی_ہندسہ)) {
+		(خالی)sys_slist_ڈھونڈو_and_remove(&قطار->pending, &work->گرہ);
 	}
 }
 
@@ -227,15 +227,15 @@ static inline void queue_remove_locked(struct k_work_q *queue,
  * @return true if and only if the queue was notified and woken, i.e. a
  * reschedule is pending.
  */
-static inline bool notify_queue_locked(struct k_work_q *queue)
+ساکن اندرونی bool notify_قطار_locked(ساخت k_work_q *قطار)
 {
 	bool rv = false;
 
-	if (queue != NULL) {
-		rv = z_sched_wake(&queue->notifyq, 0, NULL);
+	اگر (قطار != تہی) {
+		rv = z_sched_wake(&قطار->notifyq, 0, تہی);
 	}
 
-	return rv;
+	واپس rv;
 }
 
 /* Submit an work item to a queue if queue state allows new work.
@@ -257,17 +257,17 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
  * @retval -ENODEV if the queue is not started
  * @retval -EBUSY if the submission was rejected (draining, plugged)
  */
-static inline int queue_submit_locked(struct k_work_q *queue,
-				      struct k_work *work)
+ساکن اندرونی صحیح قطار_submit_locked(ساخت k_work_q *قطار,
+				      ساخت k_work *work)
 {
-	if (queue == NULL) {
-		return -EINVAL;
+	اگر (قطار == تہی) {
+		واپس -EINVAL;
 	}
 
-	int ret;
-	bool chained = (_current == queue->thread_id) && !k_is_in_isr();
-	bool draining = flag_test(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-	bool plugged = flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
+	صحیح ret;
+	bool chained = (_current == قطار->thread_id) && !k_is_اندر_isr();
+	bool draining = flag_test(&قطار->flags, K_WORK_قطار_DRAIN_ثنائی_ہندسہ);
+	bool plugged = flag_test(&قطار->flags, K_WORK_قطار_PLUGGED_ثنائی_ہندسہ);
 
 	/* Test for acceptability, in priority order:
 	 *
@@ -276,19 +276,19 @@ static inline int queue_submit_locked(struct k_work_q *queue,
 	 * * -EBUSY if plugged and not draining
 	 * * otherwise OK
 	 */
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	اگر (!flag_test(&قطار->flags, K_WORK_قطار_STARTED_ثنائی_ہندسہ)) {
 		ret = -ENODEV;
-	} else if (draining && !chained) {
+	} ورنہ اگر (draining && !chained) {
 		ret = -EBUSY;
-	} else if (plugged && !draining) {
+	} ورنہ اگر (plugged && !draining) {
 		ret = -EBUSY;
-	} else {
-		sys_slist_append(&queue->pending, &work->node);
+	} ورنہ {
+		sys_slist_append(&قطار->pending, &work->گرہ);
 		ret = 1;
-		(void)notify_queue_locked(queue);
+		(خالی)notify_قطار_locked(قطار);
 	}
 
-	return ret;
+	واپس ret;
 }
 
 /* Attempt to submit work to a queue.
@@ -317,51 +317,51 @@ static inline int queue_submit_locked(struct k_work_q *queue,
  * @retval -EINVAL if no queue is provided
  * @retval -ENODEV if the queue is not started
  */
-static int submit_to_queue_locked(struct k_work *work,
-				  struct k_work_q **queuep)
+ساکن صحیح submit_مقصد_قطار_locked(ساخت k_work *work,
+				  ساخت k_work_q **queuep)
 {
-	int ret = 0;
+	صحیح ret = 0;
 
-	if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	اگر (flag_test(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ)) {
 		/* Disallowed */
 		ret = -EBUSY;
-	} else if (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
+	} ورنہ اگر (!flag_test(&work->flags, K_WORK_QUEUED_ثنائی_ہندسہ)) {
 		/* Not currently queued */
 		ret = 1;
 
 		/* If no queue specified resubmit to last queue.
 		 */
-		if (*queuep == NULL) {
-			*queuep = work->queue;
+		اگر (*queuep == تہی) {
+			*queuep = work->قطار;
 		}
 
 		/* If the work is currently running we have to use the
 		 * queue it's running on to prevent handler
 		 * re-entrancy.
 		 */
-		if (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
-			__ASSERT_NO_MSG(work->queue != NULL);
-			*queuep = work->queue;
+		اگر (flag_test(&work->flags, K_WORK_RUNNING_ثنائی_ہندسہ)) {
+			__ASSERT_NO_MSG(work->قطار != تہی);
+			*queuep = work->قطار;
 			ret = 2;
 		}
 
-		int rc = queue_submit_locked(*queuep, work);
+		صحیح rc = قطار_submit_locked(*queuep, work);
 
-		if (rc < 0) {
+		اگر (rc < 0) {
 			ret = rc;
-		} else {
-			flag_set(&work->flags, K_WORK_QUEUED_BIT);
-			work->queue = *queuep;
+		} ورنہ {
+			flag_سیٹ(&work->flags, K_WORK_QUEUED_ثنائی_ہندسہ);
+			work->قطار = *queuep;
 		}
-	} else {
+	} ورنہ {
 		/* Already queued, do nothing. */
 	}
 
-	if (ret <= 0) {
-		*queuep = NULL;
+	اگر (ret <= 0) {
+		*queuep = تہی;
 	}
 
-	return ret;
+	واپس ret;
 }
 
 /* Submit work to a queue
@@ -375,47 +375,47 @@ static int submit_to_queue_locked(struct k_work *work,
  *
  * @retval see submit_to_queue_locked()
  */
-int z_work_submit_to_queue(struct k_work_q *queue,
-		  struct k_work *work)
+صحیح z_work_submit_مقصد_قطار(ساخت k_work_q *قطار,
+		  ساخت k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(work->handler != NULL);
+	__ASSERT_NO_MSG(work != تہی);
+	__ASSERT_NO_MSG(work->handler != تہی);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
-	int ret = submit_to_queue_locked(work, &queue);
+	صحیح ret = submit_مقصد_قطار_locked(work, &قطار);
 
 	/* No need to reschedule if the submission failed. */
-	if (ret > 0) {
-		z_reschedule(&work_lock, key);
-	} else {
-		k_spin_unlock(&work_lock, key);
+	اگر (ret > 0) {
+		z_reschedule(&work_تالا, کلید);
+	} ورنہ {
+		k_spin_unlock(&work_تالا, کلید);
 	}
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_submit_to_queue(struct k_work_q *queue,
-			    struct k_work *work)
+صحیح k_work_submit_مقصد_قطار(ساخت k_work_q *قطار,
+			    ساخت k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit_to_queue, queue, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, submit_مقصد_قطار, قطار, work);
 
-	int ret = z_work_submit_to_queue(queue, work);
+	صحیح ret = z_work_submit_مقصد_قطار(قطار, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit_to_queue, queue, work, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, submit_مقصد_قطار, قطار, work, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_submit(struct k_work *work)
+صحیح k_work_submit(ساخت k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
 
-	int ret = z_work_submit_to_queue(&k_sys_work_q, work);
+	صحیح ret = z_work_submit_مقصد_قطار(&k_sys_work_q, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
 
-	return ret;
+	واپس ret;
 }
 
 /* Flush the work item if necessary.
@@ -433,54 +433,54 @@ int k_work_submit(struct k_work *work)
  *
  * @retval false otherwise.  No wait required.
  */
-static bool work_flush_locked(struct k_work *work,
-			      struct z_work_flusher *flusher)
+ساکن bool work_flush_locked(ساخت k_work *work,
+			      ساخت z_work_flusher *flusher)
 {
 	bool need_flush = (flags_get(&work->flags)
 			   & (K_WORK_QUEUED | K_WORK_RUNNING)) != 0U;
 
-	if (need_flush) {
-		struct k_work_q *queue = work->queue;
+	اگر (need_flush) {
+		ساخت k_work_q *قطار = work->قطار;
 
-		__ASSERT_NO_MSG(queue != NULL);
+		__ASSERT_NO_MSG(قطار != تہی);
 
-		queue_flusher_locked(queue, work, flusher);
-		notify_queue_locked(queue);
+		قطار_flusher_locked(قطار, work, flusher);
+		notify_قطار_locked(قطار);
 	}
 
-	return need_flush;
+	واپس need_flush;
 }
 
-bool k_work_flush(struct k_work *work,
-		  struct k_work_sync *sync)
+bool k_work_flush(ساخت k_work *work,
+		  ساخت k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-	__ASSERT_NO_MSG(sync != NULL);
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(work != تہی);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_ثنائی_ہندسہ));
+	__ASSERT_NO_MSG(!k_is_اندر_isr());
+	__ASSERT_NO_MSG(sync != تہی);
+#اگر_تعریف_شدہ CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#اگر_ختم /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
 
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
+	اگر (need_flush) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
 
-	return need_flush;
+	واپس need_flush;
 }
 
 /* Execute the non-waiting steps necessary to cancel a work item.
@@ -494,25 +494,25 @@ bool k_work_flush(struct k_work *work,
  *
  * @return k_busy_wait() captured under lock
  */
-static int cancel_async_locked(struct k_work *work)
+ساکن صحیح cancel_async_locked(ساخت k_work *work)
 {
 	/* If we haven't already started canceling, do it now. */
-	if (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	اگر (!flag_test(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ)) {
 		/* Remove it from the queue, if it's queued. */
-		queue_remove_locked(work->queue, work);
+		قطار_remove_locked(work->قطار, work);
 	}
 
 	/* If it's still busy after it's been dequeued, then flag it
 	 * as canceling.
 	 */
-	int ret = work_busy_get_locked(work);
+	صحیح ret = work_busy_get_locked(work);
 
-	if (ret != 0) {
-		flag_set(&work->flags, K_WORK_CANCELING_BIT);
+	اگر (ret != 0) {
+		flag_سیٹ(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ);
 		ret = work_busy_get_locked(work);
 	}
 
-	return ret;
+	واپس ret;
 }
 
 /* Complete cancellation necessary, release work lock, and wait if
@@ -530,85 +530,85 @@ static int cancel_async_locked(struct k_work *work)
  *
  * @retval false if work was idle on entry.  The caller need not wait.
  */
-static bool cancel_sync_locked(struct k_work *work,
-			       struct z_work_canceller *canceller)
+ساکن bool cancel_sync_locked(ساخت k_work *work,
+			       ساخت z_work_canceller *canceller)
 {
-	bool ret = flag_test(&work->flags, K_WORK_CANCELING_BIT);
+	bool ret = flag_test(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ);
 
 	/* If something's still running then we have to wait for
 	 * completion, which is indicated when finish_cancel() gets
 	 * invoked.
 	 */
-	if (ret) {
+	اگر (ret) {
 		init_work_cancel(canceller, work);
 	}
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_cancel(struct k_work *work)
+صحیح k_work_cancel(ساخت k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
+	__ASSERT_NO_MSG(work != تہی);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_ثنائی_ہندسہ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_async_locked(work);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
+	صحیح ret = cancel_async_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
 
-	return ret;
+	واپس ret;
 }
 
-bool k_work_cancel_sync(struct k_work *work,
-			struct k_work_sync *sync)
+bool k_work_cancel_sync(ساخت k_work *work,
+			ساخت k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(work != تہی);
+	__ASSERT_NO_MSG(sync != تہی);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_ثنائی_ہندسہ));
+	__ASSERT_NO_MSG(!k_is_اندر_isr());
+#اگر_تعریف_شدہ CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#اگر_ختم /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 	bool pending = (work_busy_get_locked(work) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_async_locked(work);
+	اگر (pending) {
+		(خالی)cancel_async_locked(work);
 		need_wait = cancel_sync_locked(work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	if (need_wait) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
+	اگر (need_wait) {
+		SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
-	return pending;
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
+	واپس pending;
 }
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-static void work_timeout_handler(struct _timeout *record)
+#اگر defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+ساکن خالی work_timeout_handler(ساخت _timeout *ریکارڈ)
 {
-	struct k_work_q *queue = CONTAINER_OF(record, struct k_work_q, work_timeout_record);
-	struct k_work *work = NULL;
-	k_work_handler_t handler = NULL;
-	const char *name;
-	const char *space = " ";
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت k_work_q *قطار = CONTAINER_کا(ریکارڈ, ساخت k_work_q, work_timeout_ریکارڈ);
+	ساخت k_work *work = تہی;
+	k_work_handler_t handler = تہی;
+	ثابت حرف *name;
+	ثابت حرف *space = " ";
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
-	work = queue->work;
+	work = قطار->work;
 	handler = work->handler;
 
 	/*
@@ -622,76 +622,76 @@ static void work_timeout_handler(struct _timeout *record)
 	 * wrong worker. work_timeout_stop_locked() aborts the timeout, which
 	 * flags it superseded; bail on that too.
 	 */
-	if (queue->finished || z_timeout_inflight_superseded(record)) {
-		k_spin_unlock(&work_lock, key);
-		return;
+	اگر (قطار->ختم_شدہ || z_timeout_inflight_superseded(ریکارڈ)) {
+		k_spin_unlock(&work_تالا, کلید);
+		واپس;
 	}
-	queue->finished = true;
+	قطار->ختم_شدہ = true;
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	name = k_thread_name_get(queue->thread_id);
-	if (name == NULL) {
+	name = k_thread_name_get(قطار->thread_id);
+	اگر (name == تہی) {
 		name = "";
 		space = "";
 	}
 
 	LOG_ERR("queue %p%s%s blocked by work %p with handler %p",
-		queue, space, name, work, handler);
+		قطار, space, name, work, handler);
 
-	k_thread_abort(queue->thread_id);
+	k_thread_abort(قطار->thread_id);
 }
 
-static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *work)
+ساکن خالی work_timeout_آغاز_locked(ساخت k_work_q *قطار, ساخت k_work *work)
 {
-	queue->finished = false;
+	قطار->ختم_شدہ = false;
 
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	اگر (K_TIMEOUT_EQ(قطار->work_timeout, K_FOREVER)) {
+		واپس;
 	}
 
-	queue->work = work;
-	z_add_timeout(&queue->work_timeout_record, work_timeout_handler, queue->work_timeout);
+	قطار->work = work;
+	z_جوڑو_timeout(&قطار->work_timeout_ریکارڈ, work_timeout_handler, قطار->work_timeout);
 }
 
-static void work_timeout_stop_locked(struct k_work_q *queue)
+ساکن خالی work_timeout_stop_locked(ساخت k_work_q *قطار)
 {
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	اگر (K_TIMEOUT_EQ(قطار->work_timeout, K_FOREVER)) {
+		واپس;
 	}
 
-	(void)z_try_abort_timeout(&queue->work_timeout_record);
+	(خالی)z_try_abort_timeout(&قطار->work_timeout_ریکارڈ);
 }
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#اگر_ختم /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 /* Loop executed by a work queue thread.
  *
  * @param workq_ptr pointer to the work queue structure
  */
-static void work_queue_main(void *workq_ptr, void *p2, void *p3)
+ساکن خالی work_قطار_main(خالی *workq_ptr, خالی *p2, خالی *p3)
 {
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_غیر_مستعمل(p2);
+	ARG_غیر_مستعمل(p3);
 
-	struct k_work_q *queue = (struct k_work_q *)workq_ptr;
+	ساخت k_work_q *قطار = (ساخت k_work_q *)workq_ptr;
 
-	while (true) {
-		sys_snode_t *node;
-		struct k_work *work = NULL;
-		k_work_handler_t handler = NULL;
-		k_spinlock_key_t key = k_spin_lock(&work_lock);
+	جب (true) {
+		sys_snode_t *گرہ;
+		ساخت k_work *work = تہی;
+		k_work_handler_t handler = تہی;
+		k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 		bool yield;
 
 		/* Check for and prepare any new work. */
-		node = sys_slist_get(&queue->pending);
-		if (node != NULL) {
+		گرہ = sys_slist_get(&قطار->pending);
+		اگر (گرہ != تہی) {
 			/* Mark that there's some work active that's
 			 * not on the pending list.
 			 */
-			flag_set(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-			work = CONTAINER_OF(node, struct k_work, node);
-			flag_set(&work->flags, K_WORK_RUNNING_BIT);
-			flag_clear(&work->flags, K_WORK_QUEUED_BIT);
+			flag_سیٹ(&قطار->flags, K_WORK_قطار_BUSY_ثنائی_ہندسہ);
+			work = CONTAINER_کا(گرہ, ساخت k_work, گرہ);
+			flag_سیٹ(&work->flags, K_WORK_RUNNING_ثنائی_ہندسہ);
+			flag_clear(&work->flags, K_WORK_QUEUED_ثنائی_ہندسہ);
 
 			/* Static code analysis tool can raise a false-positive violation
 			 * in the line below that 'work' is checked for null after being
@@ -706,8 +706,8 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * This means that if node is not NULL, then work will not be NULL.
 			 */
 			handler = work->handler;
-		} else if (flag_test_and_clear(&queue->flags,
-					       K_WORK_QUEUE_DRAIN_BIT)) {
+		} ورنہ اگر (flag_test_and_clear(&قطار->flags,
+					       K_WORK_قطار_DRAIN_ثنائی_ہندسہ)) {
 			/* Not busy and draining: move threads waiting for
 			 * drain to ready state.  The held spinlock inhibits
 			 * immediate reschedule; released threads get their
@@ -717,39 +717,39 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * here doesn't mean that the queue will allow new
 			 * submissions.
 			 */
-			(void)z_sched_wake_all(&queue->drainq, 1, NULL);
-		} else if (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
+			(خالی)z_sched_wake_all(&قطار->drainq, 1, تہی);
+		} ورنہ اگر (flag_test(&قطار->flags, K_WORK_قطار_STOP_ثنائی_ہندسہ)) {
 			/* User has requested that the queue stop. Clear the status flags and exit.
 			 */
-			flags_set(&queue->flags, 0);
-			k_spin_unlock(&work_lock, key);
-			return;
-		} else {
+			flags_سیٹ(&قطار->flags, 0);
+			k_spin_unlock(&work_تالا, کلید);
+			واپس;
+		} ورنہ {
 			/* No work is available and no queue state requires
 			 * special handling.
 			 */
 			;
 		}
 
-		if (work == NULL) {
+		اگر (work == تہی) {
 			/* Nothing's had a chance to add work since we took
 			 * the lock, and we didn't find work nor got asked to
 			 * stop.  Just go to sleep: when something happens the
 			 * work thread will be woken and we can check again.
 			 */
 
-			(void)z_sched_wait(&work_lock, key, &queue->notifyq,
-					   K_FOREVER, NULL);
-			continue;
+			(خالی)z_sched_wait(&work_تالا, کلید, &قطار->notifyq,
+					   K_FOREVER, تہی);
+			جاری;
 		}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		work_timeout_start_locked(queue, work);
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#اگر defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		work_timeout_آغاز_locked(قطار, work);
+#اگر_ختم /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_تالا, کلید);
 
-		__ASSERT_NO_MSG(handler != NULL);
+		__ASSERT_NO_MSG(handler != تہی);
 		handler(work);
 
 		/* Mark the work item as no longer running and deal
@@ -757,244 +757,244 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		 * was running.  Clear the BUSY flag and optionally
 		 * yield to prevent starving other threads.
 		 */
-		key = k_spin_lock(&work_lock);
+		کلید = k_spin_تالا(&work_تالا);
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		if (queue->finished) {
+#اگر defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		اگر (قطار->ختم_شدہ) {
 			/*
 			 * The work item timeout handler has flagged this work
 			 * thread for taking too long and is going to abort it.
 			 * Do not proceed to the next work item.
 			 */
-			k_spin_unlock(&work_lock, key);
-			while (1) {
+			k_spin_unlock(&work_تالا, کلید);
+			جب (1) {
 				k_sleep(K_FOREVER);
 			}
-			CODE_UNREACHABLE;
+			رمز_UNREACHABLE;
 		}
-		work_timeout_stop_locked(queue);
-		queue->finished = true;
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+		work_timeout_stop_locked(قطار);
+		قطار->ختم_شدہ = true;
+#اگر_ختم /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		flag_clear(&work->flags, K_WORK_RUNNING_BIT);
-		if (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
+		flag_clear(&work->flags, K_WORK_RUNNING_ثنائی_ہندسہ);
+		اگر (flag_test(&work->flags, K_WORK_FLUSHING_ثنائی_ہندسہ)) {
 			finalize_flush_locked(work);
 		}
-		if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+		اگر (flag_test(&work->flags, K_WORK_CANCELING_ثنائی_ہندسہ)) {
 			finalize_cancel_locked(work);
 		}
 
-		flag_clear(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-		yield = (!flag_test(&queue->flags, K_WORK_QUEUE_NO_YIELD_BIT) &&
-			 !sys_slist_is_empty(&queue->pending));
-		k_spin_unlock(&work_lock, key);
+		flag_clear(&قطار->flags, K_WORK_قطار_BUSY_ثنائی_ہندسہ);
+		yield = (!flag_test(&قطار->flags, K_WORK_قطار_NO_YIELD_ثنائی_ہندسہ) &&
+			 !sys_slist_is_خالی_خانے(&قطار->pending));
+		k_spin_unlock(&work_تالا, کلید);
 
 		/* Optionally yield to prevent the work queue from
 		 * starving other threads.
 		 */
-		if (yield) {
+		اگر (yield) {
 			k_yield();
 		}
 	}
 }
 
-void k_work_queue_init(struct k_work_q *queue)
+خالی k_work_قطار_init(ساخت k_work_q *قطار)
 {
-	__ASSERT_NO_MSG(queue != NULL);
+	__ASSERT_NO_MSG(قطار != تہی);
 
-	*queue = (struct k_work_q) {
+	*قطار = (ساخت k_work_q) {
 		.flags = 0,
 	};
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_queue, queue);
+	SYS_پورٹ_TRACING_OBJ_INIT(k_work_قطار, قطار);
 }
 
-void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *cfg)
+خالی k_work_قطار_تسلسل(ساخت k_work_q *قطار, ثابت ساخت k_work_قطار_config *cfg)
 {
-	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
+	__ASSERT_NO_MSG(!flag_test(&قطار->flags, K_WORK_قطار_STARTED_ثنائی_ہندسہ));
 
-	uint32_t flags = K_WORK_QUEUE_STARTED;
+	uint32_t flags = K_WORK_قطار_STARTED;
 
-	if ((cfg != NULL) && cfg->no_yield) {
-		flags |= K_WORK_QUEUE_NO_YIELD;
+	اگر ((cfg != تہی) && cfg->no_yield) {
+		flags |= K_WORK_قطار_NO_YIELD;
 	}
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(_current, cfg->name);
+	اگر ((cfg != تہی) && (cfg->name != تہی)) {
+		k_thread_name_سیٹ(_current, cfg->name);
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
-		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
-		queue->work_timeout = K_FOREVER;
+#اگر defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	اگر ((cfg != تہی) && (cfg->work_timeout_ms)) {
+		قطار->work_timeout = K_MSEC(cfg->work_timeout_ms);
+	} ورنہ {
+		قطار->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#اگر_ختم /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-	sys_slist_init(&queue->pending);
-	z_waitq_init(&queue->notifyq);
-	z_waitq_init(&queue->drainq);
-	queue->thread_id = _current;
-	flags_set(&queue->flags, flags);
-	work_queue_main(queue, NULL, NULL);
+	sys_slist_init(&قطار->pending);
+	z_waitq_init(&قطار->notifyq);
+	z_waitq_init(&قطار->drainq);
+	قطار->thread_id = _current;
+	flags_سیٹ(&قطار->flags, flags);
+	work_قطار_main(قطار, تہی, تہی);
 }
 
-void k_work_queue_start(struct k_work_q *queue,
-			k_thread_stack_t *stack,
-			size_t stack_size,
-			int prio,
-			const struct k_work_queue_config *cfg)
+خالی k_work_قطار_آغاز(ساخت k_work_q *قطار,
+			k_thread_ڈھیر_t *ڈھیر,
+			size_t ڈھیر_سائز,
+			صحیح prio,
+			ثابت ساخت k_work_قطار_config *cfg)
 {
-	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(stack);
-	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
+	__ASSERT_NO_MSG(قطار);
+	__ASSERT_NO_MSG(ڈھیر);
+	__ASSERT_NO_MSG(!flag_test(&قطار->flags, K_WORK_قطار_STARTED_ثنائی_ہندسہ));
 
 	/* In future, this whole function will be deprecated, but for now, we
 	 * have to use the `thread` field to create a new thread in it.
 	 */
 	TOOLCHAIN_DISABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 
-	uint32_t flags = K_WORK_QUEUE_STARTED;
+	uint32_t flags = K_WORK_قطار_STARTED;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, start, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work_قطار, آغاز, قطار);
 
-	sys_slist_init(&queue->pending);
-	z_waitq_init(&queue->notifyq);
-	z_waitq_init(&queue->drainq);
+	sys_slist_init(&قطار->pending);
+	z_waitq_init(&قطار->notifyq);
+	z_waitq_init(&قطار->drainq);
 
-	if ((cfg != NULL) && cfg->no_yield) {
-		flags |= K_WORK_QUEUE_NO_YIELD;
+	اگر ((cfg != تہی) && cfg->no_yield) {
+		flags |= K_WORK_قطار_NO_YIELD;
 	}
 
 	/* It hasn't actually been started yet, but all the state is in place
 	 * so we can submit things and once the thread gets control it's ready
 	 * to roll.
 	 */
-	flags_set(&queue->flags, flags);
+	flags_سیٹ(&قطار->flags, flags);
 
-	(void)k_thread_create(&queue->thread, stack, stack_size,
-			      work_queue_main, queue, NULL, NULL,
+	(خالی)k_thread_create(&قطار->thread, ڈھیر, ڈھیر_سائز,
+			      work_قطار_main, قطار, تہی, تہی,
 			      prio, 0, K_FOREVER);
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(&queue->thread, cfg->name);
+	اگر ((cfg != تہی) && (cfg->name != تہی)) {
+		k_thread_name_سیٹ(&قطار->thread, cfg->name);
 	}
 
-	if ((cfg != NULL) && (cfg->essential)) {
-		queue->thread.base.user_options |= K_ESSENTIAL;
+	اگر ((cfg != تہی) && (cfg->essential)) {
+		قطار->thread.بنیاد.user_options |= K_ESSENTIAL;
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
-		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
-		queue->work_timeout = K_FOREVER;
+#اگر defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	اگر ((cfg != تہی) && (cfg->work_timeout_ms)) {
+		قطار->work_timeout = K_MSEC(cfg->work_timeout_ms);
+	} ورنہ {
+		قطار->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#اگر_ختم /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-	k_thread_start(&queue->thread);
-	queue->thread_id = &queue->thread;
+	k_thread_آغاز(&قطار->thread);
+	قطار->thread_id = &قطار->thread;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, start, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, آغاز, قطار);
 
 	TOOLCHAIN_ENABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 }
 
-int k_work_queue_drain(struct k_work_q *queue,
+صحیح k_work_قطار_drain(ساخت k_work_q *قطار,
 		       bool plug)
 {
-	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(!k_is_in_isr());
+	__ASSERT_NO_MSG(قطار);
+	__ASSERT_NO_MSG(!k_is_اندر_isr());
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work_قطار, drain, قطار);
 
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	صحیح ret = 0;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
-	if (((flags_get(&queue->flags)
-	      & (K_WORK_QUEUE_BUSY | K_WORK_QUEUE_DRAIN)) != 0U)
+	اگر (((flags_get(&قطار->flags)
+	      & (K_WORK_قطار_BUSY | K_WORK_قطار_DRAIN)) != 0U)
 	    || plug
-	    || !sys_slist_is_empty(&queue->pending)) {
-		flag_set(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-		if (plug) {
-			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
+	    || !sys_slist_is_خالی_خانے(&قطار->pending)) {
+		flag_سیٹ(&قطار->flags, K_WORK_قطار_DRAIN_ثنائی_ہندسہ);
+		اگر (plug) {
+			flag_سیٹ(&قطار->flags, K_WORK_قطار_PLUGGED_ثنائی_ہندسہ);
 		}
 
-		notify_queue_locked(queue);
-		ret = z_sched_wait(&work_lock, key, &queue->drainq,
-				   K_FOREVER, NULL);
-	} else {
-		k_spin_unlock(&work_lock, key);
+		notify_قطار_locked(قطار);
+		ret = z_sched_wait(&work_تالا, کلید, &قطار->drainq,
+				   K_FOREVER, تہی);
+	} ورنہ {
+		k_spin_unlock(&work_تالا, کلید);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, drain, قطار, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_queue_unplug(struct k_work_q *queue)
+صحیح k_work_قطار_unplug(ساخت k_work_q *قطار)
 {
-	__ASSERT_NO_MSG(queue);
+	__ASSERT_NO_MSG(قطار);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work_قطار, unplug, قطار);
 
-	int ret = -EALREADY;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	صحیح ret = -EALREADY;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
-	if (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	اگر (flag_test_and_clear(&قطار->flags, K_WORK_قطار_PLUGGED_ثنائی_ہندسہ)) {
 		ret = 0;
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, unplug, قطار, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
+صحیح k_work_قطار_stop(ساخت k_work_q *قطار, k_timeout_t timeout)
 {
-	__ASSERT_NO_MSG(queue);
+	__ASSERT_NO_MSG(قطار);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work_قطار, stop, قطار, timeout);
 
-	if (queue->thread_id) {
-		if (z_is_thread_essential(queue->thread_id)) {
-			return -ENOTSUP;
+	اگر (قطار->thread_id) {
+		اگر (z_is_thread_essential(قطار->thread_id)) {
+			واپس -ENOTSUP;
 		}
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
-		return -EALREADY;
+	اگر (!flag_test(&قطار->flags, K_WORK_قطار_STARTED_ثنائی_ہندسہ)) {
+		k_spin_unlock(&work_تالا, کلید);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, stop, قطار, timeout, -EALREADY);
+		واپس -EALREADY;
 	}
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
-		return -EBUSY;
+	اگر (!flag_test(&قطار->flags, K_WORK_قطار_PLUGGED_ثنائی_ہندسہ)) {
+		k_spin_unlock(&work_تالا, کلید);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, stop, قطار, timeout, -EBUSY);
+		واپس -EBUSY;
 	}
 
-	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-	notify_queue_locked(queue);
-	k_spin_unlock(&work_lock, key);
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
-	if (k_thread_join(queue->thread_id, timeout)) {
-		key = k_spin_lock(&work_lock);
-		flag_clear(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
-		return -ETIMEDOUT;
+	flag_سیٹ(&قطار->flags, K_WORK_قطار_STOP_ثنائی_ہندسہ);
+	notify_قطار_locked(قطار);
+	k_spin_unlock(&work_تالا, کلید);
+	SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_work_قطار, stop, قطار, timeout);
+	اگر (k_thread_join(قطار->thread_id, timeout)) {
+		کلید = k_spin_تالا(&work_تالا);
+		flag_clear(&قطار->flags, K_WORK_قطار_STOP_ثنائی_ہندسہ);
+		k_spin_unlock(&work_تالا, کلید);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, stop, قطار, timeout, -ETIMEDOUT);
+		واپس -ETIMEDOUT;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
-	return 0;
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_قطار, stop, قطار, timeout, 0);
+	واپس 0;
 }
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#اگر_تعریف_شدہ CONFIG_SYS_CLOCK_EXISTS
 
 /* Timeout handler for delayable work.
  *
@@ -1002,54 +1002,54 @@ int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
  * Takes and releases work lock.
  * Conditionally reschedules.
  */
-static void work_timeout(struct _timeout *to)
+ساکن خالی work_timeout(ساخت _timeout *مقصد)
 {
-	struct k_work_delayable *dw
-		= CONTAINER_OF(to, struct k_work_delayable, timeout);
-	struct k_work *wp = &dw->work;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	struct k_work_q *queue = NULL;
+	ساخت k_work_delayable *dw
+		= CONTAINER_کا(مقصد, ساخت k_work_delayable, timeout);
+	ساخت k_work *wp = &dw->work;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
+	ساخت k_work_q *قطار = تہی;
 
 	/* K_WORK_DELAYED_BIT is the wake-ownership flag: whichever side
 	 * (this handler or unschedule_locked()) clears it via
 	 * flag_test_and_clear() first owns the outcome. If unschedule_locked
 	 * got here first, the bit is clear and we bail.
 	 */
-	if (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
-		queue = dw->queue;
-		(void)submit_to_queue_locked(wp, &queue);
+	اگر (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_ثنائی_ہندسہ)) {
+		قطار = dw->قطار;
+		(خالی)submit_مقصد_قطار_locked(wp, &قطار);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 }
 
-void k_work_init_delayable(struct k_work_delayable *dwork,
+خالی k_work_init_delayable(ساخت k_work_delayable *dwork,
 			    k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(dwork != تہی);
+	__ASSERT_NO_MSG(handler != تہی);
 
-	*dwork = (struct k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
+	*dwork = (ساخت k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
 
 	z_init_timeout(&dwork->timeout);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_delayable, dwork);
+	SYS_پورٹ_TRACING_OBJ_INIT(k_work_delayable, dwork);
 }
 
-static inline int work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
+ساکن اندرونی صحیح work_delayable_busy_get_locked(ثابت ساخت k_work_delayable *dwork)
 {
-	return flags_get(&dwork->work.flags) & K_WORK_MASK;
+	واپس flags_get(&dwork->work.flags) & K_WORK_نقاب;
 }
 
-int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
+صحیح k_work_delayable_busy_get(ثابت ساخت k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != تہی);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_delayable_busy_get_locked(dwork);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
+	صحیح ret = work_delayable_busy_get_locked(dwork);
 
-	k_spin_unlock(&work_lock, key);
-	return ret;
+	k_spin_unlock(&work_تالا, کلید);
+	واپس ret;
 }
 
 /* Attempt to schedule a work item for future (maybe immediate)
@@ -1075,24 +1075,24 @@ int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
  * @retval from submit_to_queue_locked() if delay is K_NO_WAIT; otherwise
  * @retval 1 to indicate successfully scheduled.
  */
-static int schedule_for_queue_locked(struct k_work_q **queuep,
-				     struct k_work_delayable *dwork,
+ساکن صحیح جدول_وقت_for_قطار_locked(ساخت k_work_q **queuep,
+				     ساخت k_work_delayable *dwork,
 				     k_timeout_t delay)
 {
-	int ret = 1;
-	struct k_work *work = &dwork->work;
+	صحیح ret = 1;
+	ساخت k_work *work = &dwork->work;
 
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		return submit_to_queue_locked(work, queuep);
+	اگر (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		واپس submit_مقصد_قطار_locked(work, queuep);
 	}
 
-	flag_set(&work->flags, K_WORK_DELAYED_BIT);
-	dwork->queue = *queuep;
+	flag_سیٹ(&work->flags, K_WORK_DELAYED_ثنائی_ہندسہ);
+	dwork->قطار = *queuep;
 
 	/* Add timeout */
-	z_add_timeout(&dwork->timeout, work_timeout, delay);
+	z_جوڑو_timeout(&dwork->timeout, work_timeout, delay);
 
-	return ret;
+	واپس ret;
 }
 
 /* Unschedule delayable work.
@@ -1107,11 +1107,11 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
  * @return true if and only if work had been delayed so the timeout
  * was cancelled.
  */
-static inline bool unschedule_locked(struct k_work_delayable *dwork,
-				     k_spinlock_key_t *key)
+ساکن اندرونی bool unschedule_locked(ساخت k_work_delayable *dwork,
+				     k_spinlock_کلید_t *کلید)
 {
 	bool ret = false;
-	struct k_work *work = &dwork->work;
+	ساخت k_work *work = &dwork->work;
 
 	/* If scheduled, try to cancel.  If it fails, that means the
 	 * callback has been dequeued and will inevitably run (or has
@@ -1125,15 +1125,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
 	 * true, and either is unsafe while the handler is still about
 	 * to dereference dwork->work.flags.
 	 */
-	if (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
-		while (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
-			k_spin_unlock(&work_lock, *key);
-			*key = k_spin_lock(&work_lock);
+	اگر (flag_test_and_clear(&work->flags, K_WORK_DELAYED_ثنائی_ہندسہ)) {
+		جب (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
+			k_spin_unlock(&work_تالا, *کلید);
+			*کلید = k_spin_تالا(&work_تالا);
 		}
 		ret = true;
 	}
 
-	return ret;
+	واپس ret;
 }
 
 /* Full cancellation of a delayable work item.
@@ -1147,179 +1147,179 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
  *
  * @return k_work_busy_get() flags
  */
-static int cancel_delayable_async_locked(struct k_work_delayable *dwork,
-					 k_spinlock_key_t *key)
+ساکن صحیح cancel_delayable_async_locked(ساخت k_work_delayable *dwork,
+					 k_spinlock_کلید_t *کلید)
 {
-	(void)unschedule_locked(dwork, key);
+	(خالی)unschedule_locked(dwork, کلید);
 
-	return cancel_async_locked(&dwork->work);
+	واپس cancel_async_locked(&dwork->work);
 }
 
-int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+صحیح k_work_جدول_وقت_for_قطار(ساخت k_work_q *قطار, ساخت k_work_delayable *dwork,
 			      k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(قطار != تہی);
+	__ASSERT_NO_MSG(dwork != تہی);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule_for_queue, queue, dwork, delay);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, جدول_وقت_for_قطار, قطار, dwork, delay);
 
-	struct k_work *work = &dwork->work;
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت k_work *work = &dwork->work;
+	صحیح ret = 0;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
 	/* Schedule the work item if it's idle or running. */
-	if ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
-		ret = schedule_for_queue_locked(&queue, dwork, delay);
+	اگر ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
+		ret = جدول_وقت_for_قطار_locked(&قطار, dwork, delay);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule_for_queue, queue, dwork, delay, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, جدول_وقت_for_قطار, قطار, dwork, delay, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
+صحیح k_work_جدول_وقت(ساخت k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule, dwork, delay);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, جدول_وقت, dwork, delay);
 
-	int ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
+	صحیح ret = k_work_جدول_وقت_for_قطار(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule, dwork, delay, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, جدول_وقت, dwork, delay, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+صحیح k_work_reschedule_for_قطار(ساخت k_work_q *قطار, ساخت k_work_delayable *dwork,
 				k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(قطار != تہی);
+	__ASSERT_NO_MSG(dwork != تہی);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_قطار, قطار, dwork, delay);
 
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	صحیح ret;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
 	/* Remove any active scheduling. */
-	(void)unschedule_locked(dwork, &key);
+	(خالی)unschedule_locked(dwork, &کلید);
 
 	/* Schedule the work item with the new parameters. */
-	ret = schedule_for_queue_locked(&queue, dwork, delay);
+	ret = جدول_وقت_for_قطار_locked(&قطار, dwork, delay);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_قطار, قطار, dwork, delay, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
+صحیح k_work_reschedule(ساخت k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
 
-	int ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
+	صحیح ret = k_work_reschedule_for_قطار(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_cancel_delayable(struct k_work_delayable *dwork)
+صحیح k_work_cancel_delayable(ساخت k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != تہی);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_delayable_async_locked(dwork, &key);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
+	صحیح ret = cancel_delayable_async_locked(dwork, &کلید);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
 
-	return ret;
+	واپس ret;
 }
 
-bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
-				  struct k_work_sync *sync)
+bool k_work_cancel_delayable_sync(ساخت k_work_delayable *dwork,
+				  ساخت k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != تہی);
+	__ASSERT_NO_MSG(sync != تہی);
+	__ASSERT_NO_MSG(!k_is_اندر_isr());
+#اگر_تعریف_شدہ CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#اگر_ختم /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 	bool pending = (work_delayable_busy_get_locked(dwork) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_delayable_async_locked(dwork, &key);
+	اگر (pending) {
+		(خالی)cancel_delayable_async_locked(dwork, &کلید);
 		need_wait = cancel_sync_locked(&dwork->work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
-	if (need_wait) {
+	اگر (need_wait) {
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
-	return pending;
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
+	واپس pending;
 }
 
-bool k_work_flush_delayable(struct k_work_delayable *dwork,
-			    struct k_work_sync *sync)
+bool k_work_flush_delayable(ساخت k_work_delayable *dwork,
+			    ساخت k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != تہی);
+	__ASSERT_NO_MSG(sync != تہی);
+	__ASSERT_NO_MSG(!k_is_اندر_isr());
+#اگر_تعریف_شدہ CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#اگر_ختم /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
 
-	struct k_work *work = &dwork->work;
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	ساخت k_work *work = &dwork->work;
+	ساخت z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&work_تالا);
 
 	/* If it's idle release the lock and return immediately. */
-	if (work_busy_get_locked(work) == 0U) {
-		k_spin_unlock(&work_lock, key);
+	اگر (work_busy_get_locked(work) == 0U) {
+		k_spin_unlock(&work_تالا, کلید);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
+		SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
 
-		return false;
+		واپس false;
 	}
 
 	/* If unscheduling did something then submit it.  Ignore a
 	 * failed submission (e.g. when cancelling).
 	 */
-	if (unschedule_locked(dwork, &key)) {
-		struct k_work_q *queue = dwork->queue;
+	اگر (unschedule_locked(dwork, &کلید)) {
+		ساخت k_work_q *قطار = dwork->قطار;
 
-		(void)submit_to_queue_locked(work, &queue);
+		(خالی)submit_مقصد_قطار_locked(work, &قطار);
 	}
 
 	/* Wait for it to finish */
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_تالا, کلید);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	اگر (need_flush) {
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
 
-	return need_flush;
+	واپس need_flush;
 }
 
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#اگر_ختم /* CONFIG_SYS_CLOCK_EXISTS */

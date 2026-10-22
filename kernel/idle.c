@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/llext/symbol.h>
-#include <zephyr/pm/pm.h>
-#include <stdbool.h>
-#include <zephyr/logging/log.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/toolchain.h>
+#شامل <zephyr/linker/sections.h>
+#شامل <zephyr/drivers/timer/system_timer.h>
+#شامل <zephyr/llext/symbol.h>
+#شامل <zephyr/pm/pm.h>
+#شامل <stdbool.h>
+#شامل <zephyr/logging/log.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kswap.h>
-#include <wait_q.h>
+#شامل <ksched.h>
+#شامل <kswap.h>
+#شامل <wait_q.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-void idle(void *unused1, void *unused2, void *unused3)
+خالی idle(خالی *unused1, خالی *unused2, خالی *unused3)
 {
-	ARG_UNUSED(unused1);
-	ARG_UNUSED(unused2);
-	ARG_UNUSED(unused3);
+	ARG_غیر_مستعمل(unused1);
+	ARG_غیر_مستعمل(unused2);
+	ARG_غیر_مستعمل(unused3);
 
-	__ASSERT_NO_MSG(_current->base.prio >= 0);
+	__ASSERT_NO_MSG(_current->بنیاد.prio >= 0);
 
-	while (true) {
+	جب (true) {
 		/* SMP systems without a working IPI can't actual
 		 * enter an idle state, because they can't be notified
 		 * of scheduler changes (i.e. threads they should
@@ -36,11 +36,11 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * lock and/or timer driver.  This is intended as a
 		 * fallback configuration for new platform bringup.
 		 */
-		if (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
-			for (volatile int i = 0; i < 100000; i++) {
+		اگر (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
+			برائے (متلون صحیح i = 0; i < 100000; i++) {
 				/* Empty loop */
 			}
-			z_swap_unlocked();
+			z_تبادلہ_unlocked();
 		}
 
 		/* Note weird API: k_cpu_idle() is called with local
@@ -48,16 +48,16 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * unmasked.  It does not take a spinlock or other
 		 * higher level construct.
 		 */
-		unsigned int key = arch_irq_lock();
+		غیرعلامتی صحیح کلید = arch_irq_تالا();
 
-#ifdef CONFIG_PM
+#اگر_تعریف_شدہ CONFIG_PM
 		bool system_suspended = false;
 
-		if (!k_is_pre_kernel()) {
+		اگر (!k_is_pre_kernel()) {
 			/* Value preserving: the helper returns either at most
 			 * SYS_CLOCK_MAX_WAIT (== INT32_MAX) or K_TICKS_FOREVER.
 			 */
-			_kernel.idle = (int32_t)z_get_next_timeout_expiry();
+			_kernel.idle = (int32_t)z_get_اگلا_timeout_expiry();
 
 			/*
 			 * Call the suspend hook function of the soc interface
@@ -68,18 +68,18 @@ void idle(void *unused1, void *unused2, void *unused3)
 			system_suspended = pm_system_suspend(_kernel.idle);
 		}
 
-		if (system_suspended) {
-			arch_irq_unlock(key);
-		} else {
+		اگر (system_suspended) {
+			arch_irq_unlock(کلید);
+		} ورنہ {
 			k_cpu_idle();
 		}
-#else
-		ARG_UNUSED(key);
+#ورنہ
+		ARG_غیر_مستعمل(کلید);
 		k_cpu_idle();
-#endif /* CONFIG_PM */
+#اگر_ختم /* CONFIG_PM */
 
-#if !defined(CONFIG_PREEMPT_ENABLED)
-# if !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
+#اگر !defined(CONFIG_PREEMPT_ENABLED)
+# اگر !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
 		/* A legacy mess: the idle thread is by definition
 		 * preemptible as far as the modern scheduler is
 		 * concerned, but older platforms use
@@ -89,19 +89,19 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * explicitly yield in the idle thread otherwise
 		 * nothing else will run once it starts.
 		 */
-		if (_kernel.ready_q.cache != _current) {
-			z_swap_unlocked();
+		اگر (_kernel.ready_q.cache != _current) {
+			z_تبادلہ_unlocked();
 		}
 # endif /* !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC) */
-#endif /* !defined(CONFIG_PREEMPT_ENABLED) */
+#اگر_ختم /* !defined(CONFIG_PREEMPT_ENABLED) */
 	}
 }
 
-void __weak arch_spin_relax(void)
+خالی __weak arch_spin_relax(خالی)
 {
 	__ASSERT(!arch_cpu_irqs_are_enabled(),
 		 "this is meant to be called with IRQs disabled");
 
 	arch_nop();
 }
-EXPORT_SYMBOL(arch_spin_relax);
+EXPORT_علامت(arch_spin_relax);

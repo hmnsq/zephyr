@@ -14,13 +14,13 @@
  * stays focused on run-queue management.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
-#define ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
+#اگر_غیر_تعریف_شدہ ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
+#تعریف_کرو ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
 
-#include <zephyr/kernel.h>
-#include <kthread.h>
+#شامل <zephyr/kernel.h>
+#شامل <kthread.h>
 
-BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
+BUILD_ASSERT(CONFIG_عدد_COOP_PRIORITIES >= CONFIG_عدد_METAIRQ_PRIORITIES,
 	     "You need to provide at least as many CONFIG_NUM_COOP_PRIORITIES as "
 	     "CONFIG_NUM_METAIRQ_PRIORITIES as Meta IRQs are just a special class of cooperative "
 	     "threads.");
@@ -34,20 +34,20 @@ BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
  *
  * @param thread The thread about to become _current.
  */
-static inline void update_metairq_preempt(struct k_thread *thread)
+ساکن اندرونی خالی update_metairq_preempt(ساخت k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	if (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
+#اگر (CONFIG_عدد_METAIRQ_PRIORITIES > 0)
+	اگر (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
 	    !thread_is_preemptible(_current)) {
 		/* Record new preemption */
 		_current_cpu->metairq_preempted = _current;
-	} else if (!thread_is_metairq(thread)) {
+	} ورنہ اگر (!thread_is_metairq(thread)) {
 		/* Returning from existing preemption */
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = تہی;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#ورنہ
+	ARG_غیر_مستعمل(thread);
+#اگر_ختم /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
 /**
@@ -61,26 +61,26 @@ static inline void update_metairq_preempt(struct k_thread *thread)
  * @param thread Best candidate chosen from the run queue.
  * @return Thread to run next.
  */
-static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
+ساکن اندرونی ساخت k_thread *metairq_preempt_recover(ساخت k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+#اگر (CONFIG_عدد_METAIRQ_PRIORITIES > 0)
 	/* MetaIRQs must always attempt to return back to a cooperative thread
 	 * they preempted and not whatever happens to be highest priority now.
 	 * The cooperative thread was promised it wouldn't be preempted (by
 	 * non-metairq threads)!
 	 */
-	struct k_thread *mirqp = _current_cpu->metairq_preempted;
+	ساخت k_thread *mirqp = _current_cpu->metairq_preempted;
 
-	if (mirqp != NULL && (thread == NULL || !thread_is_metairq(thread))) {
-		if (z_is_thread_ready(mirqp)) {
-			return mirqp;
+	اگر (mirqp != تہی && (thread == تہی || !thread_is_metairq(thread))) {
+		اگر (z_is_thread_ready(mirqp)) {
+			واپس mirqp;
 		}
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = تہی;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
-	return thread;
+#ورنہ
+	ARG_غیر_مستعمل(thread);
+#اگر_ختم /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+	واپس thread;
 }
 
 /**
@@ -92,13 +92,13 @@ static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
  *
  * @return true if it is safe to re-queue _current, false otherwise.
  */
-static inline bool metairq_current_requeue_allowed(void)
+ساکن اندرونی bool metairq_current_requeue_allowed(خالی)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	return _current != _current_cpu->metairq_preempted;
-#else
-	return true;
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#اگر (CONFIG_عدد_METAIRQ_PRIORITIES > 0)
+	واپس _current != _current_cpu->metairq_preempted;
+#ورنہ
+	واپس true;
+#اگر_ختم /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
 /**
@@ -110,20 +110,20 @@ static inline bool metairq_current_requeue_allowed(void)
  *
  * @param thread Thread that is being halted.
  */
-static inline void z_metairq_preempted_clear(struct k_thread *thread)
+ساکن اندرونی خالی z_metairq_preempted_clear(ساخت k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	unsigned int cpu_id = 0;
+#اگر (CONFIG_عدد_METAIRQ_PRIORITIES > 0)
+	غیرعلامتی صحیح cpu_id = 0;
 
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
-	cpu_id = thread->base.cpu;
-#endif
-	if (_kernel.cpus[cpu_id].metairq_preempted == thread) {
-		_kernel.cpus[cpu_id].metairq_preempted = NULL;
+#اگر defined(CONFIG_SMP) && (CONFIG_MP_MAX_عدد_CPUS > 1)
+	cpu_id = thread->بنیاد.cpu;
+#اگر_ختم
+	اگر (_kernel.cpus[cpu_id].metairq_preempted == thread) {
+		_kernel.cpus[cpu_id].metairq_preempted = تہی;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#ورنہ
+	ARG_غیر_مستعمل(thread);
+#اگر_ختم /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_ */
+#اگر_ختم /* ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_ */

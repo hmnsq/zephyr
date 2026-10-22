@@ -4,10 +4,10 @@
  */
 
 
-#ifndef ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
-#define ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
+#اگر_غیر_تعریف_شدہ ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
+#تعریف_کرو ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
 
-void z_time_slice(void);
-void z_time_slice_reset(struct k_thread *curr);
+خالی z_وقت_قاش(خالی);
+خالی z_وقت_قاش_reset(ساخت k_thread *curr);
 
-#endif /* ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H */
+#اگر_ختم /* ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H */

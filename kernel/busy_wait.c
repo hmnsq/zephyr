@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/sys/clock.h>
-#include <kernel_arch_interface.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/drivers/timer/system_timer.h>
+#شامل <zephyr/sys/clock.h>
+#شامل <kernel_arch_interface.h>
 
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#اگر defined(CONFIG_SYSTEM_CLOCK_HW_ادوار_فی_SEC_RUNTIME_UPDATE)
 /* Convert microseconds to cycles using a caller-supplied frequency sample.
  *
  * When the system timer frequency can change at runtime, conversions must use
  * the same stable frequency sample that was paired with the cycle counter read.
  */
-static inline uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
+ساکن اندرونی uint32_t busy_wait_us_مقصد_cyc_ceil32(uint32_t usec, uint32_t hz)
 {
 	/* microseconds per second */
-	const uint64_t denom = 1000000ULL;
-	uint64_t num = (uint64_t)usec * (uint64_t)hz;
+	ثابت uint64_t denom = 1000000ULL;
+	uint64_t عدد = (uint64_t)usec * (uint64_t)hz;
 
 	/* Round up to avoid returning early. */
-	return (uint32_t)((num + denom - 1U) / denom);
+	واپس (uint32_t)((عدد + denom - 1U) / denom);
 }
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#اگر_ختم /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 
-void z_impl_k_busy_wait(uint32_t usec_to_wait)
+خالی z_impl_k_busy_wait(uint32_t usec_مقصد_wait)
 {
-	SYS_PORT_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_to_wait);
-	if (usec_to_wait == 0U) {
-		SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
-		return;
+	SYS_پورٹ_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_مقصد_wait);
+	اگر (usec_مقصد_wait == 0U) {
+		SYS_پورٹ_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_مقصد_wait);
+		واپس;
 	}
 
-#if defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
-	arch_busy_wait(usec_to_wait);
-#elif defined(CONFIG_SYS_CLOCK_EXISTS)
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#اگر defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
+	arch_busy_wait(usec_مقصد_wait);
+#وگرنہ_اگر defined(CONFIG_SYS_CLOCK_EXISTS)
+#اگر defined(CONFIG_SYSTEM_CLOCK_HW_ادوار_فی_SEC_RUNTIME_UPDATE)
 	/*
 	 * When the system timer frequency can change at runtime, the frequency
 	 * used for k_cycle_get_32() conversions may change during the busy wait.
@@ -45,84 +45,84 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 	 * frequency changes.
 	 */
 	uint32_t hz;
-	uint32_t start_cycles;
+	uint32_t آغاز_ادوار;
 
 	/* Get a consistent sample of the current frequency and cycle count. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	برائے (;;) {
+		uint32_t hz1 = sys_clock_hw_ادوار_فی_sec();
+		uint32_t current_ادوار = k_چکر_get_32();
+		uint32_t hz2 = sys_clock_hw_ادوار_فی_sec();
 
-		if (hz1 != hz2) {
+		اگر (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			جاری;
 		}
 
 		hz = hz1;
-		start_cycles = current_cycles;
+		آغاز_ادوار = current_ادوار;
 
-		break;
+		توڑو;
 	}
 
-	uint32_t cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+	uint32_t ادوار_مقصد_wait = busy_wait_us_مقصد_cyc_ceil32(usec_مقصد_wait, hz);
 
 	/* Now busy wait, adjusting if the frequency changes. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	برائے (;;) {
+		uint32_t hz1 = sys_clock_hw_ادوار_فی_sec();
+		uint32_t current_ادوار = k_چکر_get_32();
+		uint32_t hz2 = sys_clock_hw_ادوار_فی_sec();
 
-		if (hz1 != hz2) {
+		اگر (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			جاری;
 		}
 
-		if (hz1 != hz) {
+		اگر (hz1 != hz) {
 			/* Keep our reference point in the same scale as the cycle counter. */
-			start_cycles = (uint32_t)(((uint64_t)start_cycles * (uint64_t)hz1) /
+			آغاز_ادوار = (uint32_t)(((uint64_t)آغاز_ادوار * (uint64_t)hz1) /
 						  (uint64_t)hz);
 			hz = hz1;
-			cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+			ادوار_مقصد_wait = busy_wait_us_مقصد_cyc_ceil32(usec_مقصد_wait, hz);
 		}
 
 		/* This handles the rollover on an unsigned 32-bit value. */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		اگر ((current_ادوار - آغاز_ادوار) >= ادوار_مقصد_wait) {
+			توڑو;
 		}
 	}
-#else
-	uint32_t start_cycles = k_cycle_get_32();
-	uint32_t cycles_to_wait = k_us_to_cyc_ceil32(usec_to_wait);
+#ورنہ
+	uint32_t آغاز_ادوار = k_چکر_get_32();
+	uint32_t ادوار_مقصد_wait = k_us_مقصد_cyc_ceil32(usec_مقصد_wait);
 
-	for (;;) {
-		uint32_t current_cycles = k_cycle_get_32();
+	برائے (;;) {
+		uint32_t current_ادوار = k_چکر_get_32();
 
 		/* This handles the rollover on an unsigned 32-bit value */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		اگر ((current_ادوار - آغاز_ادوار) >= ادوار_مقصد_wait) {
+			توڑو;
 		}
 	}
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
-#else
+#اگر_ختم /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#ورنہ
 	/*
 	 * Crude busy loop for the purpose of being able to configure out
 	 * system timer support.
 	 */
-	unsigned int loops_per_usec = CONFIG_BUSYWAIT_CPU_LOOPS_PER_USEC;
-	unsigned int loops = loops_per_usec * usec_to_wait;
+	غیرعلامتی صحیح loops_فی_usec = CONFIG_BUSYWAIT_CPU_LOOPS_فی_USEC;
+	غیرعلامتی صحیح loops = loops_فی_usec * usec_مقصد_wait;
 
-	while (loops-- > 0) {
+	جب (loops-- > 0) {
 		arch_nop();
 	}
-#endif
+#اگر_ختم
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
+	SYS_پورٹ_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_مقصد_wait);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_busy_wait(uint32_t usec_to_wait)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی خالی z_vrfy_k_busy_wait(uint32_t usec_مقصد_wait)
 {
-	z_impl_k_busy_wait(usec_to_wait);
+	z_impl_k_busy_wait(usec_مقصد_wait);
 }
-#include <zephyr/syscalls/k_busy_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_busy_wait_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */

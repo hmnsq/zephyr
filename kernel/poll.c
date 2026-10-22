@@ -15,15 +15,15 @@
  * constructs.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/util.h>
-#include <zephyr/sys/__assert.h>
-#include <stdbool.h>
+#شامل <zephyr/kernel.h>
+#شامل <kernel_internal.h>
+#شامل <wait_q.h>
+#شامل <ksched.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/sys/dlist.h>
+#شامل <zephyr/sys/util.h>
+#شامل <zephyr/sys/__assert.h>
+#شامل <stdbool.h>
 
 /* Single subsystem lock.  Locking per-event would be better on highly
  * contended SMP systems, but the original locking scheme here is
@@ -32,307 +32,307 @@
  * "inside" a given critical section).  Do the synchronization port
  * later as an optimization.
  */
-static struct k_spinlock poll_lock;
+ساکن ساخت k_spinlock poll_تالا;
 
-enum POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
+شمار POLL_منوال { منوال_NONE, منوال_POLL, منوال_TRIGGERED };
 
-static int signal_poller(struct k_poll_event *event, uint32_t state);
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status);
+ساکن صحیح signal_poller(ساخت k_poll_event *event, uint32_t state);
+ساکن صحیح signal_triggered_work(ساخت k_poll_event *event, uint32_t حالت_2);
 
-void k_poll_event_init(struct k_poll_event *event, uint32_t type,
-		       int mode, void *obj)
+خالی k_poll_event_init(ساخت k_poll_event *event, uint32_t type,
+		       صحیح منوال, خالی *obj)
 {
-	__ASSERT(mode == K_POLL_MODE_NOTIFY_ONLY,
+	__ASSERT(منوال == K_POLL_منوال_NOTIFY_ONLY,
 		 "only NOTIFY_ONLY mode is supported\n");
-	__ASSERT(type < (BIT(_POLL_NUM_TYPES)), "invalid type\n");
-	__ASSERT(obj != NULL, "must provide an object\n");
+	__ASSERT(type < (ثنائی_ہندسہ(POLL_عدد_TYPES)), "invalid type\n");
+	__ASSERT(obj != تہی, "must provide an object\n");
 
-	event->poller = NULL;
+	event->poller = تہی;
 	/* event->tag is left uninitialized: the user will set it if needed */
 	event->type = type;
 	event->state = K_POLL_STATE_NOT_READY;
-	event->mode = mode;
-	event->unused = 0U;
+	event->منوال = منوال;
+	event->غیر_مستعمل = 0U;
 	event->obj = obj;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, event_init, event);
+	SYS_پورٹ_TRACING_FUNC(k_poll_api, event_init, event);
 }
 
 /* must be called with interrupts locked */
-static inline bool is_condition_met(struct k_poll_event *event, uint32_t *state)
+ساکن اندرونی bool is_condition_met(ساخت k_poll_event *event, uint32_t *state)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		if (k_sem_count_get(event->sem) > 0U) {
-			*state = K_POLL_STATE_SEM_AVAILABLE;
-			return true;
+	انتخاب (event->type) {
+	حالت K_POLL_TYPE_SEM_دستیاب:
+		اگر (k_sem_گنتی_get(event->sem) > 0U) {
+			*state = K_POLL_STATE_SEM_دستیاب;
+			واپس true;
 		}
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		if (!k_queue_is_empty(event->queue)) {
-			*state = K_POLL_STATE_FIFO_DATA_AVAILABLE;
-			return true;
+		توڑو;
+	حالت K_POLL_TYPE_ڈیٹا_دستیاب:
+		اگر (!k_قطار_is_خالی_خانے(event->قطار)) {
+			*state = K_POLL_STATE_FIFO_ڈیٹا_دستیاب;
+			واپس true;
 		}
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		if (event->signal->signaled != 0U) {
+		توڑو;
+	حالت K_POLL_TYPE_SIGNAL:
+		اگر (event->اشارہ->signaled != 0U) {
 			*state = K_POLL_STATE_SIGNALED;
-			return true;
+			واپس true;
 		}
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		if (event->msgq->used_msgs > 0) {
-			*state = K_POLL_STATE_MSGQ_DATA_AVAILABLE;
-			return true;
+		توڑو;
+	حالت K_POLL_TYPE_MSGQ_ڈیٹا_دستیاب:
+		اگر (event->msgq->مستعمل_msgs > 0) {
+			*state = K_POLL_STATE_MSGQ_ڈیٹا_دستیاب;
+			واپس true;
 		}
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		توڑو;
+	حالت K_POLL_TYPE_PIPE_ڈیٹا_دستیاب:
 		/*
 		 * A closed pipe is readable: k_pipe_read() returns any
 		 * remaining bytes, then -EPIPE. Without the closed check,
 		 * k_poll() waits forever on a closed empty pipe.
 		 */
-		if (!ring_buf_is_empty(&event->pipe->buf) ||
+		اگر (!ring_buf_is_خالی_خانے(&event->pipe->buf) ||
 		    (event->pipe->flags & PIPE_FLAG_OPEN) == 0U) {
-			*state = K_POLL_STATE_PIPE_DATA_AVAILABLE;
-			return true;
+			*state = K_POLL_STATE_PIPE_ڈیٹا_دستیاب;
+			واپس true;
 		}
-		break;
-	case K_POLL_TYPE_IGNORE:
-		break;
-	default:
+		توڑو;
+	حالت K_POLL_TYPE_IGNORE:
+		توڑو;
+	طےشدہ:
 		__ASSERT(false, "invalid event type (0x%x)\n", event->type);
-		break;
+		توڑو;
 	}
 
-	return false;
+	واپس false;
 }
 
-static struct k_thread *poller_thread(struct z_poller *p)
+ساکن ساخت k_thread *poller_thread(ساخت z_poller *p)
 {
-	return p ? CONTAINER_OF(p, struct k_thread, poller) : NULL;
+	واپس p ? CONTAINER_کا(p, ساخت k_thread, poller) : تہی;
 }
 
-static inline void add_event(sys_dlist_t *events, struct k_poll_event *event,
-			     struct z_poller *poller)
+ساکن اندرونی خالی جوڑو_event(sys_dlist_t *events, ساخت k_poll_event *event,
+			     ساخت z_poller *poller)
 {
-	struct k_poll_event *pending;
+	ساخت k_poll_event *pending;
 
-	pending = (struct k_poll_event *)sys_dlist_peek_tail(events);
-	if ((pending == NULL) ||
+	pending = (ساخت k_poll_event *)sys_dlist_peek_دم(events);
+	اگر ((pending == تہی) ||
 		(z_sched_prio_cmp(poller_thread(pending->poller),
 							   poller_thread(poller)) > 0)) {
-		sys_dlist_append(events, &event->_node);
-		return;
+		sys_dlist_append(events, &event->گرہ_2);
+		واپس;
 	}
 
-	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, _node) {
-		if (z_sched_prio_cmp(poller_thread(poller),
+	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, گرہ_2) {
+		اگر (z_sched_prio_cmp(poller_thread(poller),
 					poller_thread(pending->poller)) > 0) {
-			sys_dlist_insert(&pending->_node, &event->_node);
-			return;
+			sys_dlist_داخل_کرو(&pending->گرہ_2, &event->گرہ_2);
+			واپس;
 		}
 	}
 
-	sys_dlist_append(events, &event->_node);
+	sys_dlist_append(events, &event->گرہ_2);
 }
 
 /* must be called with interrupts locked */
-static inline void register_event(struct k_poll_event *event,
-				 struct z_poller *poller)
+ساکن اندرونی خالی رجسٹر_event(ساخت k_poll_event *event,
+				 ساخت z_poller *poller)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
-		add_event(&event->sem->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
-		add_event(&event->queue->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
-		add_event(&event->signal->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
-		add_event(&event->msgq->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
-		add_event(&event->pipe->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_IGNORE:
+	انتخاب (event->type) {
+	حالت K_POLL_TYPE_SEM_دستیاب:
+		__ASSERT(event->sem != تہی, "invalid semaphore\n");
+		جوڑو_event(&event->sem->poll_events, event, poller);
+		توڑو;
+	حالت K_POLL_TYPE_ڈیٹا_دستیاب:
+		__ASSERT(event->قطار != تہی, "invalid queue\n");
+		جوڑو_event(&event->قطار->poll_events, event, poller);
+		توڑو;
+	حالت K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->اشارہ != تہی, "invalid poll signal\n");
+		جوڑو_event(&event->اشارہ->poll_events, event, poller);
+		توڑو;
+	حالت K_POLL_TYPE_MSGQ_ڈیٹا_دستیاب:
+		__ASSERT(event->msgq != تہی, "invalid message queue\n");
+		جوڑو_event(&event->msgq->poll_events, event, poller);
+		توڑو;
+	حالت K_POLL_TYPE_PIPE_ڈیٹا_دستیاب:
+		__ASSERT(event->pipe != تہی, "invalid pipe\n");
+		جوڑو_event(&event->pipe->poll_events, event, poller);
+		توڑو;
+	حالت K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		توڑو;
+	طےشدہ:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		توڑو;
 	}
 
 	event->poller = poller;
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registration(struct k_poll_event *event)
+ساکن اندرونی خالی clear_event_registration(ساخت k_poll_event *event)
 {
 	bool remove_event = false;
 
-	event->poller = NULL;
+	event->poller = تہی;
 
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
+	انتخاب (event->type) {
+	حالت K_POLL_TYPE_SEM_دستیاب:
+		__ASSERT(event->sem != تہی, "invalid semaphore\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
+		توڑو;
+	حالت K_POLL_TYPE_ڈیٹا_دستیاب:
+		__ASSERT(event->قطار != تہی, "invalid queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
+		توڑو;
+	حالت K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->اشارہ != تہی, "invalid poll signal\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
+		توڑو;
+	حالت K_POLL_TYPE_MSGQ_ڈیٹا_دستیاب:
+		__ASSERT(event->msgq != تہی, "invalid message queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
+		توڑو;
+	حالت K_POLL_TYPE_PIPE_ڈیٹا_دستیاب:
+		__ASSERT(event->pipe != تہی, "invalid pipe\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_IGNORE:
+		توڑو;
+	حالت K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		توڑو;
+	طےشدہ:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		توڑو;
 	}
-	if (remove_event && sys_dnode_is_linked(&event->_node)) {
-		sys_dlist_remove(&event->_node);
+	اگر (remove_event && sys_dnode_is_linked(&event->گرہ_2)) {
+		sys_dlist_remove(&event->گرہ_2);
 	}
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registrations(struct k_poll_event *events,
-					      int num_events,
-					      k_spinlock_key_t key)
+ساکن اندرونی خالی clear_event_registrations(ساخت k_poll_event *events,
+					      صحیح عدد_events,
+					      k_spinlock_کلید_t کلید)
 {
-	while (num_events--) {
-		clear_event_registration(&events[num_events]);
-		k_spin_unlock(&poll_lock, key);
-		key = k_spin_lock(&poll_lock);
+	جب (عدد_events--) {
+		clear_event_registration(&events[عدد_events]);
+		k_spin_unlock(&poll_تالا, کلید);
+		کلید = k_spin_تالا(&poll_تالا);
 	}
 }
 
-static inline void set_event_ready(struct k_poll_event *event, uint32_t state)
+ساکن اندرونی خالی سیٹ_event_ready(ساخت k_poll_event *event, uint32_t state)
 {
-	event->poller = NULL;
+	event->poller = تہی;
 	event->state |= state;
 }
 
-static inline int register_events(struct k_poll_event *events,
-				  int num_events,
-				  struct z_poller *poller,
+ساکن اندرونی صحیح رجسٹر_events(ساخت k_poll_event *events,
+				  صحیح عدد_events,
+				  ساخت z_poller *poller,
 				  bool just_check)
 {
-	int events_registered = 0;
+	صحیح events_registered = 0;
 
-	for (int ii = 0; ii < num_events; ii++) {
-		k_spinlock_key_t key;
+	برائے (صحیح ii = 0; ii < عدد_events; ii++) {
+		k_spinlock_کلید_t کلید;
 		uint32_t state;
 
-		key = k_spin_lock(&poll_lock);
-		if (is_condition_met(&events[ii], &state)) {
-			set_event_ready(&events[ii], state);
+		کلید = k_spin_تالا(&poll_تالا);
+		اگر (is_condition_met(&events[ii], &state)) {
+			سیٹ_event_ready(&events[ii], state);
 			poller->is_polling = false;
-		} else if (!just_check && poller->is_polling) {
-			register_event(&events[ii], poller);
+		} ورنہ اگر (!just_check && poller->is_polling) {
+			رجسٹر_event(&events[ii], poller);
 			events_registered += 1;
-		} else {
+		} ورنہ {
 			/* Event is not one of those identified in is_condition_met()
 			 * catching non-polling events, or is marked for just check,
 			 * or not marked for polling. No action needed.
 			 */
 			;
 		}
-		k_spin_unlock(&poll_lock, key);
+		k_spin_unlock(&poll_تالا, کلید);
 	}
 
-	return events_registered;
+	واپس events_registered;
 }
 
-static int signal_poller(struct k_poll_event *event, uint32_t state)
+ساکن صحیح signal_poller(ساخت k_poll_event *event, uint32_t state)
 {
-	struct k_thread *thread = poller_thread(event->poller);
+	ساخت k_thread *thread = poller_thread(event->poller);
 
-	__ASSERT(thread != NULL, "poller should have a thread\n");
+	__ASSERT(thread != تہی, "poller should have a thread\n");
 
-	if (!z_is_thread_pending(thread)) {
-		return 0;
+	اگر (!z_is_thread_pending(thread)) {
+		واپس 0;
 	}
 
 	z_unpend_thread(thread);
-	arch_thread_return_value_set(thread,
+	arch_thread_return_قدر_سیٹ(thread,
 		state == K_POLL_STATE_CANCELLED ? -EINTR : 0);
 
-	if (!z_is_thread_ready(thread)) {
-		return 0;
+	اگر (!z_is_thread_ready(thread)) {
+		واپس 0;
 	}
 
 	z_ready_thread(thread);
 
-	return 0;
+	واپس 0;
 }
 
-int z_impl_k_poll(struct k_poll_event *events, int num_events,
+صحیح z_impl_k_poll(ساخت k_poll_event *events, صحیح عدد_events,
 		  k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
-	struct z_poller *poller = &_current->poller;
+	صحیح events_registered;
+	k_spinlock_کلید_t کلید;
+	ساخت z_poller *poller = &_current->poller;
 
 	poller->is_polling = true;
-	poller->mode = MODE_POLL;
+	poller->منوال = منوال_POLL;
 
-	__ASSERT(!arch_is_in_isr(), "");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(!arch_is_اندر_isr(), "");
+	__ASSERT(events != تہی, "NULL events\n");
+	__ASSERT(عدد_events >= 0, "<0 events\n");
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_poll_api, poll, events);
+	SYS_پورٹ_TRACING_FUNC_ENTER(k_poll_api, poll, events);
 
-	events_registered = register_events(events, num_events, poller,
+	events_registered = رجسٹر_events(events, عدد_events, poller,
 					    K_TIMEOUT_EQ(timeout, K_NO_WAIT));
 
-	key = k_spin_lock(&poll_lock);
+	کلید = k_spin_تالا(&poll_تالا);
 
 	/*
 	 * If we're not polling anymore, it means that at least one event
 	 * condition is met, either when looping through the events here or
 	 * because one of the events registered has had its state changed.
 	 */
-	if (!poller->is_polling) {
-		clear_event_registrations(events, events_registered, key);
-		k_spin_unlock(&poll_lock, key);
+	اگر (!poller->is_polling) {
+		clear_event_registrations(events, events_registered, کلید);
+		k_spin_unlock(&poll_تالا, کلید);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
+		SYS_پورٹ_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
 
-		return 0;
+		واپس 0;
 	}
 
 	poller->is_polling = false;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&poll_lock, key);
+	اگر (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&poll_تالا, کلید);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
+		SYS_پورٹ_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
 
-		return -EAGAIN;
+		واپس -EAGAIN;
 	}
 
-	static _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
+	ساکن _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
 
-	int swap_rc = z_pend_curr(&poll_lock, key, &wait_q, timeout);
+	صحیح تبادلہ_rc = z_pend_curr(&poll_تالا, کلید, &wait_q, timeout);
 
 	/*
 	 * Clear all event registrations. If events happen while we're in this
@@ -343,314 +343,314 @@ int z_impl_k_poll(struct k_poll_event *events, int num_events,
 	 * added to the list of events that occurred, the user has to check the
 	 * return code first, which invalidates the whole list of event states.
 	 */
-	key = k_spin_lock(&poll_lock);
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	کلید = k_spin_تالا(&poll_تالا);
+	clear_event_registrations(events, events_registered, کلید);
+	k_spin_unlock(&poll_تالا, کلید);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, swap_rc);
+	SYS_پورٹ_TRACING_FUNC_EXIT(k_poll_api, poll, events, تبادلہ_rc);
 
-	return swap_rc;
+	واپس تبادلہ_rc;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll(struct k_poll_event *events,
-				int num_events, k_timeout_t timeout)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی صحیح z_vrfy_k_poll(ساخت k_poll_event *events,
+				صحیح عدد_events, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
-	struct k_poll_event *events_copy = NULL;
+	صحیح ret;
+	k_spinlock_کلید_t کلید;
+	ساخت k_poll_event *events_copy = تہی;
 	uint32_t bounds;
 
 	/* Validate the events buffer and make a copy of it in an
 	 * allocated kernel-side buffer.
 	 */
-	if (K_SYSCALL_VERIFY(num_events >= 0)) {
+	اگر (K_SYSCALL_VERIFY(عدد_events >= 0)) {
 		ret = -EINVAL;
-		goto out;
+		جاؤ برآمد;
 	}
-	if (K_SYSCALL_VERIFY_MSG(!u32_mul_overflow(num_events,
-						   sizeof(struct k_poll_event),
+	اگر (K_SYSCALL_VERIFY_پیغام(!u32_mul_حد_سے_تجاوز(عدد_events,
+						   حجم(ساخت k_poll_event),
 						   &bounds),
 				 "num_events too large")) {
 		ret = -EINVAL;
-		goto out;
+		جاؤ برآمد;
 	}
 	events_copy = z_thread_malloc(bounds);
-	if (!events_copy) {
+	اگر (!events_copy) {
 		ret = -ENOMEM;
-		goto out;
+		جاؤ برآمد;
 	}
 
-	if (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
-		goto oops_free;
+	اگر (K_SYSCALL_حافظہ_WRITE(events, bounds)) {
+		جاؤ oops_free;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	(void)memcpy(events_copy, events, bounds);
-	k_spin_unlock(&poll_lock, key);
+	کلید = k_spin_تالا(&poll_تالا);
+	(خالی)حافظہ_نقل(events_copy, events, bounds);
+	k_spin_unlock(&poll_تالا, کلید);
 
 	/* Validate what's inside events_copy */
-	for (int i = 0; i < num_events; i++) {
-		struct k_poll_event *e = &events_copy[i];
+	برائے (صحیح i = 0; i < عدد_events; i++) {
+		ساخت k_poll_event *e = &events_copy[i];
 
-		if (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
+		اگر (K_SYSCALL_VERIFY(e->منوال == K_POLL_منوال_NOTIFY_ONLY)) {
 			ret = -EINVAL;
-			goto out_free;
+			جاؤ برآمد_free;
 		}
 
-		switch (e->type) {
-		case K_POLL_TYPE_IGNORE:
-			break;
-		case K_POLL_TYPE_SIGNAL:
-			if (K_SYSCALL_OBJ(e->signal, K_OBJ_POLL_SIGNAL)) {
-				goto oops_free;
+		انتخاب (e->type) {
+		حالت K_POLL_TYPE_IGNORE:
+			توڑو;
+		حالت K_POLL_TYPE_SIGNAL:
+			اگر (K_SYSCALL_OBJ(e->اشارہ, K_OBJ_POLL_SIGNAL)) {
+				جاؤ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_SEM_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
-				goto oops_free;
+			توڑو;
+		حالت K_POLL_TYPE_SEM_دستیاب:
+			اگر (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
+				جاؤ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
-				goto oops_free;
+			توڑو;
+		حالت K_POLL_TYPE_ڈیٹا_دستیاب:
+			اگر (K_SYSCALL_OBJ(e->قطار, K_OBJ_قطار)) {
+				جاؤ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
-				goto oops_free;
+			توڑو;
+		حالت K_POLL_TYPE_MSGQ_ڈیٹا_دستیاب:
+			اگر (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
+				جاؤ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
-				goto oops_free;
+			توڑو;
+		حالت K_POLL_TYPE_PIPE_ڈیٹا_دستیاب:
+			اگر (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
+				جاؤ oops_free;
 			}
-			break;
-		default:
+			توڑو;
+		طےشدہ:
 			ret = -EINVAL;
-			goto out_free;
+			جاؤ برآمد_free;
 		}
 	}
 
-	ret = k_poll(events_copy, num_events, timeout);
-	(void)memcpy((void *)events, events_copy, bounds);
-out_free:
+	ret = k_poll(events_copy, عدد_events, timeout);
+	(خالی)حافظہ_نقل((خالی *)events, events_copy, bounds);
+برآمد_free:
 	k_free(events_copy);
-out:
-	return ret;
+برآمد:
+	واپس ret;
 oops_free:
 	k_free(events_copy);
 	K_OOPS(1);
 }
-#include <zephyr/syscalls/k_poll_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_poll_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
 /* must be called with interrupts locked */
-static int signal_poll_event(struct k_poll_event *event, uint32_t state)
+ساکن صحیح signal_poll_event(ساخت k_poll_event *event, uint32_t state)
 {
-	struct z_poller *poller = event->poller;
-	int retcode = 0;
+	ساخت z_poller *poller = event->poller;
+	صحیح retcode = 0;
 
-	if (poller != NULL) {
-		if (poller->mode == MODE_POLL) {
+	اگر (poller != تہی) {
+		اگر (poller->منوال == منوال_POLL) {
 			retcode = signal_poller(event, state);
-		} else if (poller->mode == MODE_TRIGGERED) {
+		} ورنہ اگر (poller->منوال == منوال_TRIGGERED) {
 			retcode = signal_triggered_work(event, state);
-		} else {
+		} ورنہ {
 			/* Poller is not poll or triggered mode. No action needed.*/
 			;
 		}
 
 		poller->is_polling = false;
 
-		if (retcode < 0) {
-			return retcode;
+		اگر (retcode < 0) {
+			واپس retcode;
 		}
 	}
 
-	set_event_ready(event, state);
-	return retcode;
+	سیٹ_event_ready(event, state);
+	واپس retcode;
 }
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state)
 {
-	struct k_poll_event *poll_event;
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	ساخت k_poll_event *poll_event;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&poll_تالا);
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(events);
-	if (poll_event != NULL) {
-		(void) signal_poll_event(poll_event, state);
+	poll_event = (ساخت k_poll_event *)sys_dlist_get(events);
+	اگر (poll_event != تہی) {
+		(خالی) signal_poll_event(poll_event, state);
 	}
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_تالا, کلید);
 
-	return (poll_event != NULL);
+	واپس (poll_event != تہی);
 }
 
-void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
+خالی z_impl_k_poll_signal_init(ساخت k_poll_signal *sig)
 {
 	sys_dlist_init(&sig->poll_events);
 	sig->signaled = 0U;
 	/* signal->result is left uninitialized */
 	k_object_init(sig);
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_init, sig);
+	SYS_پورٹ_TRACING_FUNC(k_poll_api, signal_init, sig);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_poll_signal_init(struct k_poll_signal *sig)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی خالی z_vrfy_k_poll_signal_init(ساخت k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_init(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_poll_signal_init_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
-void z_impl_k_poll_signal_reset(struct k_poll_signal *sig)
+خالی z_impl_k_poll_signal_reset(ساخت k_poll_signal *sig)
 {
 	sig->signaled = 0U;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_reset, sig);
+	SYS_پورٹ_TRACING_FUNC(k_poll_api, signal_reset, sig);
 }
 
-void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+خالی z_impl_k_poll_signal_check(ساخت k_poll_signal *sig,
+			       غیرعلامتی صحیح *signaled, صحیح *نتیجہ)
 {
 	*signaled = sig->signaled;
-	*result = sig->result;
+	*نتیجہ = sig->نتیجہ;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_check, sig);
+	SYS_پورٹ_TRACING_FUNC(k_poll_api, signal_check, sig);
 }
 
-#ifdef CONFIG_USERSPACE
-void z_vrfy_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+خالی z_vrfy_k_poll_signal_check(ساخت k_poll_signal *sig,
+			       غیرعلامتی صحیح *signaled, صحیح *نتیجہ)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, sizeof(unsigned int)));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, sizeof(int)));
-	z_impl_k_poll_signal_check(sig, signaled, result);
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(signaled, حجم(غیرعلامتی صحیح)));
+	K_OOPS(K_SYSCALL_حافظہ_WRITE(نتیجہ, حجم(صحیح)));
+	z_impl_k_poll_signal_check(sig, signaled, نتیجہ);
 }
-#include <zephyr/syscalls/k_poll_signal_check_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_poll_signal_check_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
-int z_impl_k_poll_signal_raise(struct k_poll_signal *sig, int result)
+صحیح z_impl_k_poll_signal_raise(ساخت k_poll_signal *sig, صحیح نتیجہ)
 {
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
-	struct k_poll_event *poll_event;
+	k_spinlock_کلید_t کلید = k_spin_تالا(&poll_تالا);
+	ساخت k_poll_event *poll_event;
 
-	sig->result = result;
+	sig->نتیجہ = نتیجہ;
 	sig->signaled = 1U;
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(&sig->poll_events);
-	if (poll_event == NULL) {
-		k_spin_unlock(&poll_lock, key);
+	poll_event = (ساخت k_poll_event *)sys_dlist_get(&sig->poll_events);
+	اگر (poll_event == تہی) {
+		k_spin_unlock(&poll_تالا, کلید);
 
-		SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
+		SYS_پورٹ_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
 
-		return 0;
+		واپس 0;
 	}
 
-	int rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
+	صحیح rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
+	SYS_پورٹ_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
 
-	z_reschedule(&poll_lock, key);
-	return rc;
+	z_reschedule(&poll_تالا, کلید);
+	واپس rc;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll_signal_raise(struct k_poll_signal *sig,
-					     int result)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی صحیح z_vrfy_k_poll_signal_raise(ساخت k_poll_signal *sig,
+					     صحیح نتیجہ)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	return z_impl_k_poll_signal_raise(sig, result);
+	واپس z_impl_k_poll_signal_raise(sig, نتیجہ);
 }
-#include <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
+#شامل <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
 
-static inline void z_vrfy_k_poll_signal_reset(struct k_poll_signal *sig)
+ساکن اندرونی خالی z_vrfy_k_poll_signal_reset(ساخت k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_reset(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
+#شامل <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#اگر_ختم /* CONFIG_USERSPACE */
 
-static void triggered_work_handler(struct k_work *work)
+ساکن خالی triggered_work_handler(ساخت k_work *work)
 {
-	struct k_work_poll *twork =
-			CONTAINER_OF(work, struct k_work_poll, work);
+	ساخت k_work_poll *twork =
+			CONTAINER_کا(work, ساخت k_work_poll, work);
 
 	/*
 	 * If callback is not set, the k_work_poll_submit_to_queue()
 	 * already cleared event registrations.
 	 */
-	if (twork->poller.mode != MODE_NONE) {
-		k_spinlock_key_t key;
+	اگر (twork->poller.منوال != منوال_NONE) {
+		k_spinlock_کلید_t کلید;
 
-		key = k_spin_lock(&poll_lock);
+		کلید = k_spin_تالا(&poll_تالا);
 		clear_event_registrations(twork->events,
-					  twork->num_events, key);
-		k_spin_unlock(&poll_lock, key);
+					  twork->عدد_events, کلید);
+		k_spin_unlock(&poll_تالا, کلید);
 	}
 
 	/* Drop work ownership and execute real handler. */
-	twork->workq = NULL;
+	twork->workq = تہی;
 	twork->real_handler(work);
 }
 
-extern int z_work_submit_to_queue(struct k_work_q *queue,
-			 struct k_work *work);
+خارجی صحیح z_work_submit_مقصد_قطار(ساخت k_work_q *قطار,
+			 ساخت k_work *work);
 
-static void triggered_work_expiration_handler(struct _timeout *timeout)
+ساکن خالی triggered_work_expiration_handler(ساخت _timeout *timeout)
 {
-	struct k_work_poll *twork =
-		CONTAINER_OF(timeout, struct k_work_poll, timeout);
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	ساخت k_work_poll *twork =
+		CONTAINER_کا(timeout, ساخت k_work_poll, timeout);
+	k_spinlock_کلید_t کلید = k_spin_تالا(&poll_تالا);
 
-	if (!twork->poller.is_polling) {
+	اگر (!twork->poller.is_polling) {
 		/* signal_triggered_work() or triggered_work_cancel() has
 		 * already claimed this wake under the same lock; nothing
 		 * for us to do.
 		 */
-		k_spin_unlock(&poll_lock, key);
-		return;
+		k_spin_unlock(&poll_تالا, کلید);
+		واپس;
 	}
 
 	twork->poller.is_polling = false;
-	twork->poll_result = -EAGAIN;
-	z_work_submit_to_queue(twork->workq, &twork->work);
+	twork->poll_نتیجہ = -EAGAIN;
+	z_work_submit_مقصد_قطار(twork->workq, &twork->work);
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_تالا, کلید);
 }
 
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status)
+ساکن صحیح signal_triggered_work(ساخت k_poll_event *event, uint32_t حالت_2)
 {
-	struct z_poller *poller = event->poller;
-	struct k_work_poll *twork =
-		CONTAINER_OF(poller, struct k_work_poll, poller);
+	ساخت z_poller *poller = event->poller;
+	ساخت k_work_poll *twork =
+		CONTAINER_کا(poller, ساخت k_work_poll, poller);
 
-	if (poller->is_polling && twork->workq != NULL) {
-		struct k_work_q *work_q = twork->workq;
+	اگر (poller->is_polling && twork->workq != تہی) {
+		ساخت k_work_q *work_q = twork->workq;
 
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
 		poller->is_polling = false;
-		(void)z_try_abort_timeout(&twork->timeout);
-		twork->poll_result = 0;
-		z_work_submit_to_queue(work_q, &twork->work);
+		(خالی)z_try_abort_timeout(&twork->timeout);
+		twork->poll_نتیجہ = 0;
+		z_work_submit_مقصد_قطار(work_q, &twork->work);
 	}
 
-	return 0;
+	واپس 0;
 }
 
-static int triggered_work_cancel(struct k_work_poll *work,
-				 k_spinlock_key_t key)
+ساکن صحیح triggered_work_cancel(ساخت k_work_poll *work,
+				 k_spinlock_کلید_t کلید)
 {
 	/* Check if the work waits for event. */
-	if (work->poller.is_polling && work->poller.mode != MODE_NONE) {
+	اگر (work->poller.is_polling && work->poller.منوال != منوال_NONE) {
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
@@ -663,21 +663,21 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		 * `work` for a new poll without the old handler eventually
 		 * acting on the new setup.
 		 */
-		while (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
-			k_spin_unlock(&poll_lock, key);
-			key = k_spin_lock(&poll_lock);
+		جب (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
+			k_spin_unlock(&poll_تالا, کلید);
+			کلید = k_spin_تالا(&poll_تالا);
 		}
 
 		/*
 		 * Prevent work execution if event arrives while we will be
 		 * clearing registrations.
 		 */
-		work->poller.mode = MODE_NONE;
+		work->poller.منوال = منوال_NONE;
 
 		/* Clear registrations and work ownership. */
-		clear_event_registrations(work->events, work->num_events, key);
-		work->workq = NULL;
-		return 0;
+		clear_event_registrations(work->events, work->عدد_events, کلید);
+		work->workq = تہی;
+		واپس 0;
 	}
 
 	/*
@@ -687,99 +687,99 @@ static int triggered_work_cancel(struct k_work_poll *work,
 	 * unfortunately there is no public API performing this task.
 	 */
 
-	return -EINVAL;
+	واپس -EINVAL;
 }
 
-void k_work_poll_init(struct k_work_poll *work,
+خالی k_work_poll_init(ساخت k_work_poll *work,
 		      k_work_handler_t handler)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
 
-	*work = (struct k_work_poll) {};
+	*work = (ساخت k_work_poll) {};
 	k_work_init(&work->work, triggered_work_handler);
 	work->real_handler = handler;
 	z_init_timeout(&work->timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
 }
 
-int k_work_poll_submit_to_queue(struct k_work_q *work_q,
-				struct k_work_poll *work,
-				struct k_poll_event *events,
-				int num_events,
+صحیح k_work_poll_submit_مقصد_قطار(ساخت k_work_q *work_q,
+				ساخت k_work_poll *work,
+				ساخت k_poll_event *events,
+				صحیح عدد_events,
 				k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
+	صحیح events_registered;
+	k_spinlock_کلید_t کلید;
 
-	__ASSERT(work_q != NULL, "NULL work_q\n");
-	__ASSERT(work != NULL, "NULL work\n");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(work_q != تہی, "NULL work_q\n");
+	__ASSERT(work != تہی, "NULL work\n");
+	__ASSERT(events != تہی, "NULL events\n");
+	__ASSERT(عدد_events >= 0, "<0 events\n");
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit_to_queue, work_q, work, timeout);
+	SYS_پورٹ_TRACING_FUNC_ENTER(k_work_poll, submit_مقصد_قطار, work_q, work, timeout);
 
 	/* Take ownership of the work if it is possible. */
-	key = k_spin_lock(&poll_lock);
-	if (work->workq != NULL) {
-		if (work->workq == work_q) {
-			int retval;
+	کلید = k_spin_تالا(&poll_تالا);
+	اگر (work->workq != تہی) {
+		اگر (work->workq == work_q) {
+			صحیح retval;
 
-			retval = triggered_work_cancel(work, key);
-			if (retval < 0) {
-				k_spin_unlock(&poll_lock, key);
+			retval = triggered_work_cancel(work, کلید);
+			اگر (retval < 0) {
+				k_spin_unlock(&poll_تالا, کلید);
 
-				SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
+				SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, submit_مقصد_قطار, work_q,
 					work, timeout, retval);
 
-				return retval;
+				واپس retval;
 			}
-		} else {
-			k_spin_unlock(&poll_lock, key);
+		} ورنہ {
+			k_spin_unlock(&poll_تالا, کلید);
 
-			SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
+			SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, submit_مقصد_قطار, work_q,
 				work, timeout, -EADDRINUSE);
 
-			return -EADDRINUSE;
+			واپس -EADDRINUSE;
 		}
 	}
 
 
 	work->poller.is_polling = true;
 	work->workq = work_q;
-	work->poller.mode = MODE_NONE;
-	k_spin_unlock(&poll_lock, key);
+	work->poller.منوال = منوال_NONE;
+	k_spin_unlock(&poll_تالا, کلید);
 
 	/* Save list of events. */
 	work->events = events;
-	work->num_events = num_events;
+	work->عدد_events = عدد_events;
 
 	/* Clear result */
-	work->poll_result = -EINPROGRESS;
+	work->poll_نتیجہ = -EINPROGRESS;
 
 	/* Register events */
-	events_registered = register_events(events, num_events,
+	events_registered = رجسٹر_events(events, عدد_events,
 					    &work->poller, false);
 
-	key = k_spin_lock(&poll_lock);
-	if (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	کلید = k_spin_تالا(&poll_تالا);
+	اگر (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/*
 		 * Poller is still polling.
 		 * No event is ready and all are watched.
 		 */
-		__ASSERT(num_events == events_registered,
+		__ASSERT(عدد_events == events_registered,
 			 "Some events were not registered!\n");
 
 		/* Setup timeout if such action is requested */
-		z_add_timeout(&work->timeout, triggered_work_expiration_handler, timeout);
+		z_جوڑو_timeout(&work->timeout, triggered_work_expiration_handler, timeout);
 
 		/* From now, any event will result in submitted work. */
-		work->poller.mode = MODE_TRIGGERED;
-		k_spin_unlock(&poll_lock, key);
+		work->poller.منوال = منوال_TRIGGERED;
+		k_spin_unlock(&poll_تالا, کلید);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
+		SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, submit_مقصد_قطار, work_q, work, timeout, 0);
 
-		return 0;
+		واپس 0;
 	}
 
 	/*
@@ -793,59 +793,59 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 	 * If poller is still polling, no watched event occurred. This means
 	 * we reached here due to K_NO_WAIT timeout "expiration".
 	 */
-	if (work->poller.is_polling) {
+	اگر (work->poller.is_polling) {
 		work->poller.is_polling = false;
-		work->poll_result = -EAGAIN;
-	} else {
-		work->poll_result = 0;
+		work->poll_نتیجہ = -EAGAIN;
+	} ورنہ {
+		work->poll_نتیجہ = 0;
 	}
 
 	/* Clear registrations. */
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	clear_event_registrations(events, events_registered, کلید);
+	k_spin_unlock(&poll_تالا, کلید);
 
 	/* Submit work. */
-	k_work_submit_to_queue(work_q, &work->work);
+	k_work_submit_مقصد_قطار(work_q, &work->work);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
+	SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, submit_مقصد_قطار, work_q, work, timeout, 0);
 
-	return 0;
+	واپس 0;
 }
 
-int k_work_poll_submit(struct k_work_poll *work,
-				     struct k_poll_event *events,
-				     int num_events,
+صحیح k_work_poll_submit(ساخت k_work_poll *work,
+				     ساخت k_poll_event *events,
+				     صحیح عدد_events,
 				     k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
+	SYS_پورٹ_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
 
-	int ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
-								events, num_events, timeout);
+	صحیح ret = k_work_poll_submit_مقصد_قطار(&k_sys_work_q, work,
+								events, عدد_events, timeout);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
+	SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
 
-	return ret;
+	واپس ret;
 }
 
-int k_work_poll_cancel(struct k_work_poll *work)
+صحیح k_work_poll_cancel(ساخت k_work_poll *work)
 {
-	k_spinlock_key_t key;
-	int retval;
+	k_spinlock_کلید_t کلید;
+	صحیح retval;
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
+	SYS_پورٹ_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
 
 	/* Check if the work was submitted. */
-	if (work == NULL || work->workq == NULL) {
-		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
+	اگر (work == تہی || work->workq == تہی) {
+		SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
 
-		return -EINVAL;
+		واپس -EINVAL;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	retval = triggered_work_cancel(work, key);
-	k_spin_unlock(&poll_lock, key);
+	کلید = k_spin_تالا(&poll_تالا);
+	retval = triggered_work_cancel(work, کلید);
+	k_spin_unlock(&poll_تالا, کلید);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
+	SYS_پورٹ_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
 
-	return retval;
+	واپس retval;
 }

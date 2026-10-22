@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_USAGE_H_
-#define ZEPHYR_KERNEL_INCLUDE_USAGE_H_
+#اگر_غیر_تعریف_شدہ ZEPHYR_KERNEL_INCLUDE_USAGE_H_
+#تعریف_کرو ZEPHYR_KERNEL_INCLUDE_USAGE_H_
 
-#include <zephyr/kernel.h>
+#شامل <zephyr/kernel.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#اگر_تعریف_شدہ __cplusplus
+خارجی "C" {
+#اگر_ختم
 
 
 /** @brief Halt thread cycle usage accounting.
@@ -30,33 +30,33 @@ extern "C" {
  * requires no other synchronization.  Architecture layers don't need
  * to do anything more.
  */
-void z_sched_usage_stop(void);
+خالی z_sched_usage_stop(خالی);
 
-void z_sched_usage_start(struct k_thread *thread);
+خالی z_sched_usage_آغاز(ساخت k_thread *thread);
 
 /**
  * @brief Retrieves CPU cycle usage data for specified core
  */
-void z_sched_cpu_usage(uint8_t core_id, struct k_thread_runtime_stats *stats);
+خالی z_sched_cpu_usage(uint8_t core_id, ساخت k_thread_runtime_stats *stats);
 
 /**
  * @brief Retrieves thread cycle usage data for specified thread
  */
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats);
+خالی z_sched_thread_usage(ساخت k_thread *thread,
+			  ساخت k_thread_runtime_stats *stats);
 
-static inline void z_sched_usage_switch(struct k_thread *thread)
+ساکن اندرونی خالی z_sched_usage_switch(ساخت k_thread *thread)
 {
-	ARG_UNUSED(thread);
-#ifdef CONFIG_SCHED_THREAD_USAGE
+	ARG_غیر_مستعمل(thread);
+#اگر_تعریف_شدہ CONFIG_SCHED_THREAD_USAGE
 	z_sched_usage_stop();
-	z_sched_usage_start(thread);
-#endif /* CONFIG_SCHED_THREAD_USAGE */
+	z_sched_usage_آغاز(thread);
+#اگر_ختم /* CONFIG_SCHED_THREAD_USAGE */
 }
 
-#ifdef __cplusplus
+#اگر_تعریف_شدہ __cplusplus
 }
-#endif
+#اگر_ختم
 
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_USAGE_H_ */
+#اگر_ختم /* ZEPHYR_KERNEL_INCLUDE_USAGE_H_ */

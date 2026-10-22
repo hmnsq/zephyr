@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
-#include <ksched.h>
-#include <scheduler.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/spinlock.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/init.h>
+#شامل <ksched.h>
+#شامل <scheduler.h>
 
 /*
  * Kernel futex implementation
@@ -36,116 +36,116 @@
  *   expected to be the TID of the holder, so that a higher priority thread
  *   waiting for a futex can boost the holders priority.
  */
-static _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
-static struct k_spinlock futex_lock;
+ساکن _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
+ساکن ساخت k_spinlock futex_تالا;
 
 /**
  * Context structure for walking the futex wait queue
  */
-struct futex_walk_data {
+ساخت futex_walk_ڈیٹا {
 	/**
 	 * List head of threads to wake up during post op (NULL if empty)
 	 * This is an intermediate value filled by the walk op
 	 * Must be initialized to NULL before the walk
 	 */
-	struct k_thread *head;
+	ساخت k_thread *سر;
 	/**
 	 * Futex address
 	 * This is an input to the walk
 	 */
-	struct k_futex *futex;
+	ساخت k_futex *futex;
 	/**
 	 * Number of threads that have been woken up
 	 * This is an output of the walk and must be initialized to zero
 	 */
-	int woken;
+	صحیح woken;
 };
 
-static void futex_post_walk_op(int status, void *data)
+ساکن خالی futex_post_walk_op(صحیح حالت_2, خالی *ڈیٹا)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
 	 * to call here because this walk_op callback
 	 * is invoked with _sched_spinlock held.
 	 */
-	ARG_UNUSED(status);
-	struct futex_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ARG_غیر_مستعمل(حالت_2);
+	ساخت futex_walk_ڈیٹا *walk_ڈیٹا = ڈیٹا;
+	ساخت k_thread *thread, *اگلا;
 
-	thread = walk_data->head;
+	thread = walk_ڈیٹا->سر;
 
 	/* Wake up threads if any */
-	while (thread != NULL) {
-#ifndef CONFIG_WAITQ_SCALABLE
+	جب (thread != تہی) {
+#اگر_غیر_تعریف_شدہ CONFIG_WAITQ_SCALABLE
 		/*
 		 * walk_data->head will only ever be non-NULL for wake-one,
 		 * which has no "next" thread to wake by definition.
 		 */
-		next = NULL;
-#else  /* !CONFIG_WAITQ_SCALABLE */
-		next = thread->next_wake_link;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+		اگلا = تہی;
+#ورنہ  /* !CONFIG_WAITQ_SCALABLE */
+		اگلا = thread->اگلا_wake_link;
+#اگر_ختم /* !CONFIG_WAITQ_SCALABLE */
 
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(خالی)z_try_abort_thread_timeout(thread);
+		arch_thread_return_قدر_سیٹ(thread, 0);
 		z_sched_wake_thread_locked(thread);
-		walk_data->woken++;
+		walk_ڈیٹا->woken++;
 
-		thread = next;
+		thread = اگلا;
 	}
 }
 
-static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
+ساکن صحیح futex_wake_one_walk_op(ساخت k_thread *thread, خالی *ڈیٹا)
 {
-	struct futex_walk_data *walk_data = data;
+	ساخت futex_walk_ڈیٹا *walk_ڈیٹا = ڈیٹا;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	اگر (thread->futex_اشارہ_گر == walk_ڈیٹا->futex) {
 		/* Find the highest priority thread */
-		if (walk_data->head == NULL ||
-		    z_is_prio_higher(thread->base.prio, walk_data->head->base.prio)) {
+		اگر (walk_ڈیٹا->سر == تہی ||
+		    z_is_prio_higher(thread->بنیاد.prio, walk_ڈیٹا->سر->بنیاد.prio)) {
 			/*
 			 * next_wake_link is initialized to NULL in z_impl_k_futex_wait so
 			 * this is always a single thread
 			 */
-			walk_data->head = thread;
+			walk_ڈیٹا->سر = thread;
 		}
 	}
 
-	return 0;
+	واپس 0;
 }
 
-static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
+ساکن صحیح futex_wake_all_walk_op(ساخت k_thread *thread, خالی *ڈیٹا)
 {
-	struct futex_walk_data *walk_data = data;
+	ساخت futex_walk_ڈیٹا *walk_ڈیٹا = ڈیٹا;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
-#ifndef CONFIG_WAITQ_SCALABLE
+	اگر (thread->futex_اشارہ_گر == walk_ڈیٹا->futex) {
+#اگر_غیر_تعریف_شدہ CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
 		 * to call here because this walk_op callback
 		 * is invoked with _sched_spinlock held.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(خالی)z_try_abort_thread_timeout(thread);
+		arch_thread_return_قدر_سیٹ(thread, 0);
 		z_sched_wake_thread_locked(thread);
-		walk_data->woken++;
-#else  /* !CONFIG_WAITQ_SCALABLE */
-		thread->next_wake_link = walk_data->head;
-		walk_data->head = thread;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+		walk_ڈیٹا->woken++;
+#ورنہ  /* !CONFIG_WAITQ_SCALABLE */
+		thread->اگلا_wake_link = walk_ڈیٹا->سر;
+		walk_ڈیٹا->سر = thread;
+#اگر_ختم /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	واپس 0;
 }
 
-int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
+صحیح z_impl_k_futex_wake(ساخت k_futex *futex, bool wake_all)
 {
-	k_spinlock_key_t key;
-	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
+	k_spinlock_کلید_t کلید;
+	ساخت futex_walk_ڈیٹا walk_ڈیٹا = {.سر = تہی, .futex = futex, .woken = 0};
 
-	key = k_spin_lock(&futex_lock);
+	کلید = k_spin_تالا(&futex_تالا);
 
 	/*
 	 * Walk through the wait queue to find threads waiting on this futex.
@@ -163,61 +163,61 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 	 */
 	z_sched_waitq_walk(&futex_wait_q,
 			   (wake_all) ? futex_wake_all_walk_op : futex_wake_one_walk_op,
-			   futex_post_walk_op, &walk_data);
+			   futex_post_walk_op, &walk_ڈیٹا);
 
-	if (walk_data.woken == 0) {
-		k_spin_unlock(&futex_lock, key);
-	} else {
-		z_reschedule(&futex_lock, key);
+	اگر (walk_ڈیٹا.woken == 0) {
+		k_spin_unlock(&futex_تالا, کلید);
+	} ورنہ {
+		z_reschedule(&futex_تالا, کلید);
 	}
 
-	return walk_data.woken;
+	واپس walk_ڈیٹا.woken;
 }
 
-static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
+ساکن اندرونی صحیح z_vrfy_k_futex_wake(ساخت k_futex *futex, bool wake_all)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	اگر (K_SYSCALL_حافظہ_WRITE(futex, حجم(ساخت k_futex)) != 0) {
+		واپس -EACCES;
 	}
 
-	return z_impl_k_futex_wake(futex, wake_all);
+	واپس z_impl_k_futex_wake(futex, wake_all);
 }
-#include <zephyr/syscalls/k_futex_wake_mrsh.c>
+#شامل <zephyr/syscalls/k_futex_wake_mrsh.c>
 
-int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+صحیح z_impl_k_futex_wait(ساخت k_futex *futex, صحیح expected, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
+	صحیح ret;
+	k_spinlock_کلید_t کلید;
 
-	key = k_spin_lock(&futex_lock);
+	کلید = k_spin_تالا(&futex_تالا);
 
-	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
-		k_spin_unlock(&futex_lock, key);
-		return -EAGAIN;
+	اگر (atomic_get(&futex->val) != (atomic_val_t)expected) {
+		k_spin_unlock(&futex_تالا, کلید);
+		واپس -EAGAIN;
 	}
 
 	/*
 	 * Store futex pointer we are waiting on, so that it can be used to filter
 	 * futexes when walking the wait queue
 	 */
-	_current->futex_pointer = futex;
-#ifdef CONFIG_WAITQ_SCALABLE
-	_current->next_wake_link = NULL;
-#endif /* CONFIG_WAITQ_SCALABLE */
-	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
-	if (ret == -EAGAIN) {
+	_current->futex_اشارہ_گر = futex;
+#اگر_تعریف_شدہ CONFIG_WAITQ_SCALABLE
+	_current->اگلا_wake_link = تہی;
+#اگر_ختم /* CONFIG_WAITQ_SCALABLE */
+	ret = z_pend_curr(&futex_تالا, کلید, &futex_wait_q, timeout);
+	اگر (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}
 
-	return ret;
+	واپس ret;
 }
 
-static inline int z_vrfy_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+ساکن اندرونی صحیح z_vrfy_k_futex_wait(ساخت k_futex *futex, صحیح expected, k_timeout_t timeout)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	اگر (K_SYSCALL_حافظہ_WRITE(futex, حجم(ساخت k_futex)) != 0) {
+		واپس -EACCES;
 	}
 
-	return z_impl_k_futex_wait(futex, expected, timeout);
+	واپس z_impl_k_futex_wait(futex, expected, timeout);
 }
-#include <zephyr/syscalls/k_futex_wait_mrsh.c>
+#شامل <zephyr/syscalls/k_futex_wait_mrsh.c>

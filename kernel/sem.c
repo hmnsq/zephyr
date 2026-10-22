@@ -17,17 +17,17 @@
  * having to poll.
  */
 
-#include <zephyr/kernel.h>
+#شامل <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#شامل <zephyr/toolchain.h>
+#شامل <wait_q.h>
+#شامل <zephyr/sys/dlist.h>
+#شامل <ksched.h>
+#شامل <scheduler.h>
+#شامل <zephyr/init.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/tracing/tracing.h>
+#شامل <zephyr/sys/check.h>
 
 /* Optional striped locks reduce the performance impact of a system-wide
  * semaphore lock without the significant extra RAM required by per-object
@@ -38,189 +38,189 @@
 /* A k_spinlock can be zero-sized on uniprocessor configurations. Keep the
  * default lock scalar because arrays of empty structures are not portable.
  */
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-static struct k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
-#else
-static struct k_spinlock sem_lock;
-#endif
+#اگر defined(CONFIG_SMP) && (CONFIG_SEM_تالا_STRIPES > 1)
+ساکن ساخت k_spinlock sem_locks[CONFIG_SEM_تالا_STRIPES];
+#ورنہ
+ساکن ساخت k_spinlock sem_تالا;
+#اگر_ختم
 
-static inline struct k_spinlock *sem_spinlock_get(struct k_sem *sem)
+ساکن اندرونی ساخت k_spinlock *sem_spinlock_get(ساخت k_sem *sem)
 {
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-	BUILD_ASSERT(IS_POWER_OF_TWO(CONFIG_SEM_LOCK_STRIPES),
+#اگر defined(CONFIG_SMP) && (CONFIG_SEM_تالا_STRIPES > 1)
+	BUILD_ASSERT(IS_POWER_کا_TWO(CONFIG_SEM_تالا_STRIPES),
 		     "CONFIG_SEM_LOCK_STRIPES must be a power of two");
 
 	/* Hash the naturally aligned semaphore address into a lock stripe. */
-	return &sem_locks[((uintptr_t)sem / __alignof(struct k_sem)) %
-			  CONFIG_SEM_LOCK_STRIPES];
-#else
-	ARG_UNUSED(sem);
-	return &sem_lock;
-#endif
+	واپس &sem_locks[((uintptr_t)sem / __alignof(ساخت k_sem)) %
+			  CONFIG_SEM_تالا_STRIPES];
+#ورنہ
+	ARG_غیر_مستعمل(sem);
+	واپس &sem_تالا;
+#اگر_ختم
 }
 
-#ifdef CONFIG_OBJ_CORE_SEM
-K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_SEM */
+#اگر_تعریف_شدہ CONFIG_OBJ_CORE_SEM
+K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, تہی);
+#اگر_ختم /* CONFIG_OBJ_CORE_SEM */
 
-int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+صحیح z_impl_k_sem_init(ساخت k_sem *sem, غیرعلامتی صحیح initial_گنتی,
+		      غیرعلامتی صحیح حد_بندی)
 {
 	/*
 	 * Limit cannot be zero and count cannot be greater than limit
 	 */
-	CHECKIF(limit == 0U || initial_count > limit) {
-		SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
+	CHECKIF(حد_بندی == 0U || initial_گنتی > حد_بندی) {
+		SYS_پورٹ_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
 
-		return -EINVAL;
+		واپس -EINVAL;
 	}
 
-	sem->count = initial_count;
-	sem->limit = limit;
+	sem->گنتی = initial_گنتی;
+	sem->حد_بندی = حد_بندی;
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
+	SYS_پورٹ_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
 
 	z_waitq_init(&sem->wait_q);
-#if defined(CONFIG_POLL)
+#اگر defined(CONFIG_POLL)
 	sys_dlist_init(&sem->poll_events);
-#endif /* CONFIG_POLL */
+#اگر_ختم /* CONFIG_POLL */
 	k_object_init(sem);
 
-#ifdef CONFIG_OBJ_CORE_SEM
+#اگر_تعریف_شدہ CONFIG_OBJ_CORE_SEM
 	k_obj_core_init_and_link(K_OBJ_CORE(sem), &obj_type_sem);
-#endif /* CONFIG_OBJ_CORE_SEM */
+#اگر_ختم /* CONFIG_OBJ_CORE_SEM */
 
-	return 0;
+	واپس 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+صحیح z_vrfy_k_sem_init(ساخت k_sem *sem, غیرعلامتی صحیح initial_گنتی,
+		      غیرعلامتی صحیح حد_بندی)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sem, K_OBJ_SEM));
-	return z_impl_k_sem_init(sem, initial_count, limit);
+	واپس z_impl_k_sem_init(sem, initial_گنتی, حد_بندی);
 }
-#include <zephyr/syscalls/k_sem_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_sem_init_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
-static inline bool sem_handle_poll_events(struct k_sem *sem)
+ساکن اندرونی bool sem_handle_poll_events(ساخت k_sem *sem)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
-#else
-	ARG_UNUSED(sem);
-	return false;
-#endif /* CONFIG_POLL */
+#اگر_تعریف_شدہ CONFIG_POLL
+	واپس z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_دستیاب);
+#ورنہ
+	ARG_غیر_مستعمل(sem);
+	واپس false;
+#اگر_ختم /* CONFIG_POLL */
 }
 
-void z_impl_k_sem_give(struct k_sem *sem)
+خالی z_impl_k_sem_give(ساخت k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	ساخت k_spinlock *تالا = sem_spinlock_get(sem);
+	k_spinlock_کلید_t کلید = k_spin_تالا(تالا);
 	bool resched;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
 
-	if (z_sched_wake(&sem->wait_q, 0, NULL)) {
+	اگر (z_sched_wake(&sem->wait_q, 0, تہی)) {
 		resched = true;
-	} else {
-		sem->count += (sem->count != sem->limit) ? 1U : 0U;
+	} ورنہ {
+		sem->گنتی += (sem->گنتی != sem->حد_بندی) ? 1U : 0U;
 		resched = sem_handle_poll_events(sem);
 	}
 
-	if (unlikely(resched)) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	اگر (unlikely(resched)) {
+		z_reschedule(تالا, کلید);
+	} ورنہ {
+		k_spin_unlock(تالا, کلید);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_sem_give(struct k_sem *sem)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی خالی z_vrfy_k_sem_give(ساخت k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_give(sem);
 }
-#include <zephyr/syscalls/k_sem_give_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#شامل <zephyr/syscalls/k_sem_give_mrsh.c>
+#اگر_ختم /* CONFIG_USERSPACE */
 
-int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+صحیح z_impl_k_sem_take(ساخت k_sem *sem, k_timeout_t timeout)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	int ret;
+	ساخت k_spinlock *تالا = sem_spinlock_get(sem);
+	صحیح ret;
 
-	__ASSERT(((arch_is_in_isr() == false) ||
+	__ASSERT(((arch_is_اندر_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_کلید_t کلید = k_spin_تالا(تالا);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
+	SYS_پورٹ_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
 
-	if (likely(sem->count > 0U)) {
-		sem->count--;
-		k_spin_unlock(lock, key);
+	اگر (likely(sem->گنتی > 0U)) {
+		sem->گنتی--;
+		k_spin_unlock(تالا, کلید);
 		ret = 0;
-		goto out;
+		جاؤ برآمد;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(lock, key);
+	اگر (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(تالا, کلید);
 		ret = -EBUSY;
-		goto out;
+		جاؤ برآمد;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
+	SYS_پورٹ_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
 
-	ret = z_pend_curr(lock, key, &sem->wait_q, timeout);
+	ret = z_pend_curr(تالا, کلید, &sem->wait_q, timeout);
 
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
+برآمد:
+	SYS_پورٹ_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
 
-	return ret;
+	واپس ret;
 }
 
-void z_impl_k_sem_reset(struct k_sem *sem)
+خالی z_impl_k_sem_reset(ساخت k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	ساخت k_spinlock *تالا = sem_spinlock_get(sem);
+	k_spinlock_کلید_t کلید = k_spin_تالا(تالا);
 	bool resched = false;
 
-	while (z_sched_wake(&sem->wait_q, -EAGAIN, NULL)) {
+	جب (z_sched_wake(&sem->wait_q, -EAGAIN, تہی)) {
 		resched = true;
 	}
-	sem->count = 0;
+	sem->گنتی = 0;
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_sem, reset, sem);
+	SYS_پورٹ_TRACING_OBJ_FUNC(k_sem, reset, sem);
 
-	if (resched) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	اگر (resched) {
+		z_reschedule(تالا, کلید);
+	} ورنہ {
+		k_spin_unlock(تالا, کلید);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+#اگر_تعریف_شدہ CONFIG_USERSPACE
+ساکن اندرونی صحیح z_vrfy_k_sem_take(ساخت k_sem *sem, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_take(sem, timeout);
+	واپس z_impl_k_sem_take(sem, timeout);
 }
-#include <zephyr/syscalls/k_sem_take_mrsh.c>
+#شامل <zephyr/syscalls/k_sem_take_mrsh.c>
 
-static inline void z_vrfy_k_sem_reset(struct k_sem *sem)
+ساکن اندرونی خالی z_vrfy_k_sem_reset(ساخت k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_reset(sem);
 }
-#include <zephyr/syscalls/k_sem_reset_mrsh.c>
+#شامل <zephyr/syscalls/k_sem_reset_mrsh.c>
 
-static inline unsigned int z_vrfy_k_sem_count_get(struct k_sem *sem)
+ساکن اندرونی غیرعلامتی صحیح z_vrfy_k_sem_گنتی_get(ساخت k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_count_get(sem);
+	واپس z_impl_k_sem_گنتی_get(sem);
 }
-#include <zephyr/syscalls/k_sem_count_get_mrsh.c>
+#شامل <zephyr/syscalls/k_sem_count_get_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#اگر_ختم /* CONFIG_USERSPACE */
