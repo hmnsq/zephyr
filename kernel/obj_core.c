@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <string.h>
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/obj_core.h>
-#include <kernel_internal.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel/obj_core.h>
+#అన్తర్భావ <kernel_internal.h>
 
-static struct k_spinlock  obj_core_lock;
+స్థిర నిర్మాణం k_spinlock  obj_core_తాళం;
 
 sys_slist_t z_obj_type_list = SYS_SLIST_STATIC_INIT(&z_obj_type_list);
 
@@ -18,60 +18,60 @@ sys_slist_t z_obj_type_list = SYS_SLIST_STATIC_INIT(&z_obj_type_list);
  * without being unregistered leaves a stale entry but cannot corrupt the
  * registry or any other object.
  */
-struct obj_core_slot {
+నిర్మాణం obj_core_స్థానం {
 	atomic_ptr_t core;          /* struct k_obj_core *, NULL when free */
-	struct k_obj_type *type;
+	నిర్మాణం k_obj_type *type;
 };
 
 /* Entries are allocated under obj_core_lock. They are released with an
  * atomic exchange, so unregistering and evicting never take the lock and
  * can run from any context, including a walk callback.
  */
-static struct obj_core_slot registry[CONFIG_OBJ_CORE_MAX_DYNAMIC_OBJECTS];
+స్థిర నిర్మాణం obj_core_స్థానం registry[CONFIG_OBJ_CORE_MAX_DYNAMIC_OBJECTS];
 
-static struct k_obj_core *slot_core(const struct obj_core_slot *slot)
+స్థిర నిర్మాణం k_obj_core *స్థానం_core(స్థిరరాశి నిర్మాణం obj_core_స్థానం *స్థానం)
 {
-	return atomic_ptr_get(&slot->core);
+	తిరిగి atomic_ptr_get(&స్థానం->core);
 }
 
-static bool range_contains(const struct k_obj_range *range, const void *ptr)
+స్థిర bool range_కలిగియుంది(స్థిరరాశి నిర్మాణం k_obj_range *range, స్థిరరాశి శూన్య *ptr)
 {
-	if (range->indirect) {
-		for (const void *const *pp = range->start; pp < (const void *const *)range->end;
-		     pp = (const void *const *)((const uint8_t *)pp + range->stride)) {
-			if (*pp == ptr) {
-				return true;
+	ఒకవేళ (range->పరోక్ష) {
+		కొరకు (స్థిరరాశి శూన్య *స్థిరరాశి *pp = range->ప్రారంభం; pp < (స్థిరరాశి శూన్య *స్థిరరాశి *)range->చివర;
+		     pp = (స్థిరరాశి శూన్య *స్థిరరాశి *)((స్థిరరాశి uint8_t *)pp + range->stride)) {
+			ఒకవేళ (*pp == ptr) {
+				తిరిగి true;
 			}
 		}
-		return false;
+		తిరిగి false;
 	}
 
-	return (ptr >= range->start) && (ptr < range->end);
+	తిరిగి (ptr >= range->ప్రారంభం) && (ptr < range->చివర);
 }
 
-static bool type_ranges_contain(const struct k_obj_type *type, const void *ptr)
+స్థిర bool type_ranges_contain(స్థిరరాశి నిర్మాణం k_obj_type *type, స్థిరరాశి శూన్య *ptr)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(type->statics); i++) {
-		const struct k_obj_range *range = &type->statics[i];
+	కొరకు (size_t i = 0; i < ARRAY_కొలత(type->statics); i++) {
+		స్థిరరాశి నిర్మాణం k_obj_range *range = &type->statics[i];
 
-		if (range->stride == 0U) {
-			break;
+		ఒకవేళ (range->stride == 0U) {
+			ఆపు;
 		}
-		if (range_contains(range, ptr)) {
-			return true;
+		ఒకవేళ (range_కలిగియుంది(range, ptr)) {
+			తిరిగి true;
 		}
 	}
 
-	return false;
+	తిరిగి false;
 }
 
 /* Object core of the range element */
-static struct k_obj_core *range_core(const struct k_obj_type *type,
-				     const struct k_obj_range *range, const void *elem)
+స్థిర నిర్మాణం k_obj_core *range_core(స్థిరరాశి నిర్మాణం k_obj_type *type,
+				     స్థిరరాశి నిర్మాణం k_obj_range *range, స్థిరరాశి శూన్య *elem)
 {
-	const uint8_t *obj = range->indirect ? *(const uint8_t *const *)elem : elem;
+	స్థిరరాశి uint8_t *obj = range->పరోక్ష ? *(స్థిరరాశి uint8_t *స్థిరరాశి *)elem : elem;
 
-	return (struct k_obj_core *)(obj + type->obj_core_offset);
+	తిరిగి (నిర్మాణం k_obj_core *)(obj + type->obj_core_స్థానభ్రంశం);
 }
 
 /* Objects in the running thread's stack or in the interrupt stack are
@@ -79,203 +79,203 @@ static struct k_obj_core *range_core(const struct k_obj_type *type,
  * the current CPU. There is no current thread before the kernel has set one
  * up, and never with CONFIG_MULTITHREADING=n.
  */
-static bool in_stack_storage(const void *ptr)
+స్థిర bool లోపల_దొంతర_storage(స్థిరరాశి శూన్య *ptr)
 {
 	uintptr_t addr = (uintptr_t)ptr;
-	const struct k_thread *thread = _current;
-	uintptr_t irq_stack = (uintptr_t)K_KERNEL_STACK_BUFFER(
-		z_interrupt_stacks[_current_cpu->id]);
-	uintptr_t irq_stack_end =
-		irq_stack + K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[0]);
+	స్థిరరాశి నిర్మాణం k_thread *thread = _current;
+	uintptr_t irq_దొంతర = (uintptr_t)K_KERNEL_దొంతర_బఫరు(
+		z_అంతరాయం_stacks[_current_cpu->id]);
+	uintptr_t irq_దొంతర_చివర =
+		irq_దొంతర + K_KERNEL_దొంతర_SIZEOF(z_అంతరాయం_stacks[0]);
 
-	if ((thread != NULL) && (thread->stack_info.size != 0U) &&
-	    (addr >= thread->stack_info.start) &&
-	    (addr < thread->stack_info.start + thread->stack_info.size)) {
-		return true;
+	ఒకవేళ ((thread != ఖాళీ) && (thread->దొంతర_info.కొలత != 0U) &&
+	    (addr >= thread->దొంతర_info.ప్రారంభం) &&
+	    (addr < thread->దొంతర_info.ప్రారంభం + thread->దొంతర_info.కొలత)) {
+		తిరిగి true;
 	}
 
-	return (addr >= irq_stack) && (addr < irq_stack_end);
+	తిరిగి (addr >= irq_దొంతర) && (addr < irq_దొంతర_చివర);
 }
 
-static struct obj_core_slot *slot_find(const struct k_obj_core *core)
+స్థిర నిర్మాణం obj_core_స్థానం *స్థానం_కనుగొను(స్థిరరాశి నిర్మాణం k_obj_core *core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (slot_core(&registry[i]) == core) {
-			return &registry[i];
+	కొరకు (size_t i = 0; i < ARRAY_కొలత(registry); i++) {
+		ఒకవేళ (స్థానం_core(&registry[i]) == core) {
+			తిరిగి &registry[i];
 		}
 	}
 
-	return NULL;
+	తిరిగి ఖాళీ;
 }
 
 /* A registered object whose storage no longer carries its type is stale.
  * The caller passes the object it read from the slot: the slot may be
  * cleared concurrently by an unregistration.
  */
-static bool slot_stale(const struct obj_core_slot *slot, const struct k_obj_core *core)
+స్థిర bool స్థానం_stale(స్థిరరాశి నిర్మాణం obj_core_స్థానం *స్థానం, స్థిరరాశి నిర్మాణం k_obj_core *core)
 {
-	return core->type != slot->type;
+	తిరిగి core->type != స్థానం->type;
 }
 
-static struct obj_core_slot *slot_alloc(void)
+స్థిర నిర్మాణం obj_core_స్థానం *స్థానం_alloc(శూన్య)
 {
-	struct obj_core_slot *slot = slot_find(NULL);
+	నిర్మాణం obj_core_స్థానం *స్థానం = స్థానం_కనుగొను(ఖాళీ);
 
-	if (slot != NULL) {
-		return slot;
+	ఒకవేళ (స్థానం != ఖాళీ) {
+		తిరిగి స్థానం;
 	}
 
 	/* Full: reap every stale entry and reuse one of them */
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	కొరకు (size_t i = 0; i < ARRAY_కొలత(registry); i++) {
+		నిర్మాణం k_obj_core *core = స్థానం_core(&registry[i]);
 
-		if ((core != NULL) && slot_stale(&registry[i], core)) {
-			atomic_ptr_set(&registry[i].core, NULL);
-			slot = &registry[i];
+		ఒకవేళ ((core != ఖాళీ) && స్థానం_stale(&registry[i], core)) {
+			atomic_ptr_సమితి(&registry[i].core, ఖాళీ);
+			స్థానం = &registry[i];
 		}
 	}
 
-	return slot;
+	తిరిగి స్థానం;
 }
 
-struct k_obj_type *z_obj_type_init(struct k_obj_type *type,
+నిర్మాణం k_obj_type *z_obj_type_init(నిర్మాణం k_obj_type *type,
 				   uint32_t id, size_t off)
 {
-	sys_slist_append(&z_obj_type_list, &type->node);
+	sys_slist_append(&z_obj_type_list, &type->కణుపు);
 	type->id = id;
-	type->obj_core_offset = off;
-	memset(type->statics, 0, sizeof(type->statics));
+	type->obj_core_స్థానభ్రంశం = off;
+	memset(type->statics, 0, పరిమాణం(type->statics));
 	type->dropped = 0;
 	type->skipped = 0;
 
-	return type;
+	తిరిగి type;
 }
 
-void k_obj_type_init_range(struct k_obj_type *type, const void *start,
-			   const void *end, size_t stride, bool indirect)
+శూన్య k_obj_type_init_range(నిర్మాణం k_obj_type *type, స్థిరరాశి శూన్య *ప్రారంభం,
+			   స్థిరరాశి శూన్య *చివర, size_t stride, bool పరోక్ష)
 {
-	type->statics[0].start = start;
-	type->statics[0].end = end;
+	type->statics[0].ప్రారంభం = ప్రారంభం;
+	type->statics[0].చివర = చివర;
 	type->statics[0].stride = stride;
-	type->statics[0].indirect = indirect;
+	type->statics[0].పరోక్ష = పరోక్ష;
 }
 
-void k_obj_core_init(struct k_obj_core *obj_core, struct k_obj_type *type)
+శూన్య k_obj_core_init(నిర్మాణం k_obj_core *obj_core, నిర్మాణం k_obj_type *type)
 {
 	obj_core->type = type;
-#ifdef CONFIG_OBJ_CORE_STATS
-	obj_core->stats = NULL;
-#endif /* CONFIG_OBJ_CORE_STATS */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS
+	obj_core->stats = ఖాళీ;
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS */
 }
 
-void k_obj_core_link(struct k_obj_core *obj_core)
+శూన్య k_obj_core_link(నిర్మాణం k_obj_core *obj_core)
 {
-	struct k_obj_type *type = obj_core->type;
-	struct obj_core_slot *slot;
+	నిర్మాణం k_obj_type *type = obj_core->type;
+	నిర్మాణం obj_core_స్థానం *స్థానం;
 
-	if (type_ranges_contain(type, (const uint8_t *)obj_core - type->obj_core_offset)) {
-		return;
+	ఒకవేళ (type_ranges_contain(type, (స్థిరరాశి uint8_t *)obj_core - type->obj_core_స్థానభ్రంశం)) {
+		తిరిగి;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
-	if (in_stack_storage(obj_core)) {
+	ఒకవేళ (లోపల_దొంతర_storage(obj_core)) {
 		type->skipped++;
-		k_spin_unlock(&obj_core_lock, key);
-		return;
+		k_spin_unlock(&obj_core_తాళం, కీలకం);
+		తిరిగి;
 	}
 
-	slot = slot_find(obj_core);
-	if (slot == NULL) {
-		slot = slot_alloc();
+	స్థానం = స్థానం_కనుగొను(obj_core);
+	ఒకవేళ (స్థానం == ఖాళీ) {
+		స్థానం = స్థానం_alloc();
 	}
 
-	if (slot == NULL) {
+	ఒకవేళ (స్థానం == ఖాళీ) {
 		type->dropped++;
-	} else {
-		slot->type = type;
-		atomic_ptr_set(&slot->core, obj_core);
+	} లేకపోతే {
+		స్థానం->type = type;
+		atomic_ptr_సమితి(&స్థానం->core, obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 }
 
-void k_obj_core_init_and_link(struct k_obj_core *obj_core,
-			      struct k_obj_type *type)
+శూన్య k_obj_core_init_and_link(నిర్మాణం k_obj_core *obj_core,
+			      నిర్మాణం k_obj_type *type)
 {
 	k_obj_core_init(obj_core, type);
 	k_obj_core_link(obj_core);
 }
 
-void k_obj_core_unlink(struct k_obj_core *obj_core)
+శూన్య k_obj_core_unlink(నిర్మాణం k_obj_core *obj_core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (atomic_ptr_cas(&registry[i].core, obj_core, NULL)) {
-			break;
+	కొరకు (size_t i = 0; i < ARRAY_కొలత(registry); i++) {
+		ఒకవేళ (atomic_ptr_cas(&registry[i].core, obj_core, ఖాళీ)) {
+			ఆపు;
 		}
 	}
 }
 
-void k_obj_core_evict_range(const void *addr, size_t len)
+శూన్య k_obj_core_evict_range(స్థిరరాశి శూన్య *addr, size_t len)
 {
-	const uint8_t *start = addr;
-	const uint8_t *end = start + len;
+	స్థిరరాశి uint8_t *ప్రారంభం = addr;
+	స్థిరరాశి uint8_t *చివర = ప్రారంభం + len;
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	కొరకు (size_t i = 0; i < ARRAY_కొలత(registry); i++) {
+		నిర్మాణం k_obj_core *core = స్థానం_core(&registry[i]);
 
-		if ((core != NULL) && ((const uint8_t *)core >= start) &&
-		    ((const uint8_t *)core < end)) {
-			(void)atomic_ptr_cas(&registry[i].core, core, NULL);
+		ఒకవేళ ((core != ఖాళీ) && ((స్థిరరాశి uint8_t *)core >= ప్రారంభం) &&
+		    ((స్థిరరాశి uint8_t *)core < చివర)) {
+			(శూన్య)atomic_ptr_cas(&registry[i].core, core, ఖాళీ);
 		}
 	}
 }
 
-#ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
-void sys_heap_release_hook(void *mem, size_t bytes)
+#నిర్వచితమైతే CONFIG_OBJ_CORE_EVICT_ON_FREE
+శూన్య sys_కుప్ప_release_hook(శూన్య *mem, size_t బైట్లు)
 {
 	/* The registry is kernel data; user mode releases never hold
 	 * registered objects.
 	 */
-	if (k_is_user_context()) {
-		return;
+	ఒకవేళ (k_is_user_context()) {
+		తిరిగి;
 	}
 
-	k_obj_core_evict_range(mem, bytes);
+	k_obj_core_evict_range(mem, బైట్లు);
 }
-#endif /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
 
 /* Add the object types defined at build time to the type list and initialize
  * the object cores of their permanent objects.
  */
-static void obj_core_init_all(void)
+స్థిర శూన్య obj_core_init_all(శూన్య)
 {
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		sys_slist_append(&z_obj_type_list, &type->node);
+		sys_slist_append(&z_obj_type_list, &type->కణుపు);
 
-		for (size_t r = 0; r < ARRAY_SIZE(type->statics); r++) {
-			const struct k_obj_range *range = &type->statics[r];
+		కొరకు (size_t r = 0; r < ARRAY_కొలత(type->statics); r++) {
+			స్థిరరాశి నిర్మాణం k_obj_range *range = &type->statics[r];
 
-			if (range->stride == 0U) {
-				break;
+			ఒకవేళ (range->stride == 0U) {
+				ఆపు;
 			}
 
-			for (const uint8_t *elem = range->start;
-			     elem < (const uint8_t *)range->end; elem += range->stride) {
-				struct k_obj_core *obj_core = range_core(type, range, elem);
+			కొరకు (స్థిరరాశి uint8_t *elem = range->ప్రారంభం;
+			     elem < (స్థిరరాశి uint8_t *)range->చివర; elem += range->stride) {
+				నిర్మాణం k_obj_core *obj_core = range_core(type, range, elem);
 
 				k_obj_core_init(obj_core, type);
-#ifdef CONFIG_OBJ_CORE_STATS
-				if ((type->stats_desc != NULL) && (type->stats_size != 0)) {
-					k_obj_core_stats_register(
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS
+				ఒకవేళ ((type->stats_desc != ఖాళీ) && (type->stats_కొలత != 0)) {
+					k_obj_core_stats_రిజిస్టరు(
 						obj_core,
-						(void *)((uint8_t *)obj_core -
-							 type->obj_core_offset +
-							 type->stats_offset),
-						type->stats_size);
+						(శూన్య *)((uint8_t *)obj_core -
+							 type->obj_core_స్థానభ్రంశం +
+							 type->stats_స్థానభ్రంశం),
+						type->stats_కొలత);
 				}
-#endif /* CONFIG_OBJ_CORE_STATS */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS */
 			}
 		}
 	}
@@ -283,327 +283,327 @@ static void obj_core_init_all(void)
 
 K_KERNEL_INIT_PRE(obj_core_init_all);
 
-struct k_obj_type *k_obj_type_find(uint32_t type_id)
+నిర్మాణం k_obj_type *k_obj_type_కనుగొను(uint32_t type_id)
 {
-	struct k_obj_type *rv = NULL;
-	sys_snode_t *node;
+	నిర్మాణం k_obj_type *rv = ఖాళీ;
+	sys_snode_t *కణుపు;
 
 	/* Types defined at build time are valid before the type list is */
 
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		if (type->id == type_id) {
-			return type;
+		ఒకవేళ (type->id == type_id) {
+			తిరిగి type;
 		}
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t  కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
-	SYS_SLIST_FOR_EACH_NODE(&z_obj_type_list, node) {
-		struct k_obj_type *type = CONTAINER_OF(node, struct k_obj_type, node);
+	SYS_SLIST_FOR_EACH_కణుపు(&z_obj_type_list, కణుపు) {
+		నిర్మాణం k_obj_type *type = CONTAINER_యొక్క(కణుపు, నిర్మాణం k_obj_type, కణుపు);
 
-		if (type->id == type_id) {
+		ఒకవేళ (type->id == type_id) {
 			rv = type;
-			break;
+			ఆపు;
 		}
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
 /* Invoke func on every permanent object of the type that carries its type
  * tag. Objects of a zero-initialized array that were never initialized do
  * not.
  */
-static int walk_statics(struct k_obj_type *type,
-			int (*func)(struct k_obj_core *obj_core, void *data),
-			void *data)
+స్థిర పూర్ణాంకం walk_statics(నిర్మాణం k_obj_type *type,
+			పూర్ణాంకం (*func)(నిర్మాణం k_obj_core *obj_core, శూన్య *దత్తాంశం),
+			శూన్య *దత్తాంశం)
 {
-	int status = 0;
+	పూర్ణాంకం స్థితి_2 = 0;
 
-	for (size_t r = 0; (status == 0) && (r < ARRAY_SIZE(type->statics)); r++) {
-		const struct k_obj_range *range = &type->statics[r];
+	కొరకు (size_t r = 0; (స్థితి_2 == 0) && (r < ARRAY_కొలత(type->statics)); r++) {
+		స్థిరరాశి నిర్మాణం k_obj_range *range = &type->statics[r];
 
-		if (range->stride == 0U) {
-			break;
+		ఒకవేళ (range->stride == 0U) {
+			ఆపు;
 		}
 
-		for (const uint8_t *elem = range->start; elem < (const uint8_t *)range->end;
+		కొరకు (స్థిరరాశి uint8_t *elem = range->ప్రారంభం; elem < (స్థిరరాశి uint8_t *)range->చివర;
 		     elem += range->stride) {
-			struct k_obj_core *obj_core = range_core(type, range, elem);
+			నిర్మాణం k_obj_core *obj_core = range_core(type, range, elem);
 
-			if (obj_core->type != type) {
-				continue;
+			ఒకవేళ (obj_core->type != type) {
+				కొనసాగు;
 			}
 
-			status = func(obj_core, data);
-			if (status != 0) {
-				break;
+			స్థితి_2 = func(obj_core, దత్తాంశం);
+			ఒకవేళ (స్థితి_2 != 0) {
+				ఆపు;
 			}
 		}
 	}
 
-	return status;
+	తిరిగి స్థితి_2;
 }
 
-int k_obj_type_walk_locked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
-			   void *data)
+పూర్ణాంకం k_obj_type_walk_locked(నిర్మాణం k_obj_type *type,
+			   పూర్ణాంకం (*func)(నిర్మాణం k_obj_core *obj_core, శూన్య *దత్తాంశం),
+			   శూన్య *దత్తాంశం)
 {
-	int  status;
+	పూర్ణాంకం  స్థితి_2;
 
-	status = walk_statics(type, func, data);
+	స్థితి_2 = walk_statics(type, func, దత్తాంశం);
 
 	/* The lock covers reading and reaping each entry, not the callback,
 	 * so the callback is free to use any kernel or object core function.
 	 */
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
-		struct obj_core_slot *slot = &registry[i];
-		k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
-		struct k_obj_core *core = slot_core(slot);
+	కొరకు (size_t i = 0; (స్థితి_2 == 0) && (i < ARRAY_కొలత(registry)); i++) {
+		నిర్మాణం obj_core_స్థానం *స్థానం = &registry[i];
+		k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
+		నిర్మాణం k_obj_core *core = స్థానం_core(స్థానం);
 
-		if ((core == NULL) || (slot->type != type)) {
-			k_spin_unlock(&obj_core_lock, key);
-			continue;
+		ఒకవేళ ((core == ఖాళీ) || (స్థానం->type != type)) {
+			k_spin_unlock(&obj_core_తాళం, కీలకం);
+			కొనసాగు;
 		}
 
-		if (slot_stale(slot, core)) {
-			atomic_ptr_set(&slot->core, NULL);
-			k_spin_unlock(&obj_core_lock, key);
-			continue;
+		ఒకవేళ (స్థానం_stale(స్థానం, core)) {
+			atomic_ptr_సమితి(&స్థానం->core, ఖాళీ);
+			k_spin_unlock(&obj_core_తాళం, కీలకం);
+			కొనసాగు;
 		}
 
-		k_spin_unlock(&obj_core_lock, key);
+		k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-		status = func(core, data);
+		స్థితి_2 = func(core, దత్తాంశం);
 	}
 
-	return status;
+	తిరిగి స్థితి_2;
 }
 
-int k_obj_type_walk_unlocked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
-			   void *data)
+పూర్ణాంకం k_obj_type_walk_unlocked(నిర్మాణం k_obj_type *type,
+			   పూర్ణాంకం (*func)(నిర్మాణం k_obj_core *obj_core, శూన్య *దత్తాంశం),
+			   శూన్య *దత్తాంశం)
 {
-	int  status;
+	పూర్ణాంకం  స్థితి_2;
 
-	status = walk_statics(type, func, data);
+	స్థితి_2 = walk_statics(type, func, దత్తాంశం);
 
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	కొరకు (size_t i = 0; (స్థితి_2 == 0) && (i < ARRAY_కొలత(registry)); i++) {
+		నిర్మాణం k_obj_core *core = స్థానం_core(&registry[i]);
 
-		if ((core == NULL) || (registry[i].type != type) ||
+		ఒకవేళ ((core == ఖాళీ) || (registry[i].type != type) ||
 		    (core->type != type)) {
-			continue;
+			కొనసాగు;
 		}
 
-		status = func(core, data);
+		స్థితి_2 = func(core, దత్తాంశం);
 	}
 
-	return status;
+	తిరిగి స్థితి_2;
 }
 
-#ifdef CONFIG_OBJ_CORE_STATS
-int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS
+పూర్ణాంకం k_obj_core_stats_రిజిస్టరు(నిర్మాణం k_obj_core *obj_core, శూన్య *stats,
 			      size_t stats_len)
 {
-	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	పూర్ణాంకం rv;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
-	if (obj_core->type->stats_desc == NULL) {
+	ఒకవేళ (obj_core->type->stats_desc == ఖాళీ) {
 		/* Object type not configured for statistics. */
 		rv = -ENOTSUP;
-	} else if (obj_core->type->stats_desc->raw_size != stats_len) {
+	} లేకపోతే ఒకవేళ (obj_core->type->stats_desc->raw_కొలత != stats_len) {
 		/* Buffer size mismatch */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		obj_core->stats = stats;
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_deregister(struct k_obj_core *obj_core)
+పూర్ణాంకం k_obj_core_stats_deregister(నిర్మాణం k_obj_core *obj_core)
 {
-	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	పూర్ణాంకం rv;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
-	if (obj_core->type->stats_desc == NULL) {
+	ఒకవేళ (obj_core->type->stats_desc == ఖాళీ) {
 		/* Object type not configured  for statistics. */
 		rv = -ENOTSUP;
-	} else {
-		obj_core->stats = NULL;
+	} లేకపోతే {
+		obj_core->stats = ఖాళీ;
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
+పూర్ణాంకం k_obj_core_stats_raw(నిర్మాణం k_obj_core *obj_core, శూన్య *stats,
 			 size_t stats_len)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	పూర్ణాంకం rv;
+	నిర్మాణం k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->raw == NULL)) {
+	ఒకవేళ ((desc == ఖాళీ) || (desc->raw == ఖాళీ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->raw_size != stats_len) || (obj_core->stats == NULL)) {
+	} లేకపోతే ఒకవేళ ((desc->raw_కొలత != stats_len) || (obj_core->stats == ఖాళీ)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		rv = desc->raw(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
+పూర్ణాంకం k_obj_core_stats_query(నిర్మాణం k_obj_core *obj_core, శూన్య *stats,
 			   size_t stats_len)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	పూర్ణాంకం rv;
+	నిర్మాణం k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->query == NULL)) {
+	ఒకవేళ ((desc == ఖాళీ) || (desc->query == ఖాళీ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->query_size != stats_len) || (obj_core->stats == NULL)) {
+	} లేకపోతే ఒకవేళ ((desc->query_కొలత != stats_len) || (obj_core->stats == ఖాళీ)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		rv = desc->query(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_reset(struct k_obj_core *obj_core)
+పూర్ణాంకం k_obj_core_stats_reset(నిర్మాణం k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	పూర్ణాంకం rv;
+	నిర్మాణం k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t  కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->reset == NULL)) {
+	ఒకవేళ ((desc == ఖాళీ) || (desc->reset == ఖాళీ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} లేకపోతే ఒకవేళ (obj_core->stats == ఖాళీ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		rv = desc->reset(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_disable(struct k_obj_core *obj_core)
+పూర్ణాంకం k_obj_core_stats_disable(నిర్మాణం k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	పూర్ణాంకం rv;
+	నిర్మాణం k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->disable == NULL)) {
+	ఒకవేళ ((desc == ఖాళీ) || (desc->disable == ఖాళీ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} లేకపోతే ఒకవేళ (obj_core->stats == ఖాళీ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		rv = desc->disable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
 
-int k_obj_core_stats_enable(struct k_obj_core *obj_core)
+పూర్ణాంకం k_obj_core_stats_enable(నిర్మాణం k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	పూర్ణాంకం rv;
+	నిర్మాణం k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_core_తాళం);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->enable == NULL)) {
+	ఒకవేళ ((desc == ఖాళీ) || (desc->enable == ఖాళీ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} లేకపోతే ఒకవేళ (obj_core->stats == ఖాళీ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} లేకపోతే {
 		rv = desc->enable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_తాళం, కీలకం);
 
-	return rv;
+	తిరిగి rv;
 }
-#endif /* CONFIG_OBJ_CORE_STATS */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS */
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
-static struct k_obj_type obj_type_kernel;
+#నిర్వచితమైతే CONFIG_OBJ_CORE_SYSTEM
+స్థిర నిర్మాణం k_obj_type obj_type_kernel;
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc kernel_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats) * CONFIG_MP_MAX_NUM_CPUS,
-	.query_size = sizeof(struct k_thread_runtime_stats),
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS_SYSTEM
+స్థిర నిర్మాణం k_obj_core_stats_desc kernel_stats_desc = {
+	.raw_కొలత = పరిమాణం(నిర్మాణం k_చక్రం_stats) * CONFIG_MP_MAX_అంకె_CPUS,
+	.query_కొలత = పరిమాణం(నిర్మాణం k_thread_runtime_stats),
 	.raw   = z_kernel_stats_raw,
 	.query = z_kernel_stats_query,
-	.reset = NULL,
-	.disable = NULL,
-	.enable  = NULL,
+	.reset = ఖాళీ,
+	.disable = ఖాళీ,
+	.enable  = ఖాళీ,
 };
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 /* The kernel object is a singleton (_kernel), so it is registered and linked
  * here directly rather than through the object type table.
  */
-static void init_kernel_obj_core_list(void)
+స్థిర శూన్య init_kernel_obj_core_list(శూన్య)
 {
 	/* Initialize kernel object type */
 
 	z_obj_type_init(&obj_type_kernel, K_OBJ_TYPE_KERNEL_ID,
-			offsetof(struct z_kernel, obj_core));
+			offsetof(నిర్మాణం z_kernel, obj_core));
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS_SYSTEM
 	k_obj_type_stats_init(&obj_type_kernel, &kernel_stats_desc);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 	k_obj_core_init_and_link(K_OBJ_CORE(&_kernel), &obj_type_kernel);
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-	k_obj_core_stats_register(K_OBJ_CORE(&_kernel), _kernel.usage,
-				  sizeof(_kernel.usage));
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS_SYSTEM
+	k_obj_core_stats_రిజిస్టరు(K_OBJ_CORE(&_kernel), _kernel.usage,
+				  పరిమాణం(_kernel.usage));
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 }
 
 K_KERNEL_INIT_PRE(init_kernel_obj_core_list);
-#endif /* CONFIG_OBJ_CORE_SYSTEM */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_SYSTEM */

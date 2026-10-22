@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_LIST_H_
-#define ZEPHYR_KERNEL_TIMEOUT_LIST_H_
+#నిర్వచితం_కాకపోతే ZEPHYR_KERNEL_TIMEOUT_LIST_H_
+#నిర్వచించు ZEPHYR_KERNEL_TIMEOUT_LIST_H_
 
 /**
  * @file
@@ -20,78 +20,78 @@
  * translation unit. The per-node helpers live in kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
 
-static sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
+స్థిర sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
 
-static inline struct _timeout *z_timeout_q_first(void)
+స్థిర అంతఃవరుస నిర్మాణం _timeout *z_timeout_q_మొదటి(శూన్య)
 {
-	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
+	sys_dnode_t *t = sys_dlist_peek_తల(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	తిరిగి (t == ఖాళీ) ? ఖాళీ : CONTAINER_యొక్క(t, నిర్మాణం _timeout, కణుపు);
 }
 
-static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
+స్థిర అంతఃవరుస నిర్మాణం _timeout *z_timeout_q_తదుపరి(నిర్మాణం _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_తదుపరి(&timeout_list, &t->కణుపు);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	తిరిగి (n == ఖాళీ) ? ఖాళీ : CONTAINER_యొక్క(n, నిర్మాణం _timeout, కణుపు);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout.
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+స్థిర అంతఃవరుస bool z_timeout_q_చొప్పించు(నిర్మాణం _timeout *గమ్యం, k_ticks_t dticks)
 {
-	struct _timeout *t;
+	నిర్మాణం _timeout *t;
 
-	to->dticks = dticks;
-	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
-		if (t->dticks > to->dticks) {
-			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
-			return z_timeout_q_first() == to;
+	గమ్యం->dticks = dticks;
+	కొరకు (t = z_timeout_q_మొదటి(); t != ఖాళీ; t = z_timeout_q_తదుపరి(t)) {
+		ఒకవేళ (t->dticks > గమ్యం->dticks) {
+			t->dticks -= గమ్యం->dticks;
+			sys_dlist_చొప్పించు(&t->కణుపు, &గమ్యం->కణుపు);
+			తిరిగి z_timeout_q_మొదటి() == గమ్యం;
 		}
-		to->dticks -= t->dticks;
+		గమ్యం->dticks -= t->dticks;
 	}
 
-	sys_dlist_append(&timeout_list, &to->node);
-	return z_timeout_q_first() == to;
+	sys_dlist_append(&timeout_list, &గమ్యం->కణుపు);
+	తిరిగి z_timeout_q_మొదటి() == గమ్యం;
 }
 
 /* Remove an arbitrary timeout from the queue, absorbing its delta into the
  * successor so the remaining deltas stay valid. Returns true if @to was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+స్థిర అంతఃవరుస bool z_timeout_q_remove(నిర్మాణం _timeout *గమ్యం)
 {
-	bool was_first = (z_timeout_q_first() == to);
-	struct _timeout *n = z_timeout_q_next(to);
+	bool was_మొదటి = (z_timeout_q_మొదటి() == గమ్యం);
+	నిర్మాణం _timeout *n = z_timeout_q_తదుపరి(గమ్యం);
 
-	if (n != NULL) {
-		n->dticks += to->dticks;
+	ఒకవేళ (n != ఖాళీ) {
+		n->dticks += గమ్యం->dticks;
 	}
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&గమ్యం->కణుపు);
 
-	return was_first;
+	తిరిగి was_మొదటి;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+స్థిర అంతఃవరుస k_ticks_t z_timeout_q_remainder(స్థిరరాశి నిర్మాణం _timeout *గమ్యం)
 {
 	k_ticks_t ticks = 0;
 
-	for (struct _timeout *t = z_timeout_q_first(); t != NULL;
-	     t = z_timeout_q_next(t)) {
+	కొరకు (నిర్మాణం _timeout *t = z_timeout_q_మొదటి(); t != ఖాళీ;
+	     t = z_timeout_q_తదుపరి(t)) {
 		ticks += t->dticks;
-		if (to == t) {
-			break;
+		ఒకవేళ (గమ్యం == t) {
+			ఆపు;
 		}
 	}
 
-	return ticks;
+	తిరిగి ticks;
 }
 
 /* Ticks from (curr_tick + ticks_elapsed) until the next expiry, clamped to
@@ -101,11 +101,11 @@ static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
  * the queue is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+స్థిర అంతఃవరుస k_ticks_t z_timeout_q_తదుపరి_expiry(శూన్య)
 {
-	struct _timeout *to = z_timeout_q_first();
+	నిర్మాణం _timeout *గమ్యం = z_timeout_q_మొదటి();
 
-	return (to == NULL) ? K_TICKS_FOREVER : to->dticks;
+	తిరిగి (గమ్యం == ఖాళీ) ? K_TICKS_FOREVER : గమ్యం->dticks;
 }
 
 /* --- announce-loop helpers (see sys_clock_announce_locked() in timeout.c) --- */
@@ -114,22 +114,22 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
  * (here: the earliest expiry). A value larger than any announce window when
  * the queue is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+స్థిర అంతఃవరుస int32_t z_timeout_q_తదుపరి_gap(శూన్య)
 {
-	struct _timeout *t = z_timeout_q_first();
+	నిర్మాణం _timeout *t = z_timeout_q_మొదటి();
 
-	return (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
+	తిరిగి (t == ఖాళీ) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. For the delta list this shifts the head
  * closer to expiry; a head whose gap is fully consumed reads dticks == 0 and
  * is then drained by z_timeout_q_pop_due(). The caller advances curr_tick.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+స్థిర అంతఃవరుస శూన్య z_timeout_q_advance(int32_t dt)
 {
-	struct _timeout *t = z_timeout_q_first();
+	నిర్మాణం _timeout *t = z_timeout_q_మొదటి();
 
-	if (t != NULL) {
+	ఒకవేళ (t != ఖాళీ) {
 		t->dticks -= dt;
 	}
 }
@@ -140,17 +140,17 @@ static inline void z_timeout_q_advance(int32_t dt)
  * curr_tick was advanced to match, so the successor's stored delta stays
  * valid without propagation.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+స్థిర అంతఃవరుస నిర్మాణం _timeout *z_timeout_q_తీయి_due(శూన్య)
 {
-	struct _timeout *t = z_timeout_q_first();
+	నిర్మాణం _timeout *t = z_timeout_q_మొదటి();
 
-	if ((t == NULL) || (t->dticks != 0)) {
-		return NULL;
+	ఒకవేళ ((t == ఖాళీ) || (t->dticks != 0)) {
+		తిరిగి ఖాళీ;
 	}
 
-	sys_dlist_remove(&t->node);
+	sys_dlist_remove(&t->కణుపు);
 
-	return t;
+	తిరిగి t;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */
+#అయితే_ముగింపు /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */

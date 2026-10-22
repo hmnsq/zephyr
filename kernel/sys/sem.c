@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+పూర్ణాంకం sys_sem_init(నిర్మాణం sys_sem *sem, గుర్తులేని పూర్ణాంకం initial_లెక్క,
+		 గుర్తులేని పూర్ణాంకం హద్దు)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_లెక్క, హద్దు);
 
-	return 0;
+	తిరిగి 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+పూర్ణాంకం sys_sem_give(నిర్మాణం sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	తిరిగి 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+పూర్ణాంకం sys_sem_take(నిర్మాణం sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	పూర్ణాంకం ret_విలువ = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_విలువ = k_sem_take(&sem->kernel_sem, timeout);
+	ఒకవేళ ((ret_విలువ == -EAGAIN) || (ret_విలువ == -EBUSY)) {
+		ret_విలువ = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	తిరిగి ret_విలువ;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+గుర్తులేని పూర్ణాంకం sys_sem_లెక్క_get(నిర్మాణం sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	తిరిగి k_sem_లెక్క_get(&sem->kernel_sem);
 }

@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
-#include <stddef.h>
-#include <string.h>
-#include <zephyr/device.h>
-#include <zephyr/sys/atomic.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/kobject.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/pm/device_runtime.h>
+#అన్తర్భావ <errno.h>
+#అన్తర్భావ <stddef.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <zephyr/device.h>
+#అన్తర్భావ <zephyr/sys/atomic.h>
+#అన్తర్భావ <zephyr/sys/iterable_sections.h>
+#అన్తర్భావ <zephyr/sys/kobject.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <zephyr/pm/device_runtime.h>
 
-int do_device_init(const struct device *dev)
+పూర్ణాంకం do_device_init(స్థిరరాశి నిర్మాణం device *dev)
 {
-	int rc = 0;
+	పూర్ణాంకం rc = 0;
 
-	if (dev->ops.init != NULL) {
+	ఒకవేళ (dev->ops.init != ఖాళీ) {
 		rc = dev->ops.init(dev);
 		/* If initialization failed, record in dev->state->init_res
 		 * the POSITIVE value of the resulting errno
 		 */
-		if (rc != 0) {
+		ఒకవేళ (rc != 0) {
 			/* device's init function should return:
 			 *   0 on success
 			 *   a negative value on failure (-errno)
@@ -33,13 +33,13 @@ int do_device_init(const struct device *dev)
 			__ASSERT(rc >= -UINT8_MAX && rc < 0, "device %s init: invalid error (%d)",
 				 dev->name, rc);
 
-			if (rc < 0) {
+			ఒకవేళ (rc < 0) {
 				rc = -rc;
 			}
 			/* handle error value overflow in production
 			 * this is likely a bug in the device's init function. Signals it
 			 */
-			if (rc > UINT8_MAX) {
+			ఒకవేళ (rc > UINT8_MAX) {
 				rc = UINT8_MAX;
 			}
 		}
@@ -51,7 +51,7 @@ int do_device_init(const struct device *dev)
 		dev->state->init_res = rc;
 	}
 
-	if (rc == 0) {
+	ఒకవేళ (rc == 0) {
 		/* A failed init leaves the device uninitialized, so it can be
 		 * retried by device_init() and nothing can be released by
 		 * device_deinit().
@@ -59,88 +59,88 @@ int do_device_init(const struct device *dev)
 		dev->state->initialized = true;
 
 		/* Run automatic device runtime enablement */
-		(void)pm_device_runtime_auto_enable(dev);
+		(శూన్య)pm_device_runtime_auto_enable(dev);
 	}
 
 	/* here, the value of rc is either 0 or +errno
 	 * flip the sign to return a negative value on failure as expected
 	 */
-	return -rc;
+	తిరిగి -rc;
 }
 
-int z_impl_device_init(const struct device *dev)
+పూర్ణాంకం z_impl_device_init(స్థిరరాశి నిర్మాణం device *dev)
 {
-	if (dev->state->initialized) {
-		return -EALREADY;
+	ఒకవేళ (dev->state->initialized) {
+		తిరిగి -EALREADY;
 	}
 
-	return do_device_init(dev);
+	తిరిగి do_device_init(dev);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_init(const struct device *dev)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_device_init(స్థిరరాశి నిర్మాణం device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_init(dev);
+	తిరిగి z_impl_device_init(dev);
 }
-#include <zephyr/syscalls/device_init_mrsh.c>
-#endif
+#అన్తర్భావ <zephyr/syscalls/device_init_mrsh.c>
+#అయితే_ముగింపు
 
 
-const struct device *z_impl_device_get_binding(const char *name)
+స్థిరరాశి నిర్మాణం device *z_impl_device_get_binding(స్థిరరాశి అక్షరం *name)
 {
 	/* A null string identifies no device.  So does an empty
 	 * string.
 	 */
-	if ((name == NULL) || (name[0] == '\0')) {
-		return NULL;
+	ఒకవేళ ((name == ఖాళీ) || (name[0] == '\0')) {
+		తిరిగి ఖాళీ;
 	}
 
 	/* Return NULL if the device matching 'name' is not ready. */
 	STRUCT_SECTION_FOREACH(device, dev) {
-		if ((dev->name == name) || (strcmp(name, dev->name) == 0)) {
-			return z_impl_device_is_ready(dev) ? dev : NULL;
+		ఒకవేళ ((dev->name == name) || (strcmp(name, dev->name) == 0)) {
+			తిరిగి z_impl_device_is_ready(dev) ? dev : ఖాళీ;
 		}
 	}
 
-	return NULL;
+	తిరిగి ఖాళీ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline const struct device *z_vrfy_device_get_binding(const char *name)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస స్థిరరాశి నిర్మాణం device *z_vrfy_device_get_binding(స్థిరరాశి అక్షరం *name)
 {
-	char name_copy[Z_DEVICE_MAX_NAME_LEN];
+	అక్షరం name_copy[Z_DEVICE_MAX_NAME_LEN];
 
-	if (k_usermode_string_copy(name_copy, name, sizeof(name_copy))
+	ఒకవేళ (k_usermode_string_copy(name_copy, name, పరిమాణం(name_copy))
 	    != 0) {
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
-	return z_impl_device_get_binding(name_copy);
+	తిరిగి z_impl_device_get_binding(name_copy);
 }
-#include <zephyr/syscalls/device_get_binding_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/device_get_binding_mrsh.c>
 
-static inline bool z_vrfy_device_is_ready(const struct device *dev)
+స్థిర అంతఃవరుస bool z_vrfy_device_is_ready(స్థిరరాశి నిర్మాణం device *dev)
 {
 	/* NULL is a documented argument, not an invalid kernel object */
-	if (dev == NULL) {
-		return false;
+	ఒకవేళ (dev == ఖాళీ) {
+		తిరిగి false;
 	}
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_is_ready(dev);
+	తిరిగి z_impl_device_is_ready(dev);
 }
-#include <zephyr/syscalls/device_is_ready_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/device_is_ready_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_DEVICE_DT_METADATA
-const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
+#నిర్వచితమైతే CONFIG_DEVICE_DT_METADATA
+స్థిరరాశి నిర్మాణం device *z_impl_device_get_by_dt_nodelabel(స్థిరరాశి అక్షరం *nodelabel)
 {
 	/* For consistency with device_get_binding(). */
-	if ((nodelabel == NULL) || (nodelabel[0] == '\0')) {
-		return NULL;
+	ఒకవేళ ((nodelabel == ఖాళీ) || (nodelabel[0] == '\0')) {
+		తిరిగి ఖాళీ;
 	}
 
 	/* Unlike device_get_binding(), which has a history of being
@@ -153,138 +153,138 @@ const struct device *z_impl_device_get_by_dt_nodelabel(const char *nodelabel)
 	 * device_get_binding() does.
 	 */
 	STRUCT_SECTION_FOREACH(device, dev) {
-		const struct device_dt_nodelabels *nl = device_get_dt_nodelabels(dev);
+		స్థిరరాశి నిర్మాణం device_dt_nodelabels *nl = device_get_dt_nodelabels(dev);
 
-		if (!z_impl_device_is_ready(dev) || nl == NULL) {
-			continue;
+		ఒకవేళ (!z_impl_device_is_ready(dev) || nl == ఖాళీ) {
+			కొనసాగు;
 		}
 
-		for (size_t i = 0; i < nl->num_nodelabels; i++) {
-			const char *dev_nodelabel = nl->nodelabels[i];
+		కొరకు (size_t i = 0; i < nl->అంకె_nodelabels; i++) {
+			స్థిరరాశి అక్షరం *dev_nodelabel = nl->nodelabels[i];
 
-			if (strcmp(nodelabel, dev_nodelabel) == 0) {
-				return dev;
+			ఒకవేళ (strcmp(nodelabel, dev_nodelabel) == 0) {
+				తిరిగి dev;
 			}
 		}
 	}
 
-	return NULL;
+	తిరిగి ఖాళీ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline const struct device *z_vrfy_device_get_by_dt_nodelabel(const char *nodelabel)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస స్థిరరాశి నిర్మాణం device *z_vrfy_device_get_by_dt_nodelabel(స్థిరరాశి అక్షరం *nodelabel)
 {
-	char nl_copy[Z_DEVICE_MAX_NODELABEL_LEN];
+	అక్షరం nl_copy[Z_DEVICE_MAX_NODELABEL_LEN];
 
-	if (k_usermode_string_copy(nl_copy, (char *)nodelabel, sizeof(nl_copy)) != 0) {
-		return NULL;
+	ఒకవేళ (k_usermode_string_copy(nl_copy, (అక్షరం *)nodelabel, పరిమాణం(nl_copy)) != 0) {
+		తిరిగి ఖాళీ;
 	}
 
-	return z_impl_device_get_by_dt_nodelabel(nl_copy);
+	తిరిగి z_impl_device_get_by_dt_nodelabel(nl_copy);
 }
-#include <zephyr/syscalls/device_get_by_dt_nodelabel_mrsh.c>
-#endif /* CONFIG_USERSPACE */
-#endif /* CONFIG_DEVICE_DT_METADATA */
+#అన్తర్భావ <zephyr/syscalls/device_get_by_dt_nodelabel_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
+#అయితే_ముగింపు /* CONFIG_DEVICE_DT_METADATA */
 
-size_t z_device_get_all_static(struct device const **devices)
+size_t z_device_get_all_static(నిర్మాణం device స్థిరరాశి **devices)
 {
 	size_t cnt;
 
 	STRUCT_SECTION_GET(device, 0, devices);
-	STRUCT_SECTION_COUNT(device, &cnt);
+	STRUCT_SECTION_లెక్క(device, &cnt);
 
-	return cnt;
+	తిరిగి cnt;
 }
 
-bool z_impl_device_is_ready(const struct device *dev)
+bool z_impl_device_is_ready(స్థిరరాశి నిర్మాణం device *dev)
 {
 	/*
 	 * if an invalid device pointer is passed as argument, this call
 	 * reports the `device` as not ready for usage.
 	 */
-	if (dev == NULL) {
-		return false;
+	ఒకవేళ (dev == ఖాళీ) {
+		తిరిగి false;
 	}
 
-	return dev->state->initialized;
+	తిరిగి dev->state->initialized;
 }
 
-int z_impl_device_deinit(const struct device *dev)
+పూర్ణాంకం z_impl_device_deinit(స్థిరరాశి నిర్మాణం device *dev)
 {
-#ifdef CONFIG_DEVICE_DEINIT_SUPPORT
-	int ret;
+#నిర్వచితమైతే CONFIG_DEVICE_DEINIT_SUPPORT
+	పూర్ణాంకం ret;
 
-	if (!dev->state->initialized) {
-		return -EPERM;
+	ఒకవేళ (!dev->state->initialized) {
+		తిరిగి -EPERM;
 	}
 
-	if (dev->ops.deinit == NULL) {
-		return -ENOTSUP;
+	ఒకవేళ (dev->ops.deinit == ఖాళీ) {
+		తిరిగి -ENOTSUP;
 	}
 
 	ret = dev->ops.deinit(dev);
-	if (ret < 0) {
-		return ret;
+	ఒకవేళ (ret < 0) {
+		తిరిగి ret;
 	}
 
 	dev->state->initialized = false;
 
-	return 0;
-#else
-	ARG_UNUSED(dev);
-	return -ENOTSUP;
-#endif /* CONFIG_DEVICE_DEINIT_SUPPORT */
+	తిరిగి 0;
+#లేకపోతే
+	ARG_వాడని(dev);
+	తిరిగి -ENOTSUP;
+#అయితే_ముగింపు /* CONFIG_DEVICE_DEINIT_SUPPORT */
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_device_deinit(const struct device *dev)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_device_deinit(స్థిరరాశి నిర్మాణం device *dev)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(dev, K_OBJ_DRIVER_ANY));
 
-	return z_impl_device_deinit(dev);
+	తిరిగి z_impl_device_deinit(dev);
 }
-#include <zephyr/syscalls/device_deinit_mrsh.c>
-#endif
+#అన్తర్భావ <zephyr/syscalls/device_deinit_mrsh.c>
+#అయితే_ముగింపు
 
-#ifdef CONFIG_DEVICE_DEPS
+#నిర్వచితమైతే CONFIG_DEVICE_DEPS
 
-static int device_visitor(const device_handle_t *handles,
-			   size_t handle_count,
+స్థిర పూర్ణాంకం device_visitor(స్థిరరాశి device_handle_t *handles,
+			   size_t handle_లెక్క,
 			   device_visitor_callback_t visitor_cb,
-			   void *context)
+			   శూన్య *context)
 {
 	/* Iterate over fixed devices */
-	for (size_t i = 0; i < handle_count; ++i) {
+	కొరకు (size_t i = 0; i < handle_లెక్క; ++i) {
 		device_handle_t dh = handles[i];
-		const struct device *rdev = device_from_handle(dh);
-		int rc = visitor_cb(rdev, context);
+		స్థిరరాశి నిర్మాణం device *rdev = device_from_handle(dh);
+		పూర్ణాంకం rc = visitor_cb(rdev, context);
 
-		if (rc < 0) {
-			return rc;
+		ఒకవేళ (rc < 0) {
+			తిరిగి rc;
 		}
 	}
 
-	return handle_count;
+	తిరిగి handle_లెక్క;
 }
 
-int device_required_foreach(const struct device *dev,
+పూర్ణాంకం device_required_foreach(స్థిరరాశి నిర్మాణం device *dev,
 			    device_visitor_callback_t visitor_cb,
-			    void *context)
+			    శూన్య *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_required_handles_get(dev, &handle_count);
+	size_t handle_లెక్క = 0;
+	స్థిరరాశి device_handle_t *handles = device_required_handles_get(dev, &handle_లెక్క);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	తిరిగి device_visitor(handles, handle_లెక్క, visitor_cb, context);
 }
 
-int device_supported_foreach(const struct device *dev,
+పూర్ణాంకం device_supported_foreach(స్థిరరాశి నిర్మాణం device *dev,
 			     device_visitor_callback_t visitor_cb,
-			     void *context)
+			     శూన్య *context)
 {
-	size_t handle_count = 0;
-	const device_handle_t *handles = device_supported_handles_get(dev, &handle_count);
+	size_t handle_లెక్క = 0;
+	స్థిరరాశి device_handle_t *handles = device_supported_handles_get(dev, &handle_లెక్క);
 
-	return device_visitor(handles, handle_count, visitor_cb, context);
+	తిరిగి device_visitor(handles, handle_లెక్క, visitor_cb, context);
 }
 
-#endif /* CONFIG_DEVICE_DEPS */
+#అయితే_ముగింపు /* CONFIG_DEVICE_DEPS */

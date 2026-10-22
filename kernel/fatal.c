@@ -4,100 +4,100 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/arch/cpu.h>
-#include <zephyr/arch/exception.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/fatal.h>
-#include <zephyr/debug/coredump.h>
-#include <zephyr/sys/reboot.h>
+#అన్తర్భావ <kernel_internal.h>
+#అన్తర్భావ <zephyr/sys/__assert.h>
+#అన్తర్భావ <zephyr/arch/cpu.h>
+#అన్తర్భావ <zephyr/arch/exception.h>
+#అన్తర్భావ <zephyr/logging/log_ctrl.h>
+#అన్తర్భావ <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/fatal.h>
+#అన్తర్భావ <zephyr/debug/coredump.h>
+#అన్తర్భావ <zephyr/sys/reboot.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
+FUNC_NORETURN __weak శూన్య arch_system_halt(గుర్తులేని పూర్ణాంకం reason)
 {
-	ARG_UNUSED(reason);
+	ARG_వాడని(reason);
 
 	/* TODO: What's the best way to totally halt the system if SMP
 	 * is enabled?
 	 */
 
-	(void)arch_irq_lock();
-	for (;;) {
+	(శూన్య)arch_irq_తాళం();
+	కొరకు (;;) {
 		/* Spin endlessly */
 	}
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-__weak void k_sys_fatal_error_handler(unsigned int reason,
-				      const struct arch_esf *esf)
+__weak శూన్య k_sys_fatal_error_handler(గుర్తులేని పూర్ణాంకం reason,
+				      స్థిరరాశి నిర్మాణం arch_esf *esf)
 {
-	ARG_UNUSED(esf);
+	ARG_వాడని(esf);
 	LOG_PANIC();
 
-#if CONFIG_RESET_ON_FATAL_ERROR
+#ఒకవేళ CONFIG_RESET_ON_FATAL_ERROR
 	EXCEPTION_DUMP("Resetting system");
 	sys_reboot(SYS_REBOOT_WARM);
-#else
+#లేకపోతే
 	EXCEPTION_DUMP("Halting system");
 	arch_system_halt(reason);
-#endif /* CONFIG_RESET_ON_FATAL_ERROR */
+#అయితే_ముగింపు /* CONFIG_RESET_ON_FATAL_ERROR */
 
-	CODE_UNREACHABLE;
+	సంకేతం_UNREACHABLE;
 }
 /* LCOV_EXCL_STOP */
 
-static const char *thread_name_get(struct k_thread *thread)
+స్థిర స్థిరరాశి అక్షరం *thread_name_get(నిర్మాణం k_thread *thread)
 {
-	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
+	స్థిరరాశి అక్షరం *thread_name = (thread != ఖాళీ) ? k_thread_name_get(thread) : ఖాళీ;
 
-	if ((thread_name == NULL) || (thread_name[0] == '\0')) {
+	ఒకవేళ ((thread_name == ఖాళీ) || (thread_name[0] == '\0')) {
 		thread_name = "unknown";
 	}
 
-	return thread_name;
+	తిరిగి thread_name;
 }
 
-static const char *reason_to_str(unsigned int reason)
+స్థిర స్థిరరాశి అక్షరం *reason_గమ్యం_str(గుర్తులేని పూర్ణాంకం reason)
 {
-	switch (reason) {
-	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
-	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
-	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
-	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
-	default:
-		return "Unknown error";
+	ఎంపిక (reason) {
+	స్థితి K_ERR_CPU_EXCEPTION:
+		తిరిగి "CPU exception";
+	స్థితి K_ERR_SPURIOUS_IRQ:
+		తిరిగి "Unhandled interrupt";
+	స్థితి K_ERR_దొంతర_CHK_FAIL:
+		తిరిగి "Stack overflow";
+	స్థితి K_ERR_KERNEL_OOPS:
+		తిరిగి "Kernel oops";
+	స్థితి K_ERR_KERNEL_PANIC:
+		తిరిగి "Kernel panic";
+	అప్రమేయ:
+		తిరిగి "Unknown error";
 	}
 }
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN void k_fatal_halt(unsigned int reason)
+FUNC_NORETURN శూన్య k_fatal_halt(గుర్తులేని పూర్ణాంకం reason)
 {
 	arch_system_halt(reason);
 }
 /* LCOV_EXCL_STOP */
 
-void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
+శూన్య z_fatal_error(గుర్తులేని పూర్ణాంకం reason, స్థిరరాశి నిర్మాణం arch_esf *esf)
 {
 	/* We can't allow this code to be preempted, but don't need to
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
-			_current : NULL;
+	గుర్తులేని పూర్ణాంకం కీలకం = arch_irq_తాళం();
+	నిర్మాణం k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
+			_current : ఖాళీ;
 
 	/* The printk lock is not trustworthy from here on: this context may
 	 * have failed while holding it, or a CPU that is never coming back
@@ -108,7 +108,7 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	/* twister looks for the "ZEPHYR FATAL ERROR" string, don't
 	 * change it without also updating twister
 	 */
-	EXCEPTION_DUMP(">>> ZEPHYR FATAL ERROR %d: %s on CPU %d", reason, reason_to_str(reason),
+	EXCEPTION_DUMP(">>> ZEPHYR FATAL ERROR %d: %s on CPU %d", reason, reason_గమ్యం_str(reason),
 		       _current_cpu->id);
 
 	/* FIXME: This doesn't seem to work as expected on all arches.
@@ -117,13 +117,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 *
 	 * See #17656
 	 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-	if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#ఒకవేళ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+	ఒకవేళ ((esf != ఖాళీ) && arch_is_లోపల_nested_exception(esf)) {
 		EXCEPTION_DUMP("Fault during interrupt handling");
 	}
-#endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+#అయితే_ముగింపు /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ఒకవేళ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		EXCEPTION_DUMP("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
@@ -133,15 +133,15 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * set (kernel_arch_interface.h). IS_ENABLED still parses both branches,
 	 * which breaks builds when the option is off (implicit declaration).
 	 */
-#ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
-	unsigned int coredump_irq_cookie;
+#నిర్వచితమైతే CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
+	గుర్తులేని పూర్ణాంకం coredump_irq_cookie;
 
-	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
+	arch_coredump_fatal_irq_unlock(కీలకం, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
-	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
-#else
+	కీలకం = arch_coredump_fatal_irq_తాళం(&coredump_irq_cookie);
+#లేకపోతే
 	coredump(reason, esf, thread);
-#endif
+#అయితే_ముగింపు
 
 	k_sys_fatal_error_handler(reason, esf);
 
@@ -158,49 +158,49 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * Note that k_thread_abort() returns on some architectures but
 	 * not others; e.g. on ARC, x86_64, Xtensa with ASM2, ARM
 	 */
-	if (!IS_ENABLED(CONFIG_TEST)) {
+	ఒకవేళ (!IS_ENABLED(CONFIG_TEST)) {
 		__ASSERT(reason != K_ERR_KERNEL_PANIC,
 			 "Attempted to recover from a kernel panic condition");
 		/* FIXME: #17656 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#ఒకవేళ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		ఒకవేళ ((esf != ఖాళీ) && arch_is_లోపల_nested_exception(esf)) {
+#ఒకవేళ defined(CONFIG_దొంతర_SENTINEL)
+			ఒకవేళ (reason != K_ERR_దొంతర_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
-#endif /* CONFIG_STACK_SENTINEL */
+#అయితే_ముగింపు /* CONFIG_STACK_SENTINEL */
 		}
-#endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
-	} else {
+#అయితే_ముగింపు /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+	} లేకపోతే {
 		/* Test mode */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#ఒకవేళ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		ఒకవేళ ((esf != ఖాళీ) && arch_is_లోపల_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
-				arch_irq_unlock(key);
-				return;
+#ఒకవేళ defined(CONFIG_దొంతర_SENTINEL)
+			ఒకవేళ (reason != K_ERR_దొంతర_CHK_FAIL) {
+				arch_irq_unlock(కీలకం);
+				తిరిగి;
 			}
-#else
-			arch_irq_unlock(key);
-			return;
-#endif /* CONFIG_STACK_SENTINEL */
-		} else {
+#లేకపోతే
+			arch_irq_unlock(కీలకం);
+			తిరిగి;
+#అయితే_ముగింపు /* CONFIG_STACK_SENTINEL */
+		} లేకపోతే {
 			/* Abort the thread only if the fault is not due to
 			 * a spurious ISR handler triggered.
 			 */
-			if (reason == K_ERR_SPURIOUS_IRQ) {
-				arch_irq_unlock(key);
-				return;
+			ఒకవేళ (reason == K_ERR_SPURIOUS_IRQ) {
+				arch_irq_unlock(కీలకం);
+				తిరిగి;
 			}
 		}
-#endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
+#అయితే_ముగింపు /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(కీలకం);
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ఒకవేళ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);
 	}
 }

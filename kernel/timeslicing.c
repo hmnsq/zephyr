@@ -3,124 +3,124 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <zephyr/sys/atomic.h>
-#include <kspinlock.h>
-#include <kswap.h>
-#include <ksched.h>
-#include <ipi.h>
-#include <timeslicing.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/sys/atomic.h>
+#అన్తర్భావ <kspinlock.h>
+#అన్తర్భావ <kswap.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <ipi.h>
+#అన్తర్భావ <timeslicing.h>
 
-static int slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
-static int slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
-static struct _timeout slice_timeouts[CONFIG_MP_MAX_NUM_CPUS];
+స్థిర పూర్ణాంకం ముక్క_ticks = DIV_విడత_పైకి(CONFIG_TIMESLICE_కొలత * Z_HZ_ticks, Z_HZ_ms);
+స్థిర పూర్ణాంకం ముక్క_max_prio = CONFIG_TIMESLICE_ప్రాధాన్యత;
+స్థిర నిర్మాణం _timeout ముక్క_timeouts[CONFIG_MP_MAX_అంకె_CPUS];
 
 /* Timeouts can expire on another CPU, so each CPU's flag must be atomic. */
-static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
+స్థిర atomic_t ముక్క_expired[CONFIG_MP_MAX_అంకె_CPUS];
 
-#ifdef CONFIG_SWAP_NONATOMIC
+#నిర్వచితమైతే CONFIG_మార్పిడి_NONATOMIC
 /* If z_swap() isn't atomic, then it's possible for a timer interrupt
  * to try to timeslice away _current after it has already pended
  * itself but before the corresponding context switch.  Treat that as
  * a noop condition in z_time_slice().
  */
-struct k_thread *pending_current;
-#endif
+నిర్మాణం k_thread *pending_current;
+#అయితే_ముగింపు
 
-static inline int slice_time(struct k_thread *thread)
+స్థిర అంతఃవరుస పూర్ణాంకం ముక్క_సమయం(నిర్మాణం k_thread *thread)
 {
-	int ret = slice_ticks;
+	పూర్ణాంకం ret = ముక్క_ticks;
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		ret = thread->base.slice_ticks;
+#నిర్వచితమైతే CONFIG_TIMESLICE_చొప్పున_THREAD
+	ఒకవేళ (thread->పునాది.ముక్క_ticks != 0) {
+		ret = thread->పునాది.ముక్క_ticks;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif
-	return ret;
+#లేకపోతే
+	ARG_వాడని(thread);
+#అయితే_ముగింపు
+	తిరిగి ret;
 }
 
-static int z_time_slice_size(struct k_thread *thread)
+స్థిర పూర్ణాంకం z_సమయం_ముక్క_కొలత(నిర్మాణం k_thread *thread)
 {
-	if (z_is_thread_prevented_from_running(thread) ||
+	ఒకవేళ (z_is_thread_prevented_from_running(thread) ||
 	    z_is_idle_thread_object(thread) ||
-	    (slice_time(thread) == 0)) {
-		return 0;
+	    (ముక్క_సమయం(thread) == 0)) {
+		తిరిగి 0;
 	}
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		return thread->base.slice_ticks;
+#నిర్వచితమైతే CONFIG_TIMESLICE_చొప్పున_THREAD
+	ఒకవేళ (thread->పునాది.ముక్క_ticks != 0) {
+		తిరిగి thread->పునాది.ముక్క_ticks;
 	}
-#endif
+#అయితే_ముగింపు
 
-	if (thread_is_preemptible(thread) &&
-	    !z_is_prio_higher(thread->base.prio, slice_max_prio)) {
-		return slice_ticks;
+	ఒకవేళ (thread_is_preemptible(thread) &&
+	    !z_is_prio_higher(thread->పునాది.prio, ముక్క_max_prio)) {
+		తిరిగి ముక్క_ticks;
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-static void slice_timeout(struct _timeout *timeout)
+స్థిర శూన్య ముక్క_timeout(నిర్మాణం _timeout *timeout)
 {
-	int cpu = ARRAY_INDEX(slice_timeouts, timeout);
+	పూర్ణాంకం cpu = ARRAY_సూచీ(ముక్క_timeouts, timeout);
 
-	atomic_set(&slice_expired[cpu], 1);
+	atomic_సమితి(&ముక్క_expired[cpu], 1);
 
 	/* We need an IPI if we just handled a timeslice expiration
 	 * for a different CPU.
 	 */
-	if (cpu != _current_cpu->id) {
-		flag_ipi(IPI_CPU_MASK(cpu));
+	ఒకవేళ (cpu != _current_cpu->id) {
+		flag_ipi(IPI_CPU_ముసుగు(cpu));
 	}
 }
 
-static void slice_reset(int slice_size)
+స్థిర శూన్య ముక్క_reset(పూర్ణాంకం ముక్క_కొలత)
 {
-	int cpu = _current_cpu->id;
+	పూర్ణాంకం cpu = _current_cpu->id;
 
 	/* Best-effort cancel: if the slice timeout is already in flight,
 	 * its handler only flips slice_expired[cpu] (which we clear below)
 	 * and possibly raises an IPI -- harmless either way.
 	 */
-	(void)z_try_abort_timeout(&slice_timeouts[cpu]);
-	if (slice_size != 0) {
+	(శూన్య)z_try_abort_timeout(&ముక్క_timeouts[cpu]);
+	ఒకవేళ (ముక్క_కొలత != 0) {
 		/* When invoked because the slicer just fired (this CPU or
 		 * via IPI from another), we're at a tick edge but past the
 		 * announce window, so subtract 1 to cancel z_add_timeout()'s
 		 * "+1" round-up and land at exactly slice_size ticks.
 		 */
-		int delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
+		పూర్ణాంకం delay = atomic_get(&ముక్క_expired[cpu]) ? ముక్క_కొలత - 1 : ముక్క_కొలత;
 
-		z_add_timeout(&slice_timeouts[cpu], slice_timeout,
+		z_కూడు_timeout(&ముక్క_timeouts[cpu], ముక్క_timeout,
 			      K_TICKS(delay));
 	}
-	atomic_clear(&slice_expired[cpu]);
+	atomic_clear(&ముక్క_expired[cpu]);
 }
 
-void z_time_slice_reset(struct k_thread *thread)
+శూన్య z_సమయం_ముక్క_reset(నిర్మాణం k_thread *thread)
 {
-	slice_reset(z_time_slice_size(thread));
+	ముక్క_reset(z_సమయం_ముక్క_కొలత(thread));
 }
 
-static ALWAYS_INLINE bool thread_defines_time_slice_size(struct k_thread *thread)
+స్థిర ALWAYS_INLINE bool thread_నిర్వచిస్తుంది_సమయం_ముక్క_కొలత(నిర్మాణం k_thread *thread)
 {
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-	return (thread->base.slice_ticks != 0);
-#else  /* !CONFIG_TIMESLICE_PER_THREAD */
-	ARG_UNUSED(thread);
-	return false;
-#endif /* !CONFIG_TIMESLICE_PER_THREAD */
+#నిర్వచితమైతే CONFIG_TIMESLICE_చొప్పున_THREAD
+	తిరిగి (thread->పునాది.ముక్క_ticks != 0);
+#లేకపోతే  /* !CONFIG_TIMESLICE_PER_THREAD */
+	ARG_వాడని(thread);
+	తిరిగి false;
+#అయితే_ముగింపు /* !CONFIG_TIMESLICE_PER_THREAD */
 }
 
-void k_sched_time_slice_set(int32_t slice, int prio)
+శూన్య k_sched_సమయం_ముక్క_సమితి(int32_t ముక్క, పూర్ణాంకం prio)
 {
 	Z_SCHED_SPINLOCK {
 
-		slice_ticks = k_ms_to_ticks_ceil32(slice);
-		slice_max_prio = prio;
+		ముక్క_ticks = k_ms_గమ్యం_ticks_ceil32(ముక్క);
+		ముక్క_max_prio = prio;
 
 		/*
 		 * Threads that define their own time slice size should not have
@@ -128,74 +128,74 @@ void k_sched_time_slice_set(int32_t slice, int prio)
 		 * take precedence over the global time slice size.
 		 */
 
-		if (!thread_defines_time_slice_size(_current)) {
-			z_time_slice_reset(_current);
+		ఒకవేళ (!thread_నిర్వచిస్తుంది_సమయం_ముక్క_కొలత(_current)) {
+			z_సమయం_ముక్క_reset(_current);
 		}
 	}
 }
 
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-void k_thread_time_slice_set(struct k_thread *thread, int32_t thread_slice_ticks,
-			     k_thread_timeslice_fn_t expired, void *data)
+#నిర్వచితమైతే CONFIG_TIMESLICE_చొప్పున_THREAD
+శూన్య k_thread_సమయం_ముక్క_సమితి(నిర్మాణం k_thread *thread, int32_t thread_ముక్క_ticks,
+			     k_thread_timeslice_fn_t expired, శూన్య *దత్తాంశం)
 {
 	Z_SCHED_SPINLOCK {
-		thread->base.slice_ticks = thread_slice_ticks;
-		thread->base.slice_expired = expired;
-		thread->base.slice_data = data;
-		z_time_slice_reset(thread);
+		thread->పునాది.ముక్క_ticks = thread_ముక్క_ticks;
+		thread->పునాది.ముక్క_expired = expired;
+		thread->పునాది.ముక్క_దత్తాంశం = దత్తాంశం;
+		z_సమయం_ముక్క_reset(thread);
 	}
 }
-#endif
+#అయితే_ముగింపు
 
 /* Called out of each timer and IPI interrupt */
-void z_time_slice(void)
+శూన్య z_సమయం_ముక్క(శూన్య)
 {
 	/*
 	 * Atomic context switches need no scheduler work until this CPU's
 	 * time slice expires. Non-atomic context switches must still take
 	 * the scheduler lock to synchronize pending_current.
 	 */
-	if (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
-	    !atomic_get(&slice_expired[_current_cpu->id])) {
-		return;
+	ఒకవేళ (!IS_ENABLED(CONFIG_మార్పిడి_NONATOMIC) &&
+	    !atomic_get(&ముక్క_expired[_current_cpu->id])) {
+		తిరిగి;
 	}
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
-	struct k_thread *curr = _current;
+	k_spinlock_కీలకం_t కీలకం = z_sched_spinlock_తాళం();
+	నిర్మాణం k_thread *curr = _current;
 
-#ifdef CONFIG_SWAP_NONATOMIC
-	if (pending_current == curr) {
-		z_time_slice_reset(curr);
-		z_sched_spinlock_unlock(key);
-		return;
+#నిర్వచితమైతే CONFIG_మార్పిడి_NONATOMIC
+	ఒకవేళ (pending_current == curr) {
+		z_సమయం_ముక్క_reset(curr);
+		z_sched_spinlock_unlock(కీలకం);
+		తిరిగి;
 	}
-	pending_current = NULL;
-#endif
+	pending_current = ఖాళీ;
+#అయితే_ముగింపు
 
-	int slice_size = 0;
+	పూర్ణాంకం ముక్క_కొలత = 0;
 
-	if (atomic_get(&slice_expired[_current_cpu->id])) {
-		slice_size = z_time_slice_size(curr);
+	ఒకవేళ (atomic_get(&ముక్క_expired[_current_cpu->id])) {
+		ముక్క_కొలత = z_సమయం_ముక్క_కొలత(curr);
 	}
 
-	if (slice_size != 0) {
-#ifdef CONFIG_TIMESLICE_PER_THREAD
-		k_thread_timeslice_fn_t handler = curr->base.slice_expired;
+	ఒకవేళ (ముక్క_కొలత != 0) {
+#నిర్వచితమైతే CONFIG_TIMESLICE_చొప్పున_THREAD
+		k_thread_timeslice_fn_t handler = curr->పునాది.ముక్క_expired;
 
-		if (handler != NULL) {
-			z_sched_spinlock_unlock(key);
-			handler(curr, curr->base.slice_data);
-			key = z_sched_spinlock_lock();
+		ఒకవేళ (handler != ఖాళీ) {
+			z_sched_spinlock_unlock(కీలకం);
+			handler(curr, curr->పునాది.ముక్క_దత్తాంశం);
+			కీలకం = z_sched_spinlock_తాళం();
 
 			/* The handler ran with the lock dropped and may have
 			 * changed this thread's slice configuration, so the
 			 * cached size is stale; recompute before rearming.
 			 */
-			slice_size = z_time_slice_size(curr);
+			ముక్క_కొలత = z_సమయం_ముక్క_కొలత(curr);
 		}
-#endif
-		if (!z_is_thread_prevented_from_running(curr)) {
-			move_current_to_end_of_prio_q();
+#అయితే_ముగింపు
+		ఒకవేళ (!z_is_thread_prevented_from_running(curr)) {
+			move_current_గమ్యం_చివర_యొక్క_prio_q();
 			/* If the rotation kept curr at the front (no other
 			 * runnable thread of equal-or-higher priority is
 			 * waiting), no swap will happen and we must rearm
@@ -203,18 +203,18 @@ void z_time_slice(void)
 			 * the new thread with slice_expired still set,
 			 * picking up the tick-aligned delay.
 			 */
-#ifdef CONFIG_SMP
-			struct k_thread *next = runq_best();
+#నిర్వచితమైతే CONFIG_SMP
+			నిర్మాణం k_thread *తదుపరి = runq_ఉత్తమ();
 
-			if (next == NULL || z_is_idle_thread_object(next)) {
-				slice_reset(slice_size);
+			ఒకవేళ (తదుపరి == ఖాళీ || z_is_idle_thread_object(తదుపరి)) {
+				ముక్క_reset(ముక్క_కొలత);
 			}
-#else
-			if (_kernel.ready_q.cache == curr) {
-				slice_reset(slice_size);
+#లేకపోతే
+			ఒకవేళ (_kernel.ready_q.cache == curr) {
+				ముక్క_reset(ముక్క_కొలత);
 			}
-#endif
+#అయితే_ముగింపు
 		}
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(కీలకం);
 }

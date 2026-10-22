@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+స్థిర నిర్మాణం k_object *validate_kernel_object(స్థిరరాశి శూన్య *obj,
+					       గణన k_objects otype,
+					       గణన _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	నిర్మాణం k_object *ko;
+	పూర్ణాంకం ret;
 
-	ko = k_object_find(obj);
+	ko = k_object_కనుగొను(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
-#ifdef CONFIG_LOG
+	ఒకవేళ (ret != 0) {
+#నిర్వచితమైతే CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
-#endif /* CONFIG_LOG */
-		return NULL;
+#అయితే_ముగింపు /* CONFIG_LOG */
+		తిరిగి ఖాళీ;
 	}
 
-	return ko;
+	తిరిగి ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+స్థిర ALWAYS_INLINE నిర్మాణం k_object *validate_any_object(స్థిరరాశి శూన్య *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	తిరిగి validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(స్థిరరాశి శూన్య *obj, గణన k_objects otype)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	తిరిగి (ko != ఖాళీ);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,47 +49,47 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_object_access_grant(స్థిరరాశి శూన్య *object,
+						నిర్మాణం k_thread *thread)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied",
+	K_OOPS(K_SYSCALL_VERIFY_సందేశం(ko != ఖాళీ, "object %p access denied",
 				    object));
-	k_thread_perms_set(ko, thread);
+	k_thread_perms_సమితి(ko, thread);
 }
-#include <zephyr/syscalls/k_object_access_grant_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_object_access_grant_mrsh.c>
 
 /*
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_object_access_check(స్థిరరాశి శూన్య *object)
 {
-	return z_impl_k_object_access_check(object);
+	తిరిగి z_impl_k_object_access_check(object);
 }
-#include <zephyr/syscalls/k_object_access_check_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_object_release(స్థిరరాశి శూన్య *object)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
+	K_OOPS(K_SYSCALL_VERIFY_సందేశం(ko != ఖాళీ, "object %p access denied", object));
 	k_thread_perms_clear(ko, _current);
 }
-#include <zephyr/syscalls/k_object_release_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_object_alloc(గణన k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	తిరిగి z_impl_k_object_alloc(otype);
 }
-#include <zephyr/syscalls/k_object_alloc_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_object_alloc_కొలత(గణన k_objects otype, size_t కొలత)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	తిరిగి z_impl_k_object_alloc_కొలత(otype, కొలత);
 }
-#include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_object_alloc_size_mrsh.c>

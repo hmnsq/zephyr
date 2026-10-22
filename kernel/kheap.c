@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/iterable_sections.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/linker/linker-defs.h>
+#అన్తర్భావ <zephyr/sys/iterable_sections.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+పూర్ణాంకం k_కుప్ప_array_get(నిర్మాణం k_కుప్ప **కుప్ప)
 {
-	int num;
+	పూర్ణాంకం అంకె;
 
 	/* Pointer to the start of the heap array */
-	STRUCT_SECTION_GET(k_heap, 0, heap);
+	STRUCT_SECTION_GET(k_కుప్ప, 0, కుప్ప);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_లెక్క(k_కుప్ప, &అంకె);
+	తిరిగి అంకె;
 }
 
-void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
+శూన్య k_కుప్ప_init(నిర్మాణం k_కుప్ప *కుప్ప, శూన్య *mem, size_t బైట్లు)
 {
-	z_waitq_init(&heap->wait_q);
-	heap->lock = (struct k_spinlock) {};
-	sys_heap_init(&heap->heap, mem, bytes);
+	z_waitq_init(&కుప్ప->wait_q);
+	కుప్ప->తాళం = (నిర్మాణం k_spinlock) {};
+	sys_కుప్ప_init(&కుప్ప->కుప్ప, mem, బైట్లు);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_కుప్ప, కుప్ప);
 }
 
-static int statics_init(void)
+స్థిర పూర్ణాంకం statics_init(శూన్య)
 {
-	STRUCT_SECTION_FOREACH(k_heap, heap) {
-		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
+	STRUCT_SECTION_FOREACH(k_కుప్ప, కుప్ప) {
+		k_కుప్ప_init(కుప్ప, కుప్ప->కుప్ప.init_mem, కుప్ప->కుప్ప.init_బైట్లు);
 	}
-	return 0;
+	తిరిగి 0;
 }
 
 /*
@@ -46,73 +46,73 @@ static int statics_init(void)
  * sys_heap_init(). A K_KERNEL_INIT_PRE() hook would run ahead of that, leaving
  * the shadow unregistered and KASAN tracking disabled.
  */
-SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_OBJECTS);
+SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_ప్రాధాన్యత_OBJECTS);
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+రకనిర్వచనం శూన్య * (sys_కుప్ప_allocator_t)(నిర్మాణం sys_కుప్ప *కుప్ప, size_t align, size_t బైట్లు);
 
-static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes,
+స్థిర శూన్య *z_కుప్ప_alloc_helper(నిర్మాణం k_కుప్ప *కుప్ప, size_t align, size_t బైట్లు,
 				 k_timeout_t timeout,
-				 sys_heap_allocator_t *sys_heap_allocator)
+				 sys_కుప్ప_allocator_t *sys_కుప్ప_allocator)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t చివర = sys_timepoint_calc(timeout);
+	శూన్య *ret = ఖాళీ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_లోపల_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
-		ret = sys_heap_allocator(&heap->heap, align, bytes);
+	అయితే (ret == ఖాళీ) {
+		ret = sys_కుప్ప_allocator(&కుప్ప->కుప్ప, align, బైట్లు);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		ఒకవేళ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ఖాళీ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			ఆపు;
 		}
 
-		if (!blocked_alloc) {
+		ఒకవేళ (!blocked_alloc) {
 			blocked_alloc = true;
 
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+			SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_కుప్ప, alloc_helper, కుప్ప, timeout);
+		} లేకపోతే {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(చివర);
+		(శూన్య) z_pend_curr(&కుప్ప->తాళం, కీలకం, &కుప్ప->wait_q, timeout);
+		కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 	}
 
-	k_spin_unlock(&heap->lock, key);
-	return ret;
+	k_spin_unlock(&కుప్ప->తాళం, కీలకం);
+	తిరిగి ret;
 }
 
-void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
+శూన్య *k_కుప్ప_alloc(నిర్మాణం k_కుప్ప *కుప్ప, size_t బైట్లు, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, alloc, heap, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప, alloc, కుప్ప, timeout);
 
-	void *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
-					sys_heap_noalign_alloc);
+	శూన్య *ret = z_కుప్ప_alloc_helper(కుప్ప, 0, బైట్లు, timeout,
+					sys_కుప్ప_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప, alloc, కుప్ప, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
+శూన్య *k_కుప్ప_aligned_alloc(నిర్మాణం k_కుప్ప *కుప్ప, size_t align, size_t బైట్లు,
 			k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, aligned_alloc, heap, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప, aligned_alloc, కుప్ప, timeout);
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
 		 "align must be a power of 2");
 
-	void *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
-					sys_heap_aligned_alloc);
+	శూన్య *ret = z_కుప్ప_alloc_helper(కుప్ప, align, బైట్లు, timeout,
+					sys_కుప్ప_aligned_alloc);
 
 	/*
 	 * modules/debug/percepio/TraceRecorder/kernelports/Zephyr/include/tracing_tracerecorder.h
@@ -121,73 +121,73 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	 * that is no longer in scope. Provide a dummy stub for compilation
 	 * to still succeed until that module's layering violation is fixed.
 	 */
-	bool blocked_alloc = false; ARG_UNUSED(blocked_alloc);
+	bool blocked_alloc = false; ARG_వాడని(blocked_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప, aligned_alloc, కుప్ప, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+శూన్య *k_కుప్ప_calloc(నిర్మాణం k_కుప్ప *కుప్ప, size_t అంకె, size_t కొలత, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప, సున్నా_జ్ఞాపకం_ఇవ్వు, కుప్ప, timeout);
 
-	void *ret = NULL;
+	శూన్య *ret = ఖాళీ;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
-		ret = k_heap_alloc(heap, bounds, timeout);
+	ఒకవేళ (!కొలత_mul_అధికప్రవాహం(అంకె, కొలత, &bounds)) {
+		ret = k_కుప్ప_alloc(కుప్ప, bounds, timeout);
 	}
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	ఒకవేళ (ret != ఖాళీ) {
+		(శూన్య)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప, సున్నా_జ్ఞాపకం_ఇవ్వు, కుప్ప, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
+శూన్య *k_కుప్ప_realloc(నిర్మాణం k_కుప్ప *కుప్ప, శూన్య *ptr, size_t బైట్లు, k_timeout_t timeout)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t చివర = sys_timepoint_calc(timeout);
+	శూన్య *ret = ఖాళీ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప, realloc, కుప్ప, ptr, బైట్లు, timeout);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_లోపల_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
-		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
+	అయితే (ret == ఖాళీ) {
+		ret = sys_కుప్ప_realloc(&కుప్ప->కుప్ప, ptr, బైట్లు);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		ఒకవేళ (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != ఖాళీ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			ఆపు;
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(చివర);
+		(శూన్య) z_pend_curr(&కుప్ప->తాళం, కీలకం, &కుప్ప->wait_q, timeout);
+		కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&కుప్ప->తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప, realloc, కుప్ప, ptr, బైట్లు, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void k_heap_free(struct k_heap *heap, void *mem)
+శూన్య k_కుప్ప_free(నిర్మాణం k_కుప్ప *కుప్ప, శూన్య *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 
-	sys_heap_free(&heap->heap, mem);
+	sys_కుప్ప_free(&కుప్ప->కుప్ప, mem);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
-	} else {
-		k_spin_unlock(&heap->lock, key);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_కుప్ప, విడుదల, కుప్ప);
+	ఒకవేళ (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&కుప్ప->wait_q) != 0)) {
+		z_reschedule(&కుప్ప->తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&కుప్ప->తాళం, కీలకం);
 	}
 }

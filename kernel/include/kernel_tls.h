@@ -11,10 +11,10 @@
  * Kernel APIs related to thread local storage.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#నిర్వచితం_కాకపోతే ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#నిర్వచించు ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 
-#include <zephyr/linker/linker-defs.h>
+#అన్తర్భావ <zephyr/linker/linker-defs.h>
 
 /**
  * @brief Return the total size of TLS data/bss areas
@@ -26,14 +26,14 @@
  *
  * @return Total size of TLS data/bss areas
  */
-static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
+స్థిర అంతఃవరుస FUNC_NO_దొంతర_PROTECTOR size_t z_tls_దత్తాంశం_కొలత(శూన్య)
 {
-	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
+	size_t కొలత = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
-	size += (size_t)(uintptr_t)__stack_chk_size;
-#endif
-	return size;
+#ఒకవేళ defined(CONFIG_దొంతర_CANARIES_TLS_PREPEND)
+	కొలత += (size_t)(uintptr_t)__stack_chk_size;
+#అయితే_ముగింపు
+	తిరిగి కొలత;
 }
 
 /**
@@ -44,24 +44,24 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  *
  * @param dest Pointer to destination
  */
-static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
+స్థిర అంతఃవరుస FUNC_NO_దొంతర_PROTECTOR శూన్య z_tls_copy(అక్షరం *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#ఒకవేళ defined(CONFIG_దొంతర_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
-	memcpy(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
+	జ్ఞాపకం_నకలు(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
 	dest += (size_t)(uintptr_t)__stack_chk_size;
 
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	జ్ఞాపకం_నకలు(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+#లేకపోతే
 	/* Copy initialized data (tdata) */
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	జ్ఞాపకం_నకలు(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#endif
+#అయితే_ముగింపు
 	/* Clear BSS data (tbss) */
 	memset(dest, 0, (size_t)(uintptr_t)__tbss_size);
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */
+#అయితే_ముగింపు /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */

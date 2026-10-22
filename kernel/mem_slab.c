@@ -4,98 +4,98 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/sys/iterable_sections.h>
-#include <zephyr/sys/minmax.h>
-#include <string.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <zephyr/linker/sections.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/sys/check.h>
+#అన్తర్భావ <zephyr/sys/iterable_sections.h>
+#అన్తర్భావ <zephyr/sys/minmax.h>
+#అన్తర్భావ <string.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kernel_internal.h>
-#include <scheduler.h>
-#include <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <kernel_internal.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <wait_q.h>
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
+#నిర్వచితమైతే CONFIG_OBJ_CORE_MEM_SLAB
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS_MEM_SLAB
 
-static int k_mem_slab_stats_raw(struct k_obj_core *obj_core, void *stats)
+స్థిర పూర్ణాంకం k_mem_slab_stats_raw(నిర్మాణం k_obj_core *obj_core, శూన్య *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != ఖాళీ) && (stats != ఖాళీ), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	నిర్మాణం k_mem_slab *slab;
+	k_spinlock_కీలకం_t   కీలకం;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	memcpy(stats, &slab->info, sizeof(slab->info));
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_యొక్క(obj_core, నిర్మాణం k_mem_slab, obj_core);
+	కీలకం = k_spin_తాళం(&slab->తాళం);
+	జ్ఞాపకం_నకలు(stats, &slab->info, పరిమాణం(slab->info));
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return 0;
+	తిరిగి 0;
 }
 
-static int k_mem_slab_stats_query(struct k_obj_core *obj_core, void *stats)
+స్థిర పూర్ణాంకం k_mem_slab_stats_query(నిర్మాణం k_obj_core *obj_core, శూన్య *stats)
 {
-	__ASSERT((obj_core != NULL) && (stats != NULL), "NULL parameter");
+	__ASSERT((obj_core != ఖాళీ) && (stats != ఖాళీ), "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
-	struct sys_memory_stats *ptr = stats;
+	నిర్మాణం k_mem_slab *slab;
+	k_spinlock_కీలకం_t   కీలకం;
+	నిర్మాణం sys_జ్ఞాపకం_stats *ptr = stats;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
-	ptr->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			  slab->info.block_size;
-	ptr->allocated_bytes = slab->info.num_used * slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	ptr->max_allocated_bytes = slab->info.max_used * slab->info.block_size;
-#else
-	ptr->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
-	k_spin_unlock(&slab->lock, key);
+	slab = CONTAINER_యొక్క(obj_core, నిర్మాణం k_mem_slab, obj_core);
+	కీలకం = k_spin_తాళం(&slab->తాళం);
+	ptr->free_బైట్లు = (slab->info.అంకె_ఖండాలు - slab->info.అంకె_వాడిన) *
+			  slab->info.ఖండం_కొలత;
+	ptr->allocated_బైట్లు = slab->info.అంకె_వాడిన * slab->info.ఖండం_కొలత;
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	ptr->max_allocated_బైట్లు = slab->info.max_వాడిన * slab->info.ఖండం_కొలత;
+#లేకపోతే
+	ptr->max_allocated_బైట్లు = 0;
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return 0;
+	తిరిగి 0;
 }
 
-static int k_mem_slab_stats_reset(struct k_obj_core *obj_core)
+స్థిర పూర్ణాంకం k_mem_slab_stats_reset(నిర్మాణం k_obj_core *obj_core)
 {
-	__ASSERT(obj_core != NULL, "NULL parameter");
+	__ASSERT(obj_core != ఖాళీ, "NULL parameter");
 
-	struct k_mem_slab *slab;
-	k_spinlock_key_t   key;
+	నిర్మాణం k_mem_slab *slab;
+	k_spinlock_కీలకం_t   కీలకం;
 
-	slab = CONTAINER_OF(obj_core, struct k_mem_slab, obj_core);
-	key = k_spin_lock(&slab->lock);
+	slab = CONTAINER_యొక్క(obj_core, నిర్మాణం k_mem_slab, obj_core);
+	కీలకం = k_spin_తాళం(&slab->తాళం);
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = slab->info.num_used;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_వాడిన = slab->info.అంకె_వాడిన;
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return 0;
+	తిరిగి 0;
 }
 
-static struct k_obj_core_stats_desc mem_slab_stats_desc = {
-	.raw_size = sizeof(struct k_mem_slab_info),
-	.query_size = sizeof(struct sys_memory_stats),
+స్థిర నిర్మాణం k_obj_core_stats_desc mem_slab_stats_desc = {
+	.raw_కొలత = పరిమాణం(నిర్మాణం k_mem_slab_info),
+	.query_కొలత = పరిమాణం(నిర్మాణం sys_జ్ఞాపకం_stats),
 	.raw   = k_mem_slab_stats_raw,
 	.query = k_mem_slab_stats_query,
 	.reset = k_mem_slab_stats_reset,
-	.disable = NULL,
-	.enable = NULL,
+	.disable = ఖాళీ,
+	.enable = ఖాళీ,
 };
 
 K_OBJ_TYPE_DEFINE_STATS(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID,
 			&mem_slab_stats_desc, info);
-#else
-K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
+#లేకపోతే
+K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_MEM_SLAB */
 
 /**
  * @brief Initialize kernel memory slab subsystem.
@@ -106,38 +106,38 @@ K_OBJ_TYPE_DEFINE(obj_type_mem_slab, k_mem_slab, K_OBJ_TYPE_MEM_SLAB_ID, NULL);
  * @retval 0 on success.
  * @retval -EINVAL if @p slab contains invalid configuration and/or values.
  */
-static int create_free_list(struct k_mem_slab *slab)
+స్థిర పూర్ణాంకం create_free_list(నిర్మాణం k_mem_slab *slab)
 {
-	char *p;
-	size_t total_size;
+	అక్షరం *p;
+	size_t మొత్తం_కొలత;
 
-	CHECKIF(slab->info.block_size == 0U) {
-		return -EINVAL;
+	CHECKIF(slab->info.ఖండం_కొలత == 0U) {
+		తిరిగి -EINVAL;
 	}
 
 	/* blocks must be word aligned */
-	CHECKIF(((slab->info.block_size | (uintptr_t)slab->buffer) &
-				(sizeof(void *) - 1)) != 0U) {
-		return -EINVAL;
+	CHECKIF(((slab->info.ఖండం_కొలత | (uintptr_t)slab->బఫరు) &
+				(పరిమాణం(శూన్య *) - 1)) != 0U) {
+		తిరిగి -EINVAL;
 	}
 
-	if (size_mul_overflow(slab->info.block_size, slab->info.num_blocks, &total_size)) {
-		return -EINVAL;
+	ఒకవేళ (కొలత_mul_అధికప్రవాహం(slab->info.ఖండం_కొలత, slab->info.అంకె_ఖండాలు, &మొత్తం_కొలత)) {
+		తిరిగి -EINVAL;
 	}
-	if (size_add_overflow((size_t)(uintptr_t)slab->buffer, total_size, &total_size)) {
-		return -EINVAL;
+	ఒకవేళ (కొలత_కూడు_అధికప్రవాహం((size_t)(uintptr_t)slab->బఫరు, మొత్తం_కొలత, &మొత్తం_కొలత)) {
+		తిరిగి -EINVAL;
 	}
 
-	slab->free_list = NULL;
-	p = (char *)(total_size - slab->info.block_size);
+	slab->free_list = ఖాళీ;
+	p = (అక్షరం *)(మొత్తం_కొలత - slab->info.ఖండం_కొలత);
 
-	for (uint32_t i = 0; i < slab->info.num_blocks; i++) {
-		*(char **)p = slab->free_list;
+	కొరకు (uint32_t i = 0; i < slab->info.అంకె_ఖండాలు; i++) {
+		*(అక్షరం **)p = slab->free_list;
 		slab->free_list = p;
-		p -= slab->info.block_size;
+		p -= slab->info.ఖండం_కొలత;
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
 /**
@@ -153,11 +153,11 @@ static int create_free_list(struct k_mem_slab *slab)
  * (create_free_list() fails), matching the previous SYS_INIT behavior whose
  * return value was discarded by the init runner.
  */
-static void init_mem_slab_module(void)
+స్థిర శూన్య init_mem_slab_module(శూన్య)
 {
 	STRUCT_SECTION_FOREACH(k_mem_slab, slab) {
-		if (create_free_list(slab) < 0) {
-			return;
+		ఒకవేళ (create_free_list(slab) < 0) {
+			తిరిగి;
 		}
 		k_object_init(slab);
 	}
@@ -165,172 +165,172 @@ static void init_mem_slab_module(void)
 
 K_KERNEL_INIT_PRE(init_mem_slab_module);
 
-int k_mem_slab_init(struct k_mem_slab *slab, void *buffer,
-		    size_t block_size, uint32_t num_blocks)
+పూర్ణాంకం k_mem_slab_init(నిర్మాణం k_mem_slab *slab, శూన్య *బఫరు,
+		    size_t ఖండం_కొలత, uint32_t అంకె_ఖండాలు)
 {
-	int rc;
+	పూర్ణాంకం rc;
 
-	slab->info.num_blocks = num_blocks;
-	slab->info.block_size = block_size;
-	slab->buffer = buffer;
-	slab->info.num_used = 0U;
-	slab->lock = (struct k_spinlock) {};
+	slab->info.అంకె_ఖండాలు = అంకె_ఖండాలు;
+	slab->info.ఖండం_కొలత = ఖండం_కొలత;
+	slab->బఫరు = బఫరు;
+	slab->info.అంకె_వాడిన = 0U;
+	slab->తాళం = (నిర్మాణం k_spinlock) {};
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	slab->info.max_used = 0U;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	slab->info.max_వాడిన = 0U;
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
 	rc = create_free_list(slab);
-	if (rc < 0) {
-		goto out;
+	ఒకవేళ (rc < 0) {
+		వెళ్ళు బహిర్గతం;
 	}
 
-#ifdef CONFIG_OBJ_CORE_MEM_SLAB
+#నిర్వచితమైతే CONFIG_OBJ_CORE_MEM_SLAB
 	k_obj_core_init_and_link(K_OBJ_CORE(slab), &obj_type_mem_slab);
-#endif /* CONFIG_OBJ_CORE_MEM_SLAB */
-#ifdef CONFIG_OBJ_CORE_STATS_MEM_SLAB
-	k_obj_core_stats_register(K_OBJ_CORE(slab), &slab->info,
-				  sizeof(struct k_mem_slab_info));
-#endif /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_MEM_SLAB */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_STATS_MEM_SLAB
+	k_obj_core_stats_రిజిస్టరు(K_OBJ_CORE(slab), &slab->info,
+				  పరిమాణం(నిర్మాణం k_mem_slab_info));
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STATS_MEM_SLAB */
 
 	z_waitq_init(&slab->wait_q);
 	k_object_init(slab);
-out:
-	SYS_PORT_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
+బహిర్గతం:
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_mem_slab, slab, rc);
 
-	return rc;
+	తిరిగి rc;
 }
 
-static bool slab_ptr_is_good(struct k_mem_slab *slab, const void *ptr)
+స్థిర bool slab_ptr_is_good(నిర్మాణం k_mem_slab *slab, స్థిరరాశి శూన్య *ptr)
 {
-	if (!IS_ENABLED(CONFIG_MEM_SLAB_POINTER_VALIDATE)) {
-		return true;
+	ఒకవేళ (!IS_ENABLED(CONFIG_MEM_SLAB_సూచిక_VALIDATE)) {
+		తిరిగి true;
 	}
 
-	const char *p = ptr;
-	ptrdiff_t offset = p - slab->buffer;
+	స్థిరరాశి అక్షరం *p = ptr;
+	ptrdiff_t స్థానభ్రంశం = p - slab->బఫరు;
 
-	return (offset >= 0) &&
-	       (offset < (slab->info.block_size * slab->info.num_blocks)) &&
-	       ((offset % slab->info.block_size) == 0);
+	తిరిగి (స్థానభ్రంశం >= 0) &&
+	       (స్థానభ్రంశం < (slab->info.ఖండం_కొలత * slab->info.అంకె_ఖండాలు)) &&
+	       ((స్థానభ్రంశం % slab->info.ఖండం_కొలత) == 0);
 }
 
-int k_mem_slab_alloc(struct k_mem_slab *slab, void **mem, k_timeout_t timeout)
+పూర్ణాంకం k_mem_slab_alloc(నిర్మాణం k_mem_slab *slab, శూన్య **mem, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
-	int result;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&slab->తాళం);
+	పూర్ణాంకం ఫలితం;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_mem_slab, alloc, slab, timeout);
 
-	if (slab->free_list != NULL) {
+	ఒకవేళ (slab->free_list != ఖాళీ) {
 		/* take a free block */
 		*mem = slab->free_list;
-		slab->free_list = *(char **)(slab->free_list);
-		slab->info.num_used++;
-		__ASSERT((slab->free_list == NULL &&
-			  slab->info.num_used == slab->info.num_blocks) ||
+		slab->free_list = *(అక్షరం **)(slab->free_list);
+		slab->info.అంకె_వాడిన++;
+		__ASSERT((slab->free_list == ఖాళీ &&
+			  slab->info.అంకె_వాడిన == slab->info.అంకె_ఖండాలు) ||
 			 slab_ptr_is_good(slab, slab->free_list),
 			 "slab corruption detected");
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-		slab->info.max_used = max(slab->info.num_used,
-					  slab->info.max_used);
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+		slab->info.max_వాడిన = max(slab->info.అంకె_వాడిన,
+					  slab->info.max_వాడిన);
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
+		ఫలితం = 0;
+	} లేకపోతే ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT) ||
 		   !IS_ENABLED(CONFIG_MULTITHREADING)) {
 		/* don't wait for a free block to become available */
-		*mem = NULL;
-		result = -ENOMEM;
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
+		*mem = ఖాళీ;
+		ఫలితం = -ENOMEM;
+	} లేకపోతే {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_mem_slab, alloc, slab, timeout);
 
 		/* wait for a free block or timeout */
-		result = z_pend_curr(&slab->lock, key, &slab->wait_q, timeout);
-		if (result == 0) {
-			*mem = _current->base.swap_data;
+		ఫలితం = z_pend_curr(&slab->తాళం, కీలకం, &slab->wait_q, timeout);
+		ఒకవేళ (ఫలితం == 0) {
+			*mem = _current->పునాది.మార్పిడి_దత్తాంశం;
 		}
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, ఫలితం);
 
-		return result;
+		తిరిగి ఫలితం;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, result);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_mem_slab, alloc, slab, timeout, ఫలితం);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return result;
+	తిరిగి ఫలితం;
 }
 
-void k_mem_slab_free(struct k_mem_slab *slab, void *mem)
+శూన్య k_mem_slab_free(నిర్మాణం k_mem_slab *slab, శూన్య *mem)
 {
-	if (!slab_ptr_is_good(slab, mem)) {
+	ఒకవేళ (!slab_ptr_is_good(slab, mem)) {
 		__ASSERT(false, "Invalid memory pointer provided");
 		k_panic();
-		return;
+		తిరిగి;
 	}
 
-#ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
-	k_obj_core_evict_range(mem, slab->info.block_size);
-#endif /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_EVICT_ON_FREE
+	k_obj_core_evict_range(mem, slab->info.ఖండం_కొలత);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&slab->తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mem_slab, free, slab);
-	if (unlikely(slab->free_list == NULL) && IS_ENABLED(CONFIG_MULTITHREADING)) {
-		if (z_sched_wake(&slab->wait_q, 0, mem)) {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
-			z_reschedule(&slab->lock, key);
-			return;
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_mem_slab, విడుదల, slab);
+	ఒకవేళ (unlikely(slab->free_list == ఖాళీ) && IS_ENABLED(CONFIG_MULTITHREADING)) {
+		ఒకవేళ (z_sched_wake(&slab->wait_q, 0, mem)) {
+			SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_mem_slab, విడుదల, slab);
+			z_reschedule(&slab->తాళం, కీలకం);
+			తిరిగి;
 		}
 	}
-	*(char **) mem = slab->free_list;
-	slab->free_list = (char *) mem;
-	slab->info.num_used--;
+	*(అక్షరం **) mem = slab->free_list;
+	slab->free_list = (అక్షరం *) mem;
+	slab->info.అంకె_వాడిన--;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mem_slab, free, slab);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_mem_slab, విడుదల, slab);
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->తాళం, కీలకం);
 }
 
-int k_mem_slab_runtime_stats_get(struct k_mem_slab *slab, struct sys_memory_stats *stats)
+పూర్ణాంకం k_mem_slab_runtime_stats_get(నిర్మాణం k_mem_slab *slab, నిర్మాణం sys_జ్ఞాపకం_stats *stats)
 {
-	if ((slab == NULL) || (stats == NULL)) {
-		return -EINVAL;
+	ఒకవేళ ((slab == ఖాళీ) || (stats == ఖాళీ)) {
+		తిరిగి -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&slab->తాళం);
 
-	stats->allocated_bytes = slab->info.num_used * slab->info.block_size;
-	stats->free_bytes = (slab->info.num_blocks - slab->info.num_used) *
-			    slab->info.block_size;
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-	stats->max_allocated_bytes = slab->info.max_used *
-				     slab->info.block_size;
-#else
-	stats->max_allocated_bytes = 0;
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+	stats->allocated_బైట్లు = slab->info.అంకె_వాడిన * slab->info.ఖండం_కొలత;
+	stats->free_బైట్లు = (slab->info.అంకె_ఖండాలు - slab->info.అంకె_వాడిన) *
+			    slab->info.ఖండం_కొలత;
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+	stats->max_allocated_బైట్లు = slab->info.max_వాడిన *
+				     slab->info.ఖండం_కొలత;
+#లేకపోతే
+	stats->max_allocated_బైట్లు = 0;
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
-int k_mem_slab_runtime_stats_reset_max(struct k_mem_slab *slab)
+#నిర్వచితమైతే CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION
+పూర్ణాంకం k_mem_slab_runtime_stats_reset_max(నిర్మాణం k_mem_slab *slab)
 {
-	if (slab == NULL) {
-		return -EINVAL;
+	ఒకవేళ (slab == ఖాళీ) {
+		తిరిగి -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&slab->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&slab->తాళం);
 
-	slab->info.max_used = slab->info.num_used;
+	slab->info.max_వాడిన = slab->info.అంకె_వాడిన;
 
-	k_spin_unlock(&slab->lock, key);
+	k_spin_unlock(&slab->తాళం, కీలకం);
 
-	return 0;
+	తిరిగి 0;
 }
-#endif /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */
+#అయితే_ముగింపు /* CONFIG_MEM_SLAB_TRACE_MAX_UTILIZATION */

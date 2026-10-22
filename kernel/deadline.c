@@ -16,14 +16,14 @@
  * of the run-queue data structures.
  */
 
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <run_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <kspinlock.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <run_q.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/sys/math_extras.h>
+#అన్తర్భావ <zephyr/sys/minmax.h>
+#అన్తర్భావ <zephyr/logging/log.h>
 
 /**
  * @brief Atomically update a thread's prio_deadline in the run queue.
@@ -36,22 +36,22 @@
  * @param thread   Thread whose deadline is being updated.
  * @param deadline New absolute deadline value (raw cycle counter).
  */
-void z_sched_prio_deadline_set(struct k_thread *thread, int deadline)
+శూన్య z_sched_prio_deadline_సమితి(నిర్మాణం k_thread *thread, పూర్ణాంకం deadline)
 {
 	Z_SCHED_SPINLOCK {
-		if (z_is_thread_queued(thread)) {
-			dequeue_thread(thread);
-			thread->base.prio_deadline = deadline;
-			queue_thread(thread);
-		} else {
-			thread->base.prio_deadline = deadline;
+		ఒకవేళ (z_is_thread_queued(thread)) {
+			వరుస_నుండి_తీయి_thread(thread);
+			thread->పునాది.prio_deadline = deadline;
+			వరుస_thread(thread);
+		} లేకపోతే {
+			thread->పునాది.prio_deadline = deadline;
 		}
 	}
 }
 
-void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+శూన్య z_impl_k_thread_absolute_deadline_సమితి(k_tid_t tid, పూర్ణాంకం deadline)
 {
-	struct k_thread *thread = tid;
+	నిర్మాణం k_thread *thread = tid;
 
 	/* The prio_deadline field changes the sorting order, so it must
 	 * not be altered while the thread is in the run queue.  Because
@@ -60,10 +60,10 @@ void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
 	 * z_sched_prio_deadline_set() which performs it under the
 	 * scheduler spinlock.
 	 */
-	z_sched_prio_deadline_set(thread, deadline);
+	z_sched_prio_deadline_సమితి(thread, deadline);
 }
 
-void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
+శూన్య z_impl_k_thread_deadline_సమితి(k_tid_t tid, పూర్ణాంకం deadline)
 {
 	/*
 	 * Clamp the relative deadline to INT32_MAX / 2 (2^30 cycles) to
@@ -74,32 +74,32 @@ void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
 	deadline = clamp(deadline, 0, INT32_MAX / 2);
 
 	/* Use uint32_t arithmetic to avoid implementation-defined signed conversion. */
-	uint32_t newdl = k_cycle_get_32() + (uint32_t)deadline;
+	uint32_t newdl = k_చక్రం_get_32() + (uint32_t)deadline;
 
-	z_impl_k_thread_absolute_deadline_set(tid, (int)newdl);
+	z_impl_k_thread_absolute_deadline_సమితి(tid, (పూర్ణాంకం)newdl);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_thread_absolute_deadline_సమితి(k_tid_t tid, పూర్ణాంకం deadline)
 {
-	struct k_thread *thread = tid;
+	నిర్మాణం k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	z_impl_k_thread_absolute_deadline_set((k_tid_t)thread, deadline);
+	z_impl_k_thread_absolute_deadline_సమితి((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
 
-static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int deadline)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_thread_deadline_సమితి(k_tid_t tid, పూర్ణాంకం deadline)
 {
-	struct k_thread *thread = tid;
+	నిర్మాణం k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_VERIFY_MSG(deadline > 0,
+	K_OOPS(K_SYSCALL_VERIFY_సందేశం(deadline > 0,
 				    "invalid thread deadline %d",
-				    (int)deadline));
+				    (పూర్ణాంకం)deadline));
 
-	z_impl_k_thread_deadline_set((k_tid_t)thread, deadline);
+	z_impl_k_thread_deadline_సమితి((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kernel_internal.h"
+#అన్తర్భావ "kernel_internal.h"
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/sys/bitarray.h>
-#include <zephyr/sys/kobject.h>
-#include <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <zephyr/kernel/thread_stack.h>
+#అన్తర్భావ <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/sys/bitarray.h>
+#అన్తర్భావ <zephyr/sys/kobject.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#if CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0
-#define BA_SIZE CONFIG_DYNAMIC_THREAD_POOL_SIZE
-#else
-#define BA_SIZE 1
-#endif /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
+#ఒకవేళ CONFIG_DYNAMIC_THREAD_POOL_కొలత > 0
+#నిర్వచించు BA_కొలత CONFIG_DYNAMIC_THREAD_POOL_కొలత
+#లేకపోతే
+#నిర్వచించు BA_కొలత 1
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
 
-struct dyn_cb_data {
+నిర్మాణం dyn_cb_దత్తాంశం {
 	k_tid_t tid;
-	k_thread_stack_t *stack;
+	k_thread_దొంతర_t *దొంతర;
 };
 
-static K_THREAD_STACK_ARRAY_DEFINE(dynamic_stack, CONFIG_DYNAMIC_THREAD_POOL_SIZE,
-				   K_THREAD_STACK_LEN(CONFIG_DYNAMIC_THREAD_STACK_SIZE));
-SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_SIZE);
+స్థిర K_THREAD_దొంతర_ARRAY_DEFINE(dynamic_దొంతర, CONFIG_DYNAMIC_THREAD_POOL_కొలత,
+				   K_THREAD_దొంతర_LEN(CONFIG_DYNAMIC_THREAD_దొంతర_కొలత));
+SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_కొలత);
 
-static k_thread_stack_t *z_thread_stack_alloc_pool(size_t size, int flags)
+స్థిర k_thread_దొంతర_t *z_thread_దొంతర_alloc_pool(size_t కొలత, పూర్ణాంకం flags)
 {
-	int rv;
-	size_t offset;
-	k_thread_stack_t *stack;
+	పూర్ణాంకం rv;
+	size_t స్థానభ్రంశం;
+	k_thread_దొంతర_t *దొంతర;
 
-	if (size > CONFIG_DYNAMIC_THREAD_STACK_SIZE) {
-		LOG_DBG("stack size %zu is > pool stack size %zu", size,
-			(size_t)CONFIG_DYNAMIC_THREAD_STACK_SIZE);
-		return NULL;
+	ఒకవేళ (కొలత > CONFIG_DYNAMIC_THREAD_దొంతర_కొలత) {
+		LOG_DBG("stack size %zu is > pool stack size %zu", కొలత,
+			(size_t)CONFIG_DYNAMIC_THREAD_దొంతర_కొలత);
+		తిరిగి ఖాళీ;
 	}
 
-	rv = sys_bitarray_alloc(&dynamic_ba, 1, &offset);
-	if (rv < 0) {
+	rv = sys_bitarray_alloc(&dynamic_ba, 1, &స్థానభ్రంశం);
+	ఒకవేళ (rv < 0) {
 		LOG_DBG("unable to allocate stack from pool");
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
-	__ASSERT_NO_MSG(offset < CONFIG_DYNAMIC_THREAD_POOL_SIZE);
+	__ASSERT_NO_MSG(స్థానభ్రంశం < CONFIG_DYNAMIC_THREAD_POOL_కొలత);
 
-	stack = (k_thread_stack_t *)&dynamic_stack[offset];
+	దొంతర = (k_thread_దొంతర_t *)&dynamic_దొంతర[స్థానభ్రంశం];
 
-	return stack;
+	తిరిగి దొంతర;
 }
 
-static k_thread_stack_t *z_thread_stack_alloc_dyn(size_t size, int flags)
+స్థిర k_thread_దొంతర_t *z_thread_దొంతర_alloc_dyn(size_t కొలత, పూర్ణాంకం flags)
 {
-	size_t stack_len;
+	size_t దొంతర_len;
 
-	if ((flags & K_USER) == K_USER) {
-#ifdef CONFIG_DYNAMIC_OBJECTS
-		return k_object_alloc_size(K_OBJ_THREAD_STACK_ELEMENT, size);
-#else
+	ఒకవేళ ((flags & K_USER) == K_USER) {
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+		తిరిగి k_object_alloc_కొలత(K_OBJ_THREAD_దొంతర_ELEMENT, కొలత);
+#లేకపోతే
 		/* Dynamic user stack needs a kobject, so if this option is not
 		 * enabled we can't proceed.
 		 */
-		return NULL;
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+		తిరిగి ఖాళీ;
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
 	}
 
-	stack_len = K_KERNEL_STACK_LEN(size);
-	if (stack_len < size) {
-		return NULL;
+	దొంతర_len = K_KERNEL_దొంతర_LEN(కొలత);
+	ఒకవేళ (దొంతర_len < కొలత) {
+		తిరిగి ఖాళీ;
 	}
 
-	return z_thread_aligned_alloc(Z_KERNEL_STACK_OBJ_ALIGN, stack_len);
+	తిరిగి z_thread_aligned_alloc(Z_KERNEL_దొంతర_OBJ_ALIGN, దొంతర_len);
 }
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_దొంతర_t *z_impl_k_thread_దొంతర_alloc(size_t కొలత, పూర్ణాంకం flags)
 {
-	k_thread_stack_t *stack = NULL;
+	k_thread_దొంతర_t *దొంతర = ఖాళీ;
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
-		stack = z_thread_stack_alloc_dyn(size, flags);
-		if (stack == NULL && CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	ఒకవేళ (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
+		దొంతర = z_thread_దొంతర_alloc_dyn(కొలత, flags);
+		ఒకవేళ (దొంతర == ఖాళీ && CONFIG_DYNAMIC_THREAD_POOL_కొలత > 0) {
+			దొంతర = z_thread_దొంతర_alloc_pool(కొలత, flags);
 		}
-	} else if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
-		if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	} లేకపోతే ఒకవేళ (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
+		ఒకవేళ (CONFIG_DYNAMIC_THREAD_POOL_కొలత > 0) {
+			దొంతర = z_thread_దొంతర_alloc_pool(కొలత, flags);
 		}
 
-		if ((stack == NULL) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-			stack = z_thread_stack_alloc_dyn(size, flags);
+		ఒకవేళ ((దొంతర == ఖాళీ) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+			దొంతర = z_thread_దొంతర_alloc_dyn(కొలత, flags);
 		}
 	}
 
-	return stack;
+	తిరిగి దొంతర;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస k_thread_దొంతర_t *z_vrfy_k_thread_దొంతర_alloc(size_t కొలత, పూర్ణాంకం flags)
 {
-	return z_impl_k_thread_stack_alloc(size, flags);
+	తిరిగి z_impl_k_thread_దొంతర_alloc(కొలత, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-static void dyn_cb(const struct k_thread *thread, void *user_data)
+స్థిర శూన్య dyn_cb(స్థిరరాశి నిర్మాణం k_thread *thread, శూన్య *user_దత్తాంశం)
 {
-	struct dyn_cb_data *const data = (struct dyn_cb_data *)user_data;
+	నిర్మాణం dyn_cb_దత్తాంశం *స్థిరరాశి దత్తాంశం = (నిర్మాణం dyn_cb_దత్తాంశం *)user_దత్తాంశం;
 
-	if (data->stack == (k_thread_stack_t *)thread->stack_info.start) {
-		__ASSERT(data->tid == NULL, "stack %p is associated with more than one thread!",
-			 (void *)thread->stack_info.start);
-		data->tid = (k_tid_t)thread;
+	ఒకవేళ (దత్తాంశం->దొంతర == (k_thread_దొంతర_t *)thread->దొంతర_info.ప్రారంభం) {
+		__ASSERT(దత్తాంశం->tid == ఖాళీ, "stack %p is associated with more than one thread!",
+			 (శూన్య *)thread->దొంతర_info.ప్రారంభం);
+		దత్తాంశం->tid = (k_tid_t)thread;
 	}
 }
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+పూర్ణాంకం z_impl_k_thread_దొంతర_free(k_thread_దొంతర_t *దొంతర)
 {
-	struct dyn_cb_data data = {.stack = stack};
+	నిర్మాణం dyn_cb_దత్తాంశం దత్తాంశం = {.దొంతర = దొంతర};
 
 	/* Get a possible tid associated with stack */
-	k_thread_foreach(dyn_cb, &data);
+	k_thread_foreach(dyn_cb, &దత్తాంశం);
 
-	if (data.tid != NULL) {
-		if (!z_is_thread_state_set(data.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
-			LOG_ERR("tid %p is in use!", data.tid);
-			return -EBUSY;
+	ఒకవేళ (దత్తాంశం.tid != ఖాళీ) {
+		ఒకవేళ (!z_is_thread_state_సమితి(దత్తాంశం.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
+			LOG_ERR("tid %p is in use!", దత్తాంశం.tid);
+			తిరిగి -EBUSY;
 		}
 	}
 
-	if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-		if (IS_ARRAY_ELEMENT(dynamic_stack, stack)) {
-			if (sys_bitarray_free(&dynamic_ba, 1, ARRAY_INDEX(dynamic_stack, stack))) {
-				LOG_ERR("stack %p is not allocated!", stack);
-				return -EINVAL;
+	ఒకవేళ (CONFIG_DYNAMIC_THREAD_POOL_కొలత > 0) {
+		ఒకవేళ (IS_ARRAY_ELEMENT(dynamic_దొంతర, దొంతర)) {
+			ఒకవేళ (sys_bitarray_free(&dynamic_ba, 1, ARRAY_సూచీ(dynamic_దొంతర, దొంతర))) {
+				LOG_ERR("stack %p is not allocated!", దొంతర);
+				తిరిగి -EINVAL;
 			}
 
-			return 0;
+			తిరిగి 0;
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-#ifdef CONFIG_USERSPACE
-		if (k_object_find(stack)) {
-			k_object_free(stack);
-		} else {
-			k_free(stack);
+	ఒకవేళ (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+#నిర్వచితమైతే CONFIG_USERSPACE
+		ఒకవేళ (k_object_కనుగొను(దొంతర)) {
+			k_object_free(దొంతర);
+		} లేకపోతే {
+			k_free(దొంతర);
 		}
-#else
-		k_free(stack);
-#endif /* CONFIG_USERSPACE */
-	} else {
-		LOG_DBG("Invalid stack %p", stack);
-		return -EINVAL;
+#లేకపోతే
+		k_free(దొంతర);
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
+	} లేకపోతే {
+		LOG_DBG("Invalid stack %p", దొంతర);
+		తిరిగి -EINVAL;
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_thread_దొంతర_free(k_thread_దొంతర_t *దొంతర)
 {
 	/* The thread stack object must not be in initialized state.
 	 *
@@ -173,9 +173,9 @@ static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 	 * free a stack that is in use, we have to check that the caller
 	 * has access to the object but that it is not in use anymore.
 	 */
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_THREAD_STACK_ELEMENT));
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(దొంతర, K_OBJ_THREAD_దొంతర_ELEMENT));
 
-	return z_impl_k_thread_stack_free(stack);
+	తిరిగి z_impl_k_thread_దొంతర_free(దొంతర);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

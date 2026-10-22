@@ -11,313 +11,313 @@
  */
 
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/check.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <kernel_internal.h>
+#అన్తర్భావ <zephyr/sys/check.h>
 
-BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "k_queue needs one sflist flag bit");
+BUILD_ASSERT(SYS_SFLIST_FLAG_బిట్లు >= 1, "k_queue needs one sflist flag bit");
 
-struct alloc_node {
-	sys_sfnode_t node;
-	void *data;
+నిర్మాణం alloc_కణుపు {
+	sys_sfnode_t కణుపు;
+	శూన్య *దత్తాంశం;
 };
 
 /* The queue must have its spinlock held before calling this function. */
-static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
+స్థిర శూన్య *z_వరుస_కణుపు_peek(sys_sfnode_t *కణుపు, bool needs_free)
 {
-	void *ret;
+	శూన్య *ret;
 
-	if ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
+	ఒకవేళ ((కణుపు != ఖాళీ) && (sys_sfnode_flags_get(కణుపు) != (uint8_t)0)) {
 		/* If the flag is set, then the enqueue operation for this item
 		 * did a behind-the scenes memory allocation of an alloc_node
 		 * struct, which is what got put in the queue. Free it and pass
 		 * back the data pointer.
 		 */
-		struct alloc_node *anode;
+		నిర్మాణం alloc_కణుపు *anode;
 
-		anode = CONTAINER_OF(node, struct alloc_node, node);
-		ret = anode->data;
-		if (needs_free) {
+		anode = CONTAINER_యొక్క(కణుపు, నిర్మాణం alloc_కణుపు, కణుపు);
+		ret = anode->దత్తాంశం;
+		ఒకవేళ (needs_free) {
 			k_free(anode);
 		}
-	} else {
+	} లేకపోతే {
 		/* Data was directly placed in the queue, the first word
 		 * reserved for the linked list. User mode isn't allowed to
 		 * do this, although it can get data sent this way.
 		 */
-		ret = (void *)node;
+		ret = (శూన్య *)కణుపు;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
+#నిర్వచితమైతే CONFIG_OBJ_CORE_వరుస
 /* The queues embedded in statically defined FIFOs and LIFOs are permanent
  * objects of the queue type too.
  */
-BUILD_ASSERT(offsetof(struct k_fifo, _queue) == 0);
-BUILD_ASSERT(offsetof(struct k_lifo, _queue) == 0);
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
-STRUCT_SECTION_START_EXTERN(k_queue);
-STRUCT_SECTION_END_EXTERN(k_queue);
-K_OBJ_TYPE_DEFINE_RANGES(obj_type_queue, k_queue, K_OBJ_TYPE_QUEUE_ID, NULL,
-			 K_OBJ_RANGE_SECTION(k_queue), K_OBJ_RANGE_SECTION(k_fifo),
+BUILD_ASSERT(offsetof(నిర్మాణం k_fifo, వరుస_2) == 0);
+BUILD_ASSERT(offsetof(నిర్మాణం k_lifo, వరుస_2) == 0);
+STRUCT_SECTION_ప్రారంభం_EXTERN(k_fifo);
+STRUCT_SECTION_చివర_EXTERN(k_fifo);
+STRUCT_SECTION_ప్రారంభం_EXTERN(k_lifo);
+STRUCT_SECTION_చివర_EXTERN(k_lifo);
+STRUCT_SECTION_ప్రారంభం_EXTERN(k_వరుస);
+STRUCT_SECTION_చివర_EXTERN(k_వరుస);
+K_OBJ_TYPE_DEFINE_RANGES(obj_type_వరుస, k_వరుస, K_OBJ_TYPE_వరుస_ID, ఖాళీ,
+			 K_OBJ_RANGE_SECTION(k_వరుస), K_OBJ_RANGE_SECTION(k_fifo),
 			 K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_QUEUE */
 
-void z_impl_k_queue_init(struct k_queue *queue)
+శూన్య z_impl_k_వరుస_init(నిర్మాణం k_వరుస *వరుస)
 {
-	sys_sflist_init(&queue->data_q);
-	queue->lock = (struct k_spinlock) {};
-	z_waitq_init(&queue->wait_q);
-#if defined(CONFIG_POLL)
-	sys_dlist_init(&queue->poll_events);
-#endif
+	sys_sflist_init(&వరుస->దత్తాంశం_q);
+	వరుస->తాళం = (నిర్మాణం k_spinlock) {};
+	z_waitq_init(&వరుస->wait_q);
+#ఒకవేళ defined(CONFIG_POLL)
+	sys_dlist_init(&వరుస->poll_events);
+#అయితే_ముగింపు
 
-	SYS_PORT_TRACING_OBJ_INIT(k_queue, queue);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_వరుస, వరుస);
 
-	k_object_init(queue);
+	k_object_init(వరుస);
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
-	k_obj_core_init_and_link(K_OBJ_CORE(queue), &obj_type_queue);
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_వరుస
+	k_obj_core_init_and_link(K_OBJ_CORE(వరుస), &obj_type_వరుస);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_QUEUE */
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_init(struct k_queue *queue)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_వరుస_init(నిర్మాణం k_వరుస *వరుస)
 {
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_init(queue);
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(వరుస, K_OBJ_వరుస));
+	z_impl_k_వరుస_init(వరుస);
 }
-#include <zephyr/syscalls/k_queue_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_queue_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-static inline bool queue_handle_poll_events(struct k_queue *queue, uint32_t state)
+స్థిర అంతఃవరుస bool వరుస_handle_poll_events(నిర్మాణం k_వరుస *వరుస, uint32_t state)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&queue->poll_events, state);
-#else
-	ARG_UNUSED(queue);
-	ARG_UNUSED(state);
+#నిర్వచితమైతే CONFIG_POLL
+	తిరిగి z_handle_obj_poll_events(&వరుస->poll_events, state);
+#లేకపోతే
+	ARG_వాడని(వరుస);
+	ARG_వాడని(state);
 
-	return false;
-#endif /* CONFIG_POLL */
+	తిరిగి false;
+#అయితే_ముగింపు /* CONFIG_POLL */
 }
 
-void z_impl_k_queue_cancel_wait(struct k_queue *queue)
+శూన్య z_impl_k_వరుస_cancel_wait(నిర్మాణం k_వరుస *వరుస)
 {
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, cancel_wait, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_వరుస, cancel_wait, వరుస);
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
 	bool resched = false;
 
-	if (z_sched_wake(&queue->wait_q, 0, NULL)) {
+	ఒకవేళ (z_sched_wake(&వరుస->wait_q, 0, ఖాళీ)) {
 		resched = true;
 	}
 
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_CANCELLED) || resched;
+	resched = వరుస_handle_poll_events(వరుస, K_POLL_STATE_CANCELLED) || resched;
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	ఒకవేళ (resched) {
+		z_reschedule(&వరుస->తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&వరుస->తాళం, కీలకం);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_cancel_wait(struct k_queue *queue)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_వరుస_cancel_wait(నిర్మాణం k_వరుస *వరుస)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_cancel_wait(queue);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	z_impl_k_వరుస_cancel_wait(వరుస);
 }
-#include <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
 /*
  * Common code for inserting a node into the queue.
  * The queue's spinlock must be held prior to entry.
  * However, that same spinlock will be unlocked before it returns.
  */
-static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
-			    bool alloc, bool is_append, k_spinlock_key_t key)
+స్థిర int32_t వరుస_చొప్పించు(నిర్మాణం k_వరుస *వరుస, శూన్య *prev, శూన్య *దత్తాంశం,
+			    bool alloc, bool is_append, k_spinlock_కీలకం_t కీలకం)
 {
-	int32_t result = 0;
+	int32_t ఫలితం = 0;
 	bool resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_insert, queue, alloc);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, వరుస_చొప్పించు, వరుస, alloc);
 
-	if (is_append) {
-		prev = sys_sflist_peek_tail(&queue->data_q);
+	ఒకవేళ (is_append) {
+		prev = sys_sflist_peek_తోక(&వరుస->దత్తాంశం_q);
 	}
 
-	if (z_sched_wake(&queue->wait_q, 0, data)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_insert, queue, alloc, K_FOREVER);
+	ఒకవేళ (z_sched_wake(&వరుస->wait_q, 0, దత్తాంశం)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_వరుస, వరుస_చొప్పించు, వరుస, alloc, K_FOREVER);
 		resched = true;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
 	/* Only need to actually allocate if no threads are pending */
-	if (alloc) {
-		struct alloc_node *anode;
+	ఒకవేళ (alloc) {
+		నిర్మాణం alloc_కణుపు *anode;
 
-		anode = z_thread_malloc(sizeof(*anode));
-		if (anode == NULL) {
-			result = -ENOMEM;
-			goto out;
+		anode = z_thread_malloc(పరిమాణం(*anode));
+		ఒకవేళ (anode == ఖాళీ) {
+			ఫలితం = -ENOMEM;
+			వెళ్ళు బహిర్గతం;
 		}
-		anode->data = data;
-		sys_sfnode_init(&anode->node, 0x1);
-		data = anode;
-	} else {
-		sys_sfnode_init(data, 0x0);
+		anode->దత్తాంశం = దత్తాంశం;
+		sys_sfnode_init(&anode->కణుపు, 0x1);
+		దత్తాంశం = anode;
+	} లేకపోతే {
+		sys_sfnode_init(దత్తాంశం, 0x0);
 	}
 
-	sys_sflist_insert(&queue->data_q, prev, data);
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE);
+	sys_sflist_చొప్పించు(&వరుస->దత్తాంశం_q, prev, దత్తాంశం);
+	resched = వరుస_handle_poll_events(వరుస, K_POLL_STATE_దత్తాంశం_అందుబాటు);
 
-out:
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+బహిర్గతం:
+	ఒకవేళ (resched) {
+		z_reschedule(&వరుస->తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&వరుస->తాళం, కీలకం);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_insert, queue, alloc, result);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, వరుస_చొప్పించు, వరుస, alloc, ఫలితం);
 
-	return result;
+	తిరిగి ఫలితం;
 }
 
-void k_queue_insert(struct k_queue *queue, void *prev, void *data)
+శూన్య k_వరుస_చొప్పించు(నిర్మాణం k_వరుస *వరుస, శూన్య *prev, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, insert, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, చొప్పించు, వరుస);
 
-	(void)queue_insert(queue, prev, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(శూన్య)వరుస_చొప్పించు(వరుస, prev, దత్తాంశం, false, false,
+			   k_spin_తాళం(&వరుస->తాళం));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, insert, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, చొప్పించు, వరుస);
 }
 
-void k_queue_append(struct k_queue *queue, void *data)
+శూన్య k_వరుస_append(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, append, వరుస);
 
-	(void)queue_insert(queue, NULL, data, false, true,
-			   k_spin_lock(&queue->lock));
+	(శూన్య)వరుస_చొప్పించు(వరుస, ఖాళీ, దత్తాంశం, false, true,
+			   k_spin_తాళం(&వరుస->తాళం));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, append, వరుస);
 }
 
-void k_queue_prepend(struct k_queue *queue, void *data)
+శూన్య k_వరుస_prepend(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, prepend, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, prepend, వరుస);
 
-	(void)queue_insert(queue, NULL, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(శూన్య)వరుస_చొప్పించు(వరుస, ఖాళీ, దత్తాంశం, false, false,
+			   k_spin_తాళం(&వరుస->తాళం));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, prepend, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, prepend, వరుస);
 }
 
-int32_t z_impl_k_queue_alloc_append(struct k_queue *queue, void *data)
+int32_t z_impl_k_వరుస_alloc_append(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_append, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, alloc_append, వరుస);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, true,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = వరుస_చొప్పించు(వరుస, ఖాళీ, దత్తాంశం, true, true,
+				   k_spin_తాళం(&వరుస->తాళం));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_append, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, alloc_append, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_append(struct k_queue *queue,
-						  void *data)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస int32_t z_vrfy_k_వరుస_alloc_append(నిర్మాణం k_వరుస *వరుస,
+						  శూన్య *దత్తాంశం)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_append(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_alloc_append(వరుస, దత్తాంశం);
 }
-#include <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int32_t z_impl_k_queue_alloc_prepend(struct k_queue *queue, void *data)
+int32_t z_impl_k_వరుస_alloc_prepend(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_prepend, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, alloc_prepend, వరుస);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, false,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = వరుస_చొప్పించు(వరుస, ఖాళీ, దత్తాంశం, true, false,
+				   k_spin_తాళం(&వరుస->తాళం));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_prepend, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, alloc_prepend, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_prepend(struct k_queue *queue,
-						   void *data)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస int32_t z_vrfy_k_వరుస_alloc_prepend(నిర్మాణం k_వరుస *వరుస,
+						   శూన్య *దత్తాంశం)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_prepend(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_alloc_prepend(వరుస, దత్తాంశం);
 }
-#include <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
+పూర్ణాంకం k_వరుస_append_list(నిర్మాణం k_వరుస *వరుస, శూన్య *తల, శూన్య *తోక)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append_list, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, append_list, వరుస);
 	bool resched = false;
 
 	/* invalid head or tail of list */
-	CHECKIF((head == NULL) || (tail == NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, -EINVAL);
+	CHECKIF((తల == ఖాళీ) || (తోక == ఖాళీ)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, append_list, వరుస, -EINVAL);
 
-		return -EINVAL;
+		తిరిగి -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
 
-	while ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
+	అయితే ((తల != ఖాళీ) && z_sched_wake(&వరుస->wait_q, 0, తల)) {
 		resched = true;
-		head = *(void **)head;
+		తల = *(శూన్య **)తల;
 	}
 
-	if (head != NULL) {
-		sys_sflist_append_list(&queue->data_q, head, tail);
+	ఒకవేళ (తల != ఖాళీ) {
+		sys_sflist_append_list(&వరుస->దత్తాంశం_q, తల, తోక);
 
-		resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE) || resched;
+		resched = వరుస_handle_poll_events(వరుస, K_POLL_STATE_దత్తాంశం_అందుబాటు) || resched;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, 0);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, append_list, వరుస, 0);
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	ఒకవేళ (resched) {
+		z_reschedule(&వరుస->తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&వరుస->తాళం, కీలకం);
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
+పూర్ణాంకం k_వరుస_విలీనం_slist(నిర్మాణం k_వరుస *వరుస, sys_slist_t *list)
 {
-	int ret;
+	పూర్ణాంకం ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, merge_slist, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, విలీనం_slist, వరుస);
 
 	/* list must not be empty */
-	CHECKIF(sys_slist_is_empty(list)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, -EINVAL);
+	CHECKIF(sys_slist_is_ఖాళీలు(list)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, విలీనం_slist, వరుస, -EINVAL);
 
-		return -EINVAL;
+		తిరిగి -EINVAL;
 	}
 
 	/*
@@ -329,178 +329,178 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 	 *   flag bytes in the lower order bits of the data pointer
 	 * - source list is really an slist and not an sflist with flags set
 	 */
-	ret = k_queue_append_list(queue, list->head, list->tail);
+	ret = k_వరుస_append_list(వరుస, list->తల, list->తోక);
 	CHECKIF(ret != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, ret);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, విలీనం_slist, వరుస, ret);
 
-		return ret;
+		తిరిగి ret;
 	}
 	sys_slist_init(list);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, 0);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, విలీనం_slist, వరుస, 0);
 
-	return 0;
+	తిరిగి 0;
 }
 
-void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
+శూన్య *z_impl_k_వరుస_get(నిర్మాణం k_వరుస *వరుస, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *data;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
+	శూన్య *దత్తాంశం;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, get, queue, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, get, వరుస, timeout);
 
-	if (likely(!sys_sflist_is_empty(&queue->data_q))) {
-		sys_sfnode_t *node;
+	ఒకవేళ (likely(!sys_sflist_is_ఖాళీలు(&వరుస->దత్తాంశం_q))) {
+		sys_sfnode_t *కణుపు;
 
-		node = sys_sflist_get_not_empty(&queue->data_q);
-		data = z_queue_node_peek(node, true);
-		k_spin_unlock(&queue->lock, key);
+		కణుపు = sys_sflist_get_not_ఖాళీలు(&వరుస->దత్తాంశం_q);
+		దత్తాంశం = z_వరుస_కణుపు_peek(కణుపు, true);
+		k_spin_unlock(&వరుస->తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, data);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, get, వరుస, timeout, దత్తాంశం);
 
-		return data;
+		తిరిగి దత్తాంశం;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&queue->lock, key);
+	ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&వరుస->తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, NULL);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, get, వరుస, timeout, ఖాళీ);
 
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, get, queue, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_వరుస, get, వరుస, timeout);
 
-	int ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
+	పూర్ణాంకం ret = z_pend_curr(&వరుస->తాళం, కీలకం, &వరుస->wait_q, timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout,
-		(ret != 0) ? NULL : _current->base.swap_data);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, get, వరుస, timeout,
+		(ret != 0) ? ఖాళీ : _current->పునాది.మార్పిడి_దత్తాంశం);
 
-	return (ret != 0) ? NULL : _current->base.swap_data;
+	తిరిగి (ret != 0) ? ఖాళీ : _current->పునాది.మార్పిడి_దత్తాంశం;
 }
 
 /* Remove a queue item by its data pointer and free any wrapper node. */
-bool k_queue_remove(struct k_queue *queue, void *data)
+bool k_వరుస_remove(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, remove, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	sys_sfnode_t *prev = NULL;
-	sys_sfnode_t *node = sys_sflist_peek_head(&queue->data_q);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, remove, వరుస);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
+	sys_sfnode_t *prev = ఖాళీ;
+	sys_sfnode_t *కణుపు = sys_sflist_peek_తల(&వరుస->దత్తాంశం_q);
 	bool ret = false;
 
-	while (node != NULL) {
-		void *peeked = z_queue_node_peek(node, false);
+	అయితే (కణుపు != ఖాళీ) {
+		శూన్య *peeked = z_వరుస_కణుపు_peek(కణుపు, false);
 
-		if (peeked == data) {
-			sys_sflist_remove(&queue->data_q, prev, node);
-			(void)z_queue_node_peek(node, true);
+		ఒకవేళ (peeked == దత్తాంశం) {
+			sys_sflist_remove(&వరుస->దత్తాంశం_q, prev, కణుపు);
+			(శూన్య)z_వరుస_కణుపు_peek(కణుపు, true);
 			ret = true;
-			break;
+			ఆపు;
 		}
-		prev = node;
-		node = sys_sflist_peek_next(node);
+		prev = కణుపు;
+		కణుపు = sys_sflist_peek_తదుపరి(కణుపు);
 	}
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&వరుస->తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, remove, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, remove, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-bool k_queue_unique_append(struct k_queue *queue, void *data)
+bool k_వరుస_unique_append(నిర్మాణం k_వరుస *వరుస, శూన్య *దత్తాంశం)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, unique_append, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_వరుస, unique_append, వరుస);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
 
 	sys_sfnode_t *test;
 
-	SYS_SFLIST_FOR_EACH_NODE(&queue->data_q, test) {
-		if (test == (sys_sfnode_t *) data) {
-			k_spin_unlock(&queue->lock, key);
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, false);
+	SYS_SFLIST_FOR_EACH_కణుపు(&వరుస->దత్తాంశం_q, test) {
+		ఒకవేళ (test == (sys_sfnode_t *) దత్తాంశం) {
+			k_spin_unlock(&వరుస->తాళం, కీలకం);
+			SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, unique_append, వరుస, false);
 
-			return false;
+			తిరిగి false;
 		}
 	}
 
-	(void)queue_insert(queue, NULL, data, false, true, key);
+	(శూన్య)వరుస_చొప్పించు(వరుస, ఖాళీ, దత్తాంశం, false, true, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, true);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_వరుస, unique_append, వరుస, true);
 
-	return true;
+	తిరిగి true;
 }
 
-void *z_impl_k_queue_peek_head(struct k_queue *queue)
+శూన్య *z_impl_k_వరుస_peek_తల(నిర్మాణం k_వరుస *వరుస)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_head(&queue->data_q), false);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
+	శూన్య *ret = z_వరుస_కణుపు_peek(sys_sflist_peek_తల(&వరుస->దత్తాంశం_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&వరుస->తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_head, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_వరుస, peek_తల, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *z_impl_k_queue_peek_tail(struct k_queue *queue)
+శూన్య *z_impl_k_వరుస_peek_తోక(నిర్మాణం k_వరుస *వరుస)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_tail(&queue->data_q), false);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&వరుస->తాళం);
+	శూన్య *ret = z_వరుస_కణుపు_peek(sys_sflist_peek_తోక(&వరుస->దత్తాంశం_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&వరుస->తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_tail, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_వరుస, peek_తోక, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void *z_vrfy_k_queue_get(struct k_queue *queue,
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_వరుస_get(నిర్మాణం k_వరుస *వరుస,
 				       k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_get(queue, timeout);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_get(వరుస, timeout);
 }
-#include <zephyr/syscalls/k_queue_get_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_queue_get_mrsh.c>
 
-static inline int z_vrfy_k_queue_is_empty(struct k_queue *queue)
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_వరుస_is_ఖాళీలు(నిర్మాణం k_వరుస *వరుస)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_is_empty(queue);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_is_ఖాళీలు(వరుస);
 }
-#include <zephyr/syscalls/k_queue_is_empty_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_queue_is_empty_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_head(struct k_queue *queue)
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_వరుస_peek_తల(నిర్మాణం k_వరుస *వరుస)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_head(queue);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_peek_తల(వరుస);
 }
-#include <zephyr/syscalls/k_queue_peek_head_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_queue_peek_head_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_tail(struct k_queue *queue)
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_వరుస_peek_తోక(నిర్మాణం k_వరుస *వరుస)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_tail(queue);
+	K_OOPS(K_SYSCALL_OBJ(వరుస, K_OBJ_వరుస));
+	తిరిగి z_impl_k_వరుస_peek_తోక(వరుస);
 }
-#include <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_OBJ_CORE_FIFO
+#నిర్వచితమైతే CONFIG_OBJ_CORE_FIFO
 /* Referenced by k_fifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
+STRUCT_SECTION_ప్రారంభం_EXTERN(k_fifo);
+STRUCT_SECTION_చివర_EXTERN(k_fifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_fifo) =
-	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, ఖాళీ, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_fifo));
-#endif /* CONFIG_OBJ_CORE_FIFO */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_FIFO */
 
-#ifdef CONFIG_OBJ_CORE_LIFO
+#నిర్వచితమైతే CONFIG_OBJ_CORE_LIFO
 /* Referenced by k_lifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
+STRUCT_SECTION_ప్రారంభం_EXTERN(k_lifo);
+STRUCT_SECTION_చివర_EXTERN(k_lifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_lifo) =
-	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, ఖాళీ, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_LIFO */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_LIFO */

@@ -17,17 +17,17 @@
  * having to poll.
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/tracing/tracing.h>
+#అన్తర్భావ <zephyr/sys/check.h>
 
 /* Optional striped locks reduce the performance impact of a system-wide
  * semaphore lock without the significant extra RAM required by per-object
@@ -38,189 +38,189 @@
 /* A k_spinlock can be zero-sized on uniprocessor configurations. Keep the
  * default lock scalar because arrays of empty structures are not portable.
  */
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-static struct k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
-#else
-static struct k_spinlock sem_lock;
-#endif
+#ఒకవేళ defined(CONFIG_SMP) && (CONFIG_SEM_తాళం_STRIPES > 1)
+స్థిర నిర్మాణం k_spinlock sem_locks[CONFIG_SEM_తాళం_STRIPES];
+#లేకపోతే
+స్థిర నిర్మాణం k_spinlock sem_తాళం;
+#అయితే_ముగింపు
 
-static inline struct k_spinlock *sem_spinlock_get(struct k_sem *sem)
+స్థిర అంతఃవరుస నిర్మాణం k_spinlock *sem_spinlock_get(నిర్మాణం k_sem *sem)
 {
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-	BUILD_ASSERT(IS_POWER_OF_TWO(CONFIG_SEM_LOCK_STRIPES),
+#ఒకవేళ defined(CONFIG_SMP) && (CONFIG_SEM_తాళం_STRIPES > 1)
+	BUILD_ASSERT(IS_POWER_యొక్క_TWO(CONFIG_SEM_తాళం_STRIPES),
 		     "CONFIG_SEM_LOCK_STRIPES must be a power of two");
 
 	/* Hash the naturally aligned semaphore address into a lock stripe. */
-	return &sem_locks[((uintptr_t)sem / __alignof(struct k_sem)) %
-			  CONFIG_SEM_LOCK_STRIPES];
-#else
-	ARG_UNUSED(sem);
-	return &sem_lock;
-#endif
+	తిరిగి &sem_locks[((uintptr_t)sem / __alignof(నిర్మాణం k_sem)) %
+			  CONFIG_SEM_తాళం_STRIPES];
+#లేకపోతే
+	ARG_వాడని(sem);
+	తిరిగి &sem_తాళం;
+#అయితే_ముగింపు
 }
 
-#ifdef CONFIG_OBJ_CORE_SEM
-K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_SEM */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_SEM
+K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_SEM */
 
-int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+పూర్ణాంకం z_impl_k_sem_init(నిర్మాణం k_sem *sem, గుర్తులేని పూర్ణాంకం initial_లెక్క,
+		      గుర్తులేని పూర్ణాంకం హద్దు)
 {
 	/*
 	 * Limit cannot be zero and count cannot be greater than limit
 	 */
-	CHECKIF(limit == 0U || initial_count > limit) {
-		SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
+	CHECKIF(హద్దు == 0U || initial_లెక్క > హద్దు) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
 
-		return -EINVAL;
+		తిరిగి -EINVAL;
 	}
 
-	sem->count = initial_count;
-	sem->limit = limit;
+	sem->లెక్క = initial_లెక్క;
+	sem->హద్దు = హద్దు;
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
 
 	z_waitq_init(&sem->wait_q);
-#if defined(CONFIG_POLL)
+#ఒకవేళ defined(CONFIG_POLL)
 	sys_dlist_init(&sem->poll_events);
-#endif /* CONFIG_POLL */
+#అయితే_ముగింపు /* CONFIG_POLL */
 	k_object_init(sem);
 
-#ifdef CONFIG_OBJ_CORE_SEM
+#నిర్వచితమైతే CONFIG_OBJ_CORE_SEM
 	k_obj_core_init_and_link(K_OBJ_CORE(sem), &obj_type_sem);
-#endif /* CONFIG_OBJ_CORE_SEM */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_SEM */
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+#నిర్వచితమైతే CONFIG_USERSPACE
+పూర్ణాంకం z_vrfy_k_sem_init(నిర్మాణం k_sem *sem, గుర్తులేని పూర్ణాంకం initial_లెక్క,
+		      గుర్తులేని పూర్ణాంకం హద్దు)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sem, K_OBJ_SEM));
-	return z_impl_k_sem_init(sem, initial_count, limit);
+	తిరిగి z_impl_k_sem_init(sem, initial_లెక్క, హద్దు);
 }
-#include <zephyr/syscalls/k_sem_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_sem_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-static inline bool sem_handle_poll_events(struct k_sem *sem)
+స్థిర అంతఃవరుస bool sem_handle_poll_events(నిర్మాణం k_sem *sem)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
-#else
-	ARG_UNUSED(sem);
-	return false;
-#endif /* CONFIG_POLL */
+#నిర్వచితమైతే CONFIG_POLL
+	తిరిగి z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_అందుబాటు);
+#లేకపోతే
+	ARG_వాడని(sem);
+	తిరిగి false;
+#అయితే_ముగింపు /* CONFIG_POLL */
 }
 
-void z_impl_k_sem_give(struct k_sem *sem)
+శూన్య z_impl_k_sem_give(నిర్మాణం k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	నిర్మాణం k_spinlock *తాళం = sem_spinlock_get(sem);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(తాళం);
 	bool resched;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
 
-	if (z_sched_wake(&sem->wait_q, 0, NULL)) {
+	ఒకవేళ (z_sched_wake(&sem->wait_q, 0, ఖాళీ)) {
 		resched = true;
-	} else {
-		sem->count += (sem->count != sem->limit) ? 1U : 0U;
+	} లేకపోతే {
+		sem->లెక్క += (sem->లెక్క != sem->హద్దు) ? 1U : 0U;
 		resched = sem_handle_poll_events(sem);
 	}
 
-	if (unlikely(resched)) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	ఒకవేళ (unlikely(resched)) {
+		z_reschedule(తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(తాళం, కీలకం);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_sem_give(struct k_sem *sem)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_sem_give(నిర్మాణం k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_give(sem);
 }
-#include <zephyr/syscalls/k_sem_give_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_sem_give_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+పూర్ణాంకం z_impl_k_sem_take(నిర్మాణం k_sem *sem, k_timeout_t timeout)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	int ret;
+	నిర్మాణం k_spinlock *తాళం = sem_spinlock_get(sem);
+	పూర్ణాంకం ret;
 
-	__ASSERT(((arch_is_in_isr() == false) ||
+	__ASSERT(((arch_is_లోపల_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
 
-	if (likely(sem->count > 0U)) {
-		sem->count--;
-		k_spin_unlock(lock, key);
+	ఒకవేళ (likely(sem->లెక్క > 0U)) {
+		sem->లెక్క--;
+		k_spin_unlock(తాళం, కీలకం);
 		ret = 0;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(lock, key);
+	ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(తాళం, కీలకం);
 		ret = -EBUSY;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
 
-	ret = z_pend_curr(lock, key, &sem->wait_q, timeout);
+	ret = z_pend_curr(తాళం, కీలకం, &sem->wait_q, timeout);
 
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
+బహిర్గతం:
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void z_impl_k_sem_reset(struct k_sem *sem)
+శూన్య z_impl_k_sem_reset(నిర్మాణం k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	నిర్మాణం k_spinlock *తాళం = sem_spinlock_get(sem);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(తాళం);
 	bool resched = false;
 
-	while (z_sched_wake(&sem->wait_q, -EAGAIN, NULL)) {
+	అయితే (z_sched_wake(&sem->wait_q, -EAGAIN, ఖాళీ)) {
 		resched = true;
 	}
-	sem->count = 0;
+	sem->లెక్క = 0;
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_sem, reset, sem);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_sem, reset, sem);
 
-	if (resched) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	ఒకవేళ (resched) {
+		z_reschedule(తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(తాళం, కీలకం);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_sem_take(నిర్మాణం k_sem *sem, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_take(sem, timeout);
+	తిరిగి z_impl_k_sem_take(sem, timeout);
 }
-#include <zephyr/syscalls/k_sem_take_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_sem_take_mrsh.c>
 
-static inline void z_vrfy_k_sem_reset(struct k_sem *sem)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_sem_reset(నిర్మాణం k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_reset(sem);
 }
-#include <zephyr/syscalls/k_sem_reset_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_sem_reset_mrsh.c>
 
-static inline unsigned int z_vrfy_k_sem_count_get(struct k_sem *sem)
+స్థిర అంతఃవరుస గుర్తులేని పూర్ణాంకం z_vrfy_k_sem_లెక్క_get(నిర్మాణం k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_count_get(sem);
+	తిరిగి z_impl_k_sem_లెక్క_get(sem);
 }
-#include <zephyr/syscalls/k_sem_count_get_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_sem_count_get_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

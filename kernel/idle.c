@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/llext/symbol.h>
-#include <zephyr/pm/pm.h>
-#include <stdbool.h>
-#include <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <zephyr/linker/sections.h>
+#అన్తర్భావ <zephyr/drivers/timer/system_timer.h>
+#అన్తర్భావ <zephyr/llext/symbol.h>
+#అన్తర్భావ <zephyr/pm/pm.h>
+#అన్తర్భావ <stdbool.h>
+#అన్తర్భావ <zephyr/logging/log.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kswap.h>
-#include <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <kswap.h>
+#అన్తర్భావ <wait_q.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-void idle(void *unused1, void *unused2, void *unused3)
+శూన్య idle(శూన్య *unused1, శూన్య *unused2, శూన్య *unused3)
 {
-	ARG_UNUSED(unused1);
-	ARG_UNUSED(unused2);
-	ARG_UNUSED(unused3);
+	ARG_వాడని(unused1);
+	ARG_వాడని(unused2);
+	ARG_వాడని(unused3);
 
-	__ASSERT_NO_MSG(_current->base.prio >= 0);
+	__ASSERT_NO_MSG(_current->పునాది.prio >= 0);
 
-	while (true) {
+	అయితే (true) {
 		/* SMP systems without a working IPI can't actual
 		 * enter an idle state, because they can't be notified
 		 * of scheduler changes (i.e. threads they should
@@ -36,11 +36,11 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * lock and/or timer driver.  This is intended as a
 		 * fallback configuration for new platform bringup.
 		 */
-		if (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
-			for (volatile int i = 0; i < 100000; i++) {
+		ఒకవేళ (IS_ENABLED(CONFIG_SMP) && !IS_ENABLED(CONFIG_SCHED_IPI_SUPPORTED)) {
+			కొరకు (అస్థిర పూర్ణాంకం i = 0; i < 100000; i++) {
 				/* Empty loop */
 			}
-			z_swap_unlocked();
+			z_మార్పిడి_unlocked();
 		}
 
 		/* Note weird API: k_cpu_idle() is called with local
@@ -48,16 +48,16 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * unmasked.  It does not take a spinlock or other
 		 * higher level construct.
 		 */
-		unsigned int key = arch_irq_lock();
+		గుర్తులేని పూర్ణాంకం కీలకం = arch_irq_తాళం();
 
-#ifdef CONFIG_PM
+#నిర్వచితమైతే CONFIG_PM
 		bool system_suspended = false;
 
-		if (!k_is_pre_kernel()) {
+		ఒకవేళ (!k_is_pre_kernel()) {
 			/* Value preserving: the helper returns either at most
 			 * SYS_CLOCK_MAX_WAIT (== INT32_MAX) or K_TICKS_FOREVER.
 			 */
-			_kernel.idle = (int32_t)z_get_next_timeout_expiry();
+			_kernel.idle = (int32_t)z_get_తదుపరి_timeout_expiry();
 
 			/*
 			 * Call the suspend hook function of the soc interface
@@ -68,18 +68,18 @@ void idle(void *unused1, void *unused2, void *unused3)
 			system_suspended = pm_system_suspend(_kernel.idle);
 		}
 
-		if (system_suspended) {
-			arch_irq_unlock(key);
-		} else {
+		ఒకవేళ (system_suspended) {
+			arch_irq_unlock(కీలకం);
+		} లేకపోతే {
 			k_cpu_idle();
 		}
-#else
-		ARG_UNUSED(key);
+#లేకపోతే
+		ARG_వాడని(కీలకం);
 		k_cpu_idle();
-#endif /* CONFIG_PM */
+#అయితే_ముగింపు /* CONFIG_PM */
 
-#if !defined(CONFIG_PREEMPT_ENABLED)
-# if !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
+#ఒకవేళ !defined(CONFIG_PREEMPT_ENABLED)
+# ఒకవేళ !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC)
 		/* A legacy mess: the idle thread is by definition
 		 * preemptible as far as the modern scheduler is
 		 * concerned, but older platforms use
@@ -89,19 +89,19 @@ void idle(void *unused1, void *unused2, void *unused3)
 		 * explicitly yield in the idle thread otherwise
 		 * nothing else will run once it starts.
 		 */
-		if (_kernel.ready_q.cache != _current) {
-			z_swap_unlocked();
+		ఒకవేళ (_kernel.ready_q.cache != _current) {
+			z_మార్పిడి_unlocked();
 		}
 # endif /* !defined(CONFIG_USE_SWITCH) || defined(CONFIG_SPARC) */
-#endif /* !defined(CONFIG_PREEMPT_ENABLED) */
+#అయితే_ముగింపు /* !defined(CONFIG_PREEMPT_ENABLED) */
 	}
 }
 
-void __weak arch_spin_relax(void)
+శూన్య __weak arch_spin_relax(శూన్య)
 {
 	__ASSERT(!arch_cpu_irqs_are_enabled(),
 		 "this is meant to be called with IRQs disabled");
 
 	arch_nop();
 }
-EXPORT_SYMBOL(arch_spin_relax);
+EXPORT_చిహ్నం(arch_spin_relax);

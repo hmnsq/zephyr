@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
-#define ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_
+#నిర్వచితం_కాకపోతే ZEPHYR_KERNEL_TIMEOUT_పాత్ర_H
+#నిర్వచించు ZEPHYR_KERNEL_TIMEOUT_పాత్ర_H
 
 /**
  * @file
@@ -40,176 +40,176 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/init.h>
-#include <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
 
-#define BUCKET_LISTS CONFIG_TIMEOUT_BUCKET_LISTS
-#define BUCKET_MASK  (BUCKET_LISTS - 1)
+#నిర్వచించు పాత్ర_LISTS CONFIG_TIMEOUT_పాత్ర_LISTS
+#నిర్వచించు పాత్ర_ముసుగు  (పాత్ర_LISTS - 1)
 
-BUILD_ASSERT((BUCKET_LISTS & BUCKET_MASK) == 0,
+BUILD_ASSERT((పాత్ర_LISTS & పాత్ర_ముసుగు) == 0,
 	     "CONFIG_TIMEOUT_BUCKET_LISTS must be a power of two");
-BUILD_ASSERT(BUCKET_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
+BUILD_ASSERT(పాత్ర_LISTS <= 64, "bucket occupancy bitmap is at most 64 bits");
 
 /* Occupancy bitmap, one bit per bucket. Stay 32-bit for the common (and
  * smallest, cheapest-to-scan on 32-bit targets) window and only widen to
  * 64-bit when more than 32 buckets are configured.
  */
-#if BUCKET_LISTS <= 32
-typedef uint32_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u32_count_trailing_zeros(x)
-#else
-typedef uint64_t bucket_bitmap_t;
-#define bucket_bits_ctz(x) u64_count_trailing_zeros(x)
-#endif
-#define BUCKET_BIT(n) ((bucket_bitmap_t)1 << (n))
+#ఒకవేళ పాత్ర_LISTS <= 32
+రకనిర్వచనం uint32_t పాత్ర_bitmap_t;
+#నిర్వచించు పాత్ర_బిట్లు_ctz(x) u32_లెక్క_trailing_zeros(x)
+#లేకపోతే
+రకనిర్వచనం uint64_t పాత్ర_bitmap_t;
+#నిర్వచించు పాత్ర_బిట్లు_ctz(x) u64_లెక్క_trailing_zeros(x)
+#అయితే_ముగింపు
+#నిర్వచించు పాత్ర_బిట్టు(n) ((పాత్ర_bitmap_t)1 << (n))
 
-static sys_dlist_t bucket[BUCKET_LISTS];
-static sys_dlist_t overflow;        /* sorted ascending by absolute expiry */
-static bucket_bitmap_t bucket_bits; /* bit p set => bucket[p] is non-empty */
-static uint64_t cursor_base;        /* window start, aligned to BUCKET_LISTS */
+స్థిర sys_dlist_t పాత్ర[పాత్ర_LISTS];
+స్థిర sys_dlist_t అధికప్రవాహం;        /* sorted ascending by absolute expiry */
+స్థిర పాత్ర_bitmap_t పాత్ర_బిట్లు; /* bit p set => bucket[p] is non-empty */
+స్థిర uint64_t cursor_పునాది;        /* window start, aligned to BUCKET_LISTS */
 
-static int timeout_bucket_init(void)
+స్థిర పూర్ణాంకం timeout_పాత్ర_init(శూన్య)
 {
-	for (unsigned int i = 0; i < BUCKET_LISTS; i++) {
-		sys_dlist_init(&bucket[i]);
+	కొరకు (గుర్తులేని పూర్ణాంకం i = 0; i < పాత్ర_LISTS; i++) {
+		sys_dlist_init(&పాత్ర[i]);
 	}
-	sys_dlist_init(&overflow);
-	bucket_bits = 0U;
-	cursor_base = 0U;
+	sys_dlist_init(&అధికప్రవాహం);
+	పాత్ర_బిట్లు = 0U;
+	cursor_పునాది = 0U;
 
-	return 0;
+	తిరిగి 0;
 }
 
 /* Runs before the timer driver (PRE_KERNEL_2) and before any timeout is added.
  * Priority 0 keeps it ahead of other PRE_KERNEL_1 initialisation.
  */
-SYS_INIT(timeout_bucket_init, PRE_KERNEL_1, 0);
+SYS_INIT(timeout_పాత్ర_init, PRE_KERNEL_1, 0);
 
-static struct _timeout *overflow_head(void)
+స్థిర నిర్మాణం _timeout *అధికప్రవాహం_తల(శూన్య)
 {
-	sys_dnode_t *n = sys_dlist_peek_head(&overflow);
+	sys_dnode_t *n = sys_dlist_peek_తల(&అధికప్రవాహం);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	తిరిగి (n == ఖాళీ) ? ఖాళీ : CONTAINER_యొక్క(n, నిర్మాణం _timeout, కణుపు);
 }
 
 /* Ticks from curr_tick to the earliest pending expiry, or INT64_MAX if none. */
-static int64_t earliest_gap(void)
+స్థిర int64_t earliest_gap(శూన్య)
 {
 	int64_t gap = INT64_MAX;
-	unsigned int cur_off = (unsigned int)(curr_tick & BUCKET_MASK);
+	గుర్తులేని పూర్ణాంకం cur_off = (గుర్తులేని పూర్ణాంకం)(curr_tick & పాత్ర_ముసుగు);
 
 	/* Nearest non-empty bucket strictly ahead of curr_tick in the window.
 	 * cursor_base is aligned, so bucket index == window offset.
 	 */
-	if (cur_off < (BUCKET_LISTS - 1)) {
-		bucket_bitmap_t ahead = bucket_bits & (~(bucket_bitmap_t)0 << (cur_off + 1));
+	ఒకవేళ (cur_off < (పాత్ర_LISTS - 1)) {
+		పాత్ర_bitmap_t ahead = పాత్ర_బిట్లు & (~(పాత్ర_bitmap_t)0 << (cur_off + 1));
 
-		if (ahead != 0U) {
-			gap = (int64_t)bucket_bits_ctz(ahead) - cur_off;
+		ఒకవేళ (ahead != 0U) {
+			gap = (int64_t)పాత్ర_బిట్లు_ctz(ahead) - cur_off;
 		}
 	}
 
-	if (gap == INT64_MAX) {
-		struct _timeout *t = overflow_head();
+	ఒకవేళ (gap == INT64_MAX) {
+		నిర్మాణం _timeout *t = అధికప్రవాహం_తల();
 
-		if (t != NULL) {
+		ఒకవేళ (t != ఖాళీ) {
 			gap = (int64_t)t->dticks - (int64_t)curr_tick;
 		}
 	}
 
-	return gap;
+	తిరిగి gap;
 }
 
-static bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+స్థిర bool z_timeout_q_చొప్పించు(నిర్మాణం _timeout *గమ్యం, k_ticks_t dticks)
 {
 	uint64_t expiry = curr_tick + (uint64_t)dticks;
 	int64_t old_gap = earliest_gap();
 
-	if (expiry < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)(expiry & BUCKET_MASK);
+	ఒకవేళ (expiry < cursor_పునాది + పాత్ర_LISTS) {
+		గుర్తులేని పూర్ణాంకం idx = (గుర్తులేని పూర్ణాంకం)(expiry & పాత్ర_ముసుగు);
 
-		to->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &to->node);
-	} else {
+		గమ్యం->dticks = idx;
+		పాత్ర_బిట్లు |= పాత్ర_బిట్టు(idx);
+		sys_dlist_append(&పాత్ర[idx], &గమ్యం->కణుపు);
+	} లేకపోతే {
 		/* Overflow: keep sorted ascending by absolute expiry. Insert
 		 * after any equal-keyed entries so same-tick order stays FIFO.
 		 */
-		struct _timeout *t;
+		నిర్మాణం _timeout *t;
 
-		to->dticks = (k_ticks_t)expiry;
-		SYS_DLIST_FOR_EACH_CONTAINER(&overflow, t, node) {
-			if ((uint64_t)t->dticks > expiry) {
-				sys_dlist_insert(&t->node, &to->node);
-				return (int64_t)dticks < old_gap;
+		గమ్యం->dticks = (k_ticks_t)expiry;
+		SYS_DLIST_FOR_EACH_CONTAINER(&అధికప్రవాహం, t, కణుపు) {
+			ఒకవేళ ((uint64_t)t->dticks > expiry) {
+				sys_dlist_చొప్పించు(&t->కణుపు, &గమ్యం->కణుపు);
+				తిరిగి (int64_t)dticks < old_gap;
 			}
 		}
-		sys_dlist_append(&overflow, &to->node);
+		sys_dlist_append(&అధికప్రవాహం, &గమ్యం->కణుపు);
 	}
 
-	return (int64_t)dticks < old_gap;
+	తిరిగి (int64_t)dticks < old_gap;
 }
 
-static k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+స్థిర k_ticks_t z_timeout_q_remainder(స్థిరరాశి నిర్మాణం _timeout *గమ్యం)
 {
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
+	ఒకవేళ ((uint64_t)గమ్యం->dticks < పాత్ర_LISTS) {
 		/* Bucket entry: reconstruct its absolute expiry, the unique
 		 * tick in the window whose low bits are the bucket index.
 		 */
-		uint64_t off = ((uint64_t)to->dticks - cursor_base) & BUCKET_MASK;
+		uint64_t off = ((uint64_t)గమ్యం->dticks - cursor_పునాది) & పాత్ర_ముసుగు;
 
-		return (k_ticks_t)((cursor_base + off) - curr_tick);
+		తిరిగి (k_ticks_t)((cursor_పునాది + off) - curr_tick);
 	}
 
-	return (k_ticks_t)((uint64_t)to->dticks - curr_tick);
+	తిరిగి (k_ticks_t)((uint64_t)గమ్యం->dticks - curr_tick);
 }
 
-static bool z_timeout_q_remove(struct _timeout *to)
+స్థిర bool z_timeout_q_remove(నిర్మాణం _timeout *గమ్యం)
 {
-	bool was_first = (z_timeout_q_remainder(to) <= earliest_gap());
+	bool was_మొదటి = (z_timeout_q_remainder(గమ్యం) <= earliest_gap());
 
-	if ((uint64_t)to->dticks < BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)to->dticks;
+	ఒకవేళ ((uint64_t)గమ్యం->dticks < పాత్ర_LISTS) {
+		గుర్తులేని పూర్ణాంకం idx = (గుర్తులేని పూర్ణాంకం)గమ్యం->dticks;
 
-		sys_dlist_remove(&to->node);
-		if (sys_dlist_is_empty(&bucket[idx])) {
-			bucket_bits &= ~BUCKET_BIT(idx);
+		sys_dlist_remove(&గమ్యం->కణుపు);
+		ఒకవేళ (sys_dlist_is_ఖాళీలు(&పాత్ర[idx])) {
+			పాత్ర_బిట్లు &= ~పాత్ర_బిట్టు(idx);
 		}
-	} else {
+	} లేకపోతే {
 		/* Overflow stores absolute expiry (not a delta), so removal
 		 * needs no successor fix-up.
 		 */
-		sys_dlist_remove(&to->node);
+		sys_dlist_remove(&గమ్యం->కణుపు);
 	}
 
-	return was_first;
+	తిరిగి was_మొదటి;
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * none. The announce-range cap is applied centrally by next_timeout() in
  * timeout.c.
  */
-static k_ticks_t z_timeout_q_next_expiry(void)
+స్థిర k_ticks_t z_timeout_q_తదుపరి_expiry(శూన్య)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
+	తిరిగి (gap == INT64_MAX) ? K_TICKS_FOREVER : (k_ticks_t)gap;
 }
 
-static int32_t z_timeout_q_next_gap(void)
+స్థిర int32_t z_timeout_q_తదుపరి_gap(శూన్య)
 {
 	int64_t gap = earliest_gap();
 
-	return (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	తిరిగి (gap == INT64_MAX) ? INT32_MAX : (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static void z_timeout_q_advance(int32_t dt)
+స్థిర శూన్య z_timeout_q_advance(int32_t dt)
 {
 	uint64_t new_curr = curr_tick + (uint64_t)dt;
 
-	if (new_curr < cursor_base + BUCKET_LISTS) {
+	ఒకవేళ (new_curr < cursor_పునాది + పాత్ర_LISTS) {
 		/* Still inside the current window: nothing to migrate. */
-		return;
+		తిరిగి;
 	}
 
 	/* Crossed the window. The loop only advances past the boundary when no
@@ -217,40 +217,40 @@ static void z_timeout_q_advance(int32_t dt)
 	 * is empty here. Re-base the window onto curr_tick's new position and
 	 * migrate the overflow entries that have come within range.
 	 */
-	cursor_base = new_curr & ~(uint64_t)BUCKET_MASK;
-	bucket_bits = 0U;
+	cursor_పునాది = new_curr & ~(uint64_t)పాత్ర_ముసుగు;
+	పాత్ర_బిట్లు = 0U;
 
-	struct _timeout *t;
+	నిర్మాణం _timeout *t;
 
-	while ((t = overflow_head()) != NULL &&
-	       (uint64_t)t->dticks < cursor_base + BUCKET_LISTS) {
-		unsigned int idx = (unsigned int)((uint64_t)t->dticks & BUCKET_MASK);
+	అయితే ((t = అధికప్రవాహం_తల()) != ఖాళీ &&
+	       (uint64_t)t->dticks < cursor_పునాది + పాత్ర_LISTS) {
+		గుర్తులేని పూర్ణాంకం idx = (గుర్తులేని పూర్ణాంకం)((uint64_t)t->dticks & పాత్ర_ముసుగు);
 
-		sys_dlist_remove(&t->node);
+		sys_dlist_remove(&t->కణుపు);
 		t->dticks = idx;
-		bucket_bits |= BUCKET_BIT(idx);
-		sys_dlist_append(&bucket[idx], &t->node);
+		పాత్ర_బిట్లు |= పాత్ర_బిట్టు(idx);
+		sys_dlist_append(&పాత్ర[idx], &t->కణుపు);
 	}
 }
 
-static struct _timeout *z_timeout_q_pop_due(void)
+స్థిర నిర్మాణం _timeout *z_timeout_q_తీయి_due(శూన్య)
 {
-	unsigned int idx = (unsigned int)(curr_tick & BUCKET_MASK);
-	sys_dnode_t *n = sys_dlist_peek_head(&bucket[idx]);
-	struct _timeout *t;
+	గుర్తులేని పూర్ణాంకం idx = (గుర్తులేని పూర్ణాంకం)(curr_tick & పాత్ర_ముసుగు);
+	sys_dnode_t *n = sys_dlist_peek_తల(&పాత్ర[idx]);
+	నిర్మాణం _timeout *t;
 
-	if (n == NULL) {
-		return NULL;
+	ఒకవేళ (n == ఖాళీ) {
+		తిరిగి ఖాళీ;
 	}
 
 	/* All entries in bucket[curr_tick & MASK] expire exactly at curr_tick. */
-	t = CONTAINER_OF(n, struct _timeout, node);
-	sys_dlist_remove(&t->node);
-	if (sys_dlist_is_empty(&bucket[idx])) {
-		bucket_bits &= ~BUCKET_BIT(idx);
+	t = CONTAINER_యొక్క(n, నిర్మాణం _timeout, కణుపు);
+	sys_dlist_remove(&t->కణుపు);
+	ఒకవేళ (sys_dlist_is_ఖాళీలు(&పాత్ర[idx])) {
+		పాత్ర_బిట్లు &= ~పాత్ర_బిట్టు(idx);
 	}
 
-	return t;
+	తిరిగి t;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */
+#అయితే_ముగింపు /* ZEPHYR_KERNEL_TIMEOUT_BUCKET_H_ */

@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <zephyr/sys/math_extras.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
 
-bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b)
+bool z_priq_rb_lessthan(నిర్మాణం rbnode *a, నిర్మాణం rbnode *b)
 {
-	struct k_thread *thread_a, *thread_b;
+	నిర్మాణం k_thread *thread_a, *thread_b;
 	int32_t cmp;
 
-	thread_a = CONTAINER_OF(a, struct k_thread, base.qnode_rb);
-	thread_b = CONTAINER_OF(b, struct k_thread, base.qnode_rb);
+	thread_a = CONTAINER_యొక్క(a, నిర్మాణం k_thread, పునాది.qnode_rb);
+	thread_b = CONTAINER_యొక్క(b, నిర్మాణం k_thread, పునాది.qnode_rb);
 
 	cmp = z_sched_prio_cmp(thread_a, thread_b);
 
-	if (cmp > 0) {
-		return true;
-	} else if (cmp < 0) {
-		return false;
-	} else {
-		return thread_a->base.order_key < thread_b->base.order_key
+	ఒకవేళ (cmp > 0) {
+		తిరిగి true;
+	} లేకపోతే ఒకవేళ (cmp < 0) {
+		తిరిగి false;
+	} లేకపోతే {
+		తిరిగి thread_a->పునాది.క్రమం_కీలకం < thread_b->పునాది.క్రమం_కీలకం
 			? 1 : 0;
 	}
 }

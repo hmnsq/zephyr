@@ -15,15 +15,15 @@
  * constructs.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/util.h>
-#include <zephyr/sys/__assert.h>
-#include <stdbool.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <kernel_internal.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/sys/util.h>
+#అన్తర్భావ <zephyr/sys/__assert.h>
+#అన్తర్భావ <stdbool.h>
 
 /* Single subsystem lock.  Locking per-event would be better on highly
  * contended SMP systems, but the original locking scheme here is
@@ -32,307 +32,307 @@
  * "inside" a given critical section).  Do the synchronization port
  * later as an optimization.
  */
-static struct k_spinlock poll_lock;
+స్థిర నిర్మాణం k_spinlock poll_తాళం;
 
-enum POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
+గణన POLL_బహుళకం { బహుళకం_NONE, బహుళకం_POLL, బహుళకం_TRIGGERED };
 
-static int signal_poller(struct k_poll_event *event, uint32_t state);
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status);
+స్థిర పూర్ణాంకం signal_poller(నిర్మాణం k_poll_event *event, uint32_t state);
+స్థిర పూర్ణాంకం signal_triggered_work(నిర్మాణం k_poll_event *event, uint32_t స్థితి_2);
 
-void k_poll_event_init(struct k_poll_event *event, uint32_t type,
-		       int mode, void *obj)
+శూన్య k_poll_event_init(నిర్మాణం k_poll_event *event, uint32_t type,
+		       పూర్ణాంకం బహుళకం, శూన్య *obj)
 {
-	__ASSERT(mode == K_POLL_MODE_NOTIFY_ONLY,
+	__ASSERT(బహుళకం == K_POLL_బహుళకం_NOTIFY_ONLY,
 		 "only NOTIFY_ONLY mode is supported\n");
-	__ASSERT(type < (BIT(_POLL_NUM_TYPES)), "invalid type\n");
-	__ASSERT(obj != NULL, "must provide an object\n");
+	__ASSERT(type < (బిట్టు(POLL_అంకె_TYPES)), "invalid type\n");
+	__ASSERT(obj != ఖాళీ, "must provide an object\n");
 
-	event->poller = NULL;
+	event->poller = ఖాళీ;
 	/* event->tag is left uninitialized: the user will set it if needed */
 	event->type = type;
 	event->state = K_POLL_STATE_NOT_READY;
-	event->mode = mode;
-	event->unused = 0U;
+	event->బహుళకం = బహుళకం;
+	event->వాడని = 0U;
 	event->obj = obj;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, event_init, event);
+	SYS_పోర్టు_TRACING_FUNC(k_poll_api, event_init, event);
 }
 
 /* must be called with interrupts locked */
-static inline bool is_condition_met(struct k_poll_event *event, uint32_t *state)
+స్థిర అంతఃవరుస bool is_condition_met(నిర్మాణం k_poll_event *event, uint32_t *state)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		if (k_sem_count_get(event->sem) > 0U) {
-			*state = K_POLL_STATE_SEM_AVAILABLE;
-			return true;
+	ఎంపిక (event->type) {
+	స్థితి K_POLL_TYPE_SEM_అందుబాటు:
+		ఒకవేళ (k_sem_లెక్క_get(event->sem) > 0U) {
+			*state = K_POLL_STATE_SEM_అందుబాటు;
+			తిరిగి true;
 		}
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		if (!k_queue_is_empty(event->queue)) {
-			*state = K_POLL_STATE_FIFO_DATA_AVAILABLE;
-			return true;
+		ఆపు;
+	స్థితి K_POLL_TYPE_దత్తాంశం_అందుబాటు:
+		ఒకవేళ (!k_వరుస_is_ఖాళీలు(event->వరుస)) {
+			*state = K_POLL_STATE_FIFO_దత్తాంశం_అందుబాటు;
+			తిరిగి true;
 		}
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		if (event->signal->signaled != 0U) {
+		ఆపు;
+	స్థితి K_POLL_TYPE_SIGNAL:
+		ఒకవేళ (event->సంకేతం->signaled != 0U) {
 			*state = K_POLL_STATE_SIGNALED;
-			return true;
+			తిరిగి true;
 		}
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		if (event->msgq->used_msgs > 0) {
-			*state = K_POLL_STATE_MSGQ_DATA_AVAILABLE;
-			return true;
+		ఆపు;
+	స్థితి K_POLL_TYPE_MSGQ_దత్తాంశం_అందుబాటు:
+		ఒకవేళ (event->msgq->వాడిన_msgs > 0) {
+			*state = K_POLL_STATE_MSGQ_దత్తాంశం_అందుబాటు;
+			తిరిగి true;
 		}
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		ఆపు;
+	స్థితి K_POLL_TYPE_PIPE_దత్తాంశం_అందుబాటు:
 		/*
 		 * A closed pipe is readable: k_pipe_read() returns any
 		 * remaining bytes, then -EPIPE. Without the closed check,
 		 * k_poll() waits forever on a closed empty pipe.
 		 */
-		if (!ring_buf_is_empty(&event->pipe->buf) ||
+		ఒకవేళ (!ring_buf_is_ఖాళీలు(&event->pipe->buf) ||
 		    (event->pipe->flags & PIPE_FLAG_OPEN) == 0U) {
-			*state = K_POLL_STATE_PIPE_DATA_AVAILABLE;
-			return true;
+			*state = K_POLL_STATE_PIPE_దత్తాంశం_అందుబాటు;
+			తిరిగి true;
 		}
-		break;
-	case K_POLL_TYPE_IGNORE:
-		break;
-	default:
+		ఆపు;
+	స్థితి K_POLL_TYPE_IGNORE:
+		ఆపు;
+	అప్రమేయ:
 		__ASSERT(false, "invalid event type (0x%x)\n", event->type);
-		break;
+		ఆపు;
 	}
 
-	return false;
+	తిరిగి false;
 }
 
-static struct k_thread *poller_thread(struct z_poller *p)
+స్థిర నిర్మాణం k_thread *poller_thread(నిర్మాణం z_poller *p)
 {
-	return p ? CONTAINER_OF(p, struct k_thread, poller) : NULL;
+	తిరిగి p ? CONTAINER_యొక్క(p, నిర్మాణం k_thread, poller) : ఖాళీ;
 }
 
-static inline void add_event(sys_dlist_t *events, struct k_poll_event *event,
-			     struct z_poller *poller)
+స్థిర అంతఃవరుస శూన్య కూడు_event(sys_dlist_t *events, నిర్మాణం k_poll_event *event,
+			     నిర్మాణం z_poller *poller)
 {
-	struct k_poll_event *pending;
+	నిర్మాణం k_poll_event *pending;
 
-	pending = (struct k_poll_event *)sys_dlist_peek_tail(events);
-	if ((pending == NULL) ||
+	pending = (నిర్మాణం k_poll_event *)sys_dlist_peek_తోక(events);
+	ఒకవేళ ((pending == ఖాళీ) ||
 		(z_sched_prio_cmp(poller_thread(pending->poller),
 							   poller_thread(poller)) > 0)) {
-		sys_dlist_append(events, &event->_node);
-		return;
+		sys_dlist_append(events, &event->కణుపు_2);
+		తిరిగి;
 	}
 
-	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, _node) {
-		if (z_sched_prio_cmp(poller_thread(poller),
+	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, కణుపు_2) {
+		ఒకవేళ (z_sched_prio_cmp(poller_thread(poller),
 					poller_thread(pending->poller)) > 0) {
-			sys_dlist_insert(&pending->_node, &event->_node);
-			return;
+			sys_dlist_చొప్పించు(&pending->కణుపు_2, &event->కణుపు_2);
+			తిరిగి;
 		}
 	}
 
-	sys_dlist_append(events, &event->_node);
+	sys_dlist_append(events, &event->కణుపు_2);
 }
 
 /* must be called with interrupts locked */
-static inline void register_event(struct k_poll_event *event,
-				 struct z_poller *poller)
+స్థిర అంతఃవరుస శూన్య రిజిస్టరు_event(నిర్మాణం k_poll_event *event,
+				 నిర్మాణం z_poller *poller)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
-		add_event(&event->sem->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
-		add_event(&event->queue->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
-		add_event(&event->signal->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
-		add_event(&event->msgq->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
-		add_event(&event->pipe->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_IGNORE:
+	ఎంపిక (event->type) {
+	స్థితి K_POLL_TYPE_SEM_అందుబాటు:
+		__ASSERT(event->sem != ఖాళీ, "invalid semaphore\n");
+		కూడు_event(&event->sem->poll_events, event, poller);
+		ఆపు;
+	స్థితి K_POLL_TYPE_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->వరుస != ఖాళీ, "invalid queue\n");
+		కూడు_event(&event->వరుస->poll_events, event, poller);
+		ఆపు;
+	స్థితి K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->సంకేతం != ఖాళీ, "invalid poll signal\n");
+		కూడు_event(&event->సంకేతం->poll_events, event, poller);
+		ఆపు;
+	స్థితి K_POLL_TYPE_MSGQ_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->msgq != ఖాళీ, "invalid message queue\n");
+		కూడు_event(&event->msgq->poll_events, event, poller);
+		ఆపు;
+	స్థితి K_POLL_TYPE_PIPE_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->pipe != ఖాళీ, "invalid pipe\n");
+		కూడు_event(&event->pipe->poll_events, event, poller);
+		ఆపు;
+	స్థితి K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		ఆపు;
+	అప్రమేయ:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		ఆపు;
 	}
 
 	event->poller = poller;
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registration(struct k_poll_event *event)
+స్థిర అంతఃవరుస శూన్య clear_event_registration(నిర్మాణం k_poll_event *event)
 {
 	bool remove_event = false;
 
-	event->poller = NULL;
+	event->poller = ఖాళీ;
 
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
+	ఎంపిక (event->type) {
+	స్థితి K_POLL_TYPE_SEM_అందుబాటు:
+		__ASSERT(event->sem != ఖాళీ, "invalid semaphore\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
+		ఆపు;
+	స్థితి K_POLL_TYPE_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->వరుస != ఖాళీ, "invalid queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
+		ఆపు;
+	స్థితి K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->సంకేతం != ఖాళీ, "invalid poll signal\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
+		ఆపు;
+	స్థితి K_POLL_TYPE_MSGQ_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->msgq != ఖాళీ, "invalid message queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
+		ఆపు;
+	స్థితి K_POLL_TYPE_PIPE_దత్తాంశం_అందుబాటు:
+		__ASSERT(event->pipe != ఖాళీ, "invalid pipe\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_IGNORE:
+		ఆపు;
+	స్థితి K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		ఆపు;
+	అప్రమేయ:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		ఆపు;
 	}
-	if (remove_event && sys_dnode_is_linked(&event->_node)) {
-		sys_dlist_remove(&event->_node);
+	ఒకవేళ (remove_event && sys_dnode_is_linked(&event->కణుపు_2)) {
+		sys_dlist_remove(&event->కణుపు_2);
 	}
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registrations(struct k_poll_event *events,
-					      int num_events,
-					      k_spinlock_key_t key)
+స్థిర అంతఃవరుస శూన్య clear_event_registrations(నిర్మాణం k_poll_event *events,
+					      పూర్ణాంకం అంకె_events,
+					      k_spinlock_కీలకం_t కీలకం)
 {
-	while (num_events--) {
-		clear_event_registration(&events[num_events]);
-		k_spin_unlock(&poll_lock, key);
-		key = k_spin_lock(&poll_lock);
+	అయితే (అంకె_events--) {
+		clear_event_registration(&events[అంకె_events]);
+		k_spin_unlock(&poll_తాళం, కీలకం);
+		కీలకం = k_spin_తాళం(&poll_తాళం);
 	}
 }
 
-static inline void set_event_ready(struct k_poll_event *event, uint32_t state)
+స్థిర అంతఃవరుస శూన్య సమితి_event_ready(నిర్మాణం k_poll_event *event, uint32_t state)
 {
-	event->poller = NULL;
+	event->poller = ఖాళీ;
 	event->state |= state;
 }
 
-static inline int register_events(struct k_poll_event *events,
-				  int num_events,
-				  struct z_poller *poller,
+స్థిర అంతఃవరుస పూర్ణాంకం రిజిస్టరు_events(నిర్మాణం k_poll_event *events,
+				  పూర్ణాంకం అంకె_events,
+				  నిర్మాణం z_poller *poller,
 				  bool just_check)
 {
-	int events_registered = 0;
+	పూర్ణాంకం events_registered = 0;
 
-	for (int ii = 0; ii < num_events; ii++) {
-		k_spinlock_key_t key;
+	కొరకు (పూర్ణాంకం ii = 0; ii < అంకె_events; ii++) {
+		k_spinlock_కీలకం_t కీలకం;
 		uint32_t state;
 
-		key = k_spin_lock(&poll_lock);
-		if (is_condition_met(&events[ii], &state)) {
-			set_event_ready(&events[ii], state);
+		కీలకం = k_spin_తాళం(&poll_తాళం);
+		ఒకవేళ (is_condition_met(&events[ii], &state)) {
+			సమితి_event_ready(&events[ii], state);
 			poller->is_polling = false;
-		} else if (!just_check && poller->is_polling) {
-			register_event(&events[ii], poller);
+		} లేకపోతే ఒకవేళ (!just_check && poller->is_polling) {
+			రిజిస్టరు_event(&events[ii], poller);
 			events_registered += 1;
-		} else {
+		} లేకపోతే {
 			/* Event is not one of those identified in is_condition_met()
 			 * catching non-polling events, or is marked for just check,
 			 * or not marked for polling. No action needed.
 			 */
 			;
 		}
-		k_spin_unlock(&poll_lock, key);
+		k_spin_unlock(&poll_తాళం, కీలకం);
 	}
 
-	return events_registered;
+	తిరిగి events_registered;
 }
 
-static int signal_poller(struct k_poll_event *event, uint32_t state)
+స్థిర పూర్ణాంకం signal_poller(నిర్మాణం k_poll_event *event, uint32_t state)
 {
-	struct k_thread *thread = poller_thread(event->poller);
+	నిర్మాణం k_thread *thread = poller_thread(event->poller);
 
-	__ASSERT(thread != NULL, "poller should have a thread\n");
+	__ASSERT(thread != ఖాళీ, "poller should have a thread\n");
 
-	if (!z_is_thread_pending(thread)) {
-		return 0;
+	ఒకవేళ (!z_is_thread_pending(thread)) {
+		తిరిగి 0;
 	}
 
 	z_unpend_thread(thread);
-	arch_thread_return_value_set(thread,
+	arch_thread_return_విలువ_సమితి(thread,
 		state == K_POLL_STATE_CANCELLED ? -EINTR : 0);
 
-	if (!z_is_thread_ready(thread)) {
-		return 0;
+	ఒకవేళ (!z_is_thread_ready(thread)) {
+		తిరిగి 0;
 	}
 
 	z_ready_thread(thread);
 
-	return 0;
+	తిరిగి 0;
 }
 
-int z_impl_k_poll(struct k_poll_event *events, int num_events,
+పూర్ణాంకం z_impl_k_poll(నిర్మాణం k_poll_event *events, పూర్ణాంకం అంకె_events,
 		  k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
-	struct z_poller *poller = &_current->poller;
+	పూర్ణాంకం events_registered;
+	k_spinlock_కీలకం_t కీలకం;
+	నిర్మాణం z_poller *poller = &_current->poller;
 
 	poller->is_polling = true;
-	poller->mode = MODE_POLL;
+	poller->బహుళకం = బహుళకం_POLL;
 
-	__ASSERT(!arch_is_in_isr(), "");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(!arch_is_లోపల_isr(), "");
+	__ASSERT(events != ఖాళీ, "NULL events\n");
+	__ASSERT(అంకె_events >= 0, "<0 events\n");
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_poll_api, poll, events);
+	SYS_పోర్టు_TRACING_FUNC_ENTER(k_poll_api, poll, events);
 
-	events_registered = register_events(events, num_events, poller,
+	events_registered = రిజిస్టరు_events(events, అంకె_events, poller,
 					    K_TIMEOUT_EQ(timeout, K_NO_WAIT));
 
-	key = k_spin_lock(&poll_lock);
+	కీలకం = k_spin_తాళం(&poll_తాళం);
 
 	/*
 	 * If we're not polling anymore, it means that at least one event
 	 * condition is met, either when looping through the events here or
 	 * because one of the events registered has had its state changed.
 	 */
-	if (!poller->is_polling) {
-		clear_event_registrations(events, events_registered, key);
-		k_spin_unlock(&poll_lock, key);
+	ఒకవేళ (!poller->is_polling) {
+		clear_event_registrations(events, events_registered, కీలకం);
+		k_spin_unlock(&poll_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
+		SYS_పోర్టు_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
 
-		return 0;
+		తిరిగి 0;
 	}
 
 	poller->is_polling = false;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&poll_lock, key);
+	ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&poll_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
+		SYS_పోర్టు_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
 
-		return -EAGAIN;
+		తిరిగి -EAGAIN;
 	}
 
-	static _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
+	స్థిర _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
 
-	int swap_rc = z_pend_curr(&poll_lock, key, &wait_q, timeout);
+	పూర్ణాంకం మార్పిడి_rc = z_pend_curr(&poll_తాళం, కీలకం, &wait_q, timeout);
 
 	/*
 	 * Clear all event registrations. If events happen while we're in this
@@ -343,314 +343,314 @@ int z_impl_k_poll(struct k_poll_event *events, int num_events,
 	 * added to the list of events that occurred, the user has to check the
 	 * return code first, which invalidates the whole list of event states.
 	 */
-	key = k_spin_lock(&poll_lock);
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	కీలకం = k_spin_తాళం(&poll_తాళం);
+	clear_event_registrations(events, events_registered, కీలకం);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, swap_rc);
+	SYS_పోర్టు_TRACING_FUNC_EXIT(k_poll_api, poll, events, మార్పిడి_rc);
 
-	return swap_rc;
+	తిరిగి మార్పిడి_rc;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll(struct k_poll_event *events,
-				int num_events, k_timeout_t timeout)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_poll(నిర్మాణం k_poll_event *events,
+				పూర్ణాంకం అంకె_events, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
-	struct k_poll_event *events_copy = NULL;
+	పూర్ణాంకం ret;
+	k_spinlock_కీలకం_t కీలకం;
+	నిర్మాణం k_poll_event *events_copy = ఖాళీ;
 	uint32_t bounds;
 
 	/* Validate the events buffer and make a copy of it in an
 	 * allocated kernel-side buffer.
 	 */
-	if (K_SYSCALL_VERIFY(num_events >= 0)) {
+	ఒకవేళ (K_SYSCALL_VERIFY(అంకె_events >= 0)) {
 		ret = -EINVAL;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
-	if (K_SYSCALL_VERIFY_MSG(!u32_mul_overflow(num_events,
-						   sizeof(struct k_poll_event),
+	ఒకవేళ (K_SYSCALL_VERIFY_సందేశం(!u32_mul_అధికప్రవాహం(అంకె_events,
+						   పరిమాణం(నిర్మాణం k_poll_event),
 						   &bounds),
 				 "num_events too large")) {
 		ret = -EINVAL;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 	events_copy = z_thread_malloc(bounds);
-	if (!events_copy) {
+	ఒకవేళ (!events_copy) {
 		ret = -ENOMEM;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
-		goto oops_free;
+	ఒకవేళ (K_SYSCALL_జ్ఞాపకం_WRITE(events, bounds)) {
+		వెళ్ళు oops_free;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	(void)memcpy(events_copy, events, bounds);
-	k_spin_unlock(&poll_lock, key);
+	కీలకం = k_spin_తాళం(&poll_తాళం);
+	(శూన్య)జ్ఞాపకం_నకలు(events_copy, events, bounds);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
 	/* Validate what's inside events_copy */
-	for (int i = 0; i < num_events; i++) {
-		struct k_poll_event *e = &events_copy[i];
+	కొరకు (పూర్ణాంకం i = 0; i < అంకె_events; i++) {
+		నిర్మాణం k_poll_event *e = &events_copy[i];
 
-		if (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
+		ఒకవేళ (K_SYSCALL_VERIFY(e->బహుళకం == K_POLL_బహుళకం_NOTIFY_ONLY)) {
 			ret = -EINVAL;
-			goto out_free;
+			వెళ్ళు బహిర్గతం_free;
 		}
 
-		switch (e->type) {
-		case K_POLL_TYPE_IGNORE:
-			break;
-		case K_POLL_TYPE_SIGNAL:
-			if (K_SYSCALL_OBJ(e->signal, K_OBJ_POLL_SIGNAL)) {
-				goto oops_free;
+		ఎంపిక (e->type) {
+		స్థితి K_POLL_TYPE_IGNORE:
+			ఆపు;
+		స్థితి K_POLL_TYPE_SIGNAL:
+			ఒకవేళ (K_SYSCALL_OBJ(e->సంకేతం, K_OBJ_POLL_SIGNAL)) {
+				వెళ్ళు oops_free;
 			}
-			break;
-		case K_POLL_TYPE_SEM_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
-				goto oops_free;
+			ఆపు;
+		స్థితి K_POLL_TYPE_SEM_అందుబాటు:
+			ఒకవేళ (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
+				వెళ్ళు oops_free;
 			}
-			break;
-		case K_POLL_TYPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
-				goto oops_free;
+			ఆపు;
+		స్థితి K_POLL_TYPE_దత్తాంశం_అందుబాటు:
+			ఒకవేళ (K_SYSCALL_OBJ(e->వరుస, K_OBJ_వరుస)) {
+				వెళ్ళు oops_free;
 			}
-			break;
-		case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
-				goto oops_free;
+			ఆపు;
+		స్థితి K_POLL_TYPE_MSGQ_దత్తాంశం_అందుబాటు:
+			ఒకవేళ (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
+				వెళ్ళు oops_free;
 			}
-			break;
-		case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
-				goto oops_free;
+			ఆపు;
+		స్థితి K_POLL_TYPE_PIPE_దత్తాంశం_అందుబాటు:
+			ఒకవేళ (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
+				వెళ్ళు oops_free;
 			}
-			break;
-		default:
+			ఆపు;
+		అప్రమేయ:
 			ret = -EINVAL;
-			goto out_free;
+			వెళ్ళు బహిర్గతం_free;
 		}
 	}
 
-	ret = k_poll(events_copy, num_events, timeout);
-	(void)memcpy((void *)events, events_copy, bounds);
-out_free:
+	ret = k_poll(events_copy, అంకె_events, timeout);
+	(శూన్య)జ్ఞాపకం_నకలు((శూన్య *)events, events_copy, bounds);
+బహిర్గతం_free:
 	k_free(events_copy);
-out:
-	return ret;
+బహిర్గతం:
+	తిరిగి ret;
 oops_free:
 	k_free(events_copy);
 	K_OOPS(1);
 }
-#include <zephyr/syscalls/k_poll_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_poll_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
 /* must be called with interrupts locked */
-static int signal_poll_event(struct k_poll_event *event, uint32_t state)
+స్థిర పూర్ణాంకం signal_poll_event(నిర్మాణం k_poll_event *event, uint32_t state)
 {
-	struct z_poller *poller = event->poller;
-	int retcode = 0;
+	నిర్మాణం z_poller *poller = event->poller;
+	పూర్ణాంకం retcode = 0;
 
-	if (poller != NULL) {
-		if (poller->mode == MODE_POLL) {
+	ఒకవేళ (poller != ఖాళీ) {
+		ఒకవేళ (poller->బహుళకం == బహుళకం_POLL) {
 			retcode = signal_poller(event, state);
-		} else if (poller->mode == MODE_TRIGGERED) {
+		} లేకపోతే ఒకవేళ (poller->బహుళకం == బహుళకం_TRIGGERED) {
 			retcode = signal_triggered_work(event, state);
-		} else {
+		} లేకపోతే {
 			/* Poller is not poll or triggered mode. No action needed.*/
 			;
 		}
 
 		poller->is_polling = false;
 
-		if (retcode < 0) {
-			return retcode;
+		ఒకవేళ (retcode < 0) {
+			తిరిగి retcode;
 		}
 	}
 
-	set_event_ready(event, state);
-	return retcode;
+	సమితి_event_ready(event, state);
+	తిరిగి retcode;
 }
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state)
 {
-	struct k_poll_event *poll_event;
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	నిర్మాణం k_poll_event *poll_event;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&poll_తాళం);
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(events);
-	if (poll_event != NULL) {
-		(void) signal_poll_event(poll_event, state);
+	poll_event = (నిర్మాణం k_poll_event *)sys_dlist_get(events);
+	ఒకవేళ (poll_event != ఖాళీ) {
+		(శూన్య) signal_poll_event(poll_event, state);
 	}
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
-	return (poll_event != NULL);
+	తిరిగి (poll_event != ఖాళీ);
 }
 
-void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
+శూన్య z_impl_k_poll_signal_init(నిర్మాణం k_poll_signal *sig)
 {
 	sys_dlist_init(&sig->poll_events);
 	sig->signaled = 0U;
 	/* signal->result is left uninitialized */
 	k_object_init(sig);
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_init, sig);
+	SYS_పోర్టు_TRACING_FUNC(k_poll_api, signal_init, sig);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_poll_signal_init(struct k_poll_signal *sig)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_poll_signal_init(నిర్మాణం k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_init(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_poll_signal_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-void z_impl_k_poll_signal_reset(struct k_poll_signal *sig)
+శూన్య z_impl_k_poll_signal_reset(నిర్మాణం k_poll_signal *sig)
 {
 	sig->signaled = 0U;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_reset, sig);
+	SYS_పోర్టు_TRACING_FUNC(k_poll_api, signal_reset, sig);
 }
 
-void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+శూన్య z_impl_k_poll_signal_check(నిర్మాణం k_poll_signal *sig,
+			       గుర్తులేని పూర్ణాంకం *signaled, పూర్ణాంకం *ఫలితం)
 {
 	*signaled = sig->signaled;
-	*result = sig->result;
+	*ఫలితం = sig->ఫలితం;
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_check, sig);
+	SYS_పోర్టు_TRACING_FUNC(k_poll_api, signal_check, sig);
 }
 
-#ifdef CONFIG_USERSPACE
-void z_vrfy_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+#నిర్వచితమైతే CONFIG_USERSPACE
+శూన్య z_vrfy_k_poll_signal_check(నిర్మాణం k_poll_signal *sig,
+			       గుర్తులేని పూర్ణాంకం *signaled, పూర్ణాంకం *ఫలితం)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, sizeof(unsigned int)));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, sizeof(int)));
-	z_impl_k_poll_signal_check(sig, signaled, result);
+	K_OOPS(K_SYSCALL_జ్ఞాపకం_WRITE(signaled, పరిమాణం(గుర్తులేని పూర్ణాంకం)));
+	K_OOPS(K_SYSCALL_జ్ఞాపకం_WRITE(ఫలితం, పరిమాణం(పూర్ణాంకం)));
+	z_impl_k_poll_signal_check(sig, signaled, ఫలితం);
 }
-#include <zephyr/syscalls/k_poll_signal_check_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_poll_signal_check_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_poll_signal_raise(struct k_poll_signal *sig, int result)
+పూర్ణాంకం z_impl_k_poll_signal_raise(నిర్మాణం k_poll_signal *sig, పూర్ణాంకం ఫలితం)
 {
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
-	struct k_poll_event *poll_event;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&poll_తాళం);
+	నిర్మాణం k_poll_event *poll_event;
 
-	sig->result = result;
+	sig->ఫలితం = ఫలితం;
 	sig->signaled = 1U;
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(&sig->poll_events);
-	if (poll_event == NULL) {
-		k_spin_unlock(&poll_lock, key);
+	poll_event = (నిర్మాణం k_poll_event *)sys_dlist_get(&sig->poll_events);
+	ఒకవేళ (poll_event == ఖాళీ) {
+		k_spin_unlock(&poll_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
+		SYS_పోర్టు_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
 
-		return 0;
+		తిరిగి 0;
 	}
 
-	int rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
+	పూర్ణాంకం rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
 
-	SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
+	SYS_పోర్టు_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
 
-	z_reschedule(&poll_lock, key);
-	return rc;
+	z_reschedule(&poll_తాళం, కీలకం);
+	తిరిగి rc;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll_signal_raise(struct k_poll_signal *sig,
-					     int result)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_poll_signal_raise(నిర్మాణం k_poll_signal *sig,
+					     పూర్ణాంకం ఫలితం)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	return z_impl_k_poll_signal_raise(sig, result);
+	తిరిగి z_impl_k_poll_signal_raise(sig, ఫలితం);
 }
-#include <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
 
-static inline void z_vrfy_k_poll_signal_reset(struct k_poll_signal *sig)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_poll_signal_reset(నిర్మాణం k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_reset(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-static void triggered_work_handler(struct k_work *work)
+స్థిర శూన్య triggered_work_handler(నిర్మాణం k_work *work)
 {
-	struct k_work_poll *twork =
-			CONTAINER_OF(work, struct k_work_poll, work);
+	నిర్మాణం k_work_poll *twork =
+			CONTAINER_యొక్క(work, నిర్మాణం k_work_poll, work);
 
 	/*
 	 * If callback is not set, the k_work_poll_submit_to_queue()
 	 * already cleared event registrations.
 	 */
-	if (twork->poller.mode != MODE_NONE) {
-		k_spinlock_key_t key;
+	ఒకవేళ (twork->poller.బహుళకం != బహుళకం_NONE) {
+		k_spinlock_కీలకం_t కీలకం;
 
-		key = k_spin_lock(&poll_lock);
+		కీలకం = k_spin_తాళం(&poll_తాళం);
 		clear_event_registrations(twork->events,
-					  twork->num_events, key);
-		k_spin_unlock(&poll_lock, key);
+					  twork->అంకె_events, కీలకం);
+		k_spin_unlock(&poll_తాళం, కీలకం);
 	}
 
 	/* Drop work ownership and execute real handler. */
-	twork->workq = NULL;
+	twork->workq = ఖాళీ;
 	twork->real_handler(work);
 }
 
-extern int z_work_submit_to_queue(struct k_work_q *queue,
-			 struct k_work *work);
+బాహ్య పూర్ణాంకం z_work_submit_గమ్యం_వరుస(నిర్మాణం k_work_q *వరుస,
+			 నిర్మాణం k_work *work);
 
-static void triggered_work_expiration_handler(struct _timeout *timeout)
+స్థిర శూన్య triggered_work_expiration_handler(నిర్మాణం _timeout *timeout)
 {
-	struct k_work_poll *twork =
-		CONTAINER_OF(timeout, struct k_work_poll, timeout);
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	నిర్మాణం k_work_poll *twork =
+		CONTAINER_యొక్క(timeout, నిర్మాణం k_work_poll, timeout);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&poll_తాళం);
 
-	if (!twork->poller.is_polling) {
+	ఒకవేళ (!twork->poller.is_polling) {
 		/* signal_triggered_work() or triggered_work_cancel() has
 		 * already claimed this wake under the same lock; nothing
 		 * for us to do.
 		 */
-		k_spin_unlock(&poll_lock, key);
-		return;
+		k_spin_unlock(&poll_తాళం, కీలకం);
+		తిరిగి;
 	}
 
 	twork->poller.is_polling = false;
-	twork->poll_result = -EAGAIN;
-	z_work_submit_to_queue(twork->workq, &twork->work);
+	twork->poll_ఫలితం = -EAGAIN;
+	z_work_submit_గమ్యం_వరుస(twork->workq, &twork->work);
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 }
 
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status)
+స్థిర పూర్ణాంకం signal_triggered_work(నిర్మాణం k_poll_event *event, uint32_t స్థితి_2)
 {
-	struct z_poller *poller = event->poller;
-	struct k_work_poll *twork =
-		CONTAINER_OF(poller, struct k_work_poll, poller);
+	నిర్మాణం z_poller *poller = event->poller;
+	నిర్మాణం k_work_poll *twork =
+		CONTAINER_యొక్క(poller, నిర్మాణం k_work_poll, poller);
 
-	if (poller->is_polling && twork->workq != NULL) {
-		struct k_work_q *work_q = twork->workq;
+	ఒకవేళ (poller->is_polling && twork->workq != ఖాళీ) {
+		నిర్మాణం k_work_q *work_q = twork->workq;
 
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
 		poller->is_polling = false;
-		(void)z_try_abort_timeout(&twork->timeout);
-		twork->poll_result = 0;
-		z_work_submit_to_queue(work_q, &twork->work);
+		(శూన్య)z_try_abort_timeout(&twork->timeout);
+		twork->poll_ఫలితం = 0;
+		z_work_submit_గమ్యం_వరుస(work_q, &twork->work);
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-static int triggered_work_cancel(struct k_work_poll *work,
-				 k_spinlock_key_t key)
+స్థిర పూర్ణాంకం triggered_work_cancel(నిర్మాణం k_work_poll *work,
+				 k_spinlock_కీలకం_t కీలకం)
 {
 	/* Check if the work waits for event. */
-	if (work->poller.is_polling && work->poller.mode != MODE_NONE) {
+	ఒకవేళ (work->poller.is_polling && work->poller.బహుళకం != బహుళకం_NONE) {
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
@@ -663,21 +663,21 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		 * `work` for a new poll without the old handler eventually
 		 * acting on the new setup.
 		 */
-		while (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
-			k_spin_unlock(&poll_lock, key);
-			key = k_spin_lock(&poll_lock);
+		అయితే (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
+			k_spin_unlock(&poll_తాళం, కీలకం);
+			కీలకం = k_spin_తాళం(&poll_తాళం);
 		}
 
 		/*
 		 * Prevent work execution if event arrives while we will be
 		 * clearing registrations.
 		 */
-		work->poller.mode = MODE_NONE;
+		work->poller.బహుళకం = బహుళకం_NONE;
 
 		/* Clear registrations and work ownership. */
-		clear_event_registrations(work->events, work->num_events, key);
-		work->workq = NULL;
-		return 0;
+		clear_event_registrations(work->events, work->అంకె_events, కీలకం);
+		work->workq = ఖాళీ;
+		తిరిగి 0;
 	}
 
 	/*
@@ -687,99 +687,99 @@ static int triggered_work_cancel(struct k_work_poll *work,
 	 * unfortunately there is no public API performing this task.
 	 */
 
-	return -EINVAL;
+	తిరిగి -EINVAL;
 }
 
-void k_work_poll_init(struct k_work_poll *work,
+శూన్య k_work_poll_init(నిర్మాణం k_work_poll *work,
 		      k_work_handler_t handler)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
 
-	*work = (struct k_work_poll) {};
+	*work = (నిర్మాణం k_work_poll) {};
 	k_work_init(&work->work, triggered_work_handler);
 	work->real_handler = handler;
 	z_init_timeout(&work->timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
 }
 
-int k_work_poll_submit_to_queue(struct k_work_q *work_q,
-				struct k_work_poll *work,
-				struct k_poll_event *events,
-				int num_events,
+పూర్ణాంకం k_work_poll_submit_గమ్యం_వరుస(నిర్మాణం k_work_q *work_q,
+				నిర్మాణం k_work_poll *work,
+				నిర్మాణం k_poll_event *events,
+				పూర్ణాంకం అంకె_events,
 				k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
+	పూర్ణాంకం events_registered;
+	k_spinlock_కీలకం_t కీలకం;
 
-	__ASSERT(work_q != NULL, "NULL work_q\n");
-	__ASSERT(work != NULL, "NULL work\n");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(work_q != ఖాళీ, "NULL work_q\n");
+	__ASSERT(work != ఖాళీ, "NULL work\n");
+	__ASSERT(events != ఖాళీ, "NULL events\n");
+	__ASSERT(అంకె_events >= 0, "<0 events\n");
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit_to_queue, work_q, work, timeout);
+	SYS_పోర్టు_TRACING_FUNC_ENTER(k_work_poll, submit_గమ్యం_వరుస, work_q, work, timeout);
 
 	/* Take ownership of the work if it is possible. */
-	key = k_spin_lock(&poll_lock);
-	if (work->workq != NULL) {
-		if (work->workq == work_q) {
-			int retval;
+	కీలకం = k_spin_తాళం(&poll_తాళం);
+	ఒకవేళ (work->workq != ఖాళీ) {
+		ఒకవేళ (work->workq == work_q) {
+			పూర్ణాంకం retval;
 
-			retval = triggered_work_cancel(work, key);
-			if (retval < 0) {
-				k_spin_unlock(&poll_lock, key);
+			retval = triggered_work_cancel(work, కీలకం);
+			ఒకవేళ (retval < 0) {
+				k_spin_unlock(&poll_తాళం, కీలకం);
 
-				SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
+				SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, submit_గమ్యం_వరుస, work_q,
 					work, timeout, retval);
 
-				return retval;
+				తిరిగి retval;
 			}
-		} else {
-			k_spin_unlock(&poll_lock, key);
+		} లేకపోతే {
+			k_spin_unlock(&poll_తాళం, కీలకం);
 
-			SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
+			SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, submit_గమ్యం_వరుస, work_q,
 				work, timeout, -EADDRINUSE);
 
-			return -EADDRINUSE;
+			తిరిగి -EADDRINUSE;
 		}
 	}
 
 
 	work->poller.is_polling = true;
 	work->workq = work_q;
-	work->poller.mode = MODE_NONE;
-	k_spin_unlock(&poll_lock, key);
+	work->poller.బహుళకం = బహుళకం_NONE;
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
 	/* Save list of events. */
 	work->events = events;
-	work->num_events = num_events;
+	work->అంకె_events = అంకె_events;
 
 	/* Clear result */
-	work->poll_result = -EINPROGRESS;
+	work->poll_ఫలితం = -EINPROGRESS;
 
 	/* Register events */
-	events_registered = register_events(events, num_events,
+	events_registered = రిజిస్టరు_events(events, అంకె_events,
 					    &work->poller, false);
 
-	key = k_spin_lock(&poll_lock);
-	if (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	కీలకం = k_spin_తాళం(&poll_తాళం);
+	ఒకవేళ (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/*
 		 * Poller is still polling.
 		 * No event is ready and all are watched.
 		 */
-		__ASSERT(num_events == events_registered,
+		__ASSERT(అంకె_events == events_registered,
 			 "Some events were not registered!\n");
 
 		/* Setup timeout if such action is requested */
-		z_add_timeout(&work->timeout, triggered_work_expiration_handler, timeout);
+		z_కూడు_timeout(&work->timeout, triggered_work_expiration_handler, timeout);
 
 		/* From now, any event will result in submitted work. */
-		work->poller.mode = MODE_TRIGGERED;
-		k_spin_unlock(&poll_lock, key);
+		work->poller.బహుళకం = బహుళకం_TRIGGERED;
+		k_spin_unlock(&poll_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
+		SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, submit_గమ్యం_వరుస, work_q, work, timeout, 0);
 
-		return 0;
+		తిరిగి 0;
 	}
 
 	/*
@@ -793,59 +793,59 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 	 * If poller is still polling, no watched event occurred. This means
 	 * we reached here due to K_NO_WAIT timeout "expiration".
 	 */
-	if (work->poller.is_polling) {
+	ఒకవేళ (work->poller.is_polling) {
 		work->poller.is_polling = false;
-		work->poll_result = -EAGAIN;
-	} else {
-		work->poll_result = 0;
+		work->poll_ఫలితం = -EAGAIN;
+	} లేకపోతే {
+		work->poll_ఫలితం = 0;
 	}
 
 	/* Clear registrations. */
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	clear_event_registrations(events, events_registered, కీలకం);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
 	/* Submit work. */
-	k_work_submit_to_queue(work_q, &work->work);
+	k_work_submit_గమ్యం_వరుస(work_q, &work->work);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
+	SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, submit_గమ్యం_వరుస, work_q, work, timeout, 0);
 
-	return 0;
+	తిరిగి 0;
 }
 
-int k_work_poll_submit(struct k_work_poll *work,
-				     struct k_poll_event *events,
-				     int num_events,
+పూర్ణాంకం k_work_poll_submit(నిర్మాణం k_work_poll *work,
+				     నిర్మాణం k_poll_event *events,
+				     పూర్ణాంకం అంకె_events,
 				     k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
+	SYS_పోర్టు_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
 
-	int ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
-								events, num_events, timeout);
+	పూర్ణాంకం ret = k_work_poll_submit_గమ్యం_వరుస(&k_sys_work_q, work,
+								events, అంకె_events, timeout);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
+	SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_poll_cancel(struct k_work_poll *work)
+పూర్ణాంకం k_work_poll_cancel(నిర్మాణం k_work_poll *work)
 {
-	k_spinlock_key_t key;
-	int retval;
+	k_spinlock_కీలకం_t కీలకం;
+	పూర్ణాంకం retval;
 
-	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
+	SYS_పోర్టు_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
 
 	/* Check if the work was submitted. */
-	if (work == NULL || work->workq == NULL) {
-		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
+	ఒకవేళ (work == ఖాళీ || work->workq == ఖాళీ) {
+		SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
 
-		return -EINVAL;
+		తిరిగి -EINVAL;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	retval = triggered_work_cancel(work, key);
-	k_spin_unlock(&poll_lock, key);
+	కీలకం = k_spin_తాళం(&poll_తాళం);
+	retval = triggered_work_cancel(work, కీలకం);
+	k_spin_unlock(&poll_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
+	SYS_పోర్టు_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
 
-	return retval;
+	తిరిగి retval;
 }

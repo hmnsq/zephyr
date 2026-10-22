@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/sys/math_extras.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <kernel_internal.h>
+#అన్తర్భావ <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STACK */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_దొంతర
+K_OBJ_TYPE_DEFINE(obj_type_దొంతర, k_దొంతర, K_OBJ_TYPE_దొంతర_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+శూన్య k_దొంతర_init(నిర్మాణం k_దొంతర *దొంతర, దొంతర_దత్తాంశం_t *బఫరు,
+		  uint32_t అంకె_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&దొంతర->wait_q);
+	దొంతర->తాళం = (నిర్మాణం k_spinlock) {};
+	దొంతర->తదుపరి = బఫరు;
+	దొంతర->పునాది = బఫరు;
+	దొంతర->శిఖరం = దొంతర->పునాది + అంకె_entries;
+	దొంతర->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_దొంతర, దొంతర);
+	k_object_init(దొంతర);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
-#endif /* CONFIG_OBJ_CORE_STACK */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_దొంతర
+	k_obj_core_init_and_link(K_OBJ_CORE(దొంతర), &obj_type_దొంతర);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_దొంతర_alloc_init(నిర్మాణం k_దొంతర *దొంతర, uint32_t అంకె_entries)
 {
-	void *buffer;
-	size_t total_size;
+	శూన్య *బఫరు;
+	size_t మొత్తం_కొలత;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_దొంతర, alloc_init, దొంతర);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	ఒకవేళ (కొలత_mul_అధికప్రవాహం(అంకె_entries, పరిమాణం(దొంతర_దత్తాంశం_t), &మొత్తం_కొలత)) {
 		ret = -ENOMEM;
-	} else {
-		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+	} లేకపోతే {
+		బఫరు = z_thread_malloc(మొత్తం_కొలత);
+		ఒకవేళ (బఫరు != ఖాళీ) {
+			k_దొంతర_init(దొంతర, బఫరు, అంకె_entries);
+			దొంతర->flags = K_దొంతర_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} లేకపోతే {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, alloc_init, దొంతర, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస int32_t z_vrfy_k_దొంతర_alloc_init(నిర్మాణం k_దొంతర *దొంతర,
+					      uint32_t అంకె_entries)
 {
-	size_t total_size;
+	size_t మొత్తం_కొలత;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
-					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(దొంతర, K_OBJ_దొంతర));
+	K_OOPS(K_SYSCALL_VERIFY(అంకె_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!కొలత_mul_అధికప్రవాహం(అంకె_entries, పరిమాణం(దొంతర_దత్తాంశం_t),
+					&మొత్తం_కొలత)));
+	తిరిగి z_impl_k_దొంతర_alloc_init(దొంతర, అంకె_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+పూర్ణాంకం z_దొంతర_cleanup(నిర్మాణం k_దొంతర *దొంతర, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_దొంతర, cleanup, దొంతర);
 
-	int ret = 0;
+	పూర్ణాంకం ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&దొంతర->తాళం);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	ఒకవేళ (locked && (z_waitq_తల_locked(&దొంతర->wait_q) != ఖాళీ)) {
 		ret = -EAGAIN;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	ఒకవేళ (!locked && (z_waitq_తల(&దొంతర->wait_q) != ఖాళీ)) {
 		ret = -EAGAIN;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	ఒకవేళ ((దొంతర->flags & K_దొంతర_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(దొంతర->పునాది);
+		దొంతర->పునాది = ఖాళీ;
+		దొంతర->flags &= ~K_దొంతర_FLAG_ALLOC;
 		freed = true;
 	}
 
-out:
-	k_spin_unlock(&stack->lock, key);
+బహిర్గతం:
+	k_spin_unlock(&దొంతర->తాళం, కీలకం);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#నిర్వచితమైతే CONFIG_OBJ_CORE_దొంతర
+	ఒకవేళ (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(దొంతర));
 	}
-#endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_STACK */
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, cleanup, దొంతర, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+పూర్ణాంకం k_దొంతర_cleanup(నిర్మాణం k_దొంతర *దొంతర)
 {
-	return z_stack_cleanup(stack, false);
+	తిరిగి z_దొంతర_cleanup(దొంతర, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+పూర్ణాంకం z_impl_k_దొంతర_నెట్టు(నిర్మాణం k_దొంతర *దొంతర, దొంతర_దత్తాంశం_t దత్తాంశం)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	పూర్ణాంకం ret = 0;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&దొంతర->తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_దొంతర, నెట్టు, దొంతర);
 
-	if (stack->next == stack->top) {
+	ఒకవేళ (దొంతర->తదుపరి == దొంతర->శిఖరం) {
 		ret = -ENOMEM;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	ఒకవేళ (z_sched_wake(&దొంతర->wait_q, 0, (శూన్య *)దత్తాంశం)) {
+		z_reschedule(&దొంతర->తాళం, కీలకం);
+		వెళ్ళు చివర;
+	} లేకపోతే {
+		*(దొంతర->తదుపరి) = దత్తాంశం;
+		దొంతర->తదుపరి++;
+		వెళ్ళు బహిర్గతం;
 	}
 
-out:
-	k_spin_unlock(&stack->lock, key);
+బహిర్గతం:
+	k_spin_unlock(&దొంతర->తాళం, కీలకం);
 
-end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+చివర:
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, నెట్టు, దొంతర, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_దొంతర_నెట్టు(నిర్మాణం k_దొంతర *దొంతర, దొంతర_దత్తాంశం_t దత్తాంశం)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(దొంతర, K_OBJ_దొంతర));
 
-	return z_impl_k_stack_push(stack, data);
+	తిరిగి z_impl_k_దొంతర_నెట్టు(దొంతర, దత్తాంశం);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_stack_push_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+పూర్ణాంకం z_impl_k_దొంతర_తీయి(నిర్మాణం k_దొంతర *దొంతర, దొంతర_దత్తాంశం_t *దత్తాంశం,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_కీలకం_t కీలకం;
+	పూర్ణాంకం ఫలితం;
 
-	key = k_spin_lock(&stack->lock);
+	కీలకం = k_spin_తాళం(&దొంతర->తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_దొంతర, తీయి, దొంతర, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	ఒకవేళ (likely(దొంతర->తదుపరి > దొంతర->పునాది)) {
+		దొంతర->తదుపరి--;
+		*దత్తాంశం = *(దొంతర->తదుపరి);
+		k_spin_unlock(&దొంతర->తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, తీయి, దొంతర, timeout, 0);
 
-		return 0;
+		తిరిగి 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&దొంతర->తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, తీయి, దొంతర, timeout, -EBUSY);
 
-		return -EBUSY;
+		తిరిగి -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_దొంతర, తీయి, దొంతర, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	ఫలితం = z_pend_curr(&దొంతర->తాళం, కీలకం, &దొంతర->wait_q, timeout);
+	ఒకవేళ (ఫలితం != 0) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, తీయి, దొంతర, timeout, ఫలితం);
 
-		return result;
+		తిరిగి ఫలితం;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*దత్తాంశం = (దొంతర_దత్తాంశం_t)_current->పునాది.మార్పిడి_దత్తాంశం;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_దొంతర, తీయి, దొంతర, timeout, 0);
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_దొంతర_తీయి(నిర్మాణం k_దొంతర *దొంతర,
+				     దొంతర_దత్తాంశం_t *దత్తాంశం, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(దొంతర, K_OBJ_దొంతర));
+	K_OOPS(K_SYSCALL_జ్ఞాపకం_WRITE(దత్తాంశం, పరిమాణం(దొంతర_దత్తాంశం_t)));
+	తిరిగి z_impl_k_దొంతర_తీయి(దొంతర, దత్తాంశం, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_stack_pop_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

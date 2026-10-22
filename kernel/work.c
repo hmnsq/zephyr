@@ -10,74 +10,74 @@
  * Second generation work queue implementation
  */
 
-#include <zephyr/kernel.h>
-#include <wait_q.h>
-#include <zephyr/spinlock.h>
-#include <errno.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <zephyr/spinlock.h>
+#అన్తర్భావ <errno.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <zephyr/sys/printk.h>
+#అన్తర్భావ <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-static inline void flag_clear(uint32_t *flagp,
-			      uint32_t bit)
+స్థిర అంతఃవరుస శూన్య flag_clear(uint32_t *flagp,
+			      uint32_t బిట్టు_2)
 {
-	*flagp &= ~BIT(bit);
+	*flagp &= ~బిట్టు(బిట్టు_2);
 }
 
-static inline void flag_set(uint32_t *flagp,
-			    uint32_t bit)
+స్థిర అంతఃవరుస శూన్య flag_సమితి(uint32_t *flagp,
+			    uint32_t బిట్టు_2)
 {
-	*flagp |= BIT(bit);
+	*flagp |= బిట్టు(బిట్టు_2);
 }
 
-static inline bool flag_test(const uint32_t *flagp,
-			     uint32_t bit)
+స్థిర అంతఃవరుస bool flag_test(స్థిరరాశి uint32_t *flagp,
+			     uint32_t బిట్టు_2)
 {
-	return (*flagp & BIT(bit)) != 0U;
+	తిరిగి (*flagp & బిట్టు(బిట్టు_2)) != 0U;
 }
 
-static inline bool flag_test_and_clear(uint32_t *flagp,
-				       int bit)
+స్థిర అంతఃవరుస bool flag_test_and_clear(uint32_t *flagp,
+				       పూర్ణాంకం బిట్టు_2)
 {
-	bool ret = flag_test(flagp, bit);
+	bool ret = flag_test(flagp, బిట్టు_2);
 
-	flag_clear(flagp, bit);
+	flag_clear(flagp, బిట్టు_2);
 
-	return ret;
+	తిరిగి ret;
 }
 
-static inline void flags_set(uint32_t *flagp,
+స్థిర అంతఃవరుస శూన్య flags_సమితి(uint32_t *flagp,
 			     uint32_t flags)
 {
 	*flagp = flags;
 }
 
-static inline uint32_t flags_get(const uint32_t *flagp)
+స్థిర అంతఃవరుస uint32_t flags_get(స్థిరరాశి uint32_t *flagp)
 {
-	return *flagp;
+	తిరిగి *flagp;
 }
 
 /* Lock to protect the internal state of all work items, work queues,
  * and pending_cancels.
  */
-static struct k_spinlock work_lock;
+స్థిర నిర్మాణం k_spinlock work_తాళం;
 
 /* Invoked by work thread */
-static void handle_flush(struct k_work *work) { }
+స్థిర శూన్య handle_flush(నిర్మాణం k_work *work) { }
 
-static inline void init_flusher(struct z_work_flusher *flusher)
+స్థిర అంతఃవరుస శూన్య init_flusher(నిర్మాణం z_work_flusher *flusher)
 {
-	struct k_work *work = &flusher->work;
+	నిర్మాణం k_work *work = &flusher->work;
 	k_sem_init(&flusher->sem, 0, 1);
 	k_work_init(&flusher->work, handle_flush);
-	flag_set(&work->flags, K_WORK_FLUSHING_BIT);
+	flag_సమితి(&work->flags, K_WORK_FLUSHING_బిట్టు);
 }
 
 /* List of pending cancellations. */
-static sys_slist_t pending_cancels;
+స్థిర sys_slist_t pending_cancels;
 
 /* Initialize a canceler record and add it to the list of pending
  * cancels.
@@ -87,12 +87,12 @@ static sys_slist_t pending_cancels;
  * @param canceler the structure used to notify a waiting process.
  * @param work the work structure that is to be canceled
  */
-static inline void init_work_cancel(struct z_work_canceller *canceler,
-				    struct k_work *work)
+స్థిర అంతఃవరుస శూన్య init_work_cancel(నిర్మాణం z_work_canceller *canceler,
+				    నిర్మాణం k_work *work)
 {
 	k_sem_init(&canceler->sem, 0, 1);
 	canceler->work = work;
-	sys_slist_append(&pending_cancels, &canceler->node);
+	sys_slist_append(&pending_cancels, &canceler->కణుపు);
 }
 
 /* Complete flushing of a work item.
@@ -105,12 +105,12 @@ static inline void init_work_cancel(struct z_work_canceller *canceler,
  *
  * @param work the work structure that has completed flushing.
  */
-static void finalize_flush_locked(struct k_work *work)
+స్థిర శూన్య finalize_flush_locked(నిర్మాణం k_work *work)
 {
-	struct z_work_flusher *flusher
-		= CONTAINER_OF(work, struct z_work_flusher, work);
+	నిర్మాణం z_work_flusher *flusher
+		= CONTAINER_యొక్క(work, నిర్మాణం z_work_flusher, work);
 
-	flag_clear(&work->flags, K_WORK_FLUSHING_BIT);
+	flag_clear(&work->flags, K_WORK_FLUSHING_బిట్టు);
 
 	k_sem_give(&flusher->sem);
 };
@@ -125,55 +125,55 @@ static void finalize_flush_locked(struct k_work *work)
  *
  * @param work the work structure that has completed cancellation
  */
-static void finalize_cancel_locked(struct k_work *work)
+స్థిర శూన్య finalize_cancel_locked(నిర్మాణం k_work *work)
 {
-	struct z_work_canceller *wc, *tmp;
-	sys_snode_t *prev = NULL;
+	నిర్మాణం z_work_canceller *wc, *tmp;
+	sys_snode_t *prev = ఖాళీ;
 
 	/* Clear this first, so released high-priority threads don't
 	 * see it when doing things.
 	 */
-	flag_clear(&work->flags, K_WORK_CANCELING_BIT);
+	flag_clear(&work->flags, K_WORK_CANCELING_బిట్టు);
 
 	/* Search for and remove matching containers, and release
 	 * what's waiting for the completion.  The same work item can
 	 * appear multiple times in the list if multiple threads
 	 * attempt to cancel it; each waiter must be woken.
 	 */
-	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, node) {
-		if (wc->work == work) {
-			sys_slist_remove(&pending_cancels, prev, &wc->node);
+	SYS_SLIST_FOR_EACH_CONTAINER_సురక్షిత(&pending_cancels, wc, tmp, కణుపు) {
+		ఒకవేళ (wc->work == work) {
+			sys_slist_remove(&pending_cancels, prev, &wc->కణుపు);
 			k_sem_give(&wc->sem);
-		} else {
-			prev = &wc->node;
+		} లేకపోతే {
+			prev = &wc->కణుపు;
 		}
 	}
 }
 
-void k_work_init(struct k_work *work,
+శూన్య k_work_init(నిర్మాణం k_work *work,
 		  k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(work != ఖాళీ);
+	__ASSERT_NO_MSG(handler != ఖాళీ);
 
-	*work = (struct k_work)Z_WORK_INITIALIZER(handler);
+	*work = (నిర్మాణం k_work)Z_WORK_INITIALIZER(handler);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work, work);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_work, work);
 }
 
-static inline int work_busy_get_locked(const struct k_work *work)
+స్థిర అంతఃవరుస పూర్ణాంకం work_busy_get_locked(స్థిరరాశి నిర్మాణం k_work *work)
 {
-	return flags_get(&work->flags) & K_WORK_MASK;
+	తిరిగి flags_get(&work->flags) & K_WORK_ముసుగు;
 }
 
-int k_work_busy_get(const struct k_work *work)
+పూర్ణాంకం k_work_busy_get(స్థిరరాశి నిర్మాణం k_work *work)
 {
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_busy_get_locked(work);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
+	పూర్ణాంకం ret = work_busy_get_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Add a flusher work item to the queue.
@@ -187,17 +187,17 @@ int k_work_busy_get(const struct k_work *work)
  * queue
  * @param flusher an uninitialized/unused flusher object
  */
-static void queue_flusher_locked(struct k_work_q *queue,
-				 struct k_work *work,
-				 struct z_work_flusher *flusher)
+స్థిర శూన్య వరుస_flusher_locked(నిర్మాణం k_work_q *వరుస,
+				 నిర్మాణం k_work *work,
+				 నిర్మాణం z_work_flusher *flusher)
 {
 	init_flusher(flusher);
 
-	if ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
-		sys_slist_insert(&queue->pending, &work->node,
-				 &flusher->work.node);
-	} else {
-		sys_slist_prepend(&queue->pending, &flusher->work.node);
+	ఒకవేళ ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
+		sys_slist_చొప్పించు(&వరుస->pending, &work->కణుపు,
+				 &flusher->work.కణుపు);
+	} లేకపోతే {
+		sys_slist_prepend(&వరుస->pending, &flusher->work.కణుపు);
 	}
 }
 
@@ -208,11 +208,11 @@ static void queue_flusher_locked(struct k_work_q *queue,
  * @param queue the queue from which the work should be removed
  * @param work work that may be on the queue
  */
-static inline void queue_remove_locked(struct k_work_q *queue,
-				       struct k_work *work)
+స్థిర అంతఃవరుస శూన్య వరుస_remove_locked(నిర్మాణం k_work_q *వరుస,
+				       నిర్మాణం k_work *work)
 {
-	if (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
-		(void)sys_slist_find_and_remove(&queue->pending, &work->node);
+	ఒకవేళ (flag_test_and_clear(&work->flags, K_WORK_QUEUED_బిట్టు)) {
+		(శూన్య)sys_slist_కనుగొను_and_remove(&వరుస->pending, &work->కణుపు);
 	}
 }
 
@@ -227,15 +227,15 @@ static inline void queue_remove_locked(struct k_work_q *queue,
  * @return true if and only if the queue was notified and woken, i.e. a
  * reschedule is pending.
  */
-static inline bool notify_queue_locked(struct k_work_q *queue)
+స్థిర అంతఃవరుస bool notify_వరుస_locked(నిర్మాణం k_work_q *వరుస)
 {
 	bool rv = false;
 
-	if (queue != NULL) {
-		rv = z_sched_wake(&queue->notifyq, 0, NULL);
+	ఒకవేళ (వరుస != ఖాళీ) {
+		rv = z_sched_wake(&వరుస->notifyq, 0, ఖాళీ);
 	}
 
-	return rv;
+	తిరిగి rv;
 }
 
 /* Submit an work item to a queue if queue state allows new work.
@@ -257,17 +257,17 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
  * @retval -ENODEV if the queue is not started
  * @retval -EBUSY if the submission was rejected (draining, plugged)
  */
-static inline int queue_submit_locked(struct k_work_q *queue,
-				      struct k_work *work)
+స్థిర అంతఃవరుస పూర్ణాంకం వరుస_submit_locked(నిర్మాణం k_work_q *వరుస,
+				      నిర్మాణం k_work *work)
 {
-	if (queue == NULL) {
-		return -EINVAL;
+	ఒకవేళ (వరుస == ఖాళీ) {
+		తిరిగి -EINVAL;
 	}
 
-	int ret;
-	bool chained = (_current == queue->thread_id) && !k_is_in_isr();
-	bool draining = flag_test(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-	bool plugged = flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
+	పూర్ణాంకం ret;
+	bool chained = (_current == వరుస->thread_id) && !k_is_లోపల_isr();
+	bool draining = flag_test(&వరుస->flags, K_WORK_వరుస_DRAIN_బిట్టు);
+	bool plugged = flag_test(&వరుస->flags, K_WORK_వరుస_PLUGGED_బిట్టు);
 
 	/* Test for acceptability, in priority order:
 	 *
@@ -276,19 +276,19 @@ static inline int queue_submit_locked(struct k_work_q *queue,
 	 * * -EBUSY if plugged and not draining
 	 * * otherwise OK
 	 */
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	ఒకవేళ (!flag_test(&వరుస->flags, K_WORK_వరుస_STARTED_బిట్టు)) {
 		ret = -ENODEV;
-	} else if (draining && !chained) {
+	} లేకపోతే ఒకవేళ (draining && !chained) {
 		ret = -EBUSY;
-	} else if (plugged && !draining) {
+	} లేకపోతే ఒకవేళ (plugged && !draining) {
 		ret = -EBUSY;
-	} else {
-		sys_slist_append(&queue->pending, &work->node);
+	} లేకపోతే {
+		sys_slist_append(&వరుస->pending, &work->కణుపు);
 		ret = 1;
-		(void)notify_queue_locked(queue);
+		(శూన్య)notify_వరుస_locked(వరుస);
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Attempt to submit work to a queue.
@@ -317,51 +317,51 @@ static inline int queue_submit_locked(struct k_work_q *queue,
  * @retval -EINVAL if no queue is provided
  * @retval -ENODEV if the queue is not started
  */
-static int submit_to_queue_locked(struct k_work *work,
-				  struct k_work_q **queuep)
+స్థిర పూర్ణాంకం submit_గమ్యం_వరుస_locked(నిర్మాణం k_work *work,
+				  నిర్మాణం k_work_q **queuep)
 {
-	int ret = 0;
+	పూర్ణాంకం ret = 0;
 
-	if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	ఒకవేళ (flag_test(&work->flags, K_WORK_CANCELING_బిట్టు)) {
 		/* Disallowed */
 		ret = -EBUSY;
-	} else if (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
+	} లేకపోతే ఒకవేళ (!flag_test(&work->flags, K_WORK_QUEUED_బిట్టు)) {
 		/* Not currently queued */
 		ret = 1;
 
 		/* If no queue specified resubmit to last queue.
 		 */
-		if (*queuep == NULL) {
-			*queuep = work->queue;
+		ఒకవేళ (*queuep == ఖాళీ) {
+			*queuep = work->వరుస;
 		}
 
 		/* If the work is currently running we have to use the
 		 * queue it's running on to prevent handler
 		 * re-entrancy.
 		 */
-		if (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
-			__ASSERT_NO_MSG(work->queue != NULL);
-			*queuep = work->queue;
+		ఒకవేళ (flag_test(&work->flags, K_WORK_RUNNING_బిట్టు)) {
+			__ASSERT_NO_MSG(work->వరుస != ఖాళీ);
+			*queuep = work->వరుస;
 			ret = 2;
 		}
 
-		int rc = queue_submit_locked(*queuep, work);
+		పూర్ణాంకం rc = వరుస_submit_locked(*queuep, work);
 
-		if (rc < 0) {
+		ఒకవేళ (rc < 0) {
 			ret = rc;
-		} else {
-			flag_set(&work->flags, K_WORK_QUEUED_BIT);
-			work->queue = *queuep;
+		} లేకపోతే {
+			flag_సమితి(&work->flags, K_WORK_QUEUED_బిట్టు);
+			work->వరుస = *queuep;
 		}
-	} else {
+	} లేకపోతే {
 		/* Already queued, do nothing. */
 	}
 
-	if (ret <= 0) {
-		*queuep = NULL;
+	ఒకవేళ (ret <= 0) {
+		*queuep = ఖాళీ;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Submit work to a queue
@@ -375,47 +375,47 @@ static int submit_to_queue_locked(struct k_work *work,
  *
  * @retval see submit_to_queue_locked()
  */
-int z_work_submit_to_queue(struct k_work_q *queue,
-		  struct k_work *work)
+పూర్ణాంకం z_work_submit_గమ్యం_వరుస(నిర్మాణం k_work_q *వరుస,
+		  నిర్మాణం k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(work->handler != NULL);
+	__ASSERT_NO_MSG(work != ఖాళీ);
+	__ASSERT_NO_MSG(work->handler != ఖాళీ);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
-	int ret = submit_to_queue_locked(work, &queue);
+	పూర్ణాంకం ret = submit_గమ్యం_వరుస_locked(work, &వరుస);
 
 	/* No need to reschedule if the submission failed. */
-	if (ret > 0) {
-		z_reschedule(&work_lock, key);
-	} else {
-		k_spin_unlock(&work_lock, key);
+	ఒకవేళ (ret > 0) {
+		z_reschedule(&work_తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&work_తాళం, కీలకం);
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_submit_to_queue(struct k_work_q *queue,
-			    struct k_work *work)
+పూర్ణాంకం k_work_submit_గమ్యం_వరుస(నిర్మాణం k_work_q *వరుస,
+			    నిర్మాణం k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit_to_queue, queue, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, submit_గమ్యం_వరుస, వరుస, work);
 
-	int ret = z_work_submit_to_queue(queue, work);
+	పూర్ణాంకం ret = z_work_submit_గమ్యం_వరుస(వరుస, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit_to_queue, queue, work, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, submit_గమ్యం_వరుస, వరుస, work, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_submit(struct k_work *work)
+పూర్ణాంకం k_work_submit(నిర్మాణం k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
 
-	int ret = z_work_submit_to_queue(&k_sys_work_q, work);
+	పూర్ణాంకం ret = z_work_submit_గమ్యం_వరుస(&k_sys_work_q, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Flush the work item if necessary.
@@ -433,54 +433,54 @@ int k_work_submit(struct k_work *work)
  *
  * @retval false otherwise.  No wait required.
  */
-static bool work_flush_locked(struct k_work *work,
-			      struct z_work_flusher *flusher)
+స్థిర bool work_flush_locked(నిర్మాణం k_work *work,
+			      నిర్మాణం z_work_flusher *flusher)
 {
 	bool need_flush = (flags_get(&work->flags)
 			   & (K_WORK_QUEUED | K_WORK_RUNNING)) != 0U;
 
-	if (need_flush) {
-		struct k_work_q *queue = work->queue;
+	ఒకవేళ (need_flush) {
+		నిర్మాణం k_work_q *వరుస = work->వరుస;
 
-		__ASSERT_NO_MSG(queue != NULL);
+		__ASSERT_NO_MSG(వరుస != ఖాళీ);
 
-		queue_flusher_locked(queue, work, flusher);
-		notify_queue_locked(queue);
+		వరుస_flusher_locked(వరుస, work, flusher);
+		notify_వరుస_locked(వరుస);
 	}
 
-	return need_flush;
+	తిరిగి need_flush;
 }
 
-bool k_work_flush(struct k_work *work,
-		  struct k_work_sync *sync)
+bool k_work_flush(నిర్మాణం k_work *work,
+		  నిర్మాణం k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-	__ASSERT_NO_MSG(sync != NULL);
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(work != ఖాళీ);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_బిట్టు));
+	__ASSERT_NO_MSG(!k_is_లోపల_isr());
+	__ASSERT_NO_MSG(sync != ఖాళీ);
+#నిర్వచితమైతే CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#అయితే_ముగింపు /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
 
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
+	ఒకవేళ (need_flush) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
 
-	return need_flush;
+	తిరిగి need_flush;
 }
 
 /* Execute the non-waiting steps necessary to cancel a work item.
@@ -494,25 +494,25 @@ bool k_work_flush(struct k_work *work,
  *
  * @return k_busy_wait() captured under lock
  */
-static int cancel_async_locked(struct k_work *work)
+స్థిర పూర్ణాంకం cancel_async_locked(నిర్మాణం k_work *work)
 {
 	/* If we haven't already started canceling, do it now. */
-	if (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	ఒకవేళ (!flag_test(&work->flags, K_WORK_CANCELING_బిట్టు)) {
 		/* Remove it from the queue, if it's queued. */
-		queue_remove_locked(work->queue, work);
+		వరుస_remove_locked(work->వరుస, work);
 	}
 
 	/* If it's still busy after it's been dequeued, then flag it
 	 * as canceling.
 	 */
-	int ret = work_busy_get_locked(work);
+	పూర్ణాంకం ret = work_busy_get_locked(work);
 
-	if (ret != 0) {
-		flag_set(&work->flags, K_WORK_CANCELING_BIT);
+	ఒకవేళ (ret != 0) {
+		flag_సమితి(&work->flags, K_WORK_CANCELING_బిట్టు);
 		ret = work_busy_get_locked(work);
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Complete cancellation necessary, release work lock, and wait if
@@ -530,85 +530,85 @@ static int cancel_async_locked(struct k_work *work)
  *
  * @retval false if work was idle on entry.  The caller need not wait.
  */
-static bool cancel_sync_locked(struct k_work *work,
-			       struct z_work_canceller *canceller)
+స్థిర bool cancel_sync_locked(నిర్మాణం k_work *work,
+			       నిర్మాణం z_work_canceller *canceller)
 {
-	bool ret = flag_test(&work->flags, K_WORK_CANCELING_BIT);
+	bool ret = flag_test(&work->flags, K_WORK_CANCELING_బిట్టు);
 
 	/* If something's still running then we have to wait for
 	 * completion, which is indicated when finish_cancel() gets
 	 * invoked.
 	 */
-	if (ret) {
+	ఒకవేళ (ret) {
 		init_work_cancel(canceller, work);
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_cancel(struct k_work *work)
+పూర్ణాంకం k_work_cancel(నిర్మాణం k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
+	__ASSERT_NO_MSG(work != ఖాళీ);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_బిట్టు));
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_async_locked(work);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
+	పూర్ణాంకం ret = cancel_async_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-bool k_work_cancel_sync(struct k_work *work,
-			struct k_work_sync *sync)
+bool k_work_cancel_sync(నిర్మాణం k_work *work,
+			నిర్మాణం k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(work != ఖాళీ);
+	__ASSERT_NO_MSG(sync != ఖాళీ);
+	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_బిట్టు));
+	__ASSERT_NO_MSG(!k_is_లోపల_isr());
+#నిర్వచితమైతే CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#అయితే_ముగింపు /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 	bool pending = (work_busy_get_locked(work) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_async_locked(work);
+	ఒకవేళ (pending) {
+		(శూన్య)cancel_async_locked(work);
 		need_wait = cancel_sync_locked(work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	if (need_wait) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
+	ఒకవేళ (need_wait) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
-	return pending;
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
+	తిరిగి pending;
 }
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-static void work_timeout_handler(struct _timeout *record)
+#ఒకవేళ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+స్థిర శూన్య work_timeout_handler(నిర్మాణం _timeout *రికార్డు)
 {
-	struct k_work_q *queue = CONTAINER_OF(record, struct k_work_q, work_timeout_record);
-	struct k_work *work = NULL;
-	k_work_handler_t handler = NULL;
-	const char *name;
-	const char *space = " ";
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం k_work_q *వరుస = CONTAINER_యొక్క(రికార్డు, నిర్మాణం k_work_q, work_timeout_రికార్డు);
+	నిర్మాణం k_work *work = ఖాళీ;
+	k_work_handler_t handler = ఖాళీ;
+	స్థిరరాశి అక్షరం *name;
+	స్థిరరాశి అక్షరం *space = " ";
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
-	work = queue->work;
+	work = వరుస->work;
 	handler = work->handler;
 
 	/*
@@ -622,76 +622,76 @@ static void work_timeout_handler(struct _timeout *record)
 	 * wrong worker. work_timeout_stop_locked() aborts the timeout, which
 	 * flags it superseded; bail on that too.
 	 */
-	if (queue->finished || z_timeout_inflight_superseded(record)) {
-		k_spin_unlock(&work_lock, key);
-		return;
+	ఒకవేళ (వరుస->ముగిసిన || z_timeout_inflight_superseded(రికార్డు)) {
+		k_spin_unlock(&work_తాళం, కీలకం);
+		తిరిగి;
 	}
-	queue->finished = true;
+	వరుస->ముగిసిన = true;
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	name = k_thread_name_get(queue->thread_id);
-	if (name == NULL) {
+	name = k_thread_name_get(వరుస->thread_id);
+	ఒకవేళ (name == ఖాళీ) {
 		name = "";
 		space = "";
 	}
 
 	LOG_ERR("queue %p%s%s blocked by work %p with handler %p",
-		queue, space, name, work, handler);
+		వరుస, space, name, work, handler);
 
-	k_thread_abort(queue->thread_id);
+	k_thread_abort(వరుస->thread_id);
 }
 
-static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *work)
+స్థిర శూన్య work_timeout_ప్రారంభం_locked(నిర్మాణం k_work_q *వరుస, నిర్మాణం k_work *work)
 {
-	queue->finished = false;
+	వరుస->ముగిసిన = false;
 
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	ఒకవేళ (K_TIMEOUT_EQ(వరుస->work_timeout, K_FOREVER)) {
+		తిరిగి;
 	}
 
-	queue->work = work;
-	z_add_timeout(&queue->work_timeout_record, work_timeout_handler, queue->work_timeout);
+	వరుస->work = work;
+	z_కూడు_timeout(&వరుస->work_timeout_రికార్డు, work_timeout_handler, వరుస->work_timeout);
 }
 
-static void work_timeout_stop_locked(struct k_work_q *queue)
+స్థిర శూన్య work_timeout_stop_locked(నిర్మాణం k_work_q *వరుస)
 {
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	ఒకవేళ (K_TIMEOUT_EQ(వరుస->work_timeout, K_FOREVER)) {
+		తిరిగి;
 	}
 
-	(void)z_try_abort_timeout(&queue->work_timeout_record);
+	(శూన్య)z_try_abort_timeout(&వరుస->work_timeout_రికార్డు);
 }
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#అయితే_ముగింపు /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 /* Loop executed by a work queue thread.
  *
  * @param workq_ptr pointer to the work queue structure
  */
-static void work_queue_main(void *workq_ptr, void *p2, void *p3)
+స్థిర శూన్య work_వరుస_main(శూన్య *workq_ptr, శూన్య *p2, శూన్య *p3)
 {
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_వాడని(p2);
+	ARG_వాడని(p3);
 
-	struct k_work_q *queue = (struct k_work_q *)workq_ptr;
+	నిర్మాణం k_work_q *వరుస = (నిర్మాణం k_work_q *)workq_ptr;
 
-	while (true) {
-		sys_snode_t *node;
-		struct k_work *work = NULL;
-		k_work_handler_t handler = NULL;
-		k_spinlock_key_t key = k_spin_lock(&work_lock);
+	అయితే (true) {
+		sys_snode_t *కణుపు;
+		నిర్మాణం k_work *work = ఖాళీ;
+		k_work_handler_t handler = ఖాళీ;
+		k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 		bool yield;
 
 		/* Check for and prepare any new work. */
-		node = sys_slist_get(&queue->pending);
-		if (node != NULL) {
+		కణుపు = sys_slist_get(&వరుస->pending);
+		ఒకవేళ (కణుపు != ఖాళీ) {
 			/* Mark that there's some work active that's
 			 * not on the pending list.
 			 */
-			flag_set(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-			work = CONTAINER_OF(node, struct k_work, node);
-			flag_set(&work->flags, K_WORK_RUNNING_BIT);
-			flag_clear(&work->flags, K_WORK_QUEUED_BIT);
+			flag_సమితి(&వరుస->flags, K_WORK_వరుస_BUSY_బిట్టు);
+			work = CONTAINER_యొక్క(కణుపు, నిర్మాణం k_work, కణుపు);
+			flag_సమితి(&work->flags, K_WORK_RUNNING_బిట్టు);
+			flag_clear(&work->flags, K_WORK_QUEUED_బిట్టు);
 
 			/* Static code analysis tool can raise a false-positive violation
 			 * in the line below that 'work' is checked for null after being
@@ -706,8 +706,8 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * This means that if node is not NULL, then work will not be NULL.
 			 */
 			handler = work->handler;
-		} else if (flag_test_and_clear(&queue->flags,
-					       K_WORK_QUEUE_DRAIN_BIT)) {
+		} లేకపోతే ఒకవేళ (flag_test_and_clear(&వరుస->flags,
+					       K_WORK_వరుస_DRAIN_బిట్టు)) {
 			/* Not busy and draining: move threads waiting for
 			 * drain to ready state.  The held spinlock inhibits
 			 * immediate reschedule; released threads get their
@@ -717,39 +717,39 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * here doesn't mean that the queue will allow new
 			 * submissions.
 			 */
-			(void)z_sched_wake_all(&queue->drainq, 1, NULL);
-		} else if (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
+			(శూన్య)z_sched_wake_all(&వరుస->drainq, 1, ఖాళీ);
+		} లేకపోతే ఒకవేళ (flag_test(&వరుస->flags, K_WORK_వరుస_STOP_బిట్టు)) {
 			/* User has requested that the queue stop. Clear the status flags and exit.
 			 */
-			flags_set(&queue->flags, 0);
-			k_spin_unlock(&work_lock, key);
-			return;
-		} else {
+			flags_సమితి(&వరుస->flags, 0);
+			k_spin_unlock(&work_తాళం, కీలకం);
+			తిరిగి;
+		} లేకపోతే {
 			/* No work is available and no queue state requires
 			 * special handling.
 			 */
 			;
 		}
 
-		if (work == NULL) {
+		ఒకవేళ (work == ఖాళీ) {
 			/* Nothing's had a chance to add work since we took
 			 * the lock, and we didn't find work nor got asked to
 			 * stop.  Just go to sleep: when something happens the
 			 * work thread will be woken and we can check again.
 			 */
 
-			(void)z_sched_wait(&work_lock, key, &queue->notifyq,
-					   K_FOREVER, NULL);
-			continue;
+			(శూన్య)z_sched_wait(&work_తాళం, కీలకం, &వరుస->notifyq,
+					   K_FOREVER, ఖాళీ);
+			కొనసాగు;
 		}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		work_timeout_start_locked(queue, work);
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#ఒకవేళ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		work_timeout_ప్రారంభం_locked(వరుస, work);
+#అయితే_ముగింపు /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_తాళం, కీలకం);
 
-		__ASSERT_NO_MSG(handler != NULL);
+		__ASSERT_NO_MSG(handler != ఖాళీ);
 		handler(work);
 
 		/* Mark the work item as no longer running and deal
@@ -757,244 +757,244 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		 * was running.  Clear the BUSY flag and optionally
 		 * yield to prevent starving other threads.
 		 */
-		key = k_spin_lock(&work_lock);
+		కీలకం = k_spin_తాళం(&work_తాళం);
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		if (queue->finished) {
+#ఒకవేళ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		ఒకవేళ (వరుస->ముగిసిన) {
 			/*
 			 * The work item timeout handler has flagged this work
 			 * thread for taking too long and is going to abort it.
 			 * Do not proceed to the next work item.
 			 */
-			k_spin_unlock(&work_lock, key);
-			while (1) {
+			k_spin_unlock(&work_తాళం, కీలకం);
+			అయితే (1) {
 				k_sleep(K_FOREVER);
 			}
-			CODE_UNREACHABLE;
+			సంకేతం_UNREACHABLE;
 		}
-		work_timeout_stop_locked(queue);
-		queue->finished = true;
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+		work_timeout_stop_locked(వరుస);
+		వరుస->ముగిసిన = true;
+#అయితే_ముగింపు /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		flag_clear(&work->flags, K_WORK_RUNNING_BIT);
-		if (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
+		flag_clear(&work->flags, K_WORK_RUNNING_బిట్టు);
+		ఒకవేళ (flag_test(&work->flags, K_WORK_FLUSHING_బిట్టు)) {
 			finalize_flush_locked(work);
 		}
-		if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+		ఒకవేళ (flag_test(&work->flags, K_WORK_CANCELING_బిట్టు)) {
 			finalize_cancel_locked(work);
 		}
 
-		flag_clear(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-		yield = (!flag_test(&queue->flags, K_WORK_QUEUE_NO_YIELD_BIT) &&
-			 !sys_slist_is_empty(&queue->pending));
-		k_spin_unlock(&work_lock, key);
+		flag_clear(&వరుస->flags, K_WORK_వరుస_BUSY_బిట్టు);
+		yield = (!flag_test(&వరుస->flags, K_WORK_వరుస_NO_YIELD_బిట్టు) &&
+			 !sys_slist_is_ఖాళీలు(&వరుస->pending));
+		k_spin_unlock(&work_తాళం, కీలకం);
 
 		/* Optionally yield to prevent the work queue from
 		 * starving other threads.
 		 */
-		if (yield) {
+		ఒకవేళ (yield) {
 			k_yield();
 		}
 	}
 }
 
-void k_work_queue_init(struct k_work_q *queue)
+శూన్య k_work_వరుస_init(నిర్మాణం k_work_q *వరుస)
 {
-	__ASSERT_NO_MSG(queue != NULL);
+	__ASSERT_NO_MSG(వరుస != ఖాళీ);
 
-	*queue = (struct k_work_q) {
+	*వరుస = (నిర్మాణం k_work_q) {
 		.flags = 0,
 	};
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_queue, queue);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_work_వరుస, వరుస);
 }
 
-void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *cfg)
+శూన్య k_work_వరుస_నిరంతరం(నిర్మాణం k_work_q *వరుస, స్థిరరాశి నిర్మాణం k_work_వరుస_config *cfg)
 {
-	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
+	__ASSERT_NO_MSG(!flag_test(&వరుస->flags, K_WORK_వరుస_STARTED_బిట్టు));
 
-	uint32_t flags = K_WORK_QUEUE_STARTED;
+	uint32_t flags = K_WORK_వరుస_STARTED;
 
-	if ((cfg != NULL) && cfg->no_yield) {
-		flags |= K_WORK_QUEUE_NO_YIELD;
+	ఒకవేళ ((cfg != ఖాళీ) && cfg->no_yield) {
+		flags |= K_WORK_వరుస_NO_YIELD;
 	}
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(_current, cfg->name);
+	ఒకవేళ ((cfg != ఖాళీ) && (cfg->name != ఖాళీ)) {
+		k_thread_name_సమితి(_current, cfg->name);
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
-		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
-		queue->work_timeout = K_FOREVER;
+#ఒకవేళ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	ఒకవేళ ((cfg != ఖాళీ) && (cfg->work_timeout_ms)) {
+		వరుస->work_timeout = K_MSEC(cfg->work_timeout_ms);
+	} లేకపోతే {
+		వరుస->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#అయితే_ముగింపు /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-	sys_slist_init(&queue->pending);
-	z_waitq_init(&queue->notifyq);
-	z_waitq_init(&queue->drainq);
-	queue->thread_id = _current;
-	flags_set(&queue->flags, flags);
-	work_queue_main(queue, NULL, NULL);
+	sys_slist_init(&వరుస->pending);
+	z_waitq_init(&వరుస->notifyq);
+	z_waitq_init(&వరుస->drainq);
+	వరుస->thread_id = _current;
+	flags_సమితి(&వరుస->flags, flags);
+	work_వరుస_main(వరుస, ఖాళీ, ఖాళీ);
 }
 
-void k_work_queue_start(struct k_work_q *queue,
-			k_thread_stack_t *stack,
-			size_t stack_size,
-			int prio,
-			const struct k_work_queue_config *cfg)
+శూన్య k_work_వరుస_ప్రారంభం(నిర్మాణం k_work_q *వరుస,
+			k_thread_దొంతర_t *దొంతర,
+			size_t దొంతర_కొలత,
+			పూర్ణాంకం prio,
+			స్థిరరాశి నిర్మాణం k_work_వరుస_config *cfg)
 {
-	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(stack);
-	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
+	__ASSERT_NO_MSG(వరుస);
+	__ASSERT_NO_MSG(దొంతర);
+	__ASSERT_NO_MSG(!flag_test(&వరుస->flags, K_WORK_వరుస_STARTED_బిట్టు));
 
 	/* In future, this whole function will be deprecated, but for now, we
 	 * have to use the `thread` field to create a new thread in it.
 	 */
 	TOOLCHAIN_DISABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 
-	uint32_t flags = K_WORK_QUEUE_STARTED;
+	uint32_t flags = K_WORK_వరుస_STARTED;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, start, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work_వరుస, ప్రారంభం, వరుస);
 
-	sys_slist_init(&queue->pending);
-	z_waitq_init(&queue->notifyq);
-	z_waitq_init(&queue->drainq);
+	sys_slist_init(&వరుస->pending);
+	z_waitq_init(&వరుస->notifyq);
+	z_waitq_init(&వరుస->drainq);
 
-	if ((cfg != NULL) && cfg->no_yield) {
-		flags |= K_WORK_QUEUE_NO_YIELD;
+	ఒకవేళ ((cfg != ఖాళీ) && cfg->no_yield) {
+		flags |= K_WORK_వరుస_NO_YIELD;
 	}
 
 	/* It hasn't actually been started yet, but all the state is in place
 	 * so we can submit things and once the thread gets control it's ready
 	 * to roll.
 	 */
-	flags_set(&queue->flags, flags);
+	flags_సమితి(&వరుస->flags, flags);
 
-	(void)k_thread_create(&queue->thread, stack, stack_size,
-			      work_queue_main, queue, NULL, NULL,
+	(శూన్య)k_thread_create(&వరుస->thread, దొంతర, దొంతర_కొలత,
+			      work_వరుస_main, వరుస, ఖాళీ, ఖాళీ,
 			      prio, 0, K_FOREVER);
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(&queue->thread, cfg->name);
+	ఒకవేళ ((cfg != ఖాళీ) && (cfg->name != ఖాళీ)) {
+		k_thread_name_సమితి(&వరుస->thread, cfg->name);
 	}
 
-	if ((cfg != NULL) && (cfg->essential)) {
-		queue->thread.base.user_options |= K_ESSENTIAL;
+	ఒకవేళ ((cfg != ఖాళీ) && (cfg->essential)) {
+		వరుస->thread.పునాది.user_options |= K_ESSENTIAL;
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
-		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
-		queue->work_timeout = K_FOREVER;
+#ఒకవేళ defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	ఒకవేళ ((cfg != ఖాళీ) && (cfg->work_timeout_ms)) {
+		వరుస->work_timeout = K_MSEC(cfg->work_timeout_ms);
+	} లేకపోతే {
+		వరుస->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#అయితే_ముగింపు /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-	k_thread_start(&queue->thread);
-	queue->thread_id = &queue->thread;
+	k_thread_ప్రారంభం(&వరుస->thread);
+	వరుస->thread_id = &వరుస->thread;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, start, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, ప్రారంభం, వరుస);
 
 	TOOLCHAIN_ENABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 }
 
-int k_work_queue_drain(struct k_work_q *queue,
+పూర్ణాంకం k_work_వరుస_drain(నిర్మాణం k_work_q *వరుస,
 		       bool plug)
 {
-	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(!k_is_in_isr());
+	__ASSERT_NO_MSG(వరుస);
+	__ASSERT_NO_MSG(!k_is_లోపల_isr());
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work_వరుస, drain, వరుస);
 
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	పూర్ణాంకం ret = 0;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
-	if (((flags_get(&queue->flags)
-	      & (K_WORK_QUEUE_BUSY | K_WORK_QUEUE_DRAIN)) != 0U)
+	ఒకవేళ (((flags_get(&వరుస->flags)
+	      & (K_WORK_వరుస_BUSY | K_WORK_వరుస_DRAIN)) != 0U)
 	    || plug
-	    || !sys_slist_is_empty(&queue->pending)) {
-		flag_set(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-		if (plug) {
-			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
+	    || !sys_slist_is_ఖాళీలు(&వరుస->pending)) {
+		flag_సమితి(&వరుస->flags, K_WORK_వరుస_DRAIN_బిట్టు);
+		ఒకవేళ (plug) {
+			flag_సమితి(&వరుస->flags, K_WORK_వరుస_PLUGGED_బిట్టు);
 		}
 
-		notify_queue_locked(queue);
-		ret = z_sched_wait(&work_lock, key, &queue->drainq,
-				   K_FOREVER, NULL);
-	} else {
-		k_spin_unlock(&work_lock, key);
+		notify_వరుస_locked(వరుస);
+		ret = z_sched_wait(&work_తాళం, కీలకం, &వరుస->drainq,
+				   K_FOREVER, ఖాళీ);
+	} లేకపోతే {
+		k_spin_unlock(&work_తాళం, కీలకం);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, drain, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_queue_unplug(struct k_work_q *queue)
+పూర్ణాంకం k_work_వరుస_unplug(నిర్మాణం k_work_q *వరుస)
 {
-	__ASSERT_NO_MSG(queue);
+	__ASSERT_NO_MSG(వరుస);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work_వరుస, unplug, వరుస);
 
-	int ret = -EALREADY;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	పూర్ణాంకం ret = -EALREADY;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
-	if (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	ఒకవేళ (flag_test_and_clear(&వరుస->flags, K_WORK_వరుస_PLUGGED_బిట్టు)) {
 		ret = 0;
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, unplug, వరుస, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
+పూర్ణాంకం k_work_వరుస_stop(నిర్మాణం k_work_q *వరుస, k_timeout_t timeout)
 {
-	__ASSERT_NO_MSG(queue);
+	__ASSERT_NO_MSG(వరుస);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work_వరుస, stop, వరుస, timeout);
 
-	if (queue->thread_id) {
-		if (z_is_thread_essential(queue->thread_id)) {
-			return -ENOTSUP;
+	ఒకవేళ (వరుస->thread_id) {
+		ఒకవేళ (z_is_thread_essential(వరుస->thread_id)) {
+			తిరిగి -ENOTSUP;
 		}
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
-		return -EALREADY;
+	ఒకవేళ (!flag_test(&వరుస->flags, K_WORK_వరుస_STARTED_బిట్టు)) {
+		k_spin_unlock(&work_తాళం, కీలకం);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, stop, వరుస, timeout, -EALREADY);
+		తిరిగి -EALREADY;
 	}
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
-		return -EBUSY;
+	ఒకవేళ (!flag_test(&వరుస->flags, K_WORK_వరుస_PLUGGED_బిట్టు)) {
+		k_spin_unlock(&work_తాళం, కీలకం);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, stop, వరుస, timeout, -EBUSY);
+		తిరిగి -EBUSY;
 	}
 
-	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-	notify_queue_locked(queue);
-	k_spin_unlock(&work_lock, key);
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
-	if (k_thread_join(queue->thread_id, timeout)) {
-		key = k_spin_lock(&work_lock);
-		flag_clear(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
-		return -ETIMEDOUT;
+	flag_సమితి(&వరుస->flags, K_WORK_వరుస_STOP_బిట్టు);
+	notify_వరుస_locked(వరుస);
+	k_spin_unlock(&work_తాళం, కీలకం);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_work_వరుస, stop, వరుస, timeout);
+	ఒకవేళ (k_thread_join(వరుస->thread_id, timeout)) {
+		కీలకం = k_spin_తాళం(&work_తాళం);
+		flag_clear(&వరుస->flags, K_WORK_వరుస_STOP_బిట్టు);
+		k_spin_unlock(&work_తాళం, కీలకం);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, stop, వరుస, timeout, -ETIMEDOUT);
+		తిరిగి -ETIMEDOUT;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
-	return 0;
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work_వరుస, stop, వరుస, timeout, 0);
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#నిర్వచితమైతే CONFIG_SYS_CLOCK_EXISTS
 
 /* Timeout handler for delayable work.
  *
@@ -1002,54 +1002,54 @@ int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
  * Takes and releases work lock.
  * Conditionally reschedules.
  */
-static void work_timeout(struct _timeout *to)
+స్థిర శూన్య work_timeout(నిర్మాణం _timeout *గమ్యం)
 {
-	struct k_work_delayable *dw
-		= CONTAINER_OF(to, struct k_work_delayable, timeout);
-	struct k_work *wp = &dw->work;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	struct k_work_q *queue = NULL;
+	నిర్మాణం k_work_delayable *dw
+		= CONTAINER_యొక్క(గమ్యం, నిర్మాణం k_work_delayable, timeout);
+	నిర్మాణం k_work *wp = &dw->work;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
+	నిర్మాణం k_work_q *వరుస = ఖాళీ;
 
 	/* K_WORK_DELAYED_BIT is the wake-ownership flag: whichever side
 	 * (this handler or unschedule_locked()) clears it via
 	 * flag_test_and_clear() first owns the outcome. If unschedule_locked
 	 * got here first, the bit is clear and we bail.
 	 */
-	if (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
-		queue = dw->queue;
-		(void)submit_to_queue_locked(wp, &queue);
+	ఒకవేళ (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_బిట్టు)) {
+		వరుస = dw->వరుస;
+		(శూన్య)submit_గమ్యం_వరుస_locked(wp, &వరుస);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 }
 
-void k_work_init_delayable(struct k_work_delayable *dwork,
+శూన్య k_work_init_delayable(నిర్మాణం k_work_delayable *dwork,
 			    k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
+	__ASSERT_NO_MSG(handler != ఖాళీ);
 
-	*dwork = (struct k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
+	*dwork = (నిర్మాణం k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
 
 	z_init_timeout(&dwork->timeout);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_delayable, dwork);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_work_delayable, dwork);
 }
 
-static inline int work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
+స్థిర అంతఃవరుస పూర్ణాంకం work_delayable_busy_get_locked(స్థిరరాశి నిర్మాణం k_work_delayable *dwork)
 {
-	return flags_get(&dwork->work.flags) & K_WORK_MASK;
+	తిరిగి flags_get(&dwork->work.flags) & K_WORK_ముసుగు;
 }
 
-int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
+పూర్ణాంకం k_work_delayable_busy_get(స్థిరరాశి నిర్మాణం k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_delayable_busy_get_locked(dwork);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
+	పూర్ణాంకం ret = work_delayable_busy_get_locked(dwork);
 
-	k_spin_unlock(&work_lock, key);
-	return ret;
+	k_spin_unlock(&work_తాళం, కీలకం);
+	తిరిగి ret;
 }
 
 /* Attempt to schedule a work item for future (maybe immediate)
@@ -1075,24 +1075,24 @@ int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
  * @retval from submit_to_queue_locked() if delay is K_NO_WAIT; otherwise
  * @retval 1 to indicate successfully scheduled.
  */
-static int schedule_for_queue_locked(struct k_work_q **queuep,
-				     struct k_work_delayable *dwork,
+స్థిర పూర్ణాంకం కాలపట్టిక_for_వరుస_locked(నిర్మాణం k_work_q **queuep,
+				     నిర్మాణం k_work_delayable *dwork,
 				     k_timeout_t delay)
 {
-	int ret = 1;
-	struct k_work *work = &dwork->work;
+	పూర్ణాంకం ret = 1;
+	నిర్మాణం k_work *work = &dwork->work;
 
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		return submit_to_queue_locked(work, queuep);
+	ఒకవేళ (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		తిరిగి submit_గమ్యం_వరుస_locked(work, queuep);
 	}
 
-	flag_set(&work->flags, K_WORK_DELAYED_BIT);
-	dwork->queue = *queuep;
+	flag_సమితి(&work->flags, K_WORK_DELAYED_బిట్టు);
+	dwork->వరుస = *queuep;
 
 	/* Add timeout */
-	z_add_timeout(&dwork->timeout, work_timeout, delay);
+	z_కూడు_timeout(&dwork->timeout, work_timeout, delay);
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Unschedule delayable work.
@@ -1107,11 +1107,11 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
  * @return true if and only if work had been delayed so the timeout
  * was cancelled.
  */
-static inline bool unschedule_locked(struct k_work_delayable *dwork,
-				     k_spinlock_key_t *key)
+స్థిర అంతఃవరుస bool unschedule_locked(నిర్మాణం k_work_delayable *dwork,
+				     k_spinlock_కీలకం_t *కీలకం)
 {
 	bool ret = false;
-	struct k_work *work = &dwork->work;
+	నిర్మాణం k_work *work = &dwork->work;
 
 	/* If scheduled, try to cancel.  If it fails, that means the
 	 * callback has been dequeued and will inevitably run (or has
@@ -1125,15 +1125,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
 	 * true, and either is unsafe while the handler is still about
 	 * to dereference dwork->work.flags.
 	 */
-	if (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
-		while (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
-			k_spin_unlock(&work_lock, *key);
-			*key = k_spin_lock(&work_lock);
+	ఒకవేళ (flag_test_and_clear(&work->flags, K_WORK_DELAYED_బిట్టు)) {
+		అయితే (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
+			k_spin_unlock(&work_తాళం, *కీలకం);
+			*కీలకం = k_spin_తాళం(&work_తాళం);
 		}
 		ret = true;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
 /* Full cancellation of a delayable work item.
@@ -1147,179 +1147,179 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
  *
  * @return k_work_busy_get() flags
  */
-static int cancel_delayable_async_locked(struct k_work_delayable *dwork,
-					 k_spinlock_key_t *key)
+స్థిర పూర్ణాంకం cancel_delayable_async_locked(నిర్మాణం k_work_delayable *dwork,
+					 k_spinlock_కీలకం_t *కీలకం)
 {
-	(void)unschedule_locked(dwork, key);
+	(శూన్య)unschedule_locked(dwork, కీలకం);
 
-	return cancel_async_locked(&dwork->work);
+	తిరిగి cancel_async_locked(&dwork->work);
 }
 
-int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+పూర్ణాంకం k_work_కాలపట్టిక_for_వరుస(నిర్మాణం k_work_q *వరుస, నిర్మాణం k_work_delayable *dwork,
 			      k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(వరుస != ఖాళీ);
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule_for_queue, queue, dwork, delay);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, కాలపట్టిక_for_వరుస, వరుస, dwork, delay);
 
-	struct k_work *work = &dwork->work;
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం k_work *work = &dwork->work;
+	పూర్ణాంకం ret = 0;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
 	/* Schedule the work item if it's idle or running. */
-	if ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
-		ret = schedule_for_queue_locked(&queue, dwork, delay);
+	ఒకవేళ ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
+		ret = కాలపట్టిక_for_వరుస_locked(&వరుస, dwork, delay);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule_for_queue, queue, dwork, delay, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, కాలపట్టిక_for_వరుస, వరుస, dwork, delay, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
+పూర్ణాంకం k_work_కాలపట్టిక(నిర్మాణం k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule, dwork, delay);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, కాలపట్టిక, dwork, delay);
 
-	int ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
+	పూర్ణాంకం ret = k_work_కాలపట్టిక_for_వరుస(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule, dwork, delay, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, కాలపట్టిక, dwork, delay, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+పూర్ణాంకం k_work_reschedule_for_వరుస(నిర్మాణం k_work_q *వరుస, నిర్మాణం k_work_delayable *dwork,
 				k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(వరుస != ఖాళీ);
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_వరుస, వరుస, dwork, delay);
 
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	పూర్ణాంకం ret;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
 	/* Remove any active scheduling. */
-	(void)unschedule_locked(dwork, &key);
+	(శూన్య)unschedule_locked(dwork, &కీలకం);
 
 	/* Schedule the work item with the new parameters. */
-	ret = schedule_for_queue_locked(&queue, dwork, delay);
+	ret = కాలపట్టిక_for_వరుస_locked(&వరుస, dwork, delay);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_వరుస, వరుస, dwork, delay, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
+పూర్ణాంకం k_work_reschedule(నిర్మాణం k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
 
-	int ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
+	పూర్ణాంకం ret = k_work_reschedule_for_వరుస(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_work_cancel_delayable(struct k_work_delayable *dwork)
+పూర్ణాంకం k_work_cancel_delayable(నిర్మాణం k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_delayable_async_locked(dwork, &key);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
+	పూర్ణాంకం ret = cancel_delayable_async_locked(dwork, &కీలకం);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
-				  struct k_work_sync *sync)
+bool k_work_cancel_delayable_sync(నిర్మాణం k_work_delayable *dwork,
+				  నిర్మాణం k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
+	__ASSERT_NO_MSG(sync != ఖాళీ);
+	__ASSERT_NO_MSG(!k_is_లోపల_isr());
+#నిర్వచితమైతే CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#అయితే_ముగింపు /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 	bool pending = (work_delayable_busy_get_locked(dwork) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_delayable_async_locked(dwork, &key);
+	ఒకవేళ (pending) {
+		(శూన్య)cancel_delayable_async_locked(dwork, &కీలకం);
 		need_wait = cancel_sync_locked(&dwork->work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
-	if (need_wait) {
+	ఒకవేళ (need_wait) {
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
-	return pending;
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
+	తిరిగి pending;
 }
 
-bool k_work_flush_delayable(struct k_work_delayable *dwork,
-			    struct k_work_sync *sync)
+bool k_work_flush_delayable(నిర్మాణం k_work_delayable *dwork,
+			    నిర్మాణం k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != ఖాళీ);
+	__ASSERT_NO_MSG(sync != ఖాళీ);
+	__ASSERT_NO_MSG(!k_is_లోపల_isr());
+#నిర్వచితమైతే CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#అయితే_ముగింపు /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
 
-	struct k_work *work = &dwork->work;
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	నిర్మాణం k_work *work = &dwork->work;
+	నిర్మాణం z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&work_తాళం);
 
 	/* If it's idle release the lock and return immediately. */
-	if (work_busy_get_locked(work) == 0U) {
-		k_spin_unlock(&work_lock, key);
+	ఒకవేళ (work_busy_get_locked(work) == 0U) {
+		k_spin_unlock(&work_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
 
-		return false;
+		తిరిగి false;
 	}
 
 	/* If unscheduling did something then submit it.  Ignore a
 	 * failed submission (e.g. when cancelling).
 	 */
-	if (unschedule_locked(dwork, &key)) {
-		struct k_work_q *queue = dwork->queue;
+	ఒకవేళ (unschedule_locked(dwork, &కీలకం)) {
+		నిర్మాణం k_work_q *వరుస = dwork->వరుస;
 
-		(void)submit_to_queue_locked(work, &queue);
+		(శూన్య)submit_గమ్యం_వరుస_locked(work, &వరుస);
 	}
 
 	/* Wait for it to finish */
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_తాళం, కీలకం);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	ఒకవేళ (need_flush) {
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
 
-	return need_flush;
+	తిరిగి need_flush;
 }
 
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#అయితే_ముగింపు /* CONFIG_SYS_CLOCK_EXISTS */

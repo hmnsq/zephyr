@@ -3,14 +3,14 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_
+#నిర్వచితం_కాకపోతే ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_
+#నిర్వచించు ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_
 
-#include <zephyr/device.h>
-#include <zephyr/pm/device.h>
-#include "kernel_internal.h"
+#అన్తర్భావ <zephyr/device.h>
+#అన్తర్భావ <zephyr/pm/device.h>
+#అన్తర్భావ "kernel_internal.h"
 
-#include <zephyr/syscall_list.h>
+#అన్తర్భావ <zephyr/syscall_list.h>
 
 /* All of this is build time magic, but LCOV gets confused. Disable coverage
  * for this whole file.
@@ -23,69 +23,69 @@
  * offsets.o into the ELF image.
  */
 
-GEN_ABS_SYM_BEGIN(_OffsetAbsSyms)
+GEN_ABS_SYM_BEGIN(స్థానభ్రంశం_Abs_Syms)
 
-GEN_OFFSET_SYM(_cpu_t, current);
-GEN_OFFSET_SYM(_cpu_t, nested);
-GEN_OFFSET_SYM(_cpu_t, irq_stack);
-GEN_OFFSET_SYM(_cpu_t, arch);
+GEN_స్థానభ్రంశం_SYM(_cpu_t, current);
+GEN_స్థానభ్రంశం_SYM(_cpu_t, nested);
+GEN_స్థానభ్రంశం_SYM(_cpu_t, irq_దొంతర);
+GEN_స్థానభ్రంశం_SYM(_cpu_t, arch);
 
-GEN_OFFSET_SYM(_kernel_t, cpus);
+GEN_స్థానభ్రంశం_SYM(_kernel_t, cpus);
 
-#if defined(CONFIG_FPU_SHARING)
-GEN_OFFSET_SYM(_cpu_t, fp_ctx);
-#endif /* CONFIG_FPU_SHARING */
+#ఒకవేళ defined(CONFIG_FPU_SHARING)
+GEN_స్థానభ్రంశం_SYM(_cpu_t, fp_ctx);
+#అయితే_ముగింపు /* CONFIG_FPU_SHARING */
 
-#ifdef CONFIG_PM
-GEN_OFFSET_SYM(_kernel_t, idle);
-#endif /* CONFIG_PM */
+#నిర్వచితమైతే CONFIG_PM
+GEN_స్థానభ్రంశం_SYM(_kernel_t, idle);
+#అయితే_ముగింపు /* CONFIG_PM */
 
-#ifndef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-GEN_OFFSET_SYM(_kernel_t, ready_q);
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#నిర్వచితం_కాకపోతే CONFIG_SCHED_CPU_ముసుగు_PIN_ONLY
+GEN_స్థానభ్రంశం_SYM(_kernel_t, ready_q);
+#అయితే_ముగింపు /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 
-#ifndef CONFIG_SMP
-GEN_OFFSET_SYM(_ready_q_t, cache);
-#endif /* CONFIG_SMP */
+#నిర్వచితం_కాకపోతే CONFIG_SMP
+GEN_స్థానభ్రంశం_SYM(_ready_q_t, cache);
+#అయితే_ముగింపు /* CONFIG_SMP */
 
-GEN_OFFSET_SYM(_thread_base_t, user_options);
+GEN_స్థానభ్రంశం_SYM(thread_పునాది_t, user_options);
 
-GEN_OFFSET_SYM(_thread_t, base);
-GEN_OFFSET_SYM(_thread_t, callee_saved);
-GEN_OFFSET_SYM(_thread_t, arch);
+GEN_స్థానభ్రంశం_SYM(_thread_t, పునాది);
+GEN_స్థానభ్రంశం_SYM(_thread_t, callee_saved);
+GEN_స్థానభ్రంశం_SYM(_thread_t, arch);
 
-#ifdef CONFIG_USE_SWITCH
-GEN_OFFSET_SYM(_thread_t, switch_handle);
-#endif /* CONFIG_USE_SWITCH */
+#నిర్వచితమైతే CONFIG_USE_SWITCH
+GEN_స్థానభ్రంశం_SYM(_thread_t, switch_handle);
+#అయితే_ముగింపు /* CONFIG_USE_SWITCH */
 
-#ifdef CONFIG_THREAD_STACK_INFO
-GEN_OFFSET_SYM(_thread_t, stack_info);
-#endif /* CONFIG_THREAD_STACK_INFO */
+#నిర్వచితమైతే CONFIG_THREAD_దొంతర_INFO
+GEN_స్థానభ్రంశం_SYM(_thread_t, దొంతర_info);
+#అయితే_ముగింపు /* CONFIG_THREAD_STACK_INFO */
 
-#ifdef CONFIG_THREAD_LOCAL_STORAGE
-GEN_OFFSET_SYM(_thread_t, tls);
-#endif /* CONFIG_THREAD_LOCAL_STORAGE */
+#నిర్వచితమైతే CONFIG_THREAD_LOCAL_STORAGE
+GEN_స్థానభ్రంశం_SYM(_thread_t, tls);
+#అయితే_ముగింపు /* CONFIG_THREAD_LOCAL_STORAGE */
 
-GEN_ABSOLUTE_SYM(__z_interrupt_stack_SIZEOF, sizeof(z_interrupt_stacks[0]));
-GEN_ABSOLUTE_SYM(__z_interrupt_all_stacks_SIZEOF, sizeof(z_interrupt_stacks));
+GEN_ABSOLUTE_SYM(__z_interrupt_stack_SIZEOF, పరిమాణం(z_అంతరాయం_stacks[0]));
+GEN_ABSOLUTE_SYM(__z_interrupt_all_stacks_SIZEOF, పరిమాణం(z_అంతరాయం_stacks));
 
 /* member offsets in the device structure. Used in image post-processing */
-#ifdef CONFIG_DEVICE_DEPS
-GEN_ABSOLUTE_SYM(_DEVICE_STRUCT_HANDLES_OFFSET,
-		 offsetof(struct device, deps));
-#endif /* CONFIG_DEVICE_DEPS */
+#నిర్వచితమైతే CONFIG_DEVICE_DEPS
+GEN_ABSOLUTE_SYM(DEVICE_STRUCT_HANDLES_స్థానభ్రంశం,
+		 offsetof(నిర్మాణం device, deps));
+#అయితే_ముగింపు /* CONFIG_DEVICE_DEPS */
 
-#ifdef CONFIG_PM_DEVICE
-GEN_ABSOLUTE_SYM(_DEVICE_STRUCT_PM_OFFSET,
-		 offsetof(struct device, pm));
-#endif /* CONFIG_PM_DEVICE */
+#నిర్వచితమైతే CONFIG_PM_DEVICE
+GEN_ABSOLUTE_SYM(DEVICE_STRUCT_PM_స్థానభ్రంశం,
+		 offsetof(నిర్మాణం device, pm));
+#అయితే_ముగింపు /* CONFIG_PM_DEVICE */
 
 /* member offsets in the pm_device structure. Used in image post-processing */
 
-GEN_ABSOLUTE_SYM(_PM_DEVICE_STRUCT_FLAGS_OFFSET,
-		 offsetof(struct pm_device_base, flags));
+GEN_ABSOLUTE_SYM(PM_DEVICE_STRUCT_FLAGS_స్థానభ్రంశం,
+		 offsetof(నిర్మాణం pm_device_పునాది, flags));
 
 GEN_ABSOLUTE_SYM(_PM_DEVICE_FLAG_PD, PM_DEVICE_FLAG_PD);
 
 /* LCOV_EXCL_STOP */
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_ */
+#అయితే_ముగింపు /* ZEPHYR_KERNEL_INCLUDE_KERNEL_OFFSETS_H_ */

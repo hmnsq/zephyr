@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+స్థిర శూన్య z_work_user_q_main(శూన్య *work_q_ptr, శూన్య *p2, శూన్య *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	నిర్మాణం k_work_user_q *work_q = work_q_ptr;
 
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_వాడని(p2);
+	ARG_వాడని(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	అయితే (true) {
+		నిర్మాణం k_work_user *work;
 		k_work_user_handler_t handler;
 
-		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		work = k_వరుస_get(&work_q->వరుస, K_FOREVER);
+		ఒకవేళ (work == ఖాళీ) {
+			కొనసాగు;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != ఖాళీ, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		ఒకవేళ (atomic_test_and_clear_బిట్టు(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,21 +39,21 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+శూన్య k_work_user_వరుస_ప్రారంభం(నిర్మాణం k_work_user_q *work_q, k_thread_దొంతర_t *దొంతర,
+			     size_t దొంతర_కొలత, పూర్ణాంకం prio, స్థిరరాశి అక్షరం *name)
 {
-	k_queue_init(&work_q->queue);
+	k_వరుస_init(&work_q->వరుస);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, దొంతర, దొంతర_కొలత, z_work_user_q_main,
+			work_q, ఖాళీ, ఖాళీ, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
-	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
-		k_thread_name_set(&work_q->thread, name);
+	k_object_access_grant(&work_q->వరుస, &work_q->thread);
+	ఒకవేళ (name != ఖాళీ) {
+		k_thread_name_సమితి(&work_q->thread, name);
 	}
 
-	k_thread_start(&work_q->thread);
+	k_thread_ప్రారంభం(&work_q->thread);
 }

@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <string.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/util.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <zephyr/sys/math_extras.h>
+#అన్తర్భావ <zephyr/sys/util.h>
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+రకనిర్వచనం శూన్య * (sys_కుప్ప_allocator_t)(నిర్మాణం sys_కుప్ప *కుప్ప, size_t align, size_t బైట్లు);
 
-static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
-			    sys_heap_allocator_t sys_heap_allocator)
+స్థిర శూన్య *z_alloc_helper(నిర్మాణం k_కుప్ప *కుప్ప, size_t align, size_t కొలత,
+			    sys_కుప్ప_allocator_t sys_కుప్ప_allocator)
 {
-	void *mem;
-	struct k_heap **heap_ref;
+	శూన్య *mem;
+	నిర్మాణం k_కుప్ప **కుప్ప_ref;
 	size_t __align;
-	k_spinlock_key_t key;
+	k_spinlock_కీలకం_t కీలకం;
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
@@ -29,192 +29,192 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	 * This allows for storing the heap pointer right below the aligned
 	 * boundary without wasting any memory.
 	 */
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		return NULL;
+	ఒకవేళ (కొలత_కూడు_అధికప్రవాహం(కొలత, పరిమాణం(కుప్ప_ref), &కొలత)) {
+		తిరిగి ఖాళీ;
 	}
-	__align = align | sizeof(heap_ref);
+	__align = align | పరిమాణం(కుప్ప_ref);
 
 	/*
 	 * No point calling k_heap_malloc/k_heap_aligned_alloc with K_NO_WAIT.
 	 * Better bypass them and go directly to sys_heap_*() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	mem = sys_heap_allocator(&heap->heap, __align, size);
-	k_spin_unlock(&heap->lock, key);
+	కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
+	mem = sys_కుప్ప_allocator(&కుప్ప->కుప్ప, __align, కొలత);
+	k_spin_unlock(&కుప్ప->తాళం, కీలకం);
 
-	if (mem == NULL) {
-		return NULL;
+	ఒకవేళ (mem == ఖాళీ) {
+		తిరిగి ఖాళీ;
 	}
 
-	heap_ref = mem;
-	*heap_ref = heap;
-	mem = ++heap_ref;
+	కుప్ప_ref = mem;
+	*కుప్ప_ref = కుప్ప;
+	mem = ++కుప్ప_ref;
 	__ASSERT(align == 0 || ((uintptr_t)mem & (align - 1)) == 0,
 		 "misaligned memory at %p (align = %zu)", mem, align);
 
-	return mem;
+	తిరిగి mem;
 }
 
-void k_free(void *ptr)
+శూన్య k_free(శూన్య *ptr)
 {
-	struct k_heap **heap_ref;
+	నిర్మాణం k_కుప్ప **కుప్ప_ref;
 
-	if (ptr != NULL) {
-		heap_ref = ptr;
-		--heap_ref;
-		ptr = heap_ref;
+	ఒకవేళ (ptr != ఖాళీ) {
+		కుప్ప_ref = ptr;
+		--కుప్ప_ref;
+		ptr = కుప్ప_ref;
 
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_free, *heap_ref, heap_ref);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప_sys, k_free, *కుప్ప_ref, కుప్ప_ref);
 
 		/*
 		 * Bypass k_heap_free() as z_unpend_all() and its scheduler
 		 * locking is unnecessary here, similar to z_alloc_helper()
 		 * bypassing k_heap_alloc() to go directly to sys_heap_*().
 		 */
-		struct k_heap *heap = *heap_ref;
-		k_spinlock_key_t key = k_spin_lock(&heap->lock);
+		నిర్మాణం k_కుప్ప *కుప్ప = *కుప్ప_ref;
+		k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
 
-		sys_heap_free(&heap->heap, ptr);
-		k_spin_unlock(&heap->lock, key);
+		sys_కుప్ప_free(&కుప్ప->కుప్ప, ptr);
+		k_spin_unlock(&కుప్ప->తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_free, heap, ptr);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_free, కుప్ప, ptr);
 	}
 }
 
-#if (K_HEAP_MEM_POOL_SIZE > 0)
+#ఒకవేళ (K_కుప్ప_MEM_POOL_కొలత > 0)
 
-K_HEAP_DEFINE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#define _SYSTEM_HEAP (&_system_heap)
+K_కుప్ప_DEFINE(system_కుప్ప, Z_కుప్ప_MIN_కొలత_FOR(K_కుప్ప_MEM_POOL_కొలత));
+#నిర్వచించు SYSTEM_కుప్ప (&system_కుప్ప)
 
-#if defined(CONFIG_SYS_HEAP_KASAN_SYSTEM)
-#include <zephyr/sys/heap_kasan.h>
-K_HEAP_KASAN_ENABLE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
-#endif
+#ఒకవేళ defined(CONFIG_SYS_కుప్ప_KASAN_SYSTEM)
+#అన్తర్భావ <zephyr/sys/heap_kasan.h>
+K_కుప్ప_KASAN_ENABLE(system_కుప్ప, Z_కుప్ప_MIN_కొలత_FOR(K_కుప్ప_MEM_POOL_కొలత));
+#అయితే_ముగింపు
 
-void *k_aligned_alloc(size_t align, size_t size)
+శూన్య *k_aligned_alloc(size_t align, size_t కొలత)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప_sys, k_aligned_alloc, SYSTEM_కుప్ప);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, align, size, sys_heap_aligned_alloc);
+	శూన్య *ret = z_alloc_helper(SYSTEM_కుప్ప, align, కొలత, sys_కుప్ప_aligned_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_aligned_alloc, SYSTEM_కుప్ప, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_malloc(size_t size)
+శూన్య *k_malloc(size_t కొలత)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_malloc, _SYSTEM_HEAP);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప_sys, k_malloc, SYSTEM_కుప్ప);
 
-	void *ret = z_alloc_helper(_SYSTEM_HEAP, 0, size, sys_heap_noalign_alloc);
+	శూన్య *ret = z_alloc_helper(SYSTEM_కుప్ప, 0, కొలత, sys_కుప్ప_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_malloc, _SYSTEM_HEAP, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_malloc, SYSTEM_కుప్ప, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_calloc(size_t nmemb, size_t size)
+శూన్య *k_calloc(size_t nmemb, size_t కొలత)
 {
-	void *ret;
+	శూన్య *ret;
 	size_t bounds;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_calloc, _SYSTEM_HEAP);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప_sys, k_calloc, SYSTEM_కుప్ప);
 
-	if (size_mul_overflow(nmemb, size, &bounds)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, NULL);
+	ఒకవేళ (కొలత_mul_అధికప్రవాహం(nmemb, కొలత, &bounds)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_calloc, SYSTEM_కుప్ప, ఖాళీ);
 
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
 	ret = k_malloc(bounds);
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	ఒకవేళ (ret != ఖాళీ) {
+		(శూన్య)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_calloc, SYSTEM_కుప్ప, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *k_realloc(void *ptr, size_t size)
+శూన్య *k_realloc(శూన్య *ptr, size_t కొలత)
 {
-	struct k_heap *heap, **heap_ref;
-	k_spinlock_key_t key;
-	void *ret;
+	నిర్మాణం k_కుప్ప *కుప్ప, **కుప్ప_ref;
+	k_spinlock_కీలకం_t కీలకం;
+	శూన్య *ret;
 
-	if (size == 0) {
+	ఒకవేళ (కొలత == 0) {
 		k_free(ptr);
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
-	if (ptr == NULL) {
-		return k_malloc(size);
+	ఒకవేళ (ptr == ఖాళీ) {
+		తిరిగి k_malloc(కొలత);
 	}
-	heap_ref = ptr;
-	ptr = --heap_ref;
-	heap = *heap_ref;
+	కుప్ప_ref = ptr;
+	ptr = --కుప్ప_ref;
+	కుప్ప = *కుప్ప_ref;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_realloc, heap, ptr);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_కుప్ప_sys, k_realloc, కుప్ప, ptr);
 
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, NULL);
-		return NULL;
+	ఒకవేళ (కొలత_కూడు_అధికప్రవాహం(కొలత, పరిమాణం(కుప్ప_ref), &కొలత)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_realloc, కుప్ప, ptr, ఖాళీ);
+		తిరిగి ఖాళీ;
 	}
 
 	/*
 	 * No point calling k_heap_realloc() with K_NO_WAIT here.
 	 * Better bypass it and go directly to sys_heap_realloc() instead.
 	 */
-	key = k_spin_lock(&heap->lock);
-	ret = sys_heap_realloc(&heap->heap, ptr, size);
-	k_spin_unlock(&heap->lock, key);
+	కీలకం = k_spin_తాళం(&కుప్ప->తాళం);
+	ret = sys_కుప్ప_realloc(&కుప్ప->కుప్ప, ptr, కొలత);
+	k_spin_unlock(&కుప్ప->తాళం, కీలకం);
 
-	if (ret != NULL) {
-		heap_ref = ret;
-		ret = ++heap_ref;
+	ఒకవేళ (ret != ఖాళీ) {
+		కుప్ప_ref = ret;
+		ret = ++కుప్ప_ref;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_కుప్ప_sys, k_realloc, కుప్ప, ptr, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-void k_thread_system_pool_assign(struct k_thread *thread)
+శూన్య k_thread_system_pool_కేటాయించు(నిర్మాణం k_thread *thread)
 {
-	thread->resource_pool = _SYSTEM_HEAP;
+	thread->resource_pool = SYSTEM_కుప్ప;
 }
-#else
-#define _SYSTEM_HEAP	NULL
-#endif /* K_HEAP_MEM_POOL_SIZE */
+#లేకపోతే
+#నిర్వచించు SYSTEM_కుప్ప	ఖాళీ
+#అయితే_ముగింపు /* K_HEAP_MEM_POOL_SIZE */
 
-static void *z_thread_alloc_helper(size_t align, size_t size,
-				   sys_heap_allocator_t sys_heap_allocator)
+స్థిర శూన్య *z_thread_alloc_helper(size_t align, size_t కొలత,
+				   sys_కుప్ప_allocator_t sys_కుప్ప_allocator)
 {
-	void *ret;
-	struct k_heap *heap;
+	శూన్య *ret;
+	నిర్మాణం k_కుప్ప *కుప్ప;
 
-	if (k_is_in_isr()) {
-		heap = _SYSTEM_HEAP;
-	} else {
-		heap = _current->resource_pool;
+	ఒకవేళ (k_is_లోపల_isr()) {
+		కుప్ప = SYSTEM_కుప్ప;
+	} లేకపోతే {
+		కుప్ప = _current->resource_pool;
 	}
 
-	if (heap != NULL) {
-		ret = z_alloc_helper(heap, align, size, sys_heap_allocator);
-	} else {
-		ret = NULL;
+	ఒకవేళ (కుప్ప != ఖాళీ) {
+		ret = z_alloc_helper(కుప్ప, align, కొలత, sys_కుప్ప_allocator);
+	} లేకపోతే {
+		ret = ఖాళీ;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-void *z_thread_aligned_alloc(size_t align, size_t size)
+శూన్య *z_thread_aligned_alloc(size_t align, size_t కొలత)
 {
-	return z_thread_alloc_helper(align, size, sys_heap_aligned_alloc);
+	తిరిగి z_thread_alloc_helper(align, కొలత, sys_కుప్ప_aligned_alloc);
 }
 
-void *z_thread_malloc(size_t size)
+శూన్య *z_thread_malloc(size_t కొలత)
 {
-	return z_thread_alloc_helper(0, size, sys_heap_noalign_alloc);
+	తిరిగి z_thread_alloc_helper(0, కొలత, sys_కుప్ప_noalign_alloc);
 }
 
 /*
@@ -223,4 +223,4 @@ void *z_thread_malloc(size_t size)
  * static heaps to be initialized and that is done in that file.
  * Make sure it is pulled in at least for that; the rest will be GC'd.
  */
-static void *const __used kheap_ref = k_heap_init;
+స్థిర శూన్య *స్థిరరాశి __used kheap_ref = k_కుప్ప_init;

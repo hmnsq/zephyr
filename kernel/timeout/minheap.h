@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
-#define ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
+#నిర్వచితం_కాకపోతే ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
+#నిర్వచించు ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_
 
 /**
  * @file
@@ -22,37 +22,37 @@
  * kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/min_heap_ref.h>
+#అన్తర్భావ <zephyr/sys/min_heap_ref.h>
 
-static int timeout_cmp(const struct min_heap_handle *a, const struct min_heap_handle *b)
+స్థిర పూర్ణాంకం timeout_cmp(స్థిరరాశి నిర్మాణం min_కుప్ప_handle *a, స్థిరరాశి నిర్మాణం min_కుప్ప_handle *b)
 {
-	const struct _timeout *ta = CONTAINER_OF(a, struct _timeout, heap_handle);
-	const struct _timeout *tb = CONTAINER_OF(b, struct _timeout, heap_handle);
+	స్థిరరాశి నిర్మాణం _timeout *ta = CONTAINER_యొక్క(a, నిర్మాణం _timeout, కుప్ప_handle);
+	స్థిరరాశి నిర్మాణం _timeout *tb = CONTAINER_యొక్క(b, నిర్మాణం _timeout, కుప్ప_handle);
 
-	if (ta->abs_ticks < tb->abs_ticks) {
-		return -1;
+	ఒకవేళ (ta->abs_ticks < tb->abs_ticks) {
+		తిరిగి -1;
 	}
 
-	return (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
+	తిరిగి (ta->abs_ticks > tb->abs_ticks) ? 1 : 0;
 }
 
-MIN_HEAP_REF_DEFINE_STATIC(timeout_heap_inst, CONFIG_TIMEOUT_HEAP_MAX_ENTRIES, timeout_cmp);
+MIN_కుప్ప_REF_DEFINE_STATIC(timeout_కుప్ప_inst, CONFIG_TIMEOUT_కుప్ప_MAX_ENTRIES, timeout_cmp);
 
-static inline struct _timeout *z_timeout_q_root(void)
+స్థిర అంతఃవరుస నిర్మాణం _timeout *z_timeout_q_మూలం(శూన్య)
 {
-	const struct min_heap_handle *h = min_heap_ref_peek(&timeout_heap_inst);
+	స్థిరరాశి నిర్మాణం min_కుప్ప_handle *h = min_కుప్ప_ref_peek(&timeout_కుప్ప_inst);
 
-	return (h == NULL) ? NULL : CONTAINER_OF(h, struct _timeout, heap_handle);
+	తిరిగి (h == ఖాళీ) ? ఖాళీ : CONTAINER_యొక్క(h, నిర్మాణం _timeout, కుప్ప_handle);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout (heap root).
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+స్థిర అంతఃవరుస bool z_timeout_q_చొప్పించు(నిర్మాణం _timeout *గమ్యం, k_ticks_t dticks)
 {
-	to->abs_ticks = (int64_t)curr_tick + dticks;
+	గమ్యం->abs_ticks = (int64_t)curr_tick + dticks;
 
-	if (unlikely(min_heap_ref_push(&timeout_heap_inst, &to->heap_handle) != 0)) {
+	ఒకవేళ (unlikely(min_కుప్ప_ref_నెట్టు(&timeout_కుప్ప_inst, &గమ్యం->కుప్ప_handle) != 0)) {
 		/*
 		 * Heap overflow is always a configuration error: there is no
 		 * graceful way to drop a kernel timeout. Increase
@@ -61,38 +61,38 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 		k_panic();
 	}
 
-	return to->heap_handle.idx == 1U;
+	తిరిగి గమ్యం->కుప్ప_handle.idx == 1U;
 }
 
 /* Remove an arbitrary timeout from the heap. Returns true if it was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+స్థిర అంతఃవరుస bool z_timeout_q_remove(నిర్మాణం _timeout *గమ్యం)
 {
-	bool was_first = (to->heap_handle.idx == 1U);
+	bool was_మొదటి = (గమ్యం->కుప్ప_handle.idx == 1U);
 
-	(void)min_heap_ref_remove(&timeout_heap_inst, &to->heap_handle);
+	(శూన్య)min_కుప్ప_ref_remove(&timeout_కుప్ప_inst, &గమ్యం->కుప్ప_handle);
 
-	return was_first;
+	తిరిగి was_మొదటి;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+స్థిర అంతఃవరుస k_ticks_t z_timeout_q_remainder(స్థిరరాశి నిర్మాణం _timeout *గమ్యం)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	తిరిగి (k_ticks_t)(గమ్యం->abs_ticks - (int64_t)curr_tick);
 }
 
 /* Ticks from curr_tick to the earliest pending timeout, or K_TICKS_FOREVER if
  * the heap is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+స్థిర అంతఃవరుస k_ticks_t z_timeout_q_తదుపరి_expiry(శూన్య)
 {
-	struct _timeout *t = z_timeout_q_root();
+	నిర్మాణం _timeout *t = z_timeout_q_మూలం();
 
-	return (t == NULL) ? K_TICKS_FOREVER
+	తిరిగి (t == ఖాళీ) ? K_TICKS_FOREVER
 			   : (k_ticks_t)(t->abs_ticks - (int64_t)curr_tick);
 }
 
@@ -101,38 +101,38 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
 /* Ticks from curr_tick until the earliest expiry. A value larger than any
  * announce window when the heap is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+స్థిర అంతఃవరుస int32_t z_timeout_q_తదుపరి_gap(శూన్య)
 {
-	struct _timeout *t = z_timeout_q_root();
+	నిర్మాణం _timeout *t = z_timeout_q_మూలం();
 
-	if (t == NULL) {
-		return INT32_MAX;
+	ఒకవేళ (t == ఖాళీ) {
+		తిరిగి INT32_MAX;
 	}
 
-	return (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
+	తిరిగి (int32_t)MIN(t->abs_ticks - (int64_t)curr_tick, (int64_t)INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. The heap stores absolute expiry ticks,
  * so the caller's curr_tick += dt is all the advancing required here.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+స్థిర అంతఃవరుస శూన్య z_timeout_q_advance(int32_t dt)
 {
-	ARG_UNUSED(dt);
+	ARG_వాడని(dt);
 }
 
 /* Pop and return one timeout that is due at the current curr_tick, or NULL if
  * none is due right now. Tied timeouts share the same abs_ticks and are
  * drained by successive calls.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+స్థిర అంతఃవరుస నిర్మాణం _timeout *z_timeout_q_తీయి_due(శూన్య)
 {
-	struct _timeout *t = z_timeout_q_root();
+	నిర్మాణం _timeout *t = z_timeout_q_మూలం();
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	ఒకవేళ ((t == ఖాళీ) || (t->abs_ticks > (int64_t)curr_tick)) {
+		తిరిగి ఖాళీ;
 	}
 
-	return CONTAINER_OF(min_heap_ref_pop(&timeout_heap_inst), struct _timeout, heap_handle);
+	తిరిగి CONTAINER_యొక్క(min_కుప్ప_ref_తీయి(&timeout_కుప్ప_inst), నిర్మాణం _timeout, కుప్ప_handle);
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_ */
+#అయితే_ముగింపు /* ZEPHYR_KERNEL_TIMEOUT_MINHEAP_H_ */

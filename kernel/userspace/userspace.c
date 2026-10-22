@@ -5,38 +5,38 @@
  */
 
 
-#include <zephyr/kernel.h>
-#include <string.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/rb.h>
-#include <zephyr/sys/sys_io.h>
-#include <ksched.h>
-#include <zephyr/syscall.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/device.h>
-#include <stdbool.h>
-#include <zephyr/app_memory/app_memdomain.h>
-#include <zephyr/sys/libc-hooks.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/sys/util.h>
-#include <inttypes.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/cache.h>
-#include <kernel_internal.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <string.h>
+#అన్తర్భావ <zephyr/sys/math_extras.h>
+#అన్తర్భావ <zephyr/sys/rb.h>
+#అన్తర్భావ <zephyr/sys/sys_io.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <zephyr/syscall.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/device.h>
+#అన్తర్భావ <stdbool.h>
+#అన్తర్భావ <zephyr/app_memory/app_memdomain.h>
+#అన్తర్భావ <zephyr/sys/libc-hooks.h>
+#అన్తర్భావ <zephyr/sys/mutex.h>
+#అన్తర్భావ <zephyr/sys/util.h>
+#అన్తర్భావ <inttypes.h>
+#అన్తర్భావ <zephyr/linker/linker-defs.h>
+#అన్తర్భావ <zephyr/cache.h>
+#అన్తర్భావ <kernel_internal.h>
 
-#ifdef Z_LIBC_PARTITION_EXISTS
-K_APPMEM_PARTITION_DEFINE(z_libc_partition);
-#endif /* Z_LIBC_PARTITION_EXISTS */
+#నిర్వచితమైతే Z_LIBC_విభజన_EXISTS
+K_APPMEM_విభజన_DEFINE(z_libc_విభజన);
+#అయితే_ముగింపు /* Z_LIBC_PARTITION_EXISTS */
 
 /* TODO: Find a better place to put this. Since we pull the entire
  * lib..__modules__crypto__mbedtls.a  globals into app shared memory
  * section, we can't put this in zephyr_init.c of the mbedtls module.
  */
-#ifdef CONFIG_MBEDTLS
-K_APPMEM_PARTITION_DEFINE(k_mbedtls_partition);
-#endif /* CONFIG_MBEDTLS */
+#నిర్వచితమైతే CONFIG_MBEDTLS
+K_APPMEM_విభజన_DEFINE(k_mbedtls_విభజన);
+#అయితే_ముగింపు /* CONFIG_MBEDTLS */
 
-#include <zephyr/logging/log.h>
+#అన్తర్భావ <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* The originally synchronization strategy made heavy use of recursive
@@ -47,96 +47,96 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
  * protect where possible, or just for the code that uses them where
  * not.
  */
-#ifdef CONFIG_DYNAMIC_OBJECTS
-static struct k_spinlock lists_lock;       /* kobj dlist */
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+స్థిర నిర్మాణం k_spinlock lists_తాళం;       /* kobj dlist */
 
-#ifdef CONFIG_GEN_PRIV_STACKS
+#నిర్వచితమైతే CONFIG_GEN_PRIV_STACKS
 /* On ARM & ARC MPU & RISC-V PMP we may have two different alignment requirement
  * when dynamically allocating thread stacks, one for the privileged
  * stack and other for the user stack, so we need to account the
  * worst alignment scenario and reserve space for that.
  */
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-#define STACK_ELEMENT_DATA_SIZE(size) \
-	(sizeof(struct z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
-	Z_THREAD_STACK_OBJ_ALIGN(size) + K_THREAD_STACK_LEN(size))
-#else
-#define STACK_ELEMENT_DATA_SIZE(size) (sizeof(struct z_stack_data) + \
-	K_THREAD_STACK_LEN(size))
-#endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-#else
-#define STACK_ELEMENT_DATA_SIZE(size) K_THREAD_STACK_LEN(size)
-#endif /* CONFIG_GEN_PRIV_STACKS */
+#ఒకవేళ defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+#నిర్వచించు దొంతర_ELEMENT_దత్తాంశం_కొలత(కొలత) \
+	(పరిమాణం(నిర్మాణం z_దొంతర_దత్తాంశం) + CONFIG_PRIVILEGED_దొంతర_కొలత + \
+	Z_THREAD_దొంతర_OBJ_ALIGN(కొలత) + K_THREAD_దొంతర_LEN(కొలత))
+#లేకపోతే
+#నిర్వచించు దొంతర_ELEMENT_దత్తాంశం_కొలత(కొలత) (పరిమాణం(నిర్మాణం z_దొంతర_దత్తాంశం) + \
+	K_THREAD_దొంతర_LEN(కొలత))
+#అయితే_ముగింపు /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
+#లేకపోతే
+#నిర్వచించు దొంతర_ELEMENT_దత్తాంశం_కొలత(కొలత) K_THREAD_దొంతర_LEN(కొలత)
+#అయితే_ముగింపు /* CONFIG_GEN_PRIV_STACKS */
 
-#endif /* CONFIG_DYNAMIC_OBJECTS */
-static struct k_spinlock obj_lock;         /* kobj struct data */
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
+స్థిర నిర్మాణం k_spinlock obj_తాళం;         /* kobj struct data */
 
-#define MAX_THREAD_BITS (CONFIG_MAX_THREAD_BYTES * BITS_PER_BYTE)
+#నిర్వచించు MAX_THREAD_బిట్లు (CONFIG_MAX_THREAD_బైట్లు * బిట్లు_చొప్పున_BYTE)
 
-#ifdef CONFIG_DYNAMIC_OBJECTS
-extern uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+బాహ్య uint8_t _thread_idx_map[CONFIG_MAX_THREAD_బైట్లు];
 
-extern int z_msgq_cleanup(struct k_msgq *q, bool locked);
-extern int z_stack_cleanup(struct k_stack *stack, bool locked);
-extern int z_timer_cleanup(struct k_timer *timer, bool locked);
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+బాహ్య పూర్ణాంకం z_msgq_cleanup(నిర్మాణం k_msgq *q, bool locked);
+బాహ్య పూర్ణాంకం z_దొంతర_cleanup(నిర్మాణం k_దొంతర *దొంతర, bool locked);
+బాహ్య పూర్ణాంకం z_timer_cleanup(నిర్మాణం k_timer *timer, bool locked);
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
 
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked);
+స్థిర శూన్య unref_check(నిర్మాణం k_object *ko, uintptr_t సూచీ, bool locked);
 
-const char *otype_to_str(enum k_objects otype)
+స్థిరరాశి అక్షరం *otype_గమ్యం_str(గణన k_objects otype)
 {
-	const char *ret;
+	స్థిరరాశి అక్షరం *ret;
 	/* -fdata-sections doesn't work right except in very recent
 	 * GCC and these literal strings would appear in the binary even if
 	 * otype_to_str was omitted by the linker
 	 */
-#ifdef CONFIG_LOG
-	switch (otype) {
+#నిర్వచితమైతే CONFIG_LOG
+	ఎంపిక (otype) {
 	/* otype-to-str.h is generated automatically during build by
 	 * gen_kobject_list.py
 	 */
-	case K_OBJ_ANY:
+	స్థితి K_OBJ_ANY:
 		ret = "generic";
-		break;
-	case K_OBJ_DRIVER_ANY:
+		ఆపు;
+	స్థితి K_OBJ_DRIVER_ANY:
 		ret = "generic driver";
-		break;
-#include <zephyr/otype-to-str.h>
-	default:
+		ఆపు;
+#అన్తర్భావ <zephyr/otype-to-str.h>
+	అప్రమేయ:
 		ret = "?";
-		break;
+		ఆపు;
 	}
-#else
-	ARG_UNUSED(otype);
-	ret = NULL;
-#endif /* CONFIG_LOG */
-	return ret;
+#లేకపోతే
+	ARG_వాడని(otype);
+	ret = ఖాళీ;
+#అయితే_ముగింపు /* CONFIG_LOG */
+	తిరిగి ret;
 }
 
-struct perm_ctx {
-	int parent_id;
-	int child_id;
-	struct k_thread *parent;
+నిర్మాణం perm_ctx {
+	పూర్ణాంకం మాతృ_id;
+	పూర్ణాంకం బిడ్డ_id;
+	నిర్మాణం k_thread *మాతృ;
 };
 
-#ifdef CONFIG_GEN_PRIV_STACKS
+#నిర్వచితమైతే CONFIG_GEN_PRIV_STACKS
 /* See write_gperf_table() in scripts/build/gen_kobject_list.py. The privilege
  * mode stacks are allocated as an array. The base of the array is
  * aligned to Z_PRIVILEGE_STACK_ALIGN, and all members must be as well.
  */
-uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
+uint8_t *z_priv_దొంతర_కనుగొను(k_thread_దొంతర_t *దొంతర)
 {
-	struct k_object *obj = k_object_find(stack);
+	నిర్మాణం k_object *obj = k_object_కనుగొను(దొంతర);
 
-	__ASSERT(obj != NULL, "stack object not found");
-	__ASSERT(obj->type == K_OBJ_THREAD_STACK_ELEMENT,
+	__ASSERT(obj != ఖాళీ, "stack object not found");
+	__ASSERT(obj->type == K_OBJ_THREAD_దొంతర_ELEMENT,
 		 "bad stack object");
 
-	return obj->data.stack_data->priv;
+	తిరిగి obj->దత్తాంశం.దొంతర_దత్తాంశం->priv;
 }
-#endif /* CONFIG_GEN_PRIV_STACKS */
+#అయితే_ముగింపు /* CONFIG_GEN_PRIV_STACKS */
 
-#ifdef CONFIG_DYNAMIC_OBJECTS
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
 
 /*
  * Note that dyn_obj->data is where the kernel object resides
@@ -150,115 +150,115 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
  * the maximum alignment needed for all kernel objects
  * (hence the following DYN_OBJ_DATA_ALIGN).
  */
-#ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
-#define DYN_OBJ_DATA_ALIGN_K_THREAD	(ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT)
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD	(sizeof(void *))
-#endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
+#నిర్వచితమైతే ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD	(ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT)
+#లేకపోతే
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD	(పరిమాణం(శూన్య *))
+#అయితే_ముగింపు /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 
-#ifdef CONFIG_DYNAMIC_THREAD_STACK_SIZE
-#if defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_STACK_SIZE)
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_PRIVILEGED_STACK_SIZE)
-#endif /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(ARCH_STACK_PTR_ALIGN)
-#endif /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
+#నిర్వచితమైతే CONFIG_DYNAMIC_THREAD_దొంతర_కొలత
+#ఒకవేళ defined(CONFIG_MPU_దొంతర_GUARD) || defined(CONFIG_PMP_దొంతర_GUARD)
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD_దొంతర \
+	Z_THREAD_దొంతర_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_దొంతర_కొలత)
+#లేకపోతే
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD_దొంతర \
+	Z_THREAD_దొంతర_OBJ_ALIGN(CONFIG_PRIVILEGED_దొంతర_కొలత)
+#అయితే_ముగింపు /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
+#లేకపోతే
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD_దొంతర \
+	Z_THREAD_దొంతర_OBJ_ALIGN(ARCH_దొంతర_PTR_ALIGN)
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
 
-#define DYN_OBJ_DATA_ALIGN		\
-	MAX(DYN_OBJ_DATA_ALIGN_K_THREAD, (sizeof(void *)))
+#నిర్వచించు DYN_OBJ_దత్తాంశం_ALIGN		\
+	MAX(DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD, (పరిమాణం(శూన్య *)))
 
-struct dyn_obj {
-	struct k_object kobj;
+నిర్మాణం dyn_obj {
+	నిర్మాణం k_object kobj;
 	sys_dnode_t dobj_list;
 
 	/* The object itself */
-	void *data;
+	శూన్య *దత్తాంశం;
 };
 
-extern struct k_object *z_object_gperf_find(const void *obj);
-extern void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func,
-					     void *context);
+బాహ్య నిర్మాణం k_object *z_object_gperf_కనుగొను(స్థిరరాశి శూన్య *obj);
+బాహ్య శూన్య z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func,
+					     శూన్య *context);
 
 /*
  * Linked list of allocated kernel objects, for iteration over all allocated
  * objects (and potentially deleting them during iteration).
  */
-static sys_dlist_t obj_list = SYS_DLIST_STATIC_INIT(&obj_list);
+స్థిర sys_dlist_t obj_list = SYS_DLIST_STATIC_INIT(&obj_list);
 
 /*
  * TODO: Write some hash table code that will replace obj_list.
  */
 
-static size_t obj_size_get(enum k_objects otype)
+స్థిర size_t obj_కొలత_get(గణన k_objects otype)
 {
 	size_t ret;
 
-	switch (otype) {
-#include <zephyr/otype-to-size.h>
-	default:
-		ret = sizeof(const struct device);
-		break;
+	ఎంపిక (otype) {
+#అన్తర్భావ <zephyr/otype-to-size.h>
+	అప్రమేయ:
+		ret = పరిమాణం(స్థిరరాశి నిర్మాణం device);
+		ఆపు;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-static size_t obj_align_get(enum k_objects otype)
+స్థిర size_t obj_align_get(గణన k_objects otype)
 {
 	size_t ret;
 
-	switch (otype) {
-	case K_OBJ_THREAD:
-#ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
+	ఎంపిక (otype) {
+	స్థితి K_OBJ_THREAD:
+#నిర్వచితమైతే ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 		ret = ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT;
-#else
-		ret = __alignof(struct dyn_obj);
-#endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
-		break;
-	default:
-		ret = __alignof(struct dyn_obj);
-		break;
+#లేకపోతే
+		ret = __alignof(నిర్మాణం dyn_obj);
+#అయితే_ముగింపు /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
+		ఆపు;
+	అప్రమేయ:
+		ret = __alignof(నిర్మాణం dyn_obj);
+		ఆపు;
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-static struct dyn_obj *dyn_object_find_locked(const void *obj)
+స్థిర నిర్మాణం dyn_obj *dyn_object_కనుగొను_locked(స్థిరరాశి శూన్య *obj)
 {
-	struct dyn_obj *node;
+	నిర్మాణం dyn_obj *కణుపు;
 
 	/* For any dynamically allocated kernel object, the object
 	 * pointer is just a member of the containing struct dyn_obj,
 	 * so just a little arithmetic is necessary to locate the
 	 * corresponding struct rbnode
 	 */
-	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, node, dobj_list) {
-		if (node->kobj.name == obj) {
-			return node;
+	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, కణుపు, dobj_list) {
+		ఒకవేళ (కణుపు->kobj.name == obj) {
+			తిరిగి కణుపు;
 		}
 	}
 
-	return NULL;
+	తిరిగి ఖాళీ;
 }
 
-static struct dyn_obj *dyn_object_find(const void *obj)
+స్థిర నిర్మాణం dyn_obj *dyn_object_కనుగొను(స్థిరరాశి శూన్య *obj)
 {
-	struct dyn_obj *node;
-	k_spinlock_key_t key;
+	నిర్మాణం dyn_obj *కణుపు;
+	k_spinlock_కీలకం_t కీలకం;
 
-	key = k_spin_lock(&lists_lock);
-	node = dyn_object_find_locked(obj);
-	k_spin_unlock(&lists_lock, key);
+	కీలకం = k_spin_తాళం(&lists_తాళం);
+	కణుపు = dyn_object_కనుగొను_locked(obj);
+	k_spin_unlock(&lists_తాళం, కీలకం);
 
-	return node;
+	తిరిగి కణుపు;
 }
 
-static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
+స్థిర శూన్య clear_perms_cb(నిర్మాణం k_object *ko, శూన్య *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -281,46 +281,46 @@ static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
  *
  * @return true if successful, false if failed
  **/
-static bool thread_idx_alloc(uintptr_t *tidx)
+స్థిర bool thread_idx_alloc(uintptr_t *tidx)
 {
-	int i;
-	int idx;
-	int base;
+	పూర్ణాంకం i;
+	పూర్ణాంకం idx;
+	పూర్ణాంకం పునాది;
 	bool ret = false;
-	k_spinlock_key_t key;
+	k_spinlock_కీలకం_t కీలకం;
 
-	base = 0;
-	key = k_spin_lock(&lists_lock);
-	for (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
-		idx = find_lsb_set(_thread_idx_map[i]);
+	పునాది = 0;
+	కీలకం = k_spin_తాళం(&lists_తాళం);
+	కొరకు (i = 0; i < CONFIG_MAX_THREAD_బైట్లు; i++) {
+		idx = కనుగొను_lsb_సమితి(_thread_idx_map[i]);
 
-		if (idx != 0) {
-			struct dyn_obj *obj, *next;
+		ఒకవేళ (idx != 0) {
+			నిర్మాణం dyn_obj *obj, *తదుపరి;
 
-			*tidx = base + (idx - 1);
+			*tidx = పునాది + (idx - 1);
 
 			/* Clear the bit. We already know the array index,
 			 * and the bit to be cleared.
 			 */
-			_thread_idx_map[i] &= ~(BIT(idx - 1));
+			_thread_idx_map[i] &= ~(బిట్టు(idx - 1));
 
 			/* Clear permission from all objects */
 
-			z_object_gperf_wordlist_foreach(clear_perms_cb, (void *)*tidx);
+			z_object_gperf_wordlist_foreach(clear_perms_cb, (శూన్య *)*tidx);
 
-			SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
-				clear_perms_cb(&obj->kobj, (void *)*tidx);
+			SYS_DLIST_FOR_EACH_CONTAINER_సురక్షిత(&obj_list, obj, తదుపరి, dobj_list) {
+				clear_perms_cb(&obj->kobj, (శూన్య *)*tidx);
 			}
 
 			ret = true;
-			break;
+			ఆపు;
 		}
 
-		base += 8;
+		పునాది += 8;
 	}
 
-	k_spin_unlock(&lists_lock, key);
-	return ret;
+	k_spin_unlock(&lists_తాళం, కీలకం);
+	తిరిగి ret;
 }
 
 /**
@@ -333,65 +333,65 @@ static bool thread_idx_alloc(uintptr_t *tidx)
  *
  * @param tidx The thread index to be freed
  **/
-static void thread_idx_free(uintptr_t tidx)
+స్థిర శూన్య thread_idx_free(uintptr_t tidx)
 {
-	struct dyn_obj *obj, *next;
+	నిర్మాణం dyn_obj *obj, *తదుపరి;
 
-	z_object_gperf_wordlist_foreach(clear_perms_cb, (void *)tidx);
+	z_object_gperf_wordlist_foreach(clear_perms_cb, (శూన్య *)tidx);
 
 	/* Hold lists_lock so two concurrent k_object_free() calls on thread indices
 	 * within the same byte cannot lose a bit in the non-atomic |=.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&lists_తాళం);
 
-	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
-		clear_perms_cb(&obj->kobj, (void *)tidx);
+	SYS_DLIST_FOR_EACH_CONTAINER_సురక్షిత(&obj_list, obj, తదుపరి, dobj_list) {
+		clear_perms_cb(&obj->kobj, (శూన్య *)tidx);
 	}
 
 	/* Figure out which bits to set in _thread_idx_map[] and set it. */
-	int base = tidx / NUM_BITS(_thread_idx_map[0]);
-	int offset = tidx % NUM_BITS(_thread_idx_map[0]);
+	పూర్ణాంకం పునాది = tidx / అంకె_బిట్లు_2(_thread_idx_map[0]);
+	పూర్ణాంకం స్థానభ్రంశం = tidx % అంకె_బిట్లు_2(_thread_idx_map[0]);
 
-	_thread_idx_map[base] |= BIT(offset);
+	_thread_idx_map[పునాది] |= బిట్టు(స్థానభ్రంశం);
 
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_తాళం, కీలకం);
 }
 
-static struct k_object *dynamic_object_create(enum k_objects otype, size_t align,
-					      size_t size)
+స్థిర నిర్మాణం k_object *dynamic_object_create(గణన k_objects otype, size_t align,
+					      size_t కొలత)
 {
-	struct dyn_obj *dyn;
+	నిర్మాణం dyn_obj *dyn;
 
-	dyn = z_thread_aligned_alloc(align, sizeof(struct dyn_obj));
-	if (dyn == NULL) {
-		return NULL;
+	dyn = z_thread_aligned_alloc(align, పరిమాణం(నిర్మాణం dyn_obj));
+	ఒకవేళ (dyn == ఖాళీ) {
+		తిరిగి ఖాళీ;
 	}
 
-	if (otype == K_OBJ_THREAD_STACK_ELEMENT) {
-		size_t adjusted_size;
+	ఒకవేళ (otype == K_OBJ_THREAD_దొంతర_ELEMENT) {
+		size_t adjusted_కొలత;
 
-		if (size == 0) {
+		ఒకవేళ (కొలత == 0) {
 			k_free(dyn);
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
 
-		adjusted_size = STACK_ELEMENT_DATA_SIZE(size);
-		if (adjusted_size < size) {
+		adjusted_కొలత = దొంతర_ELEMENT_దత్తాంశం_కొలత(కొలత);
+		ఒకవేళ (adjusted_కొలత < కొలత) {
 			/* The size adjustment above overflowed, which would
 			 * hand out an allocation smaller than requested.
 			 */
 			k_free(dyn);
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
 
-		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_STACK,
-						     adjusted_size);
-		if (dyn->data == NULL) {
+		dyn->దత్తాంశం = z_thread_aligned_alloc(DYN_OBJ_దత్తాంశం_ALIGN_K_THREAD_దొంతర,
+						     adjusted_కొలత);
+		ఒకవేళ (dyn->దత్తాంశం == ఖాళీ) {
 			k_free(dyn);
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
 
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS_FORCE_దొంతర_CACHED
 		/* With kernel coherence enabled, it is possible that the stack
 		 * has been allocated on uncached area. This has an implications on
 		 * performance as memory access is not cached.
@@ -399,132 +399,132 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 		 * cached area such that the thread object will have its stack
 		 * inside cached area.
 		 */
-		if (sys_cache_is_ptr_uncached(dyn->data)) {
-			dyn->data = sys_cache_cached_ptr_get(dyn->data);
+		ఒకవేళ (sys_cache_is_ptr_uncached(dyn->దత్తాంశం)) {
+			dyn->దత్తాంశం = sys_cache_cached_ptr_get(dyn->దత్తాంశం);
 		}
-#endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 
-#ifdef CONFIG_GEN_PRIV_STACKS
-		struct z_stack_data *stack_data = (struct z_stack_data *)
-			((uint8_t *)dyn->data + adjusted_size - sizeof(*stack_data));
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-		stack_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
-			  Z_THREAD_STACK_OBJ_ALIGN(size));
-#else
-		stack_data->priv = (uint8_t *)dyn->data;
-#endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-		stack_data->size = adjusted_size;
-		dyn->kobj.data.stack_data = stack_data;
-		dyn->kobj.name = dyn->data;
-#else
-		dyn->kobj.name = dyn->data;
-		dyn->kobj.data.stack_size = adjusted_size;
-#endif /* CONFIG_GEN_PRIV_STACKS */
-	} else {
-		size_t total_size = obj_size_get(otype) + size;
+#నిర్వచితమైతే CONFIG_GEN_PRIV_STACKS
+		నిర్మాణం z_దొంతర_దత్తాంశం *దొంతర_దత్తాంశం = (నిర్మాణం z_దొంతర_దత్తాంశం *)
+			((uint8_t *)dyn->దత్తాంశం + adjusted_కొలత - పరిమాణం(*దొంతర_దత్తాంశం));
+#ఒకవేళ defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+		దొంతర_దత్తాంశం->priv = (శూన్య *)విడత_పైకి(((uint8_t *)dyn->దత్తాంశం + కొలత),
+			  Z_THREAD_దొంతర_OBJ_ALIGN(కొలత));
+#లేకపోతే
+		దొంతర_దత్తాంశం->priv = (uint8_t *)dyn->దత్తాంశం;
+#అయితే_ముగింపు /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
+		దొంతర_దత్తాంశం->కొలత = adjusted_కొలత;
+		dyn->kobj.దత్తాంశం.దొంతర_దత్తాంశం = దొంతర_దత్తాంశం;
+		dyn->kobj.name = dyn->దత్తాంశం;
+#లేకపోతే
+		dyn->kobj.name = dyn->దత్తాంశం;
+		dyn->kobj.దత్తాంశం.దొంతర_కొలత = adjusted_కొలత;
+#అయితే_ముగింపు /* CONFIG_GEN_PRIV_STACKS */
+	} లేకపోతే {
+		size_t మొత్తం_కొలత = obj_కొలత_get(otype) + కొలత;
 
-		if (total_size < size) {
+		ఒకవేళ (మొత్తం_కొలత < కొలత) {
 			k_free(dyn);
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
 
-		dyn->data = z_thread_aligned_alloc(align, total_size);
-		if (dyn->data == NULL) {
+		dyn->దత్తాంశం = z_thread_aligned_alloc(align, మొత్తం_కొలత);
+		ఒకవేళ (dyn->దత్తాంశం == ఖాళీ) {
 			k_free(dyn);
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
-		dyn->kobj.name = dyn->data;
+		dyn->kobj.name = dyn->దత్తాంశం;
 	}
 
 	dyn->kobj.type = otype;
 	dyn->kobj.flags = 0;
-	(void)memset(dyn->kobj.perms, 0, CONFIG_MAX_THREAD_BYTES);
+	(శూన్య)memset(dyn->kobj.perms, 0, CONFIG_MAX_THREAD_బైట్లు);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&lists_తాళం);
 
 	sys_dlist_append(&obj_list, &dyn->dobj_list);
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_తాళం, కీలకం);
 
-	return &dyn->kobj;
+	తిరిగి &dyn->kobj;
 }
 
-struct k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
+నిర్మాణం k_object *k_object_create_dynamic_aligned(size_t align, size_t కొలత)
 {
-	struct k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
+	నిర్మాణం k_object *obj = dynamic_object_create(K_OBJ_ANY, align, కొలత);
 
-	if (obj == NULL) {
+	ఒకవేళ (obj == ఖాళీ) {
 		LOG_ERR("could not allocate kernel object, out of memory");
 	}
 
-	return obj;
+	తిరిగి obj;
 }
 
-static void *z_object_alloc(enum k_objects otype, size_t size)
+స్థిర శూన్య *z_object_alloc(గణన k_objects otype, size_t కొలత)
 {
-	struct k_object *zo;
+	నిర్మాణం k_object *zo;
 	uintptr_t tidx = 0;
 
-	if ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
+	ఒకవేళ ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_చివరి)) {
 		LOG_ERR("bad object type %d requested", otype);
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
-	switch (otype) {
-	case K_OBJ_THREAD:
-		if (!thread_idx_alloc(&tidx)) {
+	ఎంపిక (otype) {
+	స్థితి K_OBJ_THREAD:
+		ఒకవేళ (!thread_idx_alloc(&tidx)) {
 			LOG_ERR("out of free thread indexes");
-			return NULL;
+			తిరిగి ఖాళీ;
 		}
-		break;
+		ఆపు;
 	/* The following are currently not allowed at all */
-	case K_OBJ_SYS_MUTEX:			/* Lives in user memory */
-	case K_OBJ_NET_SOCKET:			/* Indeterminate size */
+	స్థితి K_OBJ_SYS_MUTEX:			/* Lives in user memory */
+	స్థితి K_OBJ_NET_SOCKET:			/* Indeterminate size */
 		LOG_ERR("forbidden object type '%s' requested",
-			otype_to_str(otype));
-		return NULL;
-	default:
+			otype_గమ్యం_str(otype));
+		తిరిగి ఖాళీ;
+	అప్రమేయ:
 		/* Remainder within bounds are permitted */
-		break;
+		ఆపు;
 	}
 
-	zo = dynamic_object_create(otype, obj_align_get(otype), size);
-	if (zo == NULL) {
-		if (otype == K_OBJ_THREAD) {
+	zo = dynamic_object_create(otype, obj_align_get(otype), కొలత);
+	ఒకవేళ (zo == ఖాళీ) {
+		ఒకవేళ (otype == K_OBJ_THREAD) {
 			thread_idx_free(tidx);
 		}
-		return NULL;
+		తిరిగి ఖాళీ;
 	}
 
-	if (otype == K_OBJ_THREAD) {
-		zo->data.thread_id = tidx;
+	ఒకవేళ (otype == K_OBJ_THREAD) {
+		zo->దత్తాంశం.thread_id = tidx;
 	}
 
 	/* The allocating thread implicitly gets permission on kernel objects
 	 * that it allocates
 	 */
-	k_thread_perms_set(zo, _current);
+	k_thread_perms_సమితి(zo, _current);
 
 	/* Activates reference counting logic for automatic disposal when
 	 * all permissions have been revoked
 	 */
 	zo->flags |= K_OBJ_FLAG_ALLOC;
 
-	return zo->name;
+	తిరిగి zo->name;
 }
 
-void *z_impl_k_object_alloc(enum k_objects otype)
+శూన్య *z_impl_k_object_alloc(గణన k_objects otype)
 {
-	return z_object_alloc(otype, 0);
+	తిరిగి z_object_alloc(otype, 0);
 }
 
-void *z_impl_k_object_alloc_size(enum k_objects otype, size_t size)
+శూన్య *z_impl_k_object_alloc_కొలత(గణన k_objects otype, size_t కొలత)
 {
-	return z_object_alloc(otype, size);
+	తిరిగి z_object_alloc(otype, కొలత);
 }
 
-void k_object_free(void *obj)
+శూన్య k_object_free(శూన్య *obj)
 {
-	struct dyn_obj *dyn = NULL;
+	నిర్మాణం dyn_obj *dyn = ఖాళీ;
 	bool free_thread_idx = false;
 	uintptr_t thread_idx = 0;
 
@@ -537,137 +537,137 @@ void k_object_free(void *obj)
 	 * another CPU cannot save a pointer to a node that we are
 	 * about to unlink and free.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&lists_తాళం);
 
-	dyn = dyn_object_find_locked(obj);
+	dyn = dyn_object_కనుగొను_locked(obj);
 
-	if (dyn != NULL) {
+	ఒకవేళ (dyn != ఖాళీ) {
 		sys_dlist_remove(&dyn->dobj_list);
 
-		if (dyn->kobj.type == K_OBJ_THREAD) {
+		ఒకవేళ (dyn->kobj.type == K_OBJ_THREAD) {
 			free_thread_idx = true;
-			thread_idx = dyn->kobj.data.thread_id;
+			thread_idx = dyn->kobj.దత్తాంశం.thread_id;
 		}
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_తాళం, కీలకం);
 
 	/* thread_idx_free() acquires lists_lock itself to serialize the
 	 * non-atomic bitmap update against concurrent frees, so it must
 	 * run with the lock dropped here.
 	 */
-	if (free_thread_idx) {
+	ఒకవేళ (free_thread_idx) {
 		thread_idx_free(thread_idx);
 	}
 
-	if (dyn != NULL) {
-#ifdef CONFIG_OBJ_CORE
-		if (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
-			k_obj_core_evict_range(obj, obj_size_get(dyn->kobj.type));
+	ఒకవేళ (dyn != ఖాళీ) {
+#నిర్వచితమైతే CONFIG_OBJ_CORE
+		ఒకవేళ (dyn->kobj.type != K_OBJ_THREAD_దొంతర_ELEMENT) {
+			k_obj_core_evict_range(obj, obj_కొలత_get(dyn->kobj.type));
 		}
-#endif /* CONFIG_OBJ_CORE */
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE */
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS_FORCE_దొంతర_CACHED
 		/* We may have nudged the pointer to point to the cached area
 		 * in dynamic_object_create() when we first created the thread
 		 * stack object. So we need to restore the uncached one before
 		 * freeing it.
 		 */
-		if (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
-			uint8_t *stack;
+		ఒకవేళ (dyn->kobj.type == K_OBJ_THREAD_దొంతర_ELEMENT) {
+			uint8_t *దొంతర;
 
-			if (sys_cache_is_ptr_cached(dyn->data)) {
-				stack = sys_cache_uncached_ptr_get(dyn->data);
-			} else {
-				stack = dyn->data;
+			ఒకవేళ (sys_cache_is_ptr_cached(dyn->దత్తాంశం)) {
+				దొంతర = sys_cache_uncached_ptr_get(dyn->దత్తాంశం);
+			} లేకపోతే {
+				దొంతర = dyn->దత్తాంశం;
 			}
 
-			k_free(stack);
-		} else
-#endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
+			k_free(దొంతర);
+		} లేకపోతే
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 		{
-			k_free(dyn->data);
+			k_free(dyn->దత్తాంశం);
 		}
 		k_free(dyn);
 	}
 }
 
-struct k_object *k_object_find(const void *obj)
+నిర్మాణం k_object *k_object_కనుగొను(స్థిరరాశి శూన్య *obj)
 {
-	struct k_object *ret;
+	నిర్మాణం k_object *ret;
 
-	ret = z_object_gperf_find(obj);
+	ret = z_object_gperf_కనుగొను(obj);
 
-	if (ret == NULL) {
-		struct dyn_obj *dyn;
+	ఒకవేళ (ret == ఖాళీ) {
+		నిర్మాణం dyn_obj *dyn;
 
 		/* The cast to pointer-to-non-const violates MISRA
 		 * 11.8 but is justified since we know dynamic objects
 		 * were not declared with a const qualifier.
 		 */
-		dyn = dyn_object_find(obj);
-		if (dyn != NULL) {
+		dyn = dyn_object_కనుగొను(obj);
+		ఒకవేళ (dyn != ఖాళీ) {
 			ret = &dyn->kobj;
 		}
 	}
 
-	return ret;
+	తిరిగి ret;
 }
 
-void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+శూన్య k_object_wordlist_foreach(_wordlist_cb_func_t func, శూన్య *context)
 {
-	struct dyn_obj *obj, *next;
+	నిర్మాణం dyn_obj *obj, *తదుపరి;
 
 	z_object_gperf_wordlist_foreach(func, context);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&lists_తాళం);
 
-	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
+	SYS_DLIST_FOR_EACH_CONTAINER_సురక్షిత(&obj_list, obj, తదుపరి, dobj_list) {
 		func(&obj->kobj, context);
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_తాళం, కీలకం);
 }
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
 
 /* In the earlier linker-passes before we have the real generated
  * implementation of the lookup functions, we need some weak dummies.
  * Being __weak, they will be replaced by the generated implementations in
  * the later linker passes.
  */
-#ifdef CONFIG_DYNAMIC_OBJECTS
-Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *z_object_gperf_find(const void *obj)
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+Z_GENERIC_SECTION(.kobject_దత్తాంశం.పాఠ్యం.dummies)
+__weak నిర్మాణం k_object *z_object_gperf_కనుగొను(స్థిరరాశి శూన్య *obj)
 {
-	ARG_UNUSED(obj);
-	return NULL;
+	ARG_వాడని(obj);
+	తిరిగి ఖాళీ;
 }
-Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+Z_GENERIC_SECTION(.kobject_దత్తాంశం.పాఠ్యం.dummies)
+__weak శూన్య z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, శూన్య *context)
 {
-	ARG_UNUSED(func);
-	ARG_UNUSED(context);
+	ARG_వాడని(func);
+	ARG_వాడని(context);
 }
-#else
-Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *k_object_find(const void *obj)
+#లేకపోతే
+Z_GENERIC_SECTION(.kobject_దత్తాంశం.పాఠ్యం.dummies)
+__weak నిర్మాణం k_object *k_object_కనుగొను(స్థిరరాశి శూన్య *obj)
 {
-	return NULL;
+	తిరిగి ఖాళీ;
 }
-Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+Z_GENERIC_SECTION(.kobject_దత్తాంశం.పాఠ్యం.dummies)
+__weak శూన్య k_object_wordlist_foreach(_wordlist_cb_func_t func, శూన్య *context)
 {
 }
-#endif
+#అయితే_ముగింపు
 
-static unsigned int thread_index_get(struct k_thread *thread)
+స్థిర గుర్తులేని పూర్ణాంకం thread_సూచీ_get(నిర్మాణం k_thread *thread)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
-	ko = k_object_find(thread);
+	ko = k_object_కనుగొను(thread);
 
-	if (ko == NULL) {
-		return -1;
+	ఒకవేళ (ko == ఖాళీ) {
+		తిరిగి -1;
 	}
 
-	return ko->data.thread_id;
+	తిరిగి ko->దత్తాంశం.thread_id;
 }
 
 /* Caller must hold lists_lock for the duration of this call so that the
@@ -677,27 +677,27 @@ static unsigned int thread_index_get(struct k_thread *thread)
  * Note: The 'locked' parameter in this function refers to the scheduler's
  * spinlock.
  */
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
+స్థిర శూన్య unref_check(నిర్మాణం k_object *ko, uintptr_t సూచీ, bool locked)
 {
-	k_spinlock_key_t key = k_spin_lock(&obj_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&obj_తాళం);
 
-	sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
+	sys_bitfield_clear_బిట్టు((mem_addr_t)&ko->perms, సూచీ);
 
-#ifdef CONFIG_DYNAMIC_OBJECTS
-	if ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+	ఒకవేళ ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
 		/* skip unref check for static kernel object */
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	void *vko = ko;
+	శూన్య *vko = ko;
 
-	struct dyn_obj *dyn = CONTAINER_OF(vko, struct dyn_obj, kobj);
+	నిర్మాణం dyn_obj *dyn = CONTAINER_యొక్క(vko, నిర్మాణం dyn_obj, kobj);
 
-	__ASSERT(IS_PTR_ALIGNED(dyn, struct dyn_obj), "unaligned z_object");
+	__ASSERT(IS_PTR_ALIGNED(dyn, నిర్మాణం dyn_obj), "unaligned z_object");
 
-	for (int i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
-		if (ko->perms[i] != 0U) {
-			goto out;
+	కొరకు (పూర్ణాంకం i = 0; i < CONFIG_MAX_THREAD_బైట్లు; i++) {
+		ఒకవేళ (ko->perms[i] != 0U) {
+			వెళ్ళు బహిర్గతం;
 		}
 	}
 
@@ -706,89 +706,89 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	 * marked as uninitialized when all references are gone. What
 	 * specifically needs to happen depends on the object type.
 	 */
-	switch (ko->type) {
-	case K_OBJ_MSGQ:
-		(void)z_msgq_cleanup((struct k_msgq *)ko->name, locked);
-		break;
-	case K_OBJ_STACK:
-		(void)z_stack_cleanup((struct k_stack *)ko->name, locked);
-		break;
-	case K_OBJ_TIMER:
+	ఎంపిక (ko->type) {
+	స్థితి K_OBJ_MSGQ:
+		(శూన్య)z_msgq_cleanup((నిర్మాణం k_msgq *)ko->name, locked);
+		ఆపు;
+	స్థితి K_OBJ_దొంతర:
+		(శూన్య)z_దొంతర_cleanup((నిర్మాణం k_దొంతర *)ko->name, locked);
+		ఆపు;
+	స్థితి K_OBJ_TIMER:
 		/* k_timer_cleanup() does not check whether the timer has
 		 * been initialized; calling it on an uninitialized timer
 		 * would read garbage from an uninitialized dnode. Guard
 		 * explicitly here.
 		 */
-		if ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
-			(void)z_timer_cleanup((struct k_timer *)ko->name, locked);
+		ఒకవేళ ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
+			(శూన్య)z_timer_cleanup((నిర్మాణం k_timer *)ko->name, locked);
 		}
-		break;
-	default:
+		ఆపు;
+	అప్రమేయ:
 		/* Nothing to do */
-		break;
+		ఆపు;
 	}
 
 	sys_dlist_remove(&dyn->dobj_list);
-	k_free(dyn->data);
+	k_free(dyn->దత్తాంశం);
 	k_free(dyn);
-out:
-#endif /* CONFIG_DYNAMIC_OBJECTS */
-	k_spin_unlock(&obj_lock, key);
+బహిర్గతం:
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
+	k_spin_unlock(&obj_తాళం, కీలకం);
 }
 
-static void wordlist_cb(struct k_object *ko, void *ctx_ptr)
+స్థిర శూన్య wordlist_cb(నిర్మాణం k_object *ko, శూన్య *ctx_ptr)
 {
-	struct perm_ctx *ctx = (struct perm_ctx *)ctx_ptr;
+	నిర్మాణం perm_ctx *ctx = (నిర్మాణం perm_ctx *)ctx_ptr;
 
-	if (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
-				  ((struct k_thread *)ko->name != ctx->parent)) {
-		sys_bitfield_set_bit((mem_addr_t)&ko->perms, ctx->child_id);
+	ఒకవేళ (sys_bitfield_test_బిట్టు((mem_addr_t)&ko->perms, ctx->మాతృ_id) &&
+				  ((నిర్మాణం k_thread *)ko->name != ctx->మాతృ)) {
+		sys_bitfield_సమితి_బిట్టు((mem_addr_t)&ko->perms, ctx->బిడ్డ_id);
 	}
 }
 
-void k_thread_perms_inherit(struct k_thread *parent, struct k_thread *child)
+శూన్య k_thread_perms_inherit(నిర్మాణం k_thread *మాతృ, నిర్మాణం k_thread *బిడ్డ)
 {
-	struct perm_ctx ctx = {
-		thread_index_get(parent),
-		thread_index_get(child),
-		parent
+	నిర్మాణం perm_ctx ctx = {
+		thread_సూచీ_get(మాతృ),
+		thread_సూచీ_get(బిడ్డ),
+		మాతృ
 	};
 
-	if ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
+	ఒకవేళ ((ctx.మాతృ_id != -1) && (ctx.బిడ్డ_id != -1)) {
 		k_object_wordlist_foreach(wordlist_cb, &ctx);
 	}
 }
 
-void k_thread_perms_set(struct k_object *ko, struct k_thread *thread)
+శూన్య k_thread_perms_సమితి(నిర్మాణం k_object *ko, నిర్మాణం k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	పూర్ణాంకం సూచీ = thread_సూచీ_get(thread);
 
-	if (index != -1) {
-		sys_bitfield_set_bit((mem_addr_t)&ko->perms, index);
+	ఒకవేళ (సూచీ != -1) {
+		sys_bitfield_సమితి_బిట్టు((mem_addr_t)&ko->perms, సూచీ);
 	}
 }
 
-void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
+శూన్య k_thread_perms_clear(నిర్మాణం k_object *ko, నిర్మాణం k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	పూర్ణాంకం సూచీ = thread_సూచీ_get(thread);
 
-	if (index != -1) {
-		sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
+	ఒకవేళ (సూచీ != -1) {
+		sys_bitfield_clear_బిట్టు((mem_addr_t)&ko->perms, సూచీ);
 		/* unref_check() requires lists_lock so its dlist remove is
 		 * SMP-safe.
 		 */
-#ifdef CONFIG_DYNAMIC_OBJECTS
-		k_spinlock_key_t key = k_spin_lock(&lists_lock);
+#నిర్వచితమైతే CONFIG_DYNAMIC_OBJECTS
+		k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&lists_తాళం);
 
-		unref_check(ko, index, false);
-		k_spin_unlock(&lists_lock, key);
-#else
-		unref_check(ko, index, false);
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+		unref_check(ko, సూచీ, false);
+		k_spin_unlock(&lists_తాళం, కీలకం);
+#లేకపోతే
+		unref_check(ko, సూచీ, false);
+#అయితే_ముగింపు /* CONFIG_DYNAMIC_OBJECTS */
 	}
 }
 
-static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
+స్థిర శూన్య clear_perms_cb_locked(నిర్మాణం k_object *ko, శూన్య *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -802,158 +802,158 @@ static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
  * be passed down to the lower layers so that they do not try to reacquire the
  * spinlock (leading to deadlock).
  */
-void k_thread_perms_all_clear(struct k_thread *thread)
+శూన్య k_thread_perms_all_clear(నిర్మాణం k_thread *thread)
 {
-	uintptr_t index = thread_index_get(thread);
+	uintptr_t సూచీ = thread_సూచీ_get(thread);
 
-	if ((int)index != -1) {
-		k_object_wordlist_foreach(clear_perms_cb_locked, (void *)index);
+	ఒకవేళ ((పూర్ణాంకం)సూచీ != -1) {
+		k_object_wordlist_foreach(clear_perms_cb_locked, (శూన్య *)సూచీ);
 	}
 }
 
-static int thread_perms_test(struct k_object *ko)
+స్థిర పూర్ణాంకం thread_perms_test(నిర్మాణం k_object *ko)
 {
-	int index;
+	పూర్ణాంకం సూచీ;
 
-	if ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
-		return 1;
+	ఒకవేళ ((ko->flags & K_OBJ_FLAG_ప్రజా) != 0U) {
+		తిరిగి 1;
 	}
 
-	index = thread_index_get(_current);
-	if (index != -1) {
-		return sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
+	సూచీ = thread_సూచీ_get(_current);
+	ఒకవేళ (సూచీ != -1) {
+		తిరిగి sys_bitfield_test_బిట్టు((mem_addr_t)&ko->perms, సూచీ);
 	}
-	return 0;
+	తిరిగి 0;
 }
 
-static void dump_permission_error(struct k_object *ko)
+స్థిర శూన్య dump_permission_error(నిర్మాణం k_object *ko)
 {
-	int index = thread_index_get(_current);
+	పూర్ణాంకం సూచీ = thread_సూచీ_get(_current);
 	LOG_ERR("thread %p (%d) does not have permission on %s %p",
-		_current, index,
-		otype_to_str(ko->type), ko->name);
-	LOG_HEXDUMP_ERR(ko->perms, sizeof(ko->perms), "permission bitmap");
+		_current, సూచీ,
+		otype_గమ్యం_str(ko->type), ko->name);
+	LOG_HEXDUMP_ERR(ko->perms, పరిమాణం(ko->perms), "permission bitmap");
 }
 
-void k_object_dump_error(int retval, const void *obj, struct k_object *ko,
-			enum k_objects otype)
+శూన్య k_object_dump_error(పూర్ణాంకం retval, స్థిరరాశి శూన్య *obj, నిర్మాణం k_object *ko,
+			గణన k_objects otype)
 {
-	switch (retval) {
-	case -EBADF:
-		LOG_ERR("%p is not a valid %s", obj, otype_to_str(otype));
-		if (ko == NULL) {
+	ఎంపిక (retval) {
+	స్థితి -EBADF:
+		LOG_ERR("%p is not a valid %s", obj, otype_గమ్యం_str(otype));
+		ఒకవేళ (ko == ఖాళీ) {
 			LOG_ERR("address is not a known kernel object");
-		} else {
+		} లేకపోతే {
 			LOG_ERR("address is actually a %s",
-				otype_to_str(ko->type));
+				otype_గమ్యం_str(ko->type));
 		}
-		break;
-	case -EPERM:
+		ఆపు;
+	స్థితి -EPERM:
 		dump_permission_error(ko);
-		break;
-	case -EINVAL:
+		ఆపు;
+	స్థితి -EINVAL:
 		LOG_ERR("%p used before initialization", obj);
-		break;
-	case -EADDRINUSE:
-		LOG_ERR("%p %s in use", obj, otype_to_str(otype));
-		break;
-	default:
+		ఆపు;
+	స్థితి -EADDRINUSE:
+		LOG_ERR("%p %s in use", obj, otype_గమ్యం_str(otype));
+		ఆపు;
+	అప్రమేయ:
 		/* Not handled error */
-		break;
+		ఆపు;
 	}
 }
 
-void z_impl_k_object_access_grant(const void *object, struct k_thread *thread)
+శూన్య z_impl_k_object_access_grant(స్థిరరాశి శూన్య *object, నిర్మాణం k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	నిర్మాణం k_object *ko = k_object_కనుగొను(object);
 
-	if (ko != NULL) {
-		k_thread_perms_set(ko, thread);
+	ఒకవేళ (ko != ఖాళీ) {
+		k_thread_perms_సమితి(ko, thread);
 	}
 }
 
-void k_object_access_revoke(const void *object, struct k_thread *thread)
+శూన్య k_object_access_revoke(స్థిరరాశి శూన్య *object, నిర్మాణం k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	నిర్మాణం k_object *ko = k_object_కనుగొను(object);
 
-	if (ko != NULL) {
+	ఒకవేళ (ko != ఖాళీ) {
 		k_thread_perms_clear(ko, thread);
 	}
 }
 
-void k_object_access_revoke_others(const void *object)
+శూన్య k_object_access_revoke_others(స్థిరరాశి శూన్య *object)
 {
-	struct k_object *ko = k_object_find(object);
+	నిర్మాణం k_object *ko = k_object_కనుగొను(object);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
-		k_thread_perms_set(ko, _current);
-		ko->flags &= ~K_OBJ_FLAG_PUBLIC;
+	ఒకవేళ (ko != ఖాళీ) {
+		(శూన్య)memset(ko->perms, 0, పరిమాణం(ko->perms));
+		k_thread_perms_సమితి(ko, _current);
+		ko->flags &= ~K_OBJ_FLAG_ప్రజా;
 	}
 }
 
-void z_impl_k_object_release(const void *object)
+శూన్య z_impl_k_object_release(స్థిరరాశి శూన్య *object)
 {
 	k_object_access_revoke(object, _current);
 }
 
-void k_object_access_all_grant(const void *object)
+శూన్య k_object_access_all_grant(స్థిరరాశి శూన్య *object)
 {
-	struct k_object *ko = k_object_find(object);
+	నిర్మాణం k_object *ko = k_object_కనుగొను(object);
 
-	if (ko != NULL) {
-		ko->flags |= K_OBJ_FLAG_PUBLIC;
+	ఒకవేళ (ko != ఖాళీ) {
+		ko->flags |= K_OBJ_FLAG_ప్రజా;
 	}
 }
 
-int k_object_validate(struct k_object *ko, enum k_objects otype,
-		       enum _obj_init_check init)
+పూర్ణాంకం k_object_validate(నిర్మాణం k_object *ko, గణన k_objects otype,
+		       గణన _obj_init_check init)
 {
-	if (unlikely(ko == NULL)) {
-		return -EBADF;
+	ఒకవేళ (unlikely(ko == ఖాళీ)) {
+		తిరిగి -EBADF;
 	}
 
-	if (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
-		if ((otype != K_OBJ_DRIVER_ANY) ||
-		    (ko->type < K_OBJ_DRIVER_FIRST) ||
-		    (ko->type > K_OBJ_DRIVER_LAST)) {
-			return -EBADF;
+	ఒకవేళ (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
+		ఒకవేళ ((otype != K_OBJ_DRIVER_ANY) ||
+		    (ko->type < K_OBJ_DRIVER_మొదటి) ||
+		    (ko->type > K_OBJ_DRIVER_చివరి)) {
+			తిరిగి -EBADF;
 		}
 	}
 
 	/* Manipulation of any kernel objects by a user thread requires that
 	 * thread be granted access first, even for uninitialized objects
 	 */
-	if (unlikely(thread_perms_test(ko) == 0)) {
-		return -EPERM;
+	ఒకవేళ (unlikely(thread_perms_test(ko) == 0)) {
+		తిరిగి -EPERM;
 	}
 
 	/* Initialization state checks. _OBJ_INIT_ANY, we don't care */
-	if (likely(init == _OBJ_INIT_TRUE)) {
+	ఒకవేళ (likely(init == _OBJ_INIT_TRUE)) {
 		/* Object MUST be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
-			return -EINVAL;
+		ఒకవేళ (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
+			తిరిగి -EINVAL;
 		}
-	} else if (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
+	} లేకపోతే ఒకవేళ (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
 		/* Object MUST NOT be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
-			return -EADDRINUSE;
+		ఒకవేళ (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
+			తిరిగి -EADDRINUSE;
 		}
-	} else {
+	} లేకపోతే {
 		/* _OBJ_INIT_ANY */
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-int z_impl_k_object_access_check(const void *object)
+పూర్ణాంకం z_impl_k_object_access_check(స్థిరరాశి శూన్య *object)
 {
-	return k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
+	తిరిగి k_object_validate(k_object_కనుగొను(object), K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-void k_object_init(const void *obj)
+శూన్య k_object_init(స్థిరరాశి శూన్య *obj)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
 	/* By the time we get here, if the caller was from userspace, all the
 	 * necessary checks have been done in k_object_validate(), which takes
@@ -963,38 +963,38 @@ void k_object_init(const void *obj)
 	 * finalizes it
 	 */
 
-	ko = k_object_find(obj);
-	if (ko == NULL) {
+	ko = k_object_కనుగొను(obj);
+	ఒకవేళ (ko == ఖాళీ) {
 		/* Supervisor threads can ignore rules about kernel objects
 		 * and may declare them on stacks, etc. Such objects will never
 		 * be usable from userspace, but we shouldn't explode.
 		 */
-		return;
+		తిరిగి;
 	}
 
 	/* Allows non-initialization system calls to be made on this object */
 	ko->flags |= K_OBJ_FLAG_INITIALIZED;
 }
 
-void k_object_recycle(const void *obj)
+శూన్య k_object_recycle(స్థిరరాశి శూన్య *obj)
 {
-	struct k_object *ko = k_object_find(obj);
+	నిర్మాణం k_object *ko = k_object_కనుగొను(obj);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
-		k_thread_perms_set(ko, _current);
+	ఒకవేళ (ko != ఖాళీ) {
+		(శూన్య)memset(ko->perms, 0, పరిమాణం(ko->perms));
+		k_thread_perms_సమితి(ko, _current);
 		ko->flags |= K_OBJ_FLAG_INITIALIZED;
 	}
 }
 
-void k_object_uninit(const void *obj)
+శూన్య k_object_uninit(స్థిరరాశి శూన్య *obj)
 {
-	struct k_object *ko;
+	నిర్మాణం k_object *ko;
 
 	/* See comments in k_object_init() */
-	ko = k_object_find(obj);
-	if (ko == NULL) {
-		return;
+	ko = k_object_కనుగొను(obj);
+	ఒకవేళ (ko == ఖాళీ) {
+		తిరిగి;
 	}
 
 	ko->flags &= ~K_OBJ_FLAG_INITIALIZED;
@@ -1003,70 +1003,70 @@ void k_object_uninit(const void *obj)
 /*
  * Copy to/from helper functions used in syscall handlers
  */
-void *k_usermode_alloc_from_copy(const void *src, size_t size)
+శూన్య *k_usermode_alloc_from_copy(స్థిరరాశి శూన్య *src, size_t కొలత)
 {
-	void *dst = NULL;
+	శూన్య *dst = ఖాళీ;
 
 	/* Does the caller in user mode have access to read this memory? */
-	if (K_SYSCALL_MEMORY_READ(src, size)) {
-		goto out_err;
+	ఒకవేళ (K_SYSCALL_జ్ఞాపకం_READ(src, కొలత)) {
+		వెళ్ళు బహిర్గతం_err;
 	}
 
-	dst = z_thread_malloc(size);
-	if (dst == NULL) {
-		LOG_ERR("out of thread resource pool memory (%zu)", size);
-		goto out_err;
+	dst = z_thread_malloc(కొలత);
+	ఒకవేళ (dst == ఖాళీ) {
+		LOG_ERR("out of thread resource pool memory (%zu)", కొలత);
+		వెళ్ళు బహిర్గతం_err;
 	}
 
-	(void)memcpy(dst, src, size);
-out_err:
-	return dst;
+	(శూన్య)జ్ఞాపకం_నకలు(dst, src, కొలత);
+బహిర్గతం_err:
+	తిరిగి dst;
 }
 
-static int user_copy(void *dst, const void *src, size_t size, bool to_user)
+స్థిర పూర్ణాంకం user_copy(శూన్య *dst, స్థిరరాశి శూన్య *src, size_t కొలత, bool గమ్యం_user)
 {
-	int ret = EFAULT;
+	పూర్ణాంకం ret = EFAULT;
 
 	/* Does the caller in user mode have access to this memory? */
-	if (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
-			K_SYSCALL_MEMORY_READ(src, size)) {
-		goto out_err;
+	ఒకవేళ (గమ్యం_user ? K_SYSCALL_జ్ఞాపకం_WRITE(dst, కొలత) :
+			K_SYSCALL_జ్ఞాపకం_READ(src, కొలత)) {
+		వెళ్ళు బహిర్గతం_err;
 	}
 
-	(void)memcpy(dst, src, size);
+	(శూన్య)జ్ఞాపకం_నకలు(dst, src, కొలత);
 	ret = 0;
-out_err:
-	return ret;
+బహిర్గతం_err:
+	తిరిగి ret;
 }
 
-int k_usermode_from_copy(void *dst, const void *src, size_t size)
+పూర్ణాంకం k_usermode_from_copy(శూన్య *dst, స్థిరరాశి శూన్య *src, size_t కొలత)
 {
-	return user_copy(dst, src, size, false);
+	తిరిగి user_copy(dst, src, కొలత, false);
 }
 
-int k_usermode_to_copy(void *dst, const void *src, size_t size)
+పూర్ణాంకం k_usermode_గమ్యం_copy(శూన్య *dst, స్థిరరాశి శూన్య *src, size_t కొలత)
 {
-	return user_copy(dst, src, size, true);
+	తిరిగి user_copy(dst, src, కొలత, true);
 }
 
-char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
+అక్షరం *k_usermode_string_alloc_copy(స్థిరరాశి అక్షరం *src, size_t maxlen)
 {
 	size_t actual_len;
-	int err;
-	char *ret = NULL;
+	పూర్ణాంకం err;
+	అక్షరం *ret = ఖాళీ;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
-		goto out;
+	ఒకవేళ (err != 0) {
+		వెళ్ళు బహిర్గతం;
 	}
-	if (actual_len == maxlen) {
+	ఒకవేళ (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	ఒకవేళ (కొలత_కూడు_అధికప్రవాహం(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
 	ret = k_usermode_alloc_from_copy(src, actual_len);
@@ -1075,60 +1075,60 @@ char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
 	 * checks. Ensure what we actually copied is still terminated
 	 * properly.
 	 */
-	if (ret != NULL) {
+	ఒకవేళ (ret != ఖాళీ) {
 		ret[actual_len - 1U] = '\0';
 	}
-out:
-	return ret;
+బహిర్గతం:
+	తిరిగి ret;
 }
 
-int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
+పూర్ణాంకం k_usermode_string_copy(అక్షరం *dst, స్థిరరాశి అక్షరం *src, size_t maxlen)
 {
 	size_t actual_len;
-	int ret, err;
+	పూర్ణాంకం ret, err;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	ఒకవేళ (err != 0) {
 		ret = EFAULT;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
-	if (actual_len == maxlen) {
+	ఒకవేళ (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		ret = EINVAL;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	ఒకవేళ (కొలత_కూడు_అధికప్రవాహం(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		ret = EINVAL;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
 	ret = k_usermode_from_copy(dst, src, actual_len);
 
 	/* See comment above in k_usermode_string_alloc_copy() */
 	dst[actual_len - 1] = '\0';
-out:
-	return ret;
+బహిర్గతం:
+	తిరిగి ret;
 }
 
 /*
  * Application memory region initialization
  */
 
-extern char __app_shmem_regions_start[];
-extern char __app_shmem_regions_end[];
+బాహ్య అక్షరం __app_shmem_regions_start[];
+బాహ్య అక్షరం __app_shmem_regions_end[];
 
-static void app_shmem_bss_zero(void)
+స్థిర శూన్య app_shmem_bss_zero(శూన్య)
 {
-	struct z_app_region *region, *end;
+	నిర్మాణం z_app_region *region, *చివర;
 
 
-	end = (struct z_app_region *)&__app_shmem_regions_end[0];
-	region = (struct z_app_region *)&__app_shmem_regions_start[0];
+	చివర = (నిర్మాణం z_app_region *)&__app_shmem_regions_end[0];
+	region = (నిర్మాణం z_app_region *)&__app_shmem_regions_start[0];
 
-	for ( ; region < end; region++) {
-		(void)memset(region->bss_start, 0, region->bss_size);
+	కొరకు ( ; region < చివర; region++) {
+		(శూన్య)memset(region->bss_ప్రారంభం, 0, region->bss_కొలత);
 	}
 }
 
@@ -1138,36 +1138,36 @@ K_KERNEL_INIT_PRE(app_shmem_bss_zero);
  * Default handlers if otherwise unimplemented
  */
 
-static uintptr_t handler_bad_syscall(uintptr_t bad_id, uintptr_t arg2,
+స్థిర uintptr_t handler_bad_syscall(uintptr_t bad_id, uintptr_t arg2,
 				     uintptr_t arg3, uintptr_t arg4,
 				     uintptr_t arg5, uintptr_t arg6,
-				     void *ssf)
+				     శూన్య *ssf)
 {
-	ARG_UNUSED(arg2);
-	ARG_UNUSED(arg3);
-	ARG_UNUSED(arg4);
-	ARG_UNUSED(arg5);
-	ARG_UNUSED(arg6);
+	ARG_వాడని(arg2);
+	ARG_వాడని(arg3);
+	ARG_వాడని(arg4);
+	ARG_వాడని(arg5);
+	ARG_వాడని(arg6);
 
 	LOG_ERR("Bad system call id %" PRIuPTR " invoked", bad_id);
 	arch_syscall_oops(ssf);
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	సంకేతం_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static uintptr_t handler_no_syscall(uintptr_t arg1, uintptr_t arg2,
+స్థిర uintptr_t handler_no_syscall(uintptr_t arg1, uintptr_t arg2,
 				    uintptr_t arg3, uintptr_t arg4,
-				    uintptr_t arg5, uintptr_t arg6, void *ssf)
+				    uintptr_t arg5, uintptr_t arg6, శూన్య *ssf)
 {
-	ARG_UNUSED(arg1);
-	ARG_UNUSED(arg2);
-	ARG_UNUSED(arg3);
-	ARG_UNUSED(arg4);
-	ARG_UNUSED(arg5);
-	ARG_UNUSED(arg6);
+	ARG_వాడని(arg1);
+	ARG_వాడని(arg2);
+	ARG_వాడని(arg3);
+	ARG_వాడని(arg4);
+	ARG_వాడని(arg5);
+	ARG_వాడని(arg6);
 
 	LOG_ERR("Unimplemented system call");
 	arch_syscall_oops(ssf);
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	సంకేతం_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-#include <zephyr/syscall_dispatch.c>
+#అన్తర్భావ <zephyr/syscall_dispatch.c>

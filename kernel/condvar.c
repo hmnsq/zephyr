@@ -4,145 +4,145 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/init.h>
 
-#ifdef CONFIG_OBJ_CORE_CONDVAR
-K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_CONDVAR */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_CONDVAR
+K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_CONDVAR */
 
-static struct k_spinlock condvar_lock;
+స్థిర నిర్మాణం k_spinlock condvar_తాళం;
 
-int z_impl_k_condvar_init(struct k_condvar *condvar)
+పూర్ణాంకం z_impl_k_condvar_init(నిర్మాణం k_condvar *condvar)
 {
 	z_waitq_init(&condvar->wait_q);
 	k_object_init(condvar);
 
-#ifdef CONFIG_OBJ_CORE_CONDVAR
+#నిర్వచితమైతే CONFIG_OBJ_CORE_CONDVAR
 	k_obj_core_init_and_link(K_OBJ_CORE(condvar), &obj_type_condvar);
-#endif /* CONFIG_OBJ_CORE_CONDVAR */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_CONDVAR */
 
-	SYS_PORT_TRACING_OBJ_INIT(k_condvar, condvar, 0);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_condvar, condvar, 0);
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_init(struct k_condvar *condvar)
+#నిర్వచితమైతే CONFIG_USERSPACE
+పూర్ణాంకం z_vrfy_k_condvar_init(నిర్మాణం k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_init(condvar);
+	తిరిగి z_impl_k_condvar_init(condvar);
 }
-#include <zephyr/syscalls/k_condvar_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_condvar_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_signal(struct k_condvar *condvar)
+పూర్ణాంకం z_impl_k_condvar_signal(నిర్మాణం k_condvar *condvar)
 {
-	k_spinlock_key_t key = k_spin_lock(&condvar_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&condvar_తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, signal, condvar);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_condvar, సంకేతం, condvar);
 
-	if (z_sched_wake(&condvar->wait_q, 0, NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_condvar, signal, condvar, K_FOREVER);
-		z_reschedule(&condvar_lock, key);
-	} else {
-		k_spin_unlock(&condvar_lock, key);
+	ఒకవేళ (z_sched_wake(&condvar->wait_q, 0, ఖాళీ)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_condvar, సంకేతం, condvar, K_FOREVER);
+		z_reschedule(&condvar_తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&condvar_తాళం, కీలకం);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, signal, condvar, 0);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_condvar, సంకేతం, condvar, 0);
 
-	return 0;
+	తిరిగి 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_signal(struct k_condvar *condvar)
+#నిర్వచితమైతే CONFIG_USERSPACE
+పూర్ణాంకం z_vrfy_k_condvar_signal(నిర్మాణం k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_signal(condvar);
+	తిరిగి z_impl_k_condvar_signal(condvar);
 }
-#include <zephyr/syscalls/k_condvar_signal_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_condvar_signal_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_broadcast(struct k_condvar *condvar)
+పూర్ణాంకం z_impl_k_condvar_ప్రసారం(నిర్మాణం k_condvar *condvar)
 {
-	k_spinlock_key_t key;
-	int woken = 0;
+	k_spinlock_కీలకం_t కీలకం;
+	పూర్ణాంకం woken = 0;
 
-	key = k_spin_lock(&condvar_lock);
+	కీలకం = k_spin_తాళం(&condvar_తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, broadcast, condvar);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_condvar, ప్రసారం, condvar);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&condvar->wait_q, 0, NULL)) {
+	అయితే (z_sched_wake(&condvar->wait_q, 0, ఖాళీ)) {
 		woken++;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, broadcast, condvar, woken);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_condvar, ప్రసారం, condvar, woken);
 
 
-	if (woken == 0) {
-		k_spin_unlock(&condvar_lock, key);
-	} else {
-		z_reschedule(&condvar_lock, key);
+	ఒకవేళ (woken == 0) {
+		k_spin_unlock(&condvar_తాళం, కీలకం);
+	} లేకపోతే {
+		z_reschedule(&condvar_తాళం, కీలకం);
 	}
 
-	return woken;
+	తిరిగి woken;
 }
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_broadcast(struct k_condvar *condvar)
+#నిర్వచితమైతే CONFIG_USERSPACE
+పూర్ణాంకం z_vrfy_k_condvar_ప్రసారం(నిర్మాణం k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_broadcast(condvar);
+	తిరిగి z_impl_k_condvar_ప్రసారం(condvar);
 }
-#include <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+పూర్ణాంకం z_impl_k_condvar_wait(నిర్మాణం k_condvar *condvar, నిర్మాణం k_mutex *mutex,
 			  k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int ret = -EAGAIN;
+	k_spinlock_కీలకం_t కీలకం;
+	పూర్ణాంకం ret = -EAGAIN;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
 
-	if (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
+	ఒకవేళ (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
 		/* No wait: per POSIX semantics, the mutex must remain locked when
 		 * k_condvar_wait() returns. Returning -EAGAIN immediately without
 		 * touching the mutex preserves the calling-thread-holds-mutex
 		 * invariant.
 		 */
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
-		return ret;
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
+		తిరిగి ret;
 	}
 
-	key = k_spin_lock(&condvar_lock);
+	కీలకం = k_spin_తాళం(&condvar_తాళం);
 	k_mutex_unlock(mutex);
 
-	ret = z_pend_curr(&condvar_lock, key, &condvar->wait_q, timeout);
+	ret = z_pend_curr(&condvar_తాళం, కీలకం, &condvar->wait_q, timeout);
 
 	/* Always re-acquire the mutex before returning, even on timeout.
 	 * This matches POSIX semantics: the mutex must be locked by the
 	 * calling thread when pthread_cond_wait() returns, regardless of
 	 * whether it was signaled or timed out.
 	 */
-	k_mutex_lock(mutex, K_FOREVER);
+	k_mutex_తాళం(mutex, K_FOREVER);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
 
-	return ret;
+	తిరిగి ret;
 }
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+#నిర్వచితమైతే CONFIG_USERSPACE
+పూర్ణాంకం z_vrfy_k_condvar_wait(నిర్మాణం k_condvar *condvar, నిర్మాణం k_mutex *mutex,
 			  k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
 	K_OOPS(K_SYSCALL_OBJ(mutex, K_OBJ_MUTEX));
-	return z_impl_k_condvar_wait(condvar, mutex, timeout);
+	తిరిగి z_impl_k_condvar_wait(condvar, mutex, timeout);
 }
-#include <zephyr/syscalls/k_condvar_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_condvar_wait_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

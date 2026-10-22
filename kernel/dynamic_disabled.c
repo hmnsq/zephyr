@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#అన్తర్భావ <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel/thread_stack.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_దొంతర_t *z_impl_k_thread_దొంతర_alloc(size_t కొలత, పూర్ణాంకం flags)
 {
-	ARG_UNUSED(size);
-	ARG_UNUSED(flags);
+	ARG_వాడని(కొలత);
+	ARG_వాడని(flags);
 
-	return NULL;
+	తిరిగి ఖాళీ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస k_thread_దొంతర_t *z_vrfy_k_thread_దొంతర_alloc(size_t కొలత, పూర్ణాంకం flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	తిరిగి z_impl_k_thread_దొంతర_alloc(కొలత, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+పూర్ణాంకం z_impl_k_thread_దొంతర_free(k_thread_దొంతర_t *దొంతర)
 {
-	ARG_UNUSED(stack);
+	ARG_వాడని(దొంతర);
 
-	return -ENOSYS;
+	తిరిగి -ENOSYS;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_k_thread_దొంతర_free(k_thread_దొంతర_t *దొంతర)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	తిరిగి z_impl_k_thread_దొంతర_free(దొంతర);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

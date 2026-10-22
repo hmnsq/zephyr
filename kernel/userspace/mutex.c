@@ -4,70 +4,70 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/sys/mutex.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
 
-static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
+స్థిర నిర్మాణం k_mutex *get_k_mutex(నిర్మాణం sys_mutex *mutex)
 {
-	struct k_object *obj;
+	నిర్మాణం k_object *obj;
 
-	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	obj = k_object_కనుగొను(mutex);
+	ఒకవేళ ((obj == ఖాళీ) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		తిరిగి ఖాళీ;
 	}
 
-	return obj->data.mutex;
+	తిరిగి obj->దత్తాంశం.mutex;
 }
 
-static bool check_sys_mutex_addr(struct sys_mutex *addr)
+స్థిర bool check_sys_mutex_addr(నిర్మాణం sys_mutex *addr)
 {
 	/* sys_mutex memory is never touched, just used to lookup the
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	తిరిగి K_SYSCALL_జ్ఞాపకం_WRITE(addr, పరిమాణం(నిర్మాణం sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+పూర్ణాంకం z_impl_z_sys_mutex_kernel_తాళం(నిర్మాణం sys_mutex *mutex, k_timeout_t timeout)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	నిర్మాణం k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	ఒకవేళ (kernel_mutex == ఖాళీ) {
+		తిరిగి -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	తిరిగి k_mutex_తాళం(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_z_sys_mutex_kernel_తాళం(నిర్మాణం sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ఒకవేళ (check_sys_mutex_addr(mutex)) {
+		తిరిగి -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	తిరిగి z_impl_z_sys_mutex_kernel_తాళం(mutex, timeout);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+పూర్ణాంకం z_impl_z_sys_mutex_kernel_unlock(నిర్మాణం sys_mutex *mutex)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	నిర్మాణం k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	ఒకవేళ ((kernel_mutex == ఖాళీ) || (kernel_mutex->తాళం_లెక్క == 0)) {
+		తిరిగి -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	తిరిగి k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+స్థిర అంతఃవరుస పూర్ణాంకం z_vrfy_z_sys_mutex_kernel_unlock(నిర్మాణం sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ఒకవేళ (check_sys_mutex_addr(mutex)) {
+		తిరిగి -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	తిరిగి z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>

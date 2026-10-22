@@ -4,76 +4,76 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/check.h>
-#include <stdbool.h>
-#include <zephyr/spinlock.h>
-#include <ksched.h>
-#include <wait_q.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/sys/check.h>
+#అన్తర్భావ <stdbool.h>
+#అన్తర్భావ <zephyr/spinlock.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <wait_q.h>
 
-static struct k_spinlock timer_lock;
+స్థిర నిర్మాణం k_spinlock timer_తాళం;
 
-#ifdef CONFIG_OBJ_CORE_TIMER
-K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_TIMER */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_TIMER
+K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_TIMER */
 
-#if defined(CONFIG_TIMER_OBSERVER)
-static inline void z_timer_observer_on_init(struct k_timer *timer)
+#ఒకవేళ defined(CONFIG_TIMER_OBSERVER)
+స్థిర అంతఃవరుస శూన్య z_timer_observer_on_init(నిర్మాణం k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_init != NULL) {
+		ఒకవేళ (obs->on_init != ఖాళీ) {
 			obs->on_init(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_start(struct k_timer *timer, k_timeout_t duration,
+స్థిర అంతఃవరుస శూన్య z_timer_observer_on_ప్రారంభం(నిర్మాణం k_timer *timer, k_timeout_t duration,
 					     k_timeout_t period)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_start != NULL) {
-			obs->on_start(timer, duration, period);
+		ఒకవేళ (obs->on_ప్రారంభం != ఖాళీ) {
+			obs->on_ప్రారంభం(timer, duration, period);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_stop(struct k_timer *timer)
+స్థిర అంతఃవరుస శూన్య z_timer_observer_on_stop(నిర్మాణం k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_stop != NULL) {
+		ఒకవేళ (obs->on_stop != ఖాళీ) {
 			obs->on_stop(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_expiry(struct k_timer *timer)
+స్థిర అంతఃవరుస శూన్య z_timer_observer_on_expiry(నిర్మాణం k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_expiry != NULL) {
+		ఒకవేళ (obs->on_expiry != ఖాళీ) {
 			obs->on_expiry(timer);
 		}
 	}
 }
-#else
-#define z_timer_observer_on_init(timer) (void)0
-#define z_timer_observer_on_start(timer, duration, period) (void)0
-#define z_timer_observer_on_stop(timer) (void)0
-#define z_timer_observer_on_expiry(timer) (void)0
-#endif /* CONFIG_TIMER_OBSERVER */
+#లేకపోతే
+#నిర్వచించు z_timer_observer_on_init(timer) (శూన్య)0
+#నిర్వచించు z_timer_observer_on_ప్రారంభం(timer, duration, period) (శూన్య)0
+#నిర్వచించు z_timer_observer_on_stop(timer) (శూన్య)0
+#నిర్వచించు z_timer_observer_on_expiry(timer) (శూన్య)0
+#అయితే_ముగింపు /* CONFIG_TIMER_OBSERVER */
 
 /**
  * @brief Handle expiration of a kernel timer object.
  *
  * @param t  Timeout used by the timer.
  */
-void z_timer_expiration_handler(struct _timeout *t)
+శూన్య z_timer_expiration_handler(నిర్మాణం _timeout *t)
 {
-	struct k_timer *timer = CONTAINER_OF(t, struct k_timer, timeout);
-	struct k_thread *thread;
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	నిర్మాణం k_timer *timer = CONTAINER_యొక్క(t, నిర్మాణం k_timer, timeout);
+	నిర్మాణం k_thread *thread;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&timer_తాళం);
 
 	/* A same-CPU IRQ may have raced with our dispatch between
 	 * sys_clock_announce() popping us off the queue and us taking
@@ -83,21 +83,21 @@ void z_timer_expiration_handler(struct _timeout *t)
 	 *  - The timer was stopped (z_try_abort_timeout marked the
 	 *    in-flight slot superseded): bail without firing expiry_fn.
 	 */
-	if (!z_is_inactive_timeout(t) ||
+	ఒకవేళ (!z_is_inactive_timeout(t) ||
 	    z_timeout_inflight_superseded(t)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+		k_spin_unlock(&timer_తాళం, కీలకం);
+		తిరిగి;
 	}
 
 	/*
 	 * if the timer is periodic, start it again; don't add _TICK_ALIGN
 	 * since we're already aligned to a tick boundary
 	 */
-	if (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
+	ఒకవేళ (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
 	    !K_TIMEOUT_EQ(timer->period, K_FOREVER)) {
-		k_timeout_t next = timer->period;
+		k_timeout_t తదుపరి = timer->period;
 
-#ifdef CONFIG_TIMEOUT_64BIT
+#నిర్వచితమైతే CONFIG_TIMEOUT_64_బిట్టు
 		/* Exploit the fact that uptime during a kernel
 		 * timeout handler reflects the time of the scheduled
 		 * event and not real time to get some inexpensive
@@ -106,81 +106,81 @@ void z_timer_expiration_handler(struct _timeout *t)
 		 * the next expiration as a regular stride from where
 		 * we "should" have run.  Requires absolute timeouts.
 		 */
-		next = K_TIMEOUT_ABS_TICKS(k_uptime_ticks() + next.ticks);
-#endif /* CONFIG_TIMEOUT_64BIT */
-		z_add_timeout(&timer->timeout, z_timer_expiration_handler,
-			      next);
+		తదుపరి = K_TIMEOUT_ABS_TICKS(k_uptime_ticks() + తదుపరి.ticks);
+#అయితే_ముగింపు /* CONFIG_TIMEOUT_64BIT */
+		z_కూడు_timeout(&timer->timeout, z_timer_expiration_handler,
+			      తదుపరి);
 	}
 
 	/* update timer's status */
-	timer->status += 1U;
+	timer->స్థితి_2 += 1U;
 
 	z_timer_observer_on_expiry(timer);
 
 	/* invoke timer expiry function */
-	if (timer->expiry_fn != NULL) {
+	ఒకవేళ (timer->expiry_fn != ఖాళీ) {
 		k_timer_expiry_t expiry_fn = timer->expiry_fn;
 
 		/* Unlock for user handler. */
-		k_spin_unlock(&timer_lock, key);
+		k_spin_unlock(&timer_తాళం, కీలకం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, expiry, timer);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_timer, expiry, timer);
 
 		expiry_fn(timer);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, expiry, timer);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_timer, expiry, timer);
 
-		key = k_spin_lock(&timer_lock);
+		కీలకం = k_spin_తాళం(&timer_తాళం);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+	ఒకవేళ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+		k_spin_unlock(&timer_తాళం, కీలకం);
+		తిరిగి;
 	}
 
-	LOCK_SCHED_SPINLOCK {
-		thread = z_waitq_head_locked(&timer->wait_q);
+	తాళం_SCHED_SPINLOCK {
+		thread = z_waitq_తల_locked(&timer->wait_q);
 
-		if (thread != NULL) {
+		ఒకవేళ (thread != ఖాళీ) {
 			unpend_thread_no_timeout(thread);
-			arch_thread_return_value_set(thread, 0);
+			arch_thread_return_విలువ_సమితి(thread, 0);
 			z_sched_ready_locked(thread);
 		}
 	}
 
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_తాళం, కీలకం);
 
 }
 
 
-int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
+పూర్ణాంకం z_timer_cleanup(నిర్మాణం k_timer *timer, __maybe_unused bool locked)
 {
 	/* Not callable from an ISR: this is the one timer path that can
 	 * spin waiting for an in-flight handler, and an ISR spinning here
 	 * could starve the very CPU the handler needs to make progress.
 	 */
-	__ASSERT(!arch_is_in_isr(), "");
+	__ASSERT(!arch_is_లోపల_isr(), "");
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, cleanup, timer);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_timer, cleanup, timer);
 
-	int ret = 0;
-	k_spinlock_key_t key;
+	పూర్ణాంకం ret = 0;
+	k_spinlock_కీలకం_t కీలకం;
 
 	/* Refuse if anyone is still pending on the timer's wait queue
 	 * (e.g. via k_timer_status_sync()): freeing the storage would
 	 * leave dangling pended_on pointers.
 	 */
 retry:
-	key = k_spin_lock(&timer_lock);
+	కీలకం = k_spin_తాళం(&timer_తాళం);
 
-	CHECKIF(locked && (z_waitq_head_locked(&timer->wait_q) != NULL)) {
+	CHECKIF(locked && (z_waitq_తల_locked(&timer->wait_q) != ఖాళీ)) {
 		ret = -EAGAIN;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
-	CHECKIF(!locked && (z_waitq_head(&timer->wait_q) != NULL)) {
+	CHECKIF(!locked && (z_waitq_తల(&timer->wait_q) != ఖాళీ)) {
 		ret = -EAGAIN;
-		goto out;
+		వెళ్ళు బహిర్గతం;
 	}
 
 	/* Cancel the timeout AND wait for any in-flight expiration
@@ -196,66 +196,66 @@ retry:
 	 * whose handler does that is a caller bug; ordinary stop/start do
 	 * not wait and so cannot stall.
 	 */
-	if (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
-		k_spin_unlock(&timer_lock, key);
-		goto retry;
+	ఒకవేళ (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
+		k_spin_unlock(&timer_తాళం, కీలకం);
+		వెళ్ళు retry;
 	}
 
-out:
-	k_spin_unlock(&timer_lock, key);
+బహిర్గతం:
+	k_spin_unlock(&timer_తాళం, కీలకం);
 
-#ifdef CONFIG_OBJ_CORE_TIMER
-	if (ret == 0) {
+#నిర్వచితమైతే CONFIG_OBJ_CORE_TIMER
+	ఒకవేళ (ret == 0) {
 		k_obj_core_unlink(K_OBJ_CORE(timer));
 	}
-#endif /* CONFIG_OBJ_CORE_TIMER */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_TIMER */
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, cleanup, timer, ret);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_timer, cleanup, timer, ret);
 
-	return ret;
+	తిరిగి ret;
 }
 
-int k_timer_cleanup(struct k_timer *timer)
+పూర్ణాంకం k_timer_cleanup(నిర్మాణం k_timer *timer)
 {
-	return z_timer_cleanup(timer, false);
+	తిరిగి z_timer_cleanup(timer, false);
 }
 
 
-void k_timer_init(struct k_timer *timer,
+శూన్య k_timer_init(నిర్మాణం k_timer *timer,
 			 k_timer_expiry_t expiry_fn,
 			 k_timer_stop_t stop_fn)
 {
 	timer->expiry_fn = expiry_fn;
 	timer->stop_fn = stop_fn;
-	timer->status = 0U;
+	timer->స్థితి_2 = 0U;
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ఒకవేళ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		z_waitq_init(&timer->wait_q);
 	}
 
 	z_init_timeout(&timer->timeout);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_timer, timer);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_timer, timer);
 
-	timer->user_data = NULL;
+	timer->user_దత్తాంశం = ఖాళీ;
 
 	k_object_init(timer);
 
-#ifdef CONFIG_OBJ_CORE_TIMER
+#నిర్వచితమైతే CONFIG_OBJ_CORE_TIMER
 	k_obj_core_init_and_link(K_OBJ_CORE(timer), &obj_type_timer);
-#endif /* CONFIG_OBJ_CORE_TIMER */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_TIMER */
 
 	z_timer_observer_on_init(timer);
 }
 
 
-void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
+శూన్య z_impl_k_timer_ప్రారంభం(నిర్మాణం k_timer *timer, k_timeout_t duration,
 			  k_timeout_t period)
 {
-	SYS_PORT_TRACING_OBJ_FUNC(k_timer, start, timer, duration, period);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_timer, ప్రారంభం, timer, duration, period);
 
-	if (K_TIMEOUT_EQ(duration, K_FOREVER)) {
-		return;
+	ఒకవేళ (K_TIMEOUT_EQ(duration, K_FOREVER)) {
+		తిరిగి;
 	}
 
 	/* Hold the timer lock across abort + add to serialize against a
@@ -265,203 +265,203 @@ void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
 	 * makes a not-yet-committed handler bail too. Either way we do not
 	 * wait for it.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&timer_తాళం);
 
-	(void)z_try_abort_timeout(&timer->timeout);
+	(శూన్య)z_try_abort_timeout(&timer->timeout);
 
 	timer->period = period;
-	timer->status = 0U;
+	timer->స్థితి_2 = 0U;
 
-	z_add_timeout(&timer->timeout, z_timer_expiration_handler, duration);
+	z_కూడు_timeout(&timer->timeout, z_timer_expiration_handler, duration);
 
-	z_timer_observer_on_start(timer, duration, period);
+	z_timer_observer_on_ప్రారంభం(timer, duration, period);
 
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_తాళం, కీలకం);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_start(struct k_timer *timer,
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_timer_ప్రారంభం(నిర్మాణం k_timer *timer,
 					k_timeout_t duration,
 					k_timeout_t period)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	z_impl_k_timer_start(timer, duration, period);
+	z_impl_k_timer_ప్రారంభం(timer, duration, period);
 }
-#include <zephyr/syscalls/k_timer_start_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_timer_start_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-void z_impl_k_timer_stop(struct k_timer *timer)
+శూన్య z_impl_k_timer_stop(నిర్మాణం k_timer *timer)
 {
-	SYS_PORT_TRACING_OBJ_FUNC(k_timer, stop, timer);
+	SYS_పోర్టు_TRACING_OBJ_FUNC(k_timer, stop, timer);
 
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&timer_తాళం);
 
-	if (z_try_abort_timeout(&timer->timeout) != 0) {
+	ఒకవేళ (z_try_abort_timeout(&timer->timeout) != 0) {
 		/* Not removed from the queue: either the timer was not
 		 * active, or its handler is in flight. In the latter case
 		 * z_try_abort_timeout() has flagged it superseded so the
 		 * handler bails; we do not wait for it. Nothing to stop here.
 		 */
-		k_spin_unlock(&timer_lock, key);
-		return;
+		k_spin_unlock(&timer_తాళం, కీలకం);
+		తిరిగి;
 	}
 
 	z_timer_observer_on_stop(timer);
 
-	if (timer->stop_fn != NULL) {
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, stop_fn_expiry, timer);
-		k_spin_unlock(&timer_lock, key);
+	ఒకవేళ (timer->stop_fn != ఖాళీ) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_timer, stop_fn_expiry, timer);
+		k_spin_unlock(&timer_తాళం, కీలకం);
 
 		timer->stop_fn(timer);
 
-		key = k_spin_lock(&timer_lock);
+		కీలకం = k_spin_తాళం(&timer_తాళం);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, stop_fn_expiry, timer);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_timer, stop_fn_expiry, timer);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+	ఒకవేళ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+		k_spin_unlock(&timer_తాళం, కీలకం);
+		తిరిగి;
 
 	}
 
-	struct k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
+	నిర్మాణం k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
 
-	if (pending_thread != NULL) {
+	ఒకవేళ (pending_thread != ఖాళీ) {
 		z_ready_thread(pending_thread);
-		z_reschedule(&timer_lock, key);
-	} else {
-		k_spin_unlock(&timer_lock, key);
+		z_reschedule(&timer_తాళం, కీలకం);
+	} లేకపోతే {
+		k_spin_unlock(&timer_తాళం, కీలకం);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_stop(struct k_timer *timer)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_timer_stop(నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
 	z_impl_k_timer_stop(timer);
 }
-#include <zephyr/syscalls/k_timer_stop_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_timer_stop_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_get(struct k_timer *timer)
+uint32_t z_impl_k_timer_స్థితి_get(నిర్మాణం k_timer *timer)
 {
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
-	uint32_t result = timer->status;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&timer_తాళం);
+	uint32_t ఫలితం = timer->స్థితి_2;
 
-	timer->status = 0U;
-	k_spin_unlock(&timer_lock, key);
+	timer->స్థితి_2 = 0U;
+	k_spin_unlock(&timer_తాళం, కీలకం);
 
-	return result;
+	తిరిగి ఫలితం;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_get(struct k_timer *timer)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస uint32_t z_vrfy_k_timer_స్థితి_get(నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_get(timer);
+	తిరిగి z_impl_k_timer_స్థితి_get(timer);
 }
-#include <zephyr/syscalls/k_timer_status_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_timer_status_get_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
+uint32_t z_impl_k_timer_స్థితి_sync(నిర్మాణం k_timer *timer)
 {
-	__ASSERT(!arch_is_in_isr(), "");
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, status_sync, timer);
+	__ASSERT(!arch_is_లోపల_isr(), "");
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_timer, స్థితి_sync, timer);
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
-		uint32_t result;
+	ఒకవేళ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+		uint32_t ఫలితం;
 
-		do {
-			unsigned int key = irq_lock();
+		చేయి {
+			గుర్తులేని పూర్ణాంకం కీలకం = irq_తాళం();
 
-			if (!z_is_inactive_timeout(&timer->timeout)) {
-				result = *(volatile uint32_t *)&timer->status;
-				timer->status = 0U;
-				if (result > 0) {
-					irq_unlock(key);
-					break;
-				} else {
-					k_cpu_atomic_idle(key);
+			ఒకవేళ (!z_is_inactive_timeout(&timer->timeout)) {
+				ఫలితం = *(అస్థిర uint32_t *)&timer->స్థితి_2;
+				timer->స్థితి_2 = 0U;
+				ఒకవేళ (ఫలితం > 0) {
+					irq_unlock(కీలకం);
+					ఆపు;
+				} లేకపోతే {
+					k_cpu_atomic_idle(కీలకం);
 				}
-			} else {
-				result = timer->status;
-				irq_unlock(key);
-				break;
+			} లేకపోతే {
+				ఫలితం = timer->స్థితి_2;
+				irq_unlock(కీలకం);
+				ఆపు;
 			}
-		} while (true);
+		} అయితే (true);
 
-		return result;
+		తిరిగి ఫలితం;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
-	uint32_t result = timer->status;
+	k_spinlock_కీలకం_t కీలకం = k_spin_తాళం(&timer_తాళం);
+	uint32_t ఫలితం = timer->స్థితి_2;
 
-	if (result == 0U) {
-		if (!z_is_inactive_timeout(&timer->timeout)) {
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_timer, status_sync, timer, K_FOREVER);
+	ఒకవేళ (ఫలితం == 0U) {
+		ఒకవేళ (!z_is_inactive_timeout(&timer->timeout)) {
+			SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_timer, స్థితి_sync, timer, K_FOREVER);
 
 			/* wait for timer to expire or stop */
-			(void)z_pend_curr(&timer_lock, key, &timer->wait_q, K_FOREVER);
+			(శూన్య)z_pend_curr(&timer_తాళం, కీలకం, &timer->wait_q, K_FOREVER);
 
 			/* get updated timer status */
-			key = k_spin_lock(&timer_lock);
-			result = timer->status;
-		} else {
+			కీలకం = k_spin_తాళం(&timer_తాళం);
+			ఫలితం = timer->స్థితి_2;
+		} లేకపోతే {
 			/* timer is already stopped */
 		}
-	} else {
+	} లేకపోతే {
 		/* timer has already expired at least once */
 	}
 
-	timer->status = 0U;
-	k_spin_unlock(&timer_lock, key);
+	timer->స్థితి_2 = 0U;
+	k_spin_unlock(&timer_తాళం, కీలకం);
 
 	/**
 	 * @note	New tracing hook
 	 */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, status_sync, timer, result);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_timer, స్థితి_sync, timer, ఫలితం);
 
-	return result;
+	తిరిగి ఫలితం;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_sync(struct k_timer *timer)
+#నిర్వచితమైతే CONFIG_USERSPACE
+స్థిర అంతఃవరుస uint32_t z_vrfy_k_timer_స్థితి_sync(నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_sync(timer);
+	తిరిగి z_impl_k_timer_స్థితి_sync(timer);
 }
-#include <zephyr/syscalls/k_timer_status_sync_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_timer_status_sync_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_remaining_ticks(
-						const struct k_timer *timer)
+స్థిర అంతఃవరుస k_ticks_t z_vrfy_k_timer_మిగిలిన_ticks(
+						స్థిరరాశి నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_remaining_ticks(timer);
+	తిరిగి z_impl_k_timer_మిగిలిన_ticks(timer);
 }
-#include <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_expires_ticks(
-						const struct k_timer *timer)
+స్థిర అంతఃవరుస k_ticks_t z_vrfy_k_timer_expires_ticks(
+						స్థిరరాశి నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_expires_ticks(timer);
+	తిరిగి z_impl_k_timer_expires_ticks(timer);
 }
-#include <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
 
-static inline void *z_vrfy_k_timer_user_data_get(const struct k_timer *timer)
+స్థిర అంతఃవరుస శూన్య *z_vrfy_k_timer_user_దత్తాంశం_get(స్థిరరాశి నిర్మాణం k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_user_data_get(timer);
+	తిరిగి z_impl_k_timer_user_దత్తాంశం_get(timer);
 }
-#include <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
 
-static inline void z_vrfy_k_timer_user_data_set(struct k_timer *timer,
-						void *user_data)
+స్థిర అంతఃవరుస శూన్య z_vrfy_k_timer_user_దత్తాంశం_సమితి(నిర్మాణం k_timer *timer,
+						శూన్య *user_దత్తాంశం)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	z_impl_k_timer_user_data_set(timer, user_data);
+	z_impl_k_timer_user_దత్తాంశం_సమితి(timer, user_దత్తాంశం);
 }
-#include <zephyr/syscalls/k_timer_user_data_set_mrsh.c>
+#అన్తర్భావ <zephyr/syscalls/k_timer_user_data_set_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#అయితే_ముగింపు /* CONFIG_USERSPACE */

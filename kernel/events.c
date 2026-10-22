@@ -22,64 +22,64 @@
  * @brief Kernel event object
  */
 
-#include <zephyr/kernel.h>
+#అన్తర్భావ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#అన్తర్భావ <zephyr/toolchain.h>
+#అన్తర్భావ <zephyr/sys/dlist.h>
+#అన్తర్భావ <zephyr/init.h>
+#అన్తర్భావ <zephyr/internal/syscall_handler.h>
+#అన్తర్భావ <zephyr/tracing/tracing.h>
+#అన్తర్భావ <zephyr/sys/check.h>
 /* private kernel APIs */
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
+#అన్తర్భావ <wait_q.h>
+#అన్తర్భావ <ksched.h>
+#అన్తర్భావ <scheduler.h>
 
-#define K_EVENT_WAIT_ANY      0x00   /* Wait for any events */
-#define K_EVENT_WAIT_ALL      0x01   /* Wait for all events */
-#define K_EVENT_WAIT_MASK     0x01
+#నిర్వచించు K_EVENT_WAIT_ANY      0x00   /* Wait for any events */
+#నిర్వచించు K_EVENT_WAIT_ALL      0x01   /* Wait for all events */
+#నిర్వచించు K_EVENT_WAIT_ముసుగు     0x01
 
-#define K_EVENT_OPTION_RESET  0x02   /* Reset events prior to waiting */
-#define K_EVENT_OPTION_CLEAR  0x04   /* Clear events that are received */
+#నిర్వచించు K_EVENT_OPTION_RESET  0x02   /* Reset events prior to waiting */
+#నిర్వచించు K_EVENT_OPTION_CLEAR  0x04   /* Clear events that are received */
 
-struct event_walk_data {
-#ifdef CONFIG_WAITQ_SCALABLE
-	struct k_thread  *head;
-#endif /* CONFIG_WAITQ_SCALABLE */
+నిర్మాణం event_walk_దత్తాంశం {
+#నిర్వచితమైతే CONFIG_WAITQ_SCALABLE
+	నిర్మాణం k_thread  *తల;
+#అయితే_ముగింపు /* CONFIG_WAITQ_SCALABLE */
 	uint32_t events;
 	uint32_t clear_events;
 };
 
-#ifdef CONFIG_OBJ_CORE_EVENT
-K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_EVENT */
+#నిర్వచితమైతే CONFIG_OBJ_CORE_EVENT
+K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, ఖాళీ);
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_EVENT */
 
-void z_impl_k_event_init(struct k_event *event)
+శూన్య z_impl_k_event_init(నిర్మాణం k_event *event)
 {
-	__ASSERT_NO_MSG(!arch_is_in_isr());
+	__ASSERT_NO_MSG(!arch_is_లోపల_isr());
 
 	event->events = 0;
-	event->lock = (struct k_spinlock) {};
+	event->తాళం = (నిర్మాణం k_spinlock) {};
 
-	SYS_PORT_TRACING_OBJ_INIT(k_event, event);
+	SYS_పోర్టు_TRACING_OBJ_INIT(k_event, event);
 
 	z_waitq_init(&event->wait_q);
 
 	k_object_init(event);
 
-#ifdef CONFIG_OBJ_CORE_EVENT
+#నిర్వచితమైతే CONFIG_OBJ_CORE_EVENT
 	k_obj_core_init_and_link(K_OBJ_CORE(event), &obj_type_event);
-#endif /* CONFIG_OBJ_CORE_EVENT */
+#అయితే_ముగింపు /* CONFIG_OBJ_CORE_EVENT */
 }
 
-#ifdef CONFIG_USERSPACE
-void z_vrfy_k_event_init(struct k_event *event)
+#నిర్వచితమైతే CONFIG_USERSPACE
+శూన్య z_vrfy_k_event_init(నిర్మాణం k_event *event)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(event, K_OBJ_EVENT));
 	z_impl_k_event_init(event);
 }
-#include <zephyr/syscalls/k_event_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_init_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
 /**
  * @brief determine the set of events that have been satisfied
@@ -93,59 +93,59 @@ void z_vrfy_k_event_init(struct k_event *event)
  *
  * @return event bits that satisfy the wait condition or zero
  */
-static uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
-					unsigned int wait_condition)
+స్థిర uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
+					గుర్తులేని పూర్ణాంకం wait_condition)
 {
-	uint32_t match = current & desired;
+	uint32_t సరిపోలిక = current & desired;
 
-	if ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
+	ఒకవేళ ((wait_condition == K_EVENT_WAIT_ALL) && (సరిపోలిక != desired)) {
 		/* special case for K_EVENT_WAIT_ALL */
-		return 0;
+		తిరిగి 0;
 	}
 
 	/* return the matched events for any wait condition */
-	return match;
+	తిరిగి సరిపోలిక;
 }
 
-#ifdef CONFIG_WAITQ_SCALABLE
-static void event_post_walk_op(int status, void *data)
+#నిర్వచితమైతే CONFIG_WAITQ_SCALABLE
+స్థిర శూన్య event_post_walk_op(పూర్ణాంకం స్థితి_2, శూన్య *దత్తాంశం)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
 	 * to call here because this walk_op callback
 	 * is invoked with the scheduler spinlock held.
 	 */
-	ARG_UNUSED(status);
-	struct event_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ARG_వాడని(స్థితి_2);
+	నిర్మాణం event_walk_దత్తాంశం *walk_దత్తాంశం = దత్తాంశం;
+	నిర్మాణం k_thread *thread, *తదుపరి;
 
-	thread = walk_data->head;
+	thread = walk_దత్తాంశం->తల;
 
-	while (thread != NULL) {
-		next = thread->next_wake_link;
+	అయితే (thread != ఖాళీ) {
+		తదుపరి = thread->తదుపరి_wake_link;
 
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_విలువ_సమితి(thread, 0);
 		z_sched_wake_thread_locked(thread);
 
-		thread = next;
+		thread = తదుపరి;
 	}
 }
-#define EVENT_POST_WALK_OP_FN event_post_walk_op
-#else /* CONFIG_WAITQ_SCALABLE */
-#define EVENT_POST_WALK_OP_FN NULL
-#endif /* CONFIG_WAITQ_SCALABLE */
+#నిర్వచించు EVENT_POST_WALK_OP_FN event_post_walk_op
+#లేకపోతే /* CONFIG_WAITQ_SCALABLE */
+#నిర్వచించు EVENT_POST_WALK_OP_FN ఖాళీ
+#అయితే_ముగింపు /* CONFIG_WAITQ_SCALABLE */
 
-static int event_walk_op(struct k_thread *thread, void *data)
+స్థిర పూర్ణాంకం event_walk_op(నిర్మాణం k_thread *thread, శూన్య *దత్తాంశం)
 {
-	uint32_t match;
-	unsigned int wait_condition;
-	struct event_walk_data *event_data = data;
+	uint32_t సరిపోలిక;
+	గుర్తులేని పూర్ణాంకం wait_condition;
+	నిర్మాణం event_walk_దత్తాంశం *event_దత్తాంశం = దత్తాంశం;
 
-	wait_condition = thread->event_options & K_EVENT_WAIT_MASK;
+	wait_condition = thread->event_options & K_EVENT_WAIT_ముసుగు;
 
-	match = are_wait_conditions_met(thread->events, event_data->events,
+	సరిపోలిక = are_wait_conditions_met(thread->events, event_దత్తాంశం->events,
 					wait_condition);
-	if (match != 0) {
+	ఒకవేళ (సరిపోలిక != 0) {
 		/*
 		 * The wait conditions have been satisfied. Set the
 		 * received events then wake thread now if allowed,
@@ -153,44 +153,44 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 *
 		 * NOTE: thread event options can consume an event
 		 */
-		thread->events = match;
-		if (thread->event_options & K_EVENT_OPTION_CLEAR) {
-			event_data->clear_events |= match;
+		thread->events = సరిపోలిక;
+		ఒకవేళ (thread->event_options & K_EVENT_OPTION_CLEAR) {
+			event_దత్తాంశం->clear_events |= సరిపోలిక;
 		}
-		(void)z_try_abort_thread_timeout(thread);
+		(శూన్య)z_try_abort_thread_timeout(thread);
 
-#ifndef CONFIG_WAITQ_SCALABLE
+#నిర్వచితం_కాకపోతే CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
 		 * to call here because this walk_op callback
 		 * is invoked with the scheduler spinlock held.
 		 */
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_విలువ_సమితి(thread, 0);
 		z_sched_wake_thread_locked(thread);
-#else /* !CONFIG_WAITQ_SCALABLE */
-		thread->next_wake_link = event_data->head;
-		event_data->head = thread;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+#లేకపోతే /* !CONFIG_WAITQ_SCALABLE */
+		thread->తదుపరి_wake_link = event_దత్తాంశం->తల;
+		event_దత్తాంశం->తల = thread;
+#అయితే_ముగింపు /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	తిరిగి 0;
 }
 
-static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
-				  uint32_t events_mask)
+స్థిర uint32_t k_event_post_అంతర్గత(నిర్మాణం k_event *event, uint32_t events,
+				  uint32_t events_ముసుగు)
 {
-	k_spinlock_key_t  key;
-	struct event_walk_data data;
-	uint32_t previous_events;
+	k_spinlock_కీలకం_t  కీలకం;
+	నిర్మాణం event_walk_దత్తాంశం దత్తాంశం;
+	uint32_t మునుపటి_events;
 
-	key = k_spin_lock(&event->lock);
+	కీలకం = k_spin_తాళం(&event->తాళం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
-					events_mask);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
+					events_ముసుగు);
 
-	previous_events = event->events & events_mask;
-	events = (event->events & ~events_mask) |
-		 (events & events_mask);
+	మునుపటి_events = event->events & events_ముసుగు;
+	events = (event->events & ~events_ముసుగు) |
+		 (events & events_ముసుగు);
 
 	/*
 	 * Posting an event has the potential to wake multiple pended threads.
@@ -203,128 +203,128 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	 * 2. Walk the resulting linked list and wake each of the threads.
 	 */
 
-#ifdef CONFIG_WAITQ_SCALABLE
-	data.head = NULL;
-#endif /* CONFIG_WAITQ_SCALABLE */
-	data.events = events;
-	data.clear_events = 0;
-	z_sched_waitq_walk(&event->wait_q, event_walk_op, EVENT_POST_WALK_OP_FN, &data);
+#నిర్వచితమైతే CONFIG_WAITQ_SCALABLE
+	దత్తాంశం.తల = ఖాళీ;
+#అయితే_ముగింపు /* CONFIG_WAITQ_SCALABLE */
+	దత్తాంశం.events = events;
+	దత్తాంశం.clear_events = 0;
+	z_sched_waitq_walk(&event->wait_q, event_walk_op, EVENT_POST_WALK_OP_FN, &దత్తాంశం);
 
 	/* stash any events not consumed */
-	event->events = data.events & ~data.clear_events;
+	event->events = దత్తాంశం.events & ~దత్తాంశం.clear_events;
 
-	z_reschedule(&event->lock, key);
+	z_reschedule(&event->తాళం, కీలకం);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
-				       events_mask);
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
+				       events_ముసుగు);
 
-	return previous_events;
+	తిరిగి మునుపటి_events;
 }
 
-uint32_t z_impl_k_event_post(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_post(నిర్మాణం k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events);
+	తిరిగి k_event_post_అంతర్గత(event, events, events);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_post(struct k_event *event, uint32_t events)
-{
-	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_post(event, events);
-}
-#include <zephyr/syscalls/k_event_post_mrsh.c>
-#endif /* CONFIG_USERSPACE */
-
-uint32_t z_impl_k_event_set(struct k_event *event, uint32_t events)
-{
-	return k_event_post_internal(event, events, ~0);
-}
-
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set(struct k_event *event, uint32_t events)
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_post(నిర్మాణం k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set(event, events);
+	తిరిగి z_impl_k_event_post(event, events);
 }
-#include <zephyr/syscalls/k_event_set_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_post_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_set_masked(struct k_event *event, uint32_t events,
-			       uint32_t events_mask)
+uint32_t z_impl_k_event_సమితి(నిర్మాణం k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events_mask);
+	తిరిగి k_event_post_అంతర్గత(event, events, ~0);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set_masked(struct k_event *event, uint32_t events,
-			       uint32_t events_mask)
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_సమితి(నిర్మాణం k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set_masked(event, events, events_mask);
+	తిరిగి z_impl_k_event_సమితి(event, events);
 }
-#include <zephyr/syscalls/k_event_set_masked_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_set_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_clear(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_సమితి_masked(నిర్మాణం k_event *event, uint32_t events,
+			       uint32_t events_ముసుగు)
 {
-	return k_event_post_internal(event, 0, events);
+	తిరిగి k_event_post_అంతర్గత(event, events, events_ముసుగు);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_clear(struct k_event *event, uint32_t events)
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_సమితి_masked(నిర్మాణం k_event *event, uint32_t events,
+			       uint32_t events_ముసుగు)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_clear(event, events);
+	తిరిగి z_impl_k_event_సమితి_masked(event, events, events_ముసుగు);
 }
-#include <zephyr/syscalls/k_event_clear_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_set_masked_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
-				      unsigned int options, k_timeout_t timeout)
+uint32_t z_impl_k_event_clear(నిర్మాణం k_event *event, uint32_t events)
+{
+	తిరిగి k_event_post_అంతర్గత(event, 0, events);
+}
+
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_clear(నిర్మాణం k_event *event, uint32_t events)
+{
+	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
+	తిరిగి z_impl_k_event_clear(event, events);
+}
+#అన్తర్భావ <zephyr/syscalls/k_event_clear_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
+
+స్థిర uint32_t k_event_wait_అంతర్గత(నిర్మాణం k_event *event, uint32_t events,
+				      గుర్తులేని పూర్ణాంకం options, k_timeout_t timeout)
 {
 	uint32_t  rv = 0;
 
-	__ASSERT(((arch_is_in_isr() == false) ||
+	__ASSERT(((arch_is_లోపల_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
+	SYS_పోర్టు_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
 					options, timeout);
 
-	if ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+	ఒకవేళ ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
+		తిరిగి 0;
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&event->lock);
+	k_spinlock_కీలకం_t  కీలకం = k_spin_తాళం(&event->తాళం);
 
-	if (options & K_EVENT_OPTION_RESET) {
+	ఒకవేళ (options & K_EVENT_OPTION_RESET) {
 		event->events = 0;
 	}
 
-	if (events == 0) {
-		k_spin_unlock(&event->lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+	ఒకవేళ (events == 0) {
+		k_spin_unlock(&event->తాళం, కీలకం);
+		SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
+		తిరిగి 0;
 	}
 
-	unsigned int wait_condition = options & K_EVENT_WAIT_MASK;
-	struct k_thread *thread = k_sched_current_thread_query();
+	గుర్తులేని పూర్ణాంకం wait_condition = options & K_EVENT_WAIT_ముసుగు;
+	నిర్మాణం k_thread *thread = k_sched_current_thread_query();
 
 	/* Test if the wait conditions have already been met. */
 	rv = are_wait_conditions_met(events, event->events, wait_condition);
-	if (rv != 0) {
+	ఒకవేళ (rv != 0) {
 		/* clear the events that are matched */
-		if (options & K_EVENT_OPTION_CLEAR) {
+		ఒకవేళ (options & K_EVENT_OPTION_CLEAR) {
 			event->events &= ~rv;
 		}
 
-		k_spin_unlock(&event->lock, key);
-		goto out;
+		k_spin_unlock(&event->తాళం, కీలకం);
+		వెళ్ళు బహిర్గతం;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&event->lock, key);
-		goto out;
+	ఒకవేళ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&event->తాళం, కీలకం);
+		వెళ్ళు బహిర్గతం;
 	}
 
 	/*
@@ -335,97 +335,97 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	thread->events = events;
 	thread->event_options = options;
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
+	SYS_పోర్టు_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
 					   options, timeout);
 
-	if (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
+	ఒకవేళ (z_pend_curr(&event->తాళం, కీలకం, &event->wait_q, timeout) == 0) {
 		/* Retrieve the set of events that woke the thread */
 		rv = thread->events;
 	}
 
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
+బహిర్గతం:
+	SYS_పోర్టు_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
 
-	return rv;
+	తిరిగి rv;
 }
 
 /**
  * Wait for any of the specified events
  */
-uint32_t z_impl_k_event_wait(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait(నిర్మాణం k_event *event, uint32_t events,
 			     bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? K_EVENT_OPTION_RESET : 0;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	తిరిగి k_event_wait_అంతర్గత(event, events, options, timeout);
 }
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait(struct k_event *event, uint32_t events,
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait(నిర్మాణం k_event *event, uint32_t events,
 				    bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait(event, events, reset, timeout);
+	తిరిగి z_impl_k_event_wait(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_wait_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
 /**
  * Wait for all of the specified events
  */
-uint32_t z_impl_k_event_wait_all(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all(నిర్మాణం k_event *event, uint32_t events,
 				 bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : K_EVENT_WAIT_ALL;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	తిరిగి k_event_wait_అంతర్గత(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all(struct k_event *event, uint32_t events,
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_all(నిర్మాణం k_event *event, uint32_t events,
 					bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all(event, events, reset, timeout);
+	తిరిగి z_impl_k_event_wait_all(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_wait_all_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_సురక్షిత(నిర్మాణం k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR | K_EVENT_OPTION_RESET)
 				 : K_EVENT_OPTION_CLEAR;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	తిరిగి k_event_wait_అంతర్గత(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_safe(struct k_event *event, uint32_t events,
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_సురక్షిత(నిర్మాణం k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_safe(event, events, reset, timeout);
+	తిరిగి z_impl_k_event_wait_సురక్షిత(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_safe_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_wait_safe_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all_సురక్షిత(నిర్మాణం k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR |
 				    K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : (K_EVENT_OPTION_CLEAR | K_EVENT_WAIT_ALL);
 
-	return k_event_wait_internal(event, events, options, timeout);
+	తిరిగి k_event_wait_అంతర్గత(event, events, options, timeout);
 }
 
-#ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+#నిర్వచితమైతే CONFIG_USERSPACE
+uint32_t z_vrfy_k_event_wait_all_సురక్షిత(నిర్మాణం k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all_safe(event, events, reset, timeout);
+	తిరిగి z_impl_k_event_wait_all_సురక్షిత(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#అన్తర్భావ <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
+#అయితే_ముగింపు /* CONFIG_USERSPACE */
