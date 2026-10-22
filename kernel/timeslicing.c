@@ -11,8 +11,8 @@
 #include <ipi.h>
 #include <timeslicing.h>
 
-static int slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
-static int slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
+static цяло slice_ticks = DIV_ROUND_UP(CONFIG_TIMESLICE_SIZE * Z_HZ_ticks, Z_HZ_ms);
+static цяло slice_max_prio = CONFIG_TIMESLICE_PRIORITY;
 static struct _timeout slice_timeouts[CONFIG_MP_MAX_NUM_CPUS];
 
 /* Timeouts can expire on another CPU, so each CPU's flag must be atomic. */
@@ -27,72 +27,72 @@ static atomic_t slice_expired[CONFIG_MP_MAX_NUM_CPUS];
 struct k_thread *pending_current;
 #endif
 
-static inline int slice_time(struct k_thread *thread)
+static inline цяло slice_time(struct k_thread *thread)
 {
-	int ret = slice_ticks;
+	цяло ret = slice_ticks;
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
+	ако (thread->base.slice_ticks != 0) {
 		ret = thread->base.slice_ticks;
 	}
-#else
+#иначе
 	ARG_UNUSED(thread);
 #endif
-	return ret;
+	върни ret;
 }
 
-static int z_time_slice_size(struct k_thread *thread)
+static цяло z_time_slice_size(struct k_thread *thread)
 {
-	if (z_is_thread_prevented_from_running(thread) ||
+	ако (z_is_thread_prevented_from_running(thread) ||
 	    z_is_idle_thread_object(thread) ||
 	    (slice_time(thread) == 0)) {
-		return 0;
+		върни 0;
 	}
 
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	if (thread->base.slice_ticks != 0) {
-		return thread->base.slice_ticks;
+	ако (thread->base.slice_ticks != 0) {
+		върни thread->base.slice_ticks;
 	}
 #endif
 
-	if (thread_is_preemptible(thread) &&
+	ако (thread_is_preemptible(thread) &&
 	    !z_is_prio_higher(thread->base.prio, slice_max_prio)) {
-		return slice_ticks;
+		върни slice_ticks;
 	}
 
-	return 0;
+	върни 0;
 }
 
 static void slice_timeout(struct _timeout *timeout)
 {
-	int cpu = ARRAY_INDEX(slice_timeouts, timeout);
+	цяло cpu = ARRAY_INDEX(slice_timeouts, timeout);
 
 	atomic_set(&slice_expired[cpu], 1);
 
 	/* We need an IPI if we just handled a timeslice expiration
 	 * for a different CPU.
 	 */
-	if (cpu != _current_cpu->id) {
+	ако (cpu != _current_cpu->id) {
 		flag_ipi(IPI_CPU_MASK(cpu));
 	}
 }
 
-static void slice_reset(int slice_size)
+static void slice_reset(цяло slice_size)
 {
-	int cpu = _current_cpu->id;
+	цяло cpu = _current_cpu->id;
 
 	/* Best-effort cancel: if the slice timeout is already in flight,
 	 * its handler only flips slice_expired[cpu] (which we clear below)
 	 * and possibly raises an IPI -- harmless either way.
 	 */
 	(void)z_try_abort_timeout(&slice_timeouts[cpu]);
-	if (slice_size != 0) {
+	ако (slice_size != 0) {
 		/* When invoked because the slicer just fired (this CPU or
 		 * via IPI from another), we're at a tick edge but past the
 		 * announce window, so subtract 1 to cancel z_add_timeout()'s
 		 * "+1" round-up and land at exactly slice_size ticks.
 		 */
-		int delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
+		цяло delay = atomic_get(&slice_expired[cpu]) ? slice_size - 1 : slice_size;
 
 		z_add_timeout(&slice_timeouts[cpu], slice_timeout,
 			      K_TICKS(delay));
@@ -108,14 +108,14 @@ void z_time_slice_reset(struct k_thread *thread)
 static ALWAYS_INLINE bool thread_defines_time_slice_size(struct k_thread *thread)
 {
 #ifdef CONFIG_TIMESLICE_PER_THREAD
-	return (thread->base.slice_ticks != 0);
-#else  /* !CONFIG_TIMESLICE_PER_THREAD */
+	върни (thread->base.slice_ticks != 0);
+#иначе  /* !CONFIG_TIMESLICE_PER_THREAD */
 	ARG_UNUSED(thread);
-	return false;
+	върни false;
 #endif /* !CONFIG_TIMESLICE_PER_THREAD */
 }
 
-void k_sched_time_slice_set(int32_t slice, int prio)
+void k_sched_time_slice_set(int32_t slice, цяло prio)
 {
 	Z_SCHED_SPINLOCK {
 
@@ -128,7 +128,7 @@ void k_sched_time_slice_set(int32_t slice, int prio)
 		 * take precedence over the global time slice size.
 		 */
 
-		if (!thread_defines_time_slice_size(_current)) {
+		ако (!thread_defines_time_slice_size(_current)) {
 			z_time_slice_reset(_current);
 		}
 	}
@@ -155,34 +155,34 @@ void z_time_slice(void)
 	 * time slice expires. Non-atomic context switches must still take
 	 * the scheduler lock to synchronize pending_current.
 	 */
-	if (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
+	ако (!IS_ENABLED(CONFIG_SWAP_NONATOMIC) &&
 	    !atomic_get(&slice_expired[_current_cpu->id])) {
-		return;
+		върни;
 	}
 
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 	struct k_thread *curr = _current;
 
 #ifdef CONFIG_SWAP_NONATOMIC
-	if (pending_current == curr) {
+	ако (pending_current == curr) {
 		z_time_slice_reset(curr);
 		z_sched_spinlock_unlock(key);
-		return;
+		върни;
 	}
 	pending_current = NULL;
 #endif
 
-	int slice_size = 0;
+	цяло slice_size = 0;
 
-	if (atomic_get(&slice_expired[_current_cpu->id])) {
+	ако (atomic_get(&slice_expired[_current_cpu->id])) {
 		slice_size = z_time_slice_size(curr);
 	}
 
-	if (slice_size != 0) {
+	ако (slice_size != 0) {
 #ifdef CONFIG_TIMESLICE_PER_THREAD
 		k_thread_timeslice_fn_t handler = curr->base.slice_expired;
 
-		if (handler != NULL) {
+		ако (handler != NULL) {
 			z_sched_spinlock_unlock(key);
 			handler(curr, curr->base.slice_data);
 			key = z_sched_spinlock_lock();
@@ -194,7 +194,7 @@ void z_time_slice(void)
 			slice_size = z_time_slice_size(curr);
 		}
 #endif
-		if (!z_is_thread_prevented_from_running(curr)) {
+		ако (!z_is_thread_prevented_from_running(curr)) {
 			move_current_to_end_of_prio_q();
 			/* If the rotation kept curr at the front (no other
 			 * runnable thread of equal-or-higher priority is
@@ -206,11 +206,11 @@ void z_time_slice(void)
 #ifdef CONFIG_SMP
 			struct k_thread *next = runq_best();
 
-			if (next == NULL || z_is_idle_thread_object(next)) {
+			ако (next == NULL || z_is_idle_thread_object(next)) {
 				slice_reset(slice_size);
 			}
-#else
-			if (_kernel.ready_q.cache == curr) {
+#иначе
+			ако (_kernel.ready_q.cache == curr) {
 				slice_reset(slice_size);
 			}
 #endif

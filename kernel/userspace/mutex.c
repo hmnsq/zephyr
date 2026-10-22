@@ -13,11 +13,11 @@ static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
 	struct k_object *obj;
 
 	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	ако ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		върни NULL;
 	}
 
-	return obj->data.mutex;
+	върни obj->data.mutex;
 }
 
 static bool check_sys_mutex_addr(struct sys_mutex *addr)
@@ -26,48 +26,48 @@ static bool check_sys_mutex_addr(struct sys_mutex *addr)
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	върни K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+цяло z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
 {
 	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	ако (kernel_mutex == NULL) {
+		върни -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	върни k_mutex_lock(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+static inline цяло z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ако (check_sys_mutex_addr(mutex)) {
+		върни -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	върни z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+цяло z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
 {
 	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	ако ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
+		върни -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	върни k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+static inline цяло z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	ако (check_sys_mutex_addr(mutex)) {
+		върни -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	върни z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
 #include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>

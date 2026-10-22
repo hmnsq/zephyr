@@ -58,10 +58,10 @@ struct futex_walk_data {
 	 * Number of threads that have been woken up
 	 * This is an output of the walk and must be initialized to zero
 	 */
-	int woken;
+	цяло woken;
 };
 
-static void futex_post_walk_op(int status, void *data)
+static void futex_post_walk_op(цяло status, void *data)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
@@ -75,14 +75,14 @@ static void futex_post_walk_op(int status, void *data)
 	thread = walk_data->head;
 
 	/* Wake up threads if any */
-	while (thread != NULL) {
+	докато (thread != NULL) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * walk_data->head will only ever be non-NULL for wake-one,
 		 * which has no "next" thread to wake by definition.
 		 */
 		next = NULL;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+#иначе  /* !CONFIG_WAITQ_SCALABLE */
 		next = thread->next_wake_link;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
@@ -95,14 +95,14 @@ static void futex_post_walk_op(int status, void *data)
 	}
 }
 
-static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
+static цяло futex_wake_one_walk_op(struct k_thread *thread, void *data)
 {
 	struct futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	ако (thread->futex_pointer == walk_data->futex) {
 		/* Find the highest priority thread */
-		if (walk_data->head == NULL ||
+		ако (walk_data->head == NULL ||
 		    z_is_prio_higher(thread->base.prio, walk_data->head->base.prio)) {
 			/*
 			 * next_wake_link is initialized to NULL in z_impl_k_futex_wait so
@@ -112,15 +112,15 @@ static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
 		}
 	}
 
-	return 0;
+	върни 0;
 }
 
-static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
+static цяло futex_wake_all_walk_op(struct k_thread *thread, void *data)
 {
 	struct futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	ако (thread->futex_pointer == walk_data->futex) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
@@ -131,16 +131,16 @@ static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
 		arch_thread_return_value_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+#иначе  /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = walk_data->head;
 		walk_data->head = thread;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	върни 0;
 }
 
-int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
+цяло z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 {
 	k_spinlock_key_t key;
 	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
@@ -165,35 +165,35 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 			   (wake_all) ? futex_wake_all_walk_op : futex_wake_one_walk_op,
 			   futex_post_walk_op, &walk_data);
 
-	if (walk_data.woken == 0) {
+	ако (walk_data.woken == 0) {
 		k_spin_unlock(&futex_lock, key);
-	} else {
+	} иначе {
 		z_reschedule(&futex_lock, key);
 	}
 
-	return walk_data.woken;
+	върни walk_data.woken;
 }
 
-static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
+static inline цяло z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	ако (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
+		върни -EACCES;
 	}
 
-	return z_impl_k_futex_wake(futex, wake_all);
+	върни z_impl_k_futex_wake(futex, wake_all);
 }
 #include <zephyr/syscalls/k_futex_wake_mrsh.c>
 
-int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+цяло z_impl_k_futex_wait(struct k_futex *futex, цяло expected, k_timeout_t timeout)
 {
-	int ret;
+	цяло ret;
 	k_spinlock_key_t key;
 
 	key = k_spin_lock(&futex_lock);
 
-	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
+	ако (atomic_get(&futex->val) != (atomic_val_t)expected) {
 		k_spin_unlock(&futex_lock, key);
-		return -EAGAIN;
+		върни -EAGAIN;
 	}
 
 	/*
@@ -205,19 +205,19 @@ int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout
 	_current->next_wake_link = NULL;
 #endif /* CONFIG_WAITQ_SCALABLE */
 	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
-	if (ret == -EAGAIN) {
+	ако (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}
 
-	return ret;
+	върни ret;
 }
 
-static inline int z_vrfy_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+static inline цяло z_vrfy_k_futex_wait(struct k_futex *futex, цяло expected, k_timeout_t timeout)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	ако (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
+		върни -EACCES;
 	}
 
-	return z_impl_k_futex_wait(futex, expected, timeout);
+	върни z_impl_k_futex_wait(futex, expected, timeout);
 }
 #include <zephyr/syscalls/k_futex_wait_mrsh.c>

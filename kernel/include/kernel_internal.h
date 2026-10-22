@@ -26,11 +26,11 @@ extern "C" {
 #endif
 
 /* Initialize per-CPU kernel data */
-void z_init_cpu(int id);
+void z_init_cpu(цяло id);
 
 /* Initialize a thread */
-void z_init_thread_base(struct _thread_base *thread_base, int priority,
-			uint32_t initial_state, unsigned int options);
+void z_init_thread_base(struct _thread_base *thread_base, цяло priority,
+			uint32_t initial_state, unsigned цяло options);
 
 
 FUNC_NORETURN void z_cstart(void);
@@ -79,7 +79,7 @@ extern char *z_setup_new_thread(struct k_thread *new_thread,
 				k_thread_stack_t *stack, size_t stack_size,
 				k_thread_entry_t entry,
 				void *p1, void *p2, void *p3,
-				int prio, uint32_t options, const char *name);
+				цяло prio, uint32_t options, const char *name);
 
 /**
  * @brief Allocate aligned memory from the current thread's resource pool
@@ -118,7 +118,7 @@ void *z_thread_malloc(size_t size);
  * z_swap() is in use it's a simple inline provided by the kernel.
  */
 static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
+arch_thread_return_value_set(struct k_thread *thread, unsigned цяло value)
 {
 	thread->swap_retval = value;
 }
@@ -126,7 +126,7 @@ arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
 
 static ALWAYS_INLINE void
 z_thread_return_value_set_with_data(struct k_thread *thread,
-				   unsigned int value,
+				   unsigned цяло value,
 				   void *data)
 {
 	arch_thread_return_value_set(thread, value);
@@ -142,8 +142,8 @@ extern void smp_timer_init(void);
 
 extern void z_early_rand_get(uint8_t *buf, size_t length);
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-extern int z_stack_adjust_initialized;
+#ако defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
+extern цяло z_stack_adjust_initialized;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
 #ifdef CONFIG_MULTITHREADING
@@ -160,7 +160,7 @@ extern uint8_t *z_priv_stack_find(k_thread_stack_t *stack);
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 /* Calculate stack usage. */
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
+цяло z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
 
 #ifdef CONFIG_USERSPACE
 bool z_stack_is_user_capable(k_thread_stack_t *stack);
@@ -190,13 +190,13 @@ struct gdb_ctx;
 /* Should be called by the arch layer. This is the gdbstub main loop
  * and synchronously communicate with gdb on host.
  */
-extern int z_gdb_main_loop(struct gdb_ctx *ctx);
+extern цяло z_gdb_main_loop(struct gdb_ctx *ctx);
 #endif /* CONFIG_GDBSTUB */
 
 #ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
 void z_thread_mark_switched_in(void);
 void z_thread_mark_switched_out(void);
-#else
+#иначе
 
 /**
  * @brief Called after a thread has been selected to run
@@ -267,22 +267,22 @@ void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
 #endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_reset(struct k_obj_core *obj_core);
-int z_thread_stats_disable(struct k_obj_core *obj_core);
-int z_thread_stats_enable(struct k_obj_core *obj_core);
+цяло z_thread_stats_raw(struct k_obj_core *obj_core, void *stats);
+цяло z_thread_stats_query(struct k_obj_core *obj_core, void *stats);
+цяло z_thread_stats_reset(struct k_obj_core *obj_core);
+цяло z_thread_stats_disable(struct k_obj_core *obj_core);
+цяло z_thread_stats_enable(struct k_obj_core *obj_core);
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats);
+цяло z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats);
+цяло z_cpu_stats_query(struct k_obj_core *obj_core, void *stats);
 
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
+цяло z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats);
+цяло z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#if defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
+#ако defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
 /**
  * Perform cleanup at the end of k_thread_abort().
  *
