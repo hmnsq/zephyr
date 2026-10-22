@@ -20,78 +20,78 @@
  * translation unit. The per-node helpers live in kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/dlist.h>
+#அந்தர்பாவ <zephyr/sys/dlist.h>
 
-static sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
+நிலையான sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
 
-static inline struct _timeout *z_timeout_q_first(void)
+நிலையான உள்வரி கட்டமைப்பு _timeout *z_timeout_q_first(வெறுமை)
 {
 	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	திரும்பு (t == வெற்று) ? வெற்று : CONTAINER_OF(t, கட்டமைப்பு _timeout, முனை);
 }
 
-static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
+நிலையான உள்வரி கட்டமைப்பு _timeout *z_timeout_q_next(கட்டமைப்பு _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->முனை);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	திரும்பு (n == வெற்று) ? வெற்று : CONTAINER_OF(n, கட்டமைப்பு _timeout, முனை);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout.
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+நிலையான உள்வரி bool z_timeout_q_செருகு(கட்டமைப்பு _timeout *to, k_ticks_t dticks)
 {
-	struct _timeout *t;
+	கட்டமைப்பு _timeout *t;
 
 	to->dticks = dticks;
-	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
-		if (t->dticks > to->dticks) {
+	க்கு (t = z_timeout_q_first(); t != வெற்று; t = z_timeout_q_next(t)) {
+		எனில் (t->dticks > to->dticks) {
 			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
-			return z_timeout_q_first() == to;
+			sys_dlist_செருகு(&t->முனை, &to->முனை);
+			திரும்பு z_timeout_q_first() == to;
 		}
 		to->dticks -= t->dticks;
 	}
 
-	sys_dlist_append(&timeout_list, &to->node);
-	return z_timeout_q_first() == to;
+	sys_dlist_append(&timeout_list, &to->முனை);
+	திரும்பு z_timeout_q_first() == to;
 }
 
 /* Remove an arbitrary timeout from the queue, absorbing its delta into the
  * successor so the remaining deltas stay valid. Returns true if @to was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+நிலையான உள்வரி bool z_timeout_q_remove(கட்டமைப்பு _timeout *to)
 {
 	bool was_first = (z_timeout_q_first() == to);
-	struct _timeout *n = z_timeout_q_next(to);
+	கட்டமைப்பு _timeout *n = z_timeout_q_next(to);
 
-	if (n != NULL) {
+	எனில் (n != வெற்று) {
 		n->dticks += to->dticks;
 	}
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&to->முனை);
 
-	return was_first;
+	திரும்பு was_first;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+நிலையான உள்வரி k_ticks_t z_timeout_q_remainder(மாறிலி கட்டமைப்பு _timeout *to)
 {
 	k_ticks_t ticks = 0;
 
-	for (struct _timeout *t = z_timeout_q_first(); t != NULL;
+	க்கு (கட்டமைப்பு _timeout *t = z_timeout_q_first(); t != வெற்று;
 	     t = z_timeout_q_next(t)) {
 		ticks += t->dticks;
-		if (to == t) {
-			break;
+		எனில் (to == t) {
+			நிறுத்து;
 		}
 	}
 
-	return ticks;
+	திரும்பு ticks;
 }
 
 /* Ticks from (curr_tick + ticks_elapsed) until the next expiry, clamped to
@@ -101,11 +101,11 @@ static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
  * the queue is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+நிலையான உள்வரி k_ticks_t z_timeout_q_next_expiry(வெறுமை)
 {
-	struct _timeout *to = z_timeout_q_first();
+	கட்டமைப்பு _timeout *to = z_timeout_q_first();
 
-	return (to == NULL) ? K_TICKS_FOREVER : to->dticks;
+	திரும்பு (to == வெற்று) ? K_TICKS_FOREVER : to->dticks;
 }
 
 /* --- announce-loop helpers (see sys_clock_announce_locked() in timeout.c) --- */
@@ -114,22 +114,22 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
  * (here: the earliest expiry). A value larger than any announce window when
  * the queue is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+நிலையான உள்வரி int32_t z_timeout_q_next_gap(வெறுமை)
 {
-	struct _timeout *t = z_timeout_q_first();
+	கட்டமைப்பு _timeout *t = z_timeout_q_first();
 
-	return (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
+	திரும்பு (t == வெற்று) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. For the delta list this shifts the head
  * closer to expiry; a head whose gap is fully consumed reads dticks == 0 and
  * is then drained by z_timeout_q_pop_due(). The caller advances curr_tick.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+நிலையான உள்வரி வெறுமை z_timeout_q_advance(int32_t dt)
 {
-	struct _timeout *t = z_timeout_q_first();
+	கட்டமைப்பு _timeout *t = z_timeout_q_first();
 
-	if (t != NULL) {
+	எனில் (t != வெற்று) {
 		t->dticks -= dt;
 	}
 }
@@ -140,17 +140,17 @@ static inline void z_timeout_q_advance(int32_t dt)
  * curr_tick was advanced to match, so the successor's stored delta stays
  * valid without propagation.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+நிலையான உள்வரி கட்டமைப்பு _timeout *z_timeout_q_எடு_due(வெறுமை)
 {
-	struct _timeout *t = z_timeout_q_first();
+	கட்டமைப்பு _timeout *t = z_timeout_q_first();
 
-	if ((t == NULL) || (t->dticks != 0)) {
-		return NULL;
+	எனில் ((t == வெற்று) || (t->dticks != 0)) {
+		திரும்பு வெற்று;
 	}
 
-	sys_dlist_remove(&t->node);
+	sys_dlist_remove(&t->முனை);
 
-	return t;
+	திரும்பு t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */

@@ -4,102 +4,102 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/sys/sem.h>
-#include <zephyr/internal/syscall_handler.h>
+#அந்தர்பாவ <zephyr/sys/sem.h>
+#அந்தர்பாவ <zephyr/internal/syscall_handler.h>
 
 #define SYS_SEM_MINIMUM      0
 #define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+நிலையான உள்வரி atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_மதிப்பு, new_மதிப்பு;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+	செய் {
+		old_மதிப்பு = atomic_get(val);
+		எனில் (old_மதிப்பு < minimum) {
+			நிறுத்து;
 		}
 
-		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+		new_மதிப்பு = old_மதிப்பு - 1;
+	} போது (atomic_cas(val, old_மதிப்பு, new_மதிப்பு) == 0);
 
-	return old_value;
+	திரும்பு old_மதிப்பு;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+நிலையான உள்வரி atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
-	atomic_t old_value, new_value;
+	atomic_t old_மதிப்பு, new_மதிப்பு;
 
-	do {
-		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+	செய் {
+		old_மதிப்பு = atomic_get(val);
+		எனில் (old_மதிப்பு >= maximum) {
+			நிறுத்து;
 		}
 
-		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+		new_மதிப்பு = ((old_மதிப்பு < minimum) ? minimum : old_மதிப்பு) + 1;
+	} போது (atomic_cas(val, old_மதிப்பு, new_மதிப்பு) == 0U);
 
-	return old_value;
+	திரும்பு old_மதிப்பு;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+முழு sys_sem_init(கட்டமைப்பு sys_sem *sem, unsigned முழு initial_மொத்தம்,
+		 unsigned முழு limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
-	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+	எனில் ((sem == வெற்று) || (limit == SYS_SEM_MINIMUM) ||
+	    (initial_மொத்தம் > limit) || (limit > INT_MAX)) {
+		திரும்பு -EINVAL;
 	}
 
-	(void)atomic_set(&sem->futex.val, initial_count);
+	(வெறுமை)atomic_set(&sem->futex.val, initial_மொத்தம்);
 	sem->limit = limit;
 
-	return 0;
+	திரும்பு 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+முழு sys_sem_give(கட்டமைப்பு sys_sem *sem)
 {
-	int ret = 0;
-	atomic_t old_value;
+	முழு ret = 0;
+	atomic_t old_மதிப்பு;
 
-	old_value = bounded_inc(&sem->futex.val,
+	old_மதிப்பு = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	எனில் (old_மதிப்பு < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		எனில் (ret > 0) {
+			திரும்பு 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} இல்லையெனில் எனில் (old_மதிப்பு >= sem->limit) {
+		திரும்பு -EAGAIN;
+	} இல்லையெனில் {
 		;
 	}
-	return ret;
+	திரும்பு ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+முழு sys_sem_take(கட்டமைப்பு sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
-	atomic_t old_value;
+	முழு ret = 0;
+	atomic_t old_மதிப்பு;
 
-	do {
-		old_value = bounded_dec(&sem->futex.val,
+	செய் {
+		old_மதிப்பு = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		எனில் (old_மதிப்பு > 0) {
+			திரும்பு 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} போது (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	திரும்பு ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned முழு sys_sem_மொத்தம்_get(கட்டமைப்பு sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	முழு மதிப்பு = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	திரும்பு (மதிப்பு > SYS_SEM_MINIMUM) ? மதிப்பு : SYS_SEM_MINIMUM;
 }

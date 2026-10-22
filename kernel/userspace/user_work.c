@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#அந்தர்பாவ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+நிலையான வெறுமை z_work_user_q_main(வெறுமை *work_q_ptr, வெறுமை *p2, வெறுமை *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	கட்டமைப்பு k_work_user_q *work_q = work_q_ptr;
 
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	போது (true) {
+		கட்டமைப்பு k_work_user *work;
 		k_work_user_handler_t handler;
 
 		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		எனில் (work == வெற்று) {
+			தொடர்;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != வெற்று, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		எனில் (atomic_test_and_clear_bit(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,19 +39,19 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+வெறுமை k_work_user_queue_start(கட்டமைப்பு k_work_user_q *work_q, k_thread_அடுக்கு_t *அடுக்கு,
+			     size_t அடுக்கு_size, முழு prio, மாறிலி எழுத்து *name)
 {
 	k_queue_init(&work_q->queue);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, அடுக்கு, அடுக்கு_size, z_work_user_q_main,
+			work_q, வெற்று, வெற்று, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
 	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
+	எனில் (name != வெற்று) {
 		k_thread_name_set(&work_q->thread, name);
 	}
 

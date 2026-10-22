@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#அந்தர்பாவ <zephyr/kernel.h>
+#அந்தர்பாவ <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+முழு sys_sem_init(கட்டமைப்பு sys_sem *sem, unsigned முழு initial_மொத்தம்,
+		 unsigned முழு limit)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_மொத்தம், limit);
 
-	return 0;
+	திரும்பு 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+முழு sys_sem_give(கட்டமைப்பு sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	திரும்பு 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+முழு sys_sem_take(கட்டமைப்பு sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	முழு ret_மதிப்பு = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_மதிப்பு = k_sem_take(&sem->kernel_sem, timeout);
+	எனில் ((ret_மதிப்பு == -EAGAIN) || (ret_மதிப்பு == -EBUSY)) {
+		ret_மதிப்பு = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	திரும்பு ret_மதிப்பு;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned முழு sys_sem_மொத்தம்_get(கட்டமைப்பு sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	திரும்பு k_sem_மொத்தம்_get(&sem->kernel_sem);
 }

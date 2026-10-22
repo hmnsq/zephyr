@@ -26,25 +26,25 @@
 #define SKIPLIST_LEVELS CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL
 
 /* Sentinel: never expires, participates in every level, never fired. */
-static struct _timeout sl_head = {
+நிலையான கட்டமைப்பு _timeout sl_head = {
 	.height = SKIPLIST_LEVELS,
-	.forward = { NULL },
+	.forward = { வெற்று },
 };
 
 /* Highest height of any currently queued node; 0 when the list is empty. */
-static uint8_t sl_top;
+நிலையான uint8_t sl_உச்சி;
 
 /*
  * Scratch predecessor vector shared by insert and remove. Both run with
  * timeout_lock held and neither keeps it across an unlock, so one array is
  * enough. Any future caller must hold that lock too.
  */
-static struct _timeout *sl_update[SKIPLIST_LEVELS];
+நிலையான கட்டமைப்பு _timeout *sl_update[SKIPLIST_LEVELS];
 
 /* Marsaglia xorshift32 state; period 2^32-1, must stay non-zero. */
-static uint32_t sl_rng = 2463534242U;
+நிலையான uint32_t sl_rng = 2463534242U;
 
-static uint8_t skiplist_random_height(void)
+நிலையான uint8_t skiplist_random_height(வெறுமை)
 {
 	uint32_t r = sl_rng;
 
@@ -54,53 +54,53 @@ static uint8_t skiplist_random_height(void)
 	sl_rng = r;
 
 	/* p = 1/2: height is 1 + the run of low 1-bits, capped at SKIPLIST_LEVELS. */
-	return 1 + MIN(u32_count_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
+	திரும்பு 1 + MIN(u32_மொத்தம்_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
 }
 
-static inline struct _timeout *skiplist_first(void)
+நிலையான உள்வரி கட்டமைப்பு _timeout *skiplist_first(வெறுமை)
 {
-	return sl_head.forward[0];
+	திரும்பு sl_head.forward[0];
 }
 
-static void skiplist_drop_top(void)
+நிலையான வெறுமை skiplist_drop_உச்சி(வெறுமை)
 {
-	while (sl_top > 0 && sl_head.forward[sl_top - 1] == NULL) {
-		sl_top--;
+	போது (sl_உச்சி > 0 && sl_head.forward[sl_உச்சி - 1] == வெற்று) {
+		sl_உச்சி--;
 	}
 }
 
-static void skiplist_update_init(struct _timeout **update)
+நிலையான வெறுமை skiplist_update_init(கட்டமைப்பு _timeout **update)
 {
 	uint8_t i;
 
-	for (i = 0; i < SKIPLIST_LEVELS; i++) {
+	க்கு (i = 0; i < SKIPLIST_LEVELS; i++) {
 		update[i] = &sl_head;
 	}
 }
 
 /* Splice @to out at every level it occupies. */
-static void skiplist_unlink(struct _timeout *to, struct _timeout **update)
+நிலையான வெறுமை skiplist_unlink(கட்டமைப்பு _timeout *to, கட்டமைப்பு _timeout **update)
 {
 	uint8_t i;
 	uint8_t height = to->height;
 
-	for (i = 0; i < height; i++) {
+	க்கு (i = 0; i < height; i++) {
 		__ASSERT_NO_MSG(update[i]->forward[i] == to);
 		update[i]->forward[i] = to->forward[i];
 	}
 
 	to->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_உச்சி();
 }
 
 /* Equal keys are skipped so a later insert lands after them (same-tick FIFO). */
-static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **update)
+நிலையான வெறுமை skiplist_predecessors_after(int64_t abs_ticks, கட்டமைப்பு _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	கட்டமைப்பு _timeout *x = &sl_head;
+	முழு i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks <= abs_ticks) {
+	க்கு (i = (முழு)sl_உச்சி - 1; i >= 0; i--) {
+		போது (x->forward[i] != வெற்று && x->forward[i]->abs_ticks <= abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
@@ -108,20 +108,20 @@ static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **upd
 }
 
 /* Walk equal-key nodes so identity, not just expiry, selects the splice points. */
-static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **update)
+நிலையான வெறுமை skiplist_predecessors_of(கட்டமைப்பு _timeout *to, கட்டமைப்பு _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	கட்டமைப்பு _timeout *x = &sl_head;
+	முழு i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks < to->abs_ticks) {
+	க்கு (i = (முழு)sl_உச்சி - 1; i >= 0; i--) {
+		போது (x->forward[i] != வெற்று && x->forward[i]->abs_ticks < to->abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
 	}
 
-	for (i = 0; i < to->height; i++) {
-		while (update[i]->forward[i] != NULL &&
+	க்கு (i = 0; i < to->height; i++) {
+		போது (update[i]->forward[i] != வெற்று &&
 		       update[i]->forward[i] != to &&
 		       update[i]->forward[i]->abs_ticks == to->abs_ticks) {
 			update[i] = update[i]->forward[i];
@@ -129,7 +129,7 @@ static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **upda
 	}
 }
 
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+நிலையான உள்வரி bool z_timeout_q_செருகு(கட்டமைப்பு _timeout *to, k_ticks_t dticks)
 {
 	uint8_t i;
 	uint8_t height;
@@ -141,19 +141,19 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 	skiplist_update_init(sl_update);
 	skiplist_predecessors_after(to->abs_ticks, sl_update);
 
-	if (height > sl_top) {
-		sl_top = height;
+	எனில் (height > sl_உச்சி) {
+		sl_உச்சி = height;
 	}
 
-	for (i = 0; i < height; i++) {
+	க்கு (i = 0; i < height; i++) {
 		to->forward[i] = sl_update[i]->forward[i];
 		sl_update[i]->forward[i] = to;
 	}
 
-	return skiplist_first() == to;
+	திரும்பு skiplist_first() == to;
 }
 
-static inline bool z_timeout_q_remove(struct _timeout *to)
+நிலையான உள்வரி bool z_timeout_q_remove(கட்டமைப்பு _timeout *to)
 {
 	bool was_first = (skiplist_first() == to);
 
@@ -164,69 +164,69 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
 
 	skiplist_unlink(to, sl_update);
 
-	return was_first;
+	திரும்பு was_first;
 }
 
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+நிலையான உள்வரி k_ticks_t z_timeout_q_remainder(மாறிலி கட்டமைப்பு _timeout *to)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	திரும்பு (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
 }
 
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+நிலையான உள்வரி k_ticks_t z_timeout_q_next_expiry(வெறுமை)
 {
-	struct _timeout *t = skiplist_first();
+	கட்டமைப்பு _timeout *t = skiplist_first();
 	int64_t gap;
 
-	if (t == NULL) {
-		return K_TICKS_FOREVER;
+	எனில் (t == வெற்று) {
+		திரும்பு K_TICKS_FOREVER;
 	}
 
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	return (gap < 0) ? 0 : (k_ticks_t)gap;
+	திரும்பு (gap < 0) ? 0 : (k_ticks_t)gap;
 }
 
-static inline int32_t z_timeout_q_next_gap(void)
+நிலையான உள்வரி int32_t z_timeout_q_next_gap(வெறுமை)
 {
-	struct _timeout *t = skiplist_first();
+	கட்டமைப்பு _timeout *t = skiplist_first();
 	int64_t gap;
 
-	if (t == NULL) {
-		return INT32_MAX;
+	எனில் (t == வெற்று) {
+		திரும்பு INT32_MAX;
 	}
 
 	/* Overdue must be 0: announce casts dt to uint32_t. */
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	if (gap <= 0) {
-		return 0;
+	எனில் (gap <= 0) {
+		திரும்பு 0;
 	}
 
-	return (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	திரும்பு (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static inline void z_timeout_q_advance(int32_t dt)
+நிலையான உள்வரி வெறுமை z_timeout_q_advance(int32_t dt)
 {
 	ARG_UNUSED(dt);
 }
 
 /* Earliest node, so it is the head's successor at every level it occupies. */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+நிலையான உள்வரி கட்டமைப்பு _timeout *z_timeout_q_எடு_due(வெறுமை)
 {
-	struct _timeout *t = skiplist_first();
+	கட்டமைப்பு _timeout *t = skiplist_first();
 	uint8_t i;
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	எனில் ((t == வெற்று) || (t->abs_ticks > (int64_t)curr_tick)) {
+		திரும்பு வெற்று;
 	}
 
-	for (i = 0; i < t->height; i++) {
+	க்கு (i = 0; i < t->height; i++) {
 		__ASSERT_NO_MSG(sl_head.forward[i] == t);
 		sl_head.forward[i] = t->forward[i];
 	}
 
 	t->height = 0;
-	skiplist_drop_top();
+	skiplist_drop_உச்சி();
 
-	return t;
+	திரும்பு t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_ */

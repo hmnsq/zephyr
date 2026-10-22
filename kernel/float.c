@@ -4,44 +4,44 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_arch_interface.h>
+#அந்தர்பாவ <zephyr/kernel.h>
+#அந்தர்பாவ <zephyr/internal/syscall_handler.h>
+#அந்தர்பாவ <kernel_arch_interface.h>
 
-int z_impl_k_float_disable(struct k_thread *thread)
+முழு z_impl_k_float_disable(கட்டமைப்பு k_thread *thread)
 {
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
-	return arch_float_disable(thread);
-#else
+#எனில் defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
+	திரும்பு arch_float_disable(thread);
+#இல்லையெனில்
 	ARG_UNUSED(thread);
-	return -ENOTSUP;
+	திரும்பு -ENOTSUP;
 #endif /* CONFIG_FPU && CONFIG_FPU_SHARING */
 }
 
-int z_impl_k_float_enable(struct k_thread *thread, unsigned int options)
+முழு z_impl_k_float_enable(கட்டமைப்பு k_thread *thread, unsigned முழு options)
 {
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
-	return arch_float_enable(thread, options);
-#else
+#எனில் defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
+	திரும்பு arch_float_enable(thread, options);
+#இல்லையெனில்
 	ARG_UNUSED(thread);
 	ARG_UNUSED(options);
-	return -ENOTSUP;
+	திரும்பு -ENOTSUP;
 #endif /* CONFIG_FPU && CONFIG_FPU_SHARING */
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_float_disable(struct k_thread *thread)
+நிலையான உள்வரி முழு z_vrfy_k_float_disable(கட்டமைப்பு k_thread *thread)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	return z_impl_k_float_disable(thread);
+	திரும்பு z_impl_k_float_disable(thread);
 }
-#include <zephyr/syscalls/k_float_disable_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_float_disable_mrsh.c>
 
-static inline int z_vrfy_k_float_enable(struct k_thread *thread, unsigned int options)
+நிலையான உள்வரி முழு z_vrfy_k_float_enable(கட்டமைப்பு k_thread *thread, unsigned முழு options)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	return z_impl_k_float_enable(thread, options);
+	திரும்பு z_impl_k_float_enable(thread, options);
 }
-#include <zephyr/syscalls/k_float_enable_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_float_enable_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */

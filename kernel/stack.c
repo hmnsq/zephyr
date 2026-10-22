@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#அந்தர்பாவ <zephyr/sys/math_extras.h>
+#அந்தர்பாவ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#அந்தர்பாவ <zephyr/toolchain.h>
+#அந்தர்பாவ <ksched.h>
+#அந்தர்பாவ <scheduler.h>
+#அந்தர்பாவ <wait_q.h>
+#அந்தர்பாவ <zephyr/init.h>
+#அந்தர்பாவ <zephyr/internal/syscall_handler.h>
+#அந்தர்பாவ <kernel_internal.h>
+#அந்தர்பாவ <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
+#ifdef CONFIG_OBJ_CORE_அடுக்கு
+K_OBJ_TYPE_DEFINE(obj_type_அடுக்கு, k_அடுக்கு, K_OBJ_TYPE_அடுக்கு_ID, வெற்று);
 #endif /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+வெறுமை k_அடுக்கு_init(கட்டமைப்பு k_அடுக்கு *அடுக்கு, அடுக்கு_data_t *buffer,
+		  uint32_t இலக்கம்_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&அடுக்கு->wait_q);
+	அடுக்கு->lock = (கட்டமைப்பு k_spinlock) {};
+	அடுக்கு->next = buffer;
+	அடுக்கு->base = buffer;
+	அடுக்கு->உச்சி = அடுக்கு->base + இலக்கம்_entries;
+	அடுக்கு->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_PORT_TRACING_OBJ_INIT(k_அடுக்கு, அடுக்கு);
+	k_object_init(அடுக்கு);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
+#ifdef CONFIG_OBJ_CORE_அடுக்கு
+	k_obj_core_init_and_link(K_OBJ_CORE(அடுக்கு), &obj_type_அடுக்கு);
 #endif /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_அடுக்கு_alloc_init(கட்டமைப்பு k_அடுக்கு *அடுக்கு, uint32_t இலக்கம்_entries)
 {
-	void *buffer;
+	வெறுமை *buffer;
 	size_t total_size;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_அடுக்கு, alloc_init, அடுக்கு);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	எனில் (size_mul_overflow(இலக்கம்_entries, அளவு(அடுக்கு_data_t), &total_size)) {
 		ret = -ENOMEM;
-	} else {
+	} இல்லையெனில் {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+		எனில் (buffer != வெற்று) {
+			k_அடுக்கு_init(அடுக்கு, buffer, இலக்கம்_entries);
+			அடுக்கு->flags = K_அடுக்கு_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} இல்லையெனில் {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, alloc_init, அடுக்கு, ret);
 
-	return ret;
+	திரும்பு ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+நிலையான உள்வரி int32_t z_vrfy_k_அடுக்கு_alloc_init(கட்டமைப்பு k_அடுக்கு *அடுக்கு,
+					      uint32_t இலக்கம்_entries)
 {
 	size_t total_size;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(அடுக்கு, K_OBJ_அடுக்கு));
+	K_OOPS(K_SYSCALL_VERIFY(இலக்கம்_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(இலக்கம்_entries, அளவு(அடுக்கு_data_t),
 					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	திரும்பு z_impl_k_அடுக்கு_alloc_init(அடுக்கு, இலக்கம்_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+முழு z_அடுக்கு_cleanup(கட்டமைப்பு k_அடுக்கு *அடுக்கு, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_அடுக்கு, cleanup, அடுக்கு);
 
-	int ret = 0;
+	முழு ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_சாவி_t சாவி = k_spin_lock(&அடுக்கு->lock);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	எனில் (locked && (z_waitq_head_locked(&அடுக்கு->wait_q) != வெற்று)) {
 		ret = -EAGAIN;
-		goto out;
+		செல் out;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	எனில் (!locked && (z_waitq_head(&அடுக்கு->wait_q) != வெற்று)) {
 		ret = -EAGAIN;
-		goto out;
+		செல் out;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	எனில் ((அடுக்கு->flags & K_அடுக்கு_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(அடுக்கு->base);
+		அடுக்கு->base = வெற்று;
+		அடுக்கு->flags &= ~K_அடுக்கு_FLAG_ALLOC;
 		freed = true;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&அடுக்கு->lock, சாவி);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#ifdef CONFIG_OBJ_CORE_அடுக்கு
+	எனில் (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(அடுக்கு));
 	}
 #endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, cleanup, அடுக்கு, ret);
 
-	return ret;
+	திரும்பு ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+முழு k_அடுக்கு_cleanup(கட்டமைப்பு k_அடுக்கு *அடுக்கு)
 {
-	return z_stack_cleanup(stack, false);
+	திரும்பு z_அடுக்கு_cleanup(அடுக்கு, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+முழு z_impl_k_அடுக்கு_தள்ளு(கட்டமைப்பு k_அடுக்கு *அடுக்கு, அடுக்கு_data_t data)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	முழு ret = 0;
+	k_spinlock_சாவி_t சாவி = k_spin_lock(&அடுக்கு->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_அடுக்கு, தள்ளு, அடுக்கு);
 
-	if (stack->next == stack->top) {
+	எனில் (அடுக்கு->next == அடுக்கு->உச்சி) {
 		ret = -ENOMEM;
-		goto out;
+		செல் out;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	எனில் (z_sched_wake(&அடுக்கு->wait_q, 0, (வெறுமை *)data)) {
+		z_reschedule(&அடுக்கு->lock, சாவி);
+		செல் end;
+	} இல்லையெனில் {
+		*(அடுக்கு->next) = data;
+		அடுக்கு->next++;
+		செல் out;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&அடுக்கு->lock, சாவி);
 
 end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, தள்ளு, அடுக்கு, ret);
 
-	return ret;
+	திரும்பு ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+நிலையான உள்வரி முழு z_vrfy_k_அடுக்கு_தள்ளு(கட்டமைப்பு k_அடுக்கு *அடுக்கு, அடுக்கு_data_t data)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(அடுக்கு, K_OBJ_அடுக்கு));
 
-	return z_impl_k_stack_push(stack, data);
+	திரும்பு z_impl_k_அடுக்கு_தள்ளு(அடுக்கு, data);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_stack_push_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+முழு z_impl_k_அடுக்கு_எடு(கட்டமைப்பு k_அடுக்கு *அடுக்கு, அடுக்கு_data_t *data,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_சாவி_t சாவி;
+	முழு result;
 
-	key = k_spin_lock(&stack->lock);
+	சாவி = k_spin_lock(&அடுக்கு->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_அடுக்கு, எடு, அடுக்கு, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	எனில் (likely(அடுக்கு->next > அடுக்கு->base)) {
+		அடுக்கு->next--;
+		*data = *(அடுக்கு->next);
+		k_spin_unlock(&அடுக்கு->lock, சாவி);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, எடு, அடுக்கு, timeout, 0);
 
-		return 0;
+		திரும்பு 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	எனில் (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&அடுக்கு->lock, சாவி);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, எடு, அடுக்கு, timeout, -EBUSY);
 
-		return -EBUSY;
+		திரும்பு -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_அடுக்கு, எடு, அடுக்கு, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	result = z_pend_curr(&அடுக்கு->lock, சாவி, &அடுக்கு->wait_q, timeout);
+	எனில் (result != 0) {
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, எடு, அடுக்கு, timeout, result);
 
-		return result;
+		திரும்பு result;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*data = (அடுக்கு_data_t)_current->base.swap_data;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_அடுக்கு, எடு, அடுக்கு, timeout, 0);
 
-	return 0;
+	திரும்பு 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+நிலையான உள்வரி முழு z_vrfy_k_அடுக்கு_எடு(கட்டமைப்பு k_அடுக்கு *அடுக்கு,
+				     அடுக்கு_data_t *data, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(அடுக்கு, K_OBJ_அடுக்கு));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, அளவு(அடுக்கு_data_t)));
+	திரும்பு z_impl_k_அடுக்கு_எடு(அடுக்கு, data, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_stack_pop_mrsh.c>
 #endif /* CONFIG_USERSPACE */

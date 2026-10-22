@@ -3,85 +3,85 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/sys/minmax.h>
-#include <zephyr/init.h>
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#அந்தர்பாவ <zephyr/sys/minmax.h>
+#அந்தர்பாவ <zephyr/init.h>
+#அந்தர்பாவ <zephyr/kernel.h>
+#அந்தர்பாவ <zephyr/internal/syscall_handler.h>
+#அந்தர்பாவ <ksched.h>
+#அந்தர்பாவ <kthread.h>
+#அந்தர்பாவ <wait_q.h>
+#அந்தர்பாவ <scheduler.h>
 
 #ifdef CONFIG_OBJ_CORE_PIPE
-K_OBJ_TYPE_DEFINE(obj_type_pipe, k_pipe, K_OBJ_TYPE_PIPE_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_pipe, k_pipe, K_OBJ_TYPE_PIPE_ID, வெற்று);
 #endif /* CONFIG_OBJ_CORE_PIPE */
 
-static inline bool pipe_closed(struct k_pipe *pipe)
+நிலையான உள்வரி bool pipe_closed(கட்டமைப்பு k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_OPEN) == 0;
+	திரும்பு (pipe->flags & PIPE_FLAG_OPEN) == 0;
 }
 
-static inline bool pipe_resetting(struct k_pipe *pipe)
+நிலையான உள்வரி bool pipe_resetting(கட்டமைப்பு k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_RESET) != 0;
+	திரும்பு (pipe->flags & PIPE_FLAG_RESET) != 0;
 }
 
-static inline bool pipe_full(struct k_pipe *pipe)
+நிலையான உள்வரி bool pipe_full(கட்டமைப்பு k_pipe *pipe)
 {
-	return ring_buf_space_get(&pipe->buf) == 0;
+	திரும்பு ring_buf_space_get(&pipe->buf) == 0;
 }
 
-static inline bool pipe_empty(struct k_pipe *pipe)
+நிலையான உள்வரி bool pipe_empty(கட்டமைப்பு k_pipe *pipe)
 {
-	return ring_buf_is_empty(&pipe->buf);
+	திரும்பு ring_buf_is_empty(&pipe->buf);
 }
 
-struct pipe_buf_spec {
-	uint8_t * const data;
-	const size_t len;
+கட்டமைப்பு pipe_buf_spec {
+	uint8_t * மாறிலி data;
+	மாறிலி size_t len;
 	size_t used;
 };
 
-static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_key_t *key,
+நிலையான முழு wait_for(_wait_q_t *waitq, கட்டமைப்பு k_pipe *pipe, k_spinlock_சாவி_t *சாவி,
 		    k_timepoint_t time_limit, bool *need_resched,
-		    struct pipe_buf_spec *buf_spec)
+		    கட்டமைப்பு pipe_buf_spec *buf_spec)
 {
 	k_timeout_t timeout = sys_timepoint_timeout(time_limit);
-	int rc;
+	முழு rc;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		return -EAGAIN;
+	எனில் (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		திரும்பு -EAGAIN;
 	}
 
 	_current->base.swap_data = buf_spec;
 
 	pipe->waiting++;
 	*need_resched = false;
-	if (waitq == &pipe->space) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, write, pipe, timeout);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, read, pipe, timeout);
+	எனில் (waitq == &pipe->space) {
+		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, லிக, pipe, timeout);
+	} இல்லையெனில் {
+		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, பட, pipe, timeout);
 	}
-	rc = z_pend_curr(&pipe->lock, *key, waitq, timeout);
-	*key = k_spin_lock(&pipe->lock);
+	rc = z_pend_curr(&pipe->lock, *சாவி, waitq, timeout);
+	*சாவி = k_spin_lock(&pipe->lock);
 	pipe->waiting--;
-	if (unlikely(pipe_resetting(pipe))) {
-		if (pipe->waiting == 0) {
+	எனில் (unlikely(pipe_resetting(pipe))) {
+		எனில் (pipe->waiting == 0) {
 			pipe->flags &= ~PIPE_FLAG_RESET;
 		}
 		rc = -ECANCELED;
 	}
 
-	return rc;
+	திரும்பு rc;
 }
 
-void z_impl_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+வெறுமை z_impl_k_pipe_init(கட்டமைப்பு k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
 {
 	ring_buf_init(&pipe->buf, buffer_size, buffer);
 	pipe->flags = PIPE_FLAG_OPEN;
 	pipe->waiting = 0;
 
-	pipe->lock = (struct k_spinlock){};
+	pipe->lock = (கட்டமைப்பு k_spinlock){};
 	z_waitq_init(&pipe->data);
 	z_waitq_init(&pipe->space);
 	k_object_init(pipe);
@@ -95,11 +95,11 @@ void z_impl_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size
 	SYS_PORT_TRACING_OBJ_INIT(k_pipe, pipe, buffer, buffer_size);
 }
 
-static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
-				      const uint8_t *data, size_t len)
+நிலையான size_t copy_to_pending_readers(கட்டமைப்பு k_pipe *pipe, bool *need_resched,
+				      மாறிலி uint8_t *data, size_t len)
 {
-	struct k_thread *reader = NULL;
-	struct pipe_buf_spec *reader_buf;
+	கட்டமைப்பு k_thread *reader = வெற்று;
+	கட்டமைப்பு pipe_buf_spec *reader_buf;
 	size_t copy_size, written = 0;
 
 	/*
@@ -110,10 +110,10 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 	 * received all the data it wanted, without racing with a potential
 	 * thread timeout/cancellation event.
 	 */
-	do {
+	செய் {
 		LOCK_SCHED_SPINLOCK {
 			reader = _priq_wait_best(&pipe->data.waitq);
-			if (reader == NULL) {
+			எனில் (reader == வெற்று) {
 				K_SPINLOCK_BREAK;
 			}
 
@@ -125,10 +125,10 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 			written += copy_size;
 			reader_buf->used += copy_size;
 
-			if (reader_buf->used < reader_buf->len) {
+			எனில் (reader_buf->used < reader_buf->len) {
 				/* This reader wants more: don't unpend. */
-				reader = NULL;
-			} else {
+				reader = வெற்று;
+			} இல்லையெனில் {
 				/*
 				 * This reader has received all the data
 				 * it was waiting for. Set its return
@@ -137,47 +137,47 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 				 * so a racing timeout handler cannot
 				 * observe a half-initialized wake-up.
 				 */
-				z_thread_return_value_set_with_data(reader, 0, NULL);
+				z_thread_return_மதிப்பு_set_with_data(reader, 0, வெற்று);
 				unpend_thread_no_timeout(reader);
-				(void)z_try_abort_thread_timeout(reader);
+				(வெறுமை)z_try_abort_thread_timeout(reader);
 				z_sched_ready_locked(reader);
 				*need_resched = true;
 			}
 		}
-	} while (reader != NULL && written < len);
+	} போது (reader != வெற்று && written < len);
 
-	return written;
+	திரும்பு written;
 }
 
-int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+முழு z_impl_k_pipe_write(கட்டமைப்பு k_pipe *pipe, மாறிலி uint8_t *data, size_t len, k_timeout_t timeout)
 {
-	int rc;
+	முழு rc;
 	size_t written = 0;
 	size_t added;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	k_spinlock_சாவி_t சாவி = k_spin_lock(&pipe->lock);
 	bool need_resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, write, pipe, data, len, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, லிக, pipe, data, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	எனில் (unlikely(len > INT_MAX)) {
 		rc = -EOVERFLOW;
-		goto out;
+		செல் out;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	எனில் (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
-		goto out;
+		செல் out;
 	}
 
-	for (;;) {
-		if (unlikely(pipe_closed(pipe))) {
+	க்கு (;;) {
+		எனில் (unlikely(pipe_closed(pipe))) {
 			rc = -EPIPE;
-			break;
+			நிறுத்து;
 		}
 
-		if (pipe_empty(pipe)) {
-			if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
+		எனில் (pipe_empty(pipe)) {
+			எனில் (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
 				/*
 				 * Systems that enabled this option don't have
 				 * their stacks in coherent memory. Given our
@@ -187,14 +187,14 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 				 * supporting direct-to-readers copy with them.
 				 * Simply wake up all pending readers instead.
 				 */
-				need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
-			} else if (pipe->waiting != 0) {
+				need_resched = z_sched_wake_all(&pipe->data, 0, வெற்று);
+			} இல்லையெனில் எனில் (pipe->waiting != 0) {
 				written += copy_to_pending_readers(pipe, &need_resched,
 								   &data[written],
 								   len - written);
-				if (written >= len) {
+				எனில் (written >= len) {
 					rc = written;
-					break;
+					நிறுத்து;
 				}
 			}
 		}
@@ -202,124 +202,124 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 		added = ring_buf_put(&pipe->buf, &data[written], len - written);
 
 #ifdef CONFIG_POLL
-		if (added != 0) {
+		எனில் (added != 0) {
 			need_resched |= z_handle_obj_poll_events(&pipe->poll_events,
 								 K_POLL_STATE_PIPE_DATA_AVAILABLE);
 		}
 #endif /* CONFIG_POLL */
 
 		written += added;
-		if (likely(written == len)) {
+		எனில் (likely(written == len)) {
 			rc = written;
-			break;
+			நிறுத்து;
 		}
 
-		rc = wait_for(&pipe->space, pipe, &key, end, &need_resched, NULL);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
+		rc = wait_for(&pipe->space, pipe, &சாவி, end, &need_resched, வெற்று);
+		எனில் (rc != 0) {
+			எனில் (rc == -EAGAIN) {
 				rc = written ? written : -EAGAIN;
 			}
-			break;
+			நிறுத்து;
 		}
 	}
 out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, write, pipe, rc);
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, லிக, pipe, rc);
+	எனில் (need_resched) {
+		z_reschedule(&pipe->lock, சாவி);
+	} இல்லையெனில் {
+		k_spin_unlock(&pipe->lock, சாவி);
 	}
-	return rc;
+	திரும்பு rc;
 }
 
-int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+முழு z_impl_k_pipe_read(கட்டமைப்பு k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
 {
-	struct pipe_buf_spec buf = { data, len, 0 };
-	int rc;
+	கட்டமைப்பு pipe_buf_spec buf = { data, len, 0 };
+	முழு rc;
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	k_spinlock_சாவி_t சாவி = k_spin_lock(&pipe->lock);
 	bool need_resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, read, pipe, data, len, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, பட, pipe, data, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	எனில் (unlikely(len > INT_MAX)) {
 		rc = -EOVERFLOW;
-		goto out;
+		செல் out;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	எனில் (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
-		goto out;
+		செல் out;
 	}
 
-	for (;;) {
-		if (pipe_full(pipe)) {
+	க்கு (;;) {
+		எனில் (pipe_full(pipe)) {
 			/* One or more pending writers may exist. */
-			need_resched = z_sched_wake_all(&pipe->space, 0, NULL);
+			need_resched = z_sched_wake_all(&pipe->space, 0, வெற்று);
 		}
 
 		buf.used += ring_buf_get(&pipe->buf, &data[buf.used], len - buf.used);
-		if (likely(buf.used == len)) {
+		எனில் (likely(buf.used == len)) {
 			rc = buf.used;
-			break;
+			நிறுத்து;
 		}
 
-		if (unlikely(pipe_closed(pipe))) {
+		எனில் (unlikely(pipe_closed(pipe))) {
 			rc = buf.used ? buf.used : -EPIPE;
-			break;
+			நிறுத்து;
 		}
 
-		rc = wait_for(&pipe->data, pipe, &key, end, &need_resched, &buf);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
+		rc = wait_for(&pipe->data, pipe, &சாவி, end, &need_resched, &buf);
+		எனில் (rc != 0) {
+			எனில் (rc == -EAGAIN) {
 				rc = buf.used ? buf.used : -EAGAIN;
 			}
-			break;
+			நிறுத்து;
 		}
 	}
 out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, read, pipe, rc);
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, பட, pipe, rc);
+	எனில் (need_resched) {
+		z_reschedule(&pipe->lock, சாவி);
+	} இல்லையெனில் {
+		k_spin_unlock(&pipe->lock, சாவி);
 	}
-	return rc;
+	திரும்பு rc;
 }
 
-void z_impl_k_pipe_reset(struct k_pipe *pipe)
+வெறுமை z_impl_k_pipe_reset(கட்டமைப்பு k_pipe *pipe)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, reset, pipe);
 	K_SPINLOCK(&pipe->lock) {
 		ring_buf_reset(&pipe->buf);
-		if (likely(pipe->waiting != 0)) {
+		எனில் (likely(pipe->waiting != 0)) {
 			pipe->flags |= PIPE_FLAG_RESET;
-			z_sched_wake_all(&pipe->data, 0, NULL);
-			z_sched_wake_all(&pipe->space, 0, NULL);
+			z_sched_wake_all(&pipe->data, 0, வெற்று);
+			z_sched_wake_all(&pipe->space, 0, வெற்று);
 		}
 	}
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, reset, pipe);
 }
 
-void z_impl_k_pipe_close(struct k_pipe *pipe)
+வெறுமை z_impl_k_pipe_close(கட்டமைப்பு k_pipe *pipe)
 {
-	k_spinlock_key_t key;
+	k_spinlock_சாவி_t சாவி;
 	bool need_resched;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, close, pipe);
 
-	key = k_spin_lock(&pipe->lock);
+	சாவி = k_spin_lock(&pipe->lock);
 
 	pipe->flags = 0;
-	need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
-	need_resched |= z_sched_wake_all(&pipe->space, 0, NULL);
+	need_resched = z_sched_wake_all(&pipe->data, 0, வெற்று);
+	need_resched |= z_sched_wake_all(&pipe->space, 0, வெற்று);
 
 #ifdef CONFIG_POLL
 	/*
 	 * Closing is a broadcast: wake every registered poller. Later
 	 * k_poll() calls see the hangup through is_condition_met().
 	 */
-	while (z_handle_obj_poll_events(&pipe->poll_events,
+	போது (z_handle_obj_poll_events(&pipe->poll_events,
 					K_POLL_STATE_PIPE_DATA_AVAILABLE)) {
 		need_resched = true;
 	}
@@ -327,52 +327,52 @@ void z_impl_k_pipe_close(struct k_pipe *pipe)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
 
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+	எனில் (need_resched) {
+		z_reschedule(&pipe->lock, சாவி);
+	} இல்லையெனில் {
+		k_spin_unlock(&pipe->lock, சாவி);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-void z_vrfy_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+வெறுமை z_vrfy_k_pipe_init(கட்டமைப்பு k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(buffer, buffer_size));
 
 	z_impl_k_pipe_init(pipe, buffer, buffer_size);
 }
-#include <zephyr/syscalls/k_pipe_init_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_pipe_init_mrsh.c>
 
-int z_vrfy_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+முழு z_vrfy_k_pipe_read(கட்டமைப்பு k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, len));
 
-	return z_impl_k_pipe_read(pipe, data, len, timeout);
+	திரும்பு z_impl_k_pipe_read(pipe, data, len, timeout);
 }
-#include <zephyr/syscalls/k_pipe_read_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_pipe_read_mrsh.c>
 
-int z_vrfy_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+முழு z_vrfy_k_pipe_write(கட்டமைப்பு k_pipe *pipe, மாறிலி uint8_t *data, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	K_OOPS(K_SYSCALL_MEMORY_READ(data, len));
 
-	return z_impl_k_pipe_write(pipe, data, len, timeout);
+	திரும்பு z_impl_k_pipe_write(pipe, data, len, timeout);
 }
-#include <zephyr/syscalls/k_pipe_write_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_pipe_write_mrsh.c>
 
-void z_vrfy_k_pipe_reset(struct k_pipe *pipe)
+வெறுமை z_vrfy_k_pipe_reset(கட்டமைப்பு k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_reset(pipe);
 }
-#include <zephyr/syscalls/k_pipe_reset_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_pipe_reset_mrsh.c>
 
-void z_vrfy_k_pipe_close(struct k_pipe *pipe)
+வெறுமை z_vrfy_k_pipe_close(கட்டமைப்பு k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_close(pipe);
 }
-#include <zephyr/syscalls/k_pipe_close_mrsh.c>
+#அந்தர்பாவ <zephyr/syscalls/k_pipe_close_mrsh.c>
 #endif /* CONFIG_USERSPACE */
