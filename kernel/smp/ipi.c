@@ -3,176 +3,176 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/math_extras.h>
-#include <kswap.h>
-#include <ksched.h>
-#include <ipi.h>
+#અન્તર્ભાવ <zephyr/kernel.h>
+#અન્તર્ભાવ <zephyr/sys/math_extras.h>
+#અન્તર્ભાવ <kswap.h>
+#અન્તર્ભાવ <ksched.h>
+#અન્તર્ભાવ <ipi.h>
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE) && defined(CONFIG_PM)
-#include <zephyr/pm/pm.h>
+#જો defined(CONFIG_IPI_OPTIMIZE_IDLE) && defined(CONFIG_PM)
+#અન્તર્ભાવ <zephyr/pm/pm.h>
 #endif
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-static struct k_spinlock ipi_lock;
+સ્થિર સંરચના k_spinlock ipi_lock;
 #endif
 
 #ifdef CONFIG_TRACE_SCHED_IPI
-extern void z_trace_sched_ipi(void);
+બાહ્ય શૂન્ય z_trace_sched_ipi(શૂન્ય);
 #endif
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
-static bool sched_ipi_idle_cpu_active(uint32_t cpu)
+#જો defined(CONFIG_IPI_OPTIMIZE_IDLE)
+સ્થિર bool sched_ipi_idle_cpu_active(uint32_t cpu)
 {
-#if defined(CONFIG_PM)
-	return pm_state_next_get((uint8_t)cpu)->state == PM_STATE_ACTIVE;
-#else
+#જો defined(CONFIG_PM)
+	પાછા pm_state_next_get((uint8_t)cpu)->state == PM_STATE_ACTIVE;
+#નહીંતર
 	ARG_UNUSED(cpu);
-	return true;
+	પાછા true;
 #endif
 }
 
-static inline int sched_ipi_thread_reservation(const struct k_thread *thread)
+સ્થિર અંતઃરેખ પૂર્ણાંક sched_ipi_thread_reservation(અચલ સંરચના k_thread *thread)
 {
 	uint32_t reservations = _kernel.sched_ipi_reserved;
 
-	while (reservations != 0U) {
-		unsigned int cpu = (unsigned int)u32_count_trailing_zeros(reservations);
+	જ્યારે (reservations != 0U) {
+		unsigned પૂર્ણાંક cpu = (unsigned પૂર્ણાંક)u32_ગણતરી_trailing_zeros(reservations);
 
 		reservations &= ~BIT(cpu);
-		if (_kernel.sched_ipi_target[cpu] == thread) {
-			return (int)cpu;
+		જો (_kernel.sched_ipi_target[cpu] == thread) {
+			પાછા (પૂર્ણાંક)cpu;
 		}
 	}
 
-	return -1;
+	પાછા -1;
 }
 
-static void sched_ipi_idle_reserve(uint32_t cpu, struct k_thread *thread)
+સ્થિર શૂન્ય sched_ipi_idle_reserve(uint32_t cpu, સંરચના k_thread *thread)
 {
 	uint32_t bit = BIT(cpu);
 
 	__ASSERT_NO_MSG((_kernel.sched_ipi_reserved & bit) == 0U);
-	__ASSERT_NO_MSG(_kernel.sched_ipi_target[cpu] == NULL);
+	__ASSERT_NO_MSG(_kernel.sched_ipi_target[cpu] == ખાલી);
 
 	_kernel.sched_ipi_target[cpu] = thread;
 	_kernel.sched_ipi_reserved |= bit;
 }
 
-static void sched_ipi_idle_unreserve(uint32_t cpu)
+સ્થિર શૂન્ય sched_ipi_idle_unreserve(uint32_t cpu)
 {
 	uint32_t bit = BIT(cpu);
 
-	_kernel.sched_ipi_target[cpu] = NULL;
+	_kernel.sched_ipi_target[cpu] = ખાલી;
 	_kernel.sched_ipi_reserved &= ~bit;
 }
 
-void ipi_idle_thread_unreserve(struct k_thread *thread)
+શૂન્ય ipi_idle_thread_unreserve(સંરચના k_thread *thread)
 {
-	int cpu = sched_ipi_thread_reservation(thread);
+	પૂર્ણાંક cpu = sched_ipi_thread_reservation(thread);
 
 	/* Keep pending_ipi intact: its CPU bit may cover another request.
 	 * An already-dispatched scheduling IPI is harmless.
 	 */
-	if (cpu >= 0) {
+	જો (cpu >= 0) {
 		sched_ipi_idle_unreserve((uint32_t)cpu);
 	}
 }
 
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread)
+bool ipi_idle_thread_rebind(સંરચના k_thread *old_thread,
+			    સંરચના k_thread *new_thread)
 {
-	int old_cpu;
+	પૂર્ણાંક old_cpu;
 
 	__ASSERT_NO_MSG(old_thread != new_thread);
 
 	old_cpu = sched_ipi_thread_reservation(old_thread);
-	if (old_cpu < 0) {
-		return false;
+	જો (old_cpu < 0) {
+		પાછા false;
 	}
 
 	uint32_t cpu = (uint32_t)old_cpu;
 	bool eligible = sched_ipi_idle_cpu_active(cpu);
 
-#if defined(CONFIG_SCHED_CPU_MASK)
+#જો defined(CONFIG_SCHED_CPU_MASK)
 	eligible = eligible && ((new_thread->base.cpu_mask & BIT(cpu)) != 0U);
 #endif
 
-	if (!eligible) {
+	જો (!eligible) {
 		sched_ipi_idle_unreserve(cpu);
-		return false;
+		પાછા false;
 	}
 
 	/* Reuse the outstanding IPI while transferring its coverage. */
 	_kernel.sched_ipi_target[cpu] = new_thread;
-	return true;
+	પાછા true;
 }
 
-struct k_thread *ipi_idle_reserved_take(void)
+સંરચના k_thread *ipi_idle_reserved_take(શૂન્ય)
 {
 	uint32_t cpu = _current_cpu->id;
-	struct k_thread *thread = _kernel.sched_ipi_target[cpu];
+	સંરચના k_thread *thread = _kernel.sched_ipi_target[cpu];
 
-	__ASSERT_NO_MSG((thread != NULL) ==
+	__ASSERT_NO_MSG((thread != ખાલી) ==
 			((_kernel.sched_ipi_reserved & BIT(cpu)) != 0U));
 
-	if (thread != NULL) {
+	જો (thread != ખાલી) {
 		sched_ipi_idle_unreserve(cpu);
 	}
 
-	return thread;
+	પાછા thread;
 }
 #endif
 
-void flag_ipi(uint32_t ipi_mask)
+શૂન્ય flag_ipi(uint32_t ipi_mask)
 {
-#if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+#જો defined(CONFIG_SCHED_IPI_SUPPORTED)
+	જો (arch_અંક_cpus() > 1) {
 		atomic_or(&_kernel.pending_ipi, (atomic_val_t)ipi_mask);
 	}
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
 }
 
 /* Create a bitmask of CPUs that need an IPI. Note: sched_spinlock is held. */
-atomic_val_t ipi_mask_create(struct k_thread *thread)
+atomic_val_t ipi_mask_create(સંરચના k_thread *thread)
 {
-	if (!IS_ENABLED(CONFIG_IPI_OPTIMIZE)) {
-		return (CONFIG_MP_MAX_NUM_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
+	જો (!IS_ENABLED(CONFIG_IPI_OPTIMIZE)) {
+		પાછા (CONFIG_MP_MAX_અંક_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
 	}
 
 	uint32_t  ipi_mask = 0;
-	uint32_t  num_cpus = (uint32_t)arch_num_cpus();
+	uint32_t  અંક_cpus = (uint32_t)arch_અંક_cpus();
 	uint32_t  id = _current_cpu->id;
-	struct k_thread *cpu_thread;
+	સંરચના k_thread *cpu_thread;
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
+#જો defined(CONFIG_IPI_OPTIMIZE_IDLE)
 	/* An outstanding idle CPU IPI already covers this thread. */
-	if (sched_ipi_thread_reservation(thread) >= 0) {
-		return 0;
+	જો (sched_ipi_thread_reservation(thread) >= 0) {
+		પાછા 0;
 	}
 
 	/* Fast path: the thread's previous CPU is idle and not already reserved.
 	 */
 	uint8_t last = thread->base.cpu;
-	struct k_thread *last_thread = _kernel.cpus[last].current;
+	સંરચના k_thread *last_thread = _kernel.cpus[last].current;
 
-	if (last != id &&
-	    last_thread != NULL &&
+	જો (last != id &&
+	    last_thread != ખાલી &&
 	    z_is_idle_thread_object(last_thread) &&
 	    sched_ipi_idle_cpu_active(last) &&
-#if defined(CONFIG_SCHED_CPU_MASK)
+#જો defined(CONFIG_SCHED_CPU_MASK)
 	    (thread->base.cpu_mask & BIT(last)) != 0 &&
 #endif
 	    (_kernel.sched_ipi_reserved & BIT(last)) == 0U) {
 		sched_ipi_idle_reserve(last, thread);
-		return IPI_CPU_MASK(last);
+		પાછા IPI_CPU_MASK(last);
 	}
 
 #endif
 
-	for (uint32_t i = 0; i < num_cpus; i++) {
-		if (id == i) {
-			continue;
+	માટે (uint32_t i = 0; i < અંક_cpus; i++) {
+		જો (id == i) {
+			ચાલુ;
 		}
 
 		/*
@@ -185,41 +185,41 @@ atomic_val_t ipi_mask_create(struct k_thread *thread)
 		 *    (Items 3 & 4 may be overridden by a metaIRQ thread)
 		 */
 
-#if defined(CONFIG_SCHED_CPU_MASK)
-		if ((thread->base.cpu_mask & BIT(i)) == 0) {
-			continue;
+#જો defined(CONFIG_SCHED_CPU_MASK)
+		જો ((thread->base.cpu_mask & BIT(i)) == 0) {
+			ચાલુ;
 		}
 #endif
 
 		cpu_thread = _kernel.cpus[i].current;
 
-		if (cpu_thread == NULL) {
-			continue;
+		જો (cpu_thread == ખાલી) {
+			ચાલુ;
 		}
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
-		if ((_kernel.sched_ipi_reserved & BIT(i)) != 0U) {
-			continue;
+#જો defined(CONFIG_IPI_OPTIMIZE_IDLE)
+		જો ((_kernel.sched_ipi_reserved & BIT(i)) != 0U) {
+			ચાલુ;
 		}
-		if (i != (uint32_t)thread->base.cpu &&
+		જો (i != (uint32_t)thread->base.cpu &&
 		    z_is_idle_thread_object(cpu_thread) &&
 		    sched_ipi_idle_cpu_active(i)) {
 			sched_ipi_idle_reserve(i, thread);
-			return IPI_CPU_MASK(i);
+			પાછા IPI_CPU_MASK(i);
 		}
 #endif
 
-		if ((z_sched_prio_cmp(cpu_thread, thread) < 0 &&
+		જો ((z_sched_prio_cmp(cpu_thread, thread) < 0 &&
 		     thread_is_preemptible(cpu_thread)) ||
 		    thread_is_metairq(thread)) {
 			ipi_mask |= BIT(i);
 		}
 	}
 
-	return (atomic_val_t)ipi_mask;
+	પાછા (atomic_val_t)ipi_mask;
 }
 
-void signal_pending_ipi(void)
+શૂન્ય signal_pending_ipi(શૂન્ય)
 {
 	/* Drain only the bits for other CPUs. Clearing our own bit here
 	 * would silently drop an IPI destined for us, because
@@ -235,18 +235,18 @@ void signal_pending_ipi(void)
 	 * released (and the other CPU dispatches the IPI).
 	 */
 
-#if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+#જો defined(CONFIG_SCHED_IPI_SUPPORTED)
+	જો (arch_અંક_cpus() > 1) {
 		uint32_t self_bit = BIT(_current_cpu->id);
 		uint32_t cpu_bitmap;
 
 		cpu_bitmap = (uint32_t)atomic_and(&_kernel.pending_ipi,
 						  (atomic_val_t)self_bit);
 		cpu_bitmap &= ~self_bit;
-		if (cpu_bitmap != 0) {
+		જો (cpu_bitmap != 0) {
 #ifdef CONFIG_ARCH_HAS_DIRECTED_IPIS
 			arch_sched_directed_ipi(cpu_bitmap);
-#else
+#નહીંતર
 			arch_sched_broadcast_ipi();
 #endif
 		}
@@ -255,28 +255,28 @@ void signal_pending_ipi(void)
 }
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-static struct k_ipi_work *first_ipi_work(sys_dlist_t *list, unsigned int cpu_id)
+સ્થિર સંરચના k_ipi_work *first_ipi_work(sys_dlist_t *list, unsigned પૂર્ણાંક cpu_id)
 {
 	sys_dnode_t *work = sys_dlist_peek_head(list);
 
-	return (work == NULL) ? NULL
-			      : CONTAINER_OF(work, struct k_ipi_work, node[cpu_id]);
+	પાછા (work == ખાલી) ? ખાલી
+			      : CONTAINER_OF(work, સંરચના k_ipi_work, ગાંઠ[cpu_id]);
 }
 
-int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
+પૂર્ણાંક k_ipi_work_add(સંરચના k_ipi_work *work, uint32_t cpu_bitmask,
 		   k_ipi_func_t func)
 {
-	__ASSERT(work != NULL, "");
-	__ASSERT(func != NULL, "");
+	__ASSERT(work != ખાલી, "");
+	__ASSERT(func != ખાલી, "");
 
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_ચાવી_t ચાવી = k_spin_lock(&ipi_lock);
 
 	/* Verify the IPI work item is not currently in use */
 
-	if (k_event_wait_all(&work->event, work->bitmask,
+	જો (k_event_wait_all(&work->event, work->bitmask,
 			     false, K_NO_WAIT) != work->bitmask) {
-		k_spin_unlock(&ipi_lock, key);
-		return -EBUSY;
+		k_spin_unlock(&ipi_lock, ચાવી);
+		પાછા -EBUSY;
 	}
 
 	/*
@@ -284,7 +284,7 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	 * CPU as the architecture may not support sending an IPI to itself.
 	 */
 
-	unsigned int cpu_id = _current_cpu->id;
+	unsigned પૂર્ણાંક cpu_id = _current_cpu->id;
 
 	cpu_bitmask &= (IPI_ALL_CPUS_MASK & ~BIT(cpu_id));
 
@@ -292,52 +292,52 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	work->func = func;
 	work->bitmask = cpu_bitmask;
 
-	for (unsigned int id = 0; id < arch_num_cpus(); id++) {
-		if ((cpu_bitmask & BIT(id)) != 0) {
-			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->node[id]);
+	માટે (unsigned પૂર્ણાંક id = 0; id < arch_અંક_cpus(); id++) {
+		જો ((cpu_bitmask & BIT(id)) != 0) {
+			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->ગાંઠ[id]);
 		}
 	}
 
 	flag_ipi(cpu_bitmask);
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, ચાવી);
 
-	return 0;
+	પાછા 0;
 }
 
-int k_ipi_work_wait(struct k_ipi_work *work, k_timeout_t timeout)
+પૂર્ણાંક k_ipi_work_wait(સંરચના k_ipi_work *work, k_timeout_t timeout)
 {
 	uint32_t rv = k_event_wait_all(&work->event, work->bitmask,
 				       false, timeout);
 
-	return (rv == 0) ? -EAGAIN : 0;
+	પાછા (rv == 0) ? -EAGAIN : 0;
 }
 
-void k_ipi_work_signal(void)
+શૂન્ય k_ipi_work_signal(શૂન્ય)
 {
 	signal_pending_ipi();
 }
 
-static void ipi_work_process(sys_dlist_t *list, unsigned int cpu_id)
+સ્થિર શૂન્ય ipi_work_process(sys_dlist_t *list, unsigned પૂર્ણાંક cpu_id)
 {
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_ચાવી_t ચાવી = k_spin_lock(&ipi_lock);
 
-	for (struct k_ipi_work *work = first_ipi_work(list, cpu_id);
-	     work != NULL; work = first_ipi_work(list, cpu_id)) {
-		sys_dlist_remove(&work->node[cpu_id]);
-		k_spin_unlock(&ipi_lock, key);
+	માટે (સંરચના k_ipi_work *work = first_ipi_work(list, cpu_id);
+	     work != ખાલી; work = first_ipi_work(list, cpu_id)) {
+		sys_dlist_remove(&work->ગાંઠ[cpu_id]);
+		k_spin_unlock(&ipi_lock, ચાવી);
 
 		work->func(work);
 
-		key = k_spin_lock(&ipi_lock);
+		ચાવી = k_spin_lock(&ipi_lock);
 		k_event_post(&work->event, BIT(cpu_id));
 	}
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, ચાવી);
 }
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
 
-void z_sched_ipi(void)
+શૂન્ય z_sched_ipi(શૂન્ય)
 {
 	/* NOTE: When adding code to this, make sure this is called
 	 * at appropriate location when !CONFIG_SCHED_IPI_SUPPORTED.
@@ -355,7 +355,7 @@ void z_sched_ipi(void)
 #endif
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-	unsigned int cpu_id = _current_cpu->id;
+	unsigned પૂર્ણાંક cpu_id = _current_cpu->id;
 
 	ipi_work_process(&_kernel.cpus[cpu_id].ipi_workq, cpu_id);
 #endif

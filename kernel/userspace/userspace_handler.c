@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
+#અન્તર્ભાવ <zephyr/kernel.h>
+#અન્તર્ભાવ <zephyr/internal/syscall_handler.h>
+#અન્તર્ભાવ <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+સ્થિર સંરચના k_object *validate_kernel_object(અચલ શૂન્ય *obj,
+					       ગણના k_objects otype,
+					       ગણના _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	સંરચના k_object *ko;
+	પૂર્ણાંક ret;
 
 	ko = k_object_find(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
+	જો (ret != 0) {
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
 #endif /* CONFIG_LOG */
-		return NULL;
+		પાછા ખાલી;
 	}
 
-	return ko;
+	પાછા ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+સ્થિર ALWAYS_INLINE સંરચના k_object *validate_any_object(અચલ શૂન્ય *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	પાછા validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(અચલ શૂન્ય *obj, ગણના k_objects otype)
 {
-	struct k_object *ko;
+	સંરચના k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	પાછા (ko != ખાલી);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,47 +49,47 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+સ્થિર અંતઃરેખ શૂન્ય z_vrfy_k_object_access_grant(અચલ શૂન્ય *object,
+						સંરચના k_thread *thread)
 {
-	struct k_object *ko;
+	સંરચના k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied",
+	K_OOPS(K_SYSCALL_VERIFY_સંદેશ(ko != ખાલી, "object %p access denied",
 				    object));
 	k_thread_perms_set(ko, thread);
 }
-#include <zephyr/syscalls/k_object_access_grant_mrsh.c>
+#અન્તર્ભાવ <zephyr/syscalls/k_object_access_grant_mrsh.c>
 
 /*
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+સ્થિર અંતઃરેખ પૂર્ણાંક z_vrfy_k_object_access_check(અચલ શૂન્ય *object)
 {
-	return z_impl_k_object_access_check(object);
+	પાછા z_impl_k_object_access_check(object);
 }
-#include <zephyr/syscalls/k_object_access_check_mrsh.c>
+#અન્તર્ભાવ <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+સ્થિર અંતઃરેખ શૂન્ય z_vrfy_k_object_release(અચલ શૂન્ય *object)
 {
-	struct k_object *ko;
+	સંરચના k_object *ko;
 
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
+	K_OOPS(K_SYSCALL_VERIFY_સંદેશ(ko != ખાલી, "object %p access denied", object));
 	k_thread_perms_clear(ko, _current);
 }
-#include <zephyr/syscalls/k_object_release_mrsh.c>
+#અન્તર્ભાવ <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+સ્થિર અંતઃરેખ શૂન્ય *z_vrfy_k_object_alloc(ગણના k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	પાછા z_impl_k_object_alloc(otype);
 }
-#include <zephyr/syscalls/k_object_alloc_mrsh.c>
+#અન્તર્ભાવ <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+સ્થિર અંતઃરેખ શૂન્ય *z_vrfy_k_object_alloc_size(ગણના k_objects otype, size_t size)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	પાછા z_impl_k_object_alloc_size(otype, size);
 }
-#include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
+#અન્તર્ભાવ <zephyr/syscalls/k_object_alloc_size_mrsh.c>

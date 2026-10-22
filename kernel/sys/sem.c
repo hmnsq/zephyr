@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#અન્તર્ભાવ <zephyr/kernel.h>
+#અન્તર્ભાવ <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+પૂર્ણાંક sys_sem_init(સંરચના sys_sem *sem, unsigned પૂર્ણાંક initial_ગણતરી,
+		 unsigned પૂર્ણાંક limit)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_ગણતરી, limit);
 
-	return 0;
+	પાછા 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+પૂર્ણાંક sys_sem_give(સંરચના sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	પાછા 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+પૂર્ણાંક sys_sem_take(સંરચના sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	પૂર્ણાંક ret_કિંમત = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_કિંમત = k_sem_take(&sem->kernel_sem, timeout);
+	જો ((ret_કિંમત == -EAGAIN) || (ret_કિંમત == -EBUSY)) {
+		ret_કિંમત = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	પાછા ret_કિંમત;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned પૂર્ણાંક sys_sem_ગણતરી_get(સંરચના sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	પાછા k_sem_ગણતરી_get(&sem->kernel_sem);
 }

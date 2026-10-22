@@ -17,12 +17,12 @@
  * function __stack_chk_fail and global variable __stack_chk_guard.
  */
 
-#include <zephyr/toolchain.h> /* compiler specific configurations */
+#અન્તર્ભાવ <zephyr/toolchain.h> /* compiler specific configurations */
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/kernel.h>
-#include <zephyr/app_memory/app_memdomain.h>
+#અન્તર્ભાવ <zephyr/toolchain.h>
+#અન્તર્ભાવ <zephyr/linker/sections.h>
+#અન્તર્ભાવ <zephyr/kernel.h>
+#અન્તર્ભાવ <zephyr/app_memory/app_memdomain.h>
 
 /**
  *
@@ -32,11 +32,11 @@
  *
  * @note This function does not return.
  */
-void _StackCheckHandler(void)
+શૂન્ય ઢગલો_Check_Handler(શૂન્ય)
 {
 	/* Stack canary error is a software fatal condition; treat it as such.
 	 */
-	z_except_reason(K_ERR_STACK_CHK_FAIL);
+	z_except_reason(K_ERR_ઢગલો_CHK_FAIL);
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
@@ -46,16 +46,16 @@ void _StackCheckHandler(void)
  * Symbol referenced by GCC compiler generated code for canary value.
  * The canary value gets initialized in z_cstart().
  */
-#ifdef CONFIG_STACK_CANARIES_TLS
-#ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
-__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
+#ifdef CONFIG_ઢગલો_CANARIES_TLS
+#ifdef CONFIG_ઢગલો_CANARIES_TLS_PREPEND
+__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL અસ્થિર uintptr_t __stack_chk_guard;
+#નહીંતર
+Z_THREAD_LOCAL અસ્થિર uintptr_t __stack_chk_guard;
 #endif
-#elif CONFIG_USERSPACE
-K_APP_DMEM(z_libc_partition) volatile uintptr_t __stack_chk_guard;
-#else
-__noinit volatile uintptr_t __stack_chk_guard;
+#અથવાજો CONFIG_USERSPACE
+K_APP_DMEM(z_libc_partition) અસ્થિર uintptr_t __stack_chk_guard;
+#નહીંતર
+__noinit અસ્થિર uintptr_t __stack_chk_guard;
 #endif
 
 /**
@@ -65,4 +65,4 @@ __noinit volatile uintptr_t __stack_chk_guard;
  * This routine is invoked when a stack canary error is detected, indicating
  * a buffer overflow or stack corruption problem.
  */
-FUNC_ALIAS(_StackCheckHandler, __stack_chk_fail, void);
+FUNC_ALIAS(ઢગલો_Check_Handler, __stack_chk_fail, શૂન્ય);
