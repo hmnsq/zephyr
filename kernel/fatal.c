@@ -4,22 +4,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#شامل <zephyr/kernel.h>
 
-#include <kernel_internal.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/arch/cpu.h>
-#include <zephyr/arch/exception.h>
-#include <zephyr/logging/log_ctrl.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/fatal.h>
-#include <zephyr/debug/coredump.h>
-#include <zephyr/sys/reboot.h>
+#شامل <kernel_internal.h>
+#شامل <zephyr/sys/__assert.h>
+#شامل <zephyr/arch/cpu.h>
+#شامل <zephyr/arch/exception.h>
+#شامل <zephyr/logging/log_ctrl.h>
+#شامل <zephyr/logging/log.h>
+#شامل <zephyr/fatal.h>
+#شامل <zephyr/debug/coredump.h>
+#شامل <zephyr/sys/reboot.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
+FUNC_NORETURN __weak تهی arch_system_halt(unsigned صحیح reason)
 {
 	ARG_UNUSED(reason);
 
@@ -27,24 +27,24 @@ FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
 	 * is enabled?
 	 */
 
-	(void)arch_irq_lock();
-	for (;;) {
+	(تهی)arch_irq_lock();
+	برای (;;) {
 		/* Spin endlessly */
 	}
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-__weak void k_sys_fatal_error_handler(unsigned int reason,
-				      const struct arch_esf *esf)
+__weak تهی k_sys_fatal_error_handler(unsigned صحیح reason,
+				      ثابت ساختار arch_esf *esf)
 {
 	ARG_UNUSED(esf);
 	LOG_PANIC();
 
-#if CONFIG_RESET_ON_FATAL_ERROR
+#اگر CONFIG_RESET_ON_FATAL_ERROR
 	EXCEPTION_DUMP("Resetting system");
 	sys_reboot(SYS_REBOOT_WARM);
-#else
+#وگرنه
 	EXCEPTION_DUMP("Halting system");
 	arch_system_halt(reason);
 #endif /* CONFIG_RESET_ON_FATAL_ERROR */
@@ -53,51 +53,51 @@ __weak void k_sys_fatal_error_handler(unsigned int reason,
 }
 /* LCOV_EXCL_STOP */
 
-static const char *thread_name_get(struct k_thread *thread)
+ایستا ثابت نویسه *thread_name_get(ساختار k_thread *thread)
 {
-	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
+	ثابت نویسه *thread_name = (thread != پوچ) ? k_thread_name_get(thread) : پوچ;
 
-	if ((thread_name == NULL) || (thread_name[0] == '\0')) {
+	اگر ((thread_name == پوچ) || (thread_name[0] == '\0')) {
 		thread_name = "unknown";
 	}
 
-	return thread_name;
+	بازگشت thread_name;
 }
 
-static const char *reason_to_str(unsigned int reason)
+ایستا ثابت نویسه *reason_to_str(unsigned صحیح reason)
 {
-	switch (reason) {
-	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
-	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
-	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
-	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
-	default:
-		return "Unknown error";
+	انتخاب (reason) {
+	حالت K_ERR_CPU_EXCEPTION:
+		بازگشت "CPU exception";
+	حالت K_ERR_SPURIOUS_IRQ:
+		بازگشت "Unhandled interrupt";
+	حالت K_ERR_پشته_CHK_FAIL:
+		بازگشت "Stack overflow";
+	حالت K_ERR_KERNEL_OOPS:
+		بازگشت "Kernel oops";
+	حالت K_ERR_KERNEL_PANIC:
+		بازگشت "Kernel panic";
+	پیشفرض:
+		بازگشت "Unknown error";
 	}
 }
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN void k_fatal_halt(unsigned int reason)
+FUNC_NORETURN تهی k_fatal_halt(unsigned صحیح reason)
 {
 	arch_system_halt(reason);
 }
 /* LCOV_EXCL_STOP */
 
-void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
+تهی z_fatal_error(unsigned صحیح reason, ثابت ساختار arch_esf *esf)
 {
 	/* We can't allow this code to be preempted, but don't need to
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
-			_current : NULL;
+	unsigned صحیح کلید = arch_irq_lock();
+	ساختار k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
+			_current : پوچ;
 
 	/* The printk lock is not trustworthy from here on: this context may
 	 * have failed while holding it, or a CPU that is never coming back
@@ -117,13 +117,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 *
 	 * See #17656
 	 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-	if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#اگر defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+	اگر ((esf != پوچ) && arch_is_in_nested_exception(esf)) {
 		EXCEPTION_DUMP("Fault during interrupt handling");
 	}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	اگر (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		EXCEPTION_DUMP("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
@@ -134,12 +134,12 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * which breaks builds when the option is off (implicit declaration).
 	 */
 #ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
-	unsigned int coredump_irq_cookie;
+	unsigned صحیح coredump_irq_cookie;
 
-	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
+	arch_coredump_fatal_irq_unlock(کلید, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
-	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
-#else
+	کلید = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
+#وگرنه
 	coredump(reason, esf, thread);
 #endif
 
@@ -158,49 +158,49 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * Note that k_thread_abort() returns on some architectures but
 	 * not others; e.g. on ARC, x86_64, Xtensa with ASM2, ARM
 	 */
-	if (!IS_ENABLED(CONFIG_TEST)) {
+	اگر (!IS_ENABLED(CONFIG_TEST)) {
 		__ASSERT(reason != K_ERR_KERNEL_PANIC,
 			 "Attempted to recover from a kernel panic condition");
 		/* FIXME: #17656 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#اگر defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		اگر ((esf != پوچ) && arch_is_in_nested_exception(esf)) {
+#اگر defined(CONFIG_پشته_SENTINEL)
+			اگر (reason != K_ERR_پشته_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
 #endif /* CONFIG_STACK_SENTINEL */
 		}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
-	} else {
+	} وگرنه {
 		/* Test mode */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#اگر defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		اگر ((esf != پوچ) && arch_is_in_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
-				arch_irq_unlock(key);
-				return;
+#اگر defined(CONFIG_پشته_SENTINEL)
+			اگر (reason != K_ERR_پشته_CHK_FAIL) {
+				arch_irq_unlock(کلید);
+				بازگشت;
 			}
-#else
-			arch_irq_unlock(key);
-			return;
+#وگرنه
+			arch_irq_unlock(کلید);
+			بازگشت;
 #endif /* CONFIG_STACK_SENTINEL */
-		} else {
+		} وگرنه {
 			/* Abort the thread only if the fault is not due to
 			 * a spurious ISR handler triggered.
 			 */
-			if (reason == K_ERR_SPURIOUS_IRQ) {
-				arch_irq_unlock(key);
-				return;
+			اگر (reason == K_ERR_SPURIOUS_IRQ) {
+				arch_irq_unlock(کلید);
+				بازگشت;
 			}
 		}
 #endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(کلید);
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	اگر (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);
 	}
 }

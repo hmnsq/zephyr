@@ -22,18 +22,18 @@
  * @brief Kernel event object
  */
 
-#include <zephyr/kernel.h>
+#شامل <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#شامل <zephyr/toolchain.h>
+#شامل <zephyr/sys/dlist.h>
+#شامل <zephyr/init.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/tracing/tracing.h>
+#شامل <zephyr/sys/check.h>
 /* private kernel APIs */
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
+#شامل <wait_q.h>
+#شامل <ksched.h>
+#شامل <scheduler.h>
 
 #define K_EVENT_WAIT_ANY      0x00   /* Wait for any events */
 #define K_EVENT_WAIT_ALL      0x01   /* Wait for all events */
@@ -42,24 +42,24 @@
 #define K_EVENT_OPTION_RESET  0x02   /* Reset events prior to waiting */
 #define K_EVENT_OPTION_CLEAR  0x04   /* Clear events that are received */
 
-struct event_walk_data {
+ساختار event_walk_data {
 #ifdef CONFIG_WAITQ_SCALABLE
-	struct k_thread  *head;
+	ساختار k_thread  *head;
 #endif /* CONFIG_WAITQ_SCALABLE */
 	uint32_t events;
 	uint32_t clear_events;
 };
 
 #ifdef CONFIG_OBJ_CORE_EVENT
-K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_event, k_event, K_OBJ_TYPE_EVENT_ID, پوچ);
 #endif /* CONFIG_OBJ_CORE_EVENT */
 
-void z_impl_k_event_init(struct k_event *event)
+تهی z_impl_k_event_init(ساختار k_event *event)
 {
 	__ASSERT_NO_MSG(!arch_is_in_isr());
 
 	event->events = 0;
-	event->lock = (struct k_spinlock) {};
+	event->lock = (ساختار k_spinlock) {};
 
 	SYS_PORT_TRACING_OBJ_INIT(k_event, event);
 
@@ -73,12 +73,12 @@ void z_impl_k_event_init(struct k_event *event)
 }
 
 #ifdef CONFIG_USERSPACE
-void z_vrfy_k_event_init(struct k_event *event)
+تهی z_vrfy_k_event_init(ساختار k_event *event)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(event, K_OBJ_EVENT));
 	z_impl_k_event_init(event);
 }
-#include <zephyr/syscalls/k_event_init_mrsh.c>
+#شامل <zephyr/syscalls/k_event_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 /**
@@ -93,22 +93,22 @@ void z_vrfy_k_event_init(struct k_event *event)
  *
  * @return event bits that satisfy the wait condition or zero
  */
-static uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
-					unsigned int wait_condition)
+ایستا uint32_t are_wait_conditions_met(uint32_t desired, uint32_t current,
+					unsigned صحیح wait_condition)
 {
 	uint32_t match = current & desired;
 
-	if ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
+	اگر ((wait_condition == K_EVENT_WAIT_ALL) && (match != desired)) {
 		/* special case for K_EVENT_WAIT_ALL */
-		return 0;
+		بازگشت 0;
 	}
 
 	/* return the matched events for any wait condition */
-	return match;
+	بازگشت match;
 }
 
 #ifdef CONFIG_WAITQ_SCALABLE
-static void event_post_walk_op(int status, void *data)
+ایستا تهی event_post_walk_op(صحیح status, تهی *data)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
@@ -116,36 +116,36 @@ static void event_post_walk_op(int status, void *data)
 	 * is invoked with the scheduler spinlock held.
 	 */
 	ARG_UNUSED(status);
-	struct event_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ساختار event_walk_data *walk_data = data;
+	ساختار k_thread *thread, *next;
 
 	thread = walk_data->head;
 
-	while (thread != NULL) {
+	وقتی (thread != پوچ) {
 		next = thread->next_wake_link;
 
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_مقدار_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 
 		thread = next;
 	}
 }
 #define EVENT_POST_WALK_OP_FN event_post_walk_op
-#else /* CONFIG_WAITQ_SCALABLE */
-#define EVENT_POST_WALK_OP_FN NULL
+#وگرنه /* CONFIG_WAITQ_SCALABLE */
+#define EVENT_POST_WALK_OP_FN پوچ
 #endif /* CONFIG_WAITQ_SCALABLE */
 
-static int event_walk_op(struct k_thread *thread, void *data)
+ایستا صحیح event_walk_op(ساختار k_thread *thread, تهی *data)
 {
 	uint32_t match;
-	unsigned int wait_condition;
-	struct event_walk_data *event_data = data;
+	unsigned صحیح wait_condition;
+	ساختار event_walk_data *event_data = data;
 
 	wait_condition = thread->event_options & K_EVENT_WAIT_MASK;
 
 	match = are_wait_conditions_met(thread->events, event_data->events,
 					wait_condition);
-	if (match != 0) {
+	اگر (match != 0) {
 		/*
 		 * The wait conditions have been satisfied. Set the
 		 * received events then wake thread now if allowed,
@@ -154,10 +154,10 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 * NOTE: thread event options can consume an event
 		 */
 		thread->events = match;
-		if (thread->event_options & K_EVENT_OPTION_CLEAR) {
+		اگر (thread->event_options & K_EVENT_OPTION_CLEAR) {
 			event_data->clear_events |= match;
 		}
-		(void)z_try_abort_thread_timeout(thread);
+		(تهی)z_try_abort_thread_timeout(thread);
 
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
@@ -165,25 +165,25 @@ static int event_walk_op(struct k_thread *thread, void *data)
 		 * to call here because this walk_op callback
 		 * is invoked with the scheduler spinlock held.
 		 */
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_مقدار_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
-#else /* !CONFIG_WAITQ_SCALABLE */
+#وگرنه /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = event_data->head;
 		event_data->head = thread;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	بازگشت 0;
 }
 
-static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
+ایستا uint32_t k_event_post_internal(ساختار k_event *event, uint32_t events,
 				  uint32_t events_mask)
 {
-	k_spinlock_key_t  key;
-	struct event_walk_data data;
+	k_spinlock_کلید_t  کلید;
+	ساختار event_walk_data data;
 	uint32_t previous_events;
 
-	key = k_spin_lock(&event->lock);
+	کلید = k_spin_lock(&event->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, post, event, events,
 					events_mask);
@@ -204,7 +204,7 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	 */
 
 #ifdef CONFIG_WAITQ_SCALABLE
-	data.head = NULL;
+	data.head = پوچ;
 #endif /* CONFIG_WAITQ_SCALABLE */
 	data.events = events;
 	data.clear_events = 0;
@@ -213,74 +213,74 @@ static uint32_t k_event_post_internal(struct k_event *event, uint32_t events,
 	/* stash any events not consumed */
 	event->events = data.events & ~data.clear_events;
 
-	z_reschedule(&event->lock, key);
+	z_reschedule(&event->lock, کلید);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, post, event, events,
 				       events_mask);
 
-	return previous_events;
+	بازگشت previous_events;
 }
 
-uint32_t z_impl_k_event_post(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_post(ساختار k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, events);
+	بازگشت k_event_post_internal(event, events, events);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_post(struct k_event *event, uint32_t events)
+uint32_t z_vrfy_k_event_post(ساختار k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_post(event, events);
+	بازگشت z_impl_k_event_post(event, events);
 }
-#include <zephyr/syscalls/k_event_post_mrsh.c>
+#شامل <zephyr/syscalls/k_event_post_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_set(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_set(ساختار k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, events, ~0);
+	بازگشت k_event_post_internal(event, events, ~0);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set(struct k_event *event, uint32_t events)
+uint32_t z_vrfy_k_event_set(ساختار k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set(event, events);
+	بازگشت z_impl_k_event_set(event, events);
 }
-#include <zephyr/syscalls/k_event_set_mrsh.c>
+#شامل <zephyr/syscalls/k_event_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_set_masked(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_set_masked(ساختار k_event *event, uint32_t events,
 			       uint32_t events_mask)
 {
-	return k_event_post_internal(event, events, events_mask);
+	بازگشت k_event_post_internal(event, events, events_mask);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_set_masked(struct k_event *event, uint32_t events,
+uint32_t z_vrfy_k_event_set_masked(ساختار k_event *event, uint32_t events,
 			       uint32_t events_mask)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_set_masked(event, events, events_mask);
+	بازگشت z_impl_k_event_set_masked(event, events, events_mask);
 }
-#include <zephyr/syscalls/k_event_set_masked_mrsh.c>
+#شامل <zephyr/syscalls/k_event_set_masked_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_clear(struct k_event *event, uint32_t events)
+uint32_t z_impl_k_event_clear(ساختار k_event *event, uint32_t events)
 {
-	return k_event_post_internal(event, 0, events);
+	بازگشت k_event_post_internal(event, 0, events);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_clear(struct k_event *event, uint32_t events)
+uint32_t z_vrfy_k_event_clear(ساختار k_event *event, uint32_t events)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_clear(event, events);
+	بازگشت z_impl_k_event_clear(event, events);
 }
-#include <zephyr/syscalls/k_event_clear_mrsh.c>
+#شامل <zephyr/syscalls/k_event_clear_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
-				      unsigned int options, k_timeout_t timeout)
+ایستا uint32_t k_event_wait_internal(ساختار k_event *event, uint32_t events,
+				      unsigned صحیح options, k_timeout_t timeout)
 {
 	uint32_t  rv = 0;
 
@@ -290,41 +290,41 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_event, wait, event, events,
 					options, timeout);
 
-	if ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
+	اگر ((events == 0U) && !(options & K_EVENT_OPTION_RESET)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+		بازگشت 0;
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&event->lock);
+	k_spinlock_کلید_t  کلید = k_spin_lock(&event->lock);
 
-	if (options & K_EVENT_OPTION_RESET) {
+	اگر (options & K_EVENT_OPTION_RESET) {
 		event->events = 0;
 	}
 
-	if (events == 0) {
-		k_spin_unlock(&event->lock, key);
+	اگر (events == 0) {
+		k_spin_unlock(&event->lock, کلید);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, 0);
-		return 0;
+		بازگشت 0;
 	}
 
-	unsigned int wait_condition = options & K_EVENT_WAIT_MASK;
-	struct k_thread *thread = k_sched_current_thread_query();
+	unsigned صحیح wait_condition = options & K_EVENT_WAIT_MASK;
+	ساختار k_thread *thread = k_sched_current_thread_query();
 
 	/* Test if the wait conditions have already been met. */
 	rv = are_wait_conditions_met(events, event->events, wait_condition);
-	if (rv != 0) {
+	اگر (rv != 0) {
 		/* clear the events that are matched */
-		if (options & K_EVENT_OPTION_CLEAR) {
+		اگر (options & K_EVENT_OPTION_CLEAR) {
 			event->events &= ~rv;
 		}
 
-		k_spin_unlock(&event->lock, key);
-		goto out;
+		k_spin_unlock(&event->lock, کلید);
+		برو out;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&event->lock, key);
-		goto out;
+	اگر (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&event->lock, کلید);
+		برو out;
 	}
 
 	/*
@@ -338,7 +338,7 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_event, wait, event, events,
 					   options, timeout);
 
-	if (z_pend_curr(&event->lock, key, &event->wait_q, timeout) == 0) {
+	اگر (z_pend_curr(&event->lock, کلید, &event->wait_q, timeout) == 0) {
 		/* Retrieve the set of events that woke the thread */
 		rv = thread->events;
 	}
@@ -346,86 +346,86 @@ static uint32_t k_event_wait_internal(struct k_event *event, uint32_t events,
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_event, wait, event, events, rv);
 
-	return rv;
+	بازگشت rv;
 }
 
 /**
  * Wait for any of the specified events
  */
-uint32_t z_impl_k_event_wait(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait(ساختار k_event *event, uint32_t events,
 			     bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? K_EVENT_OPTION_RESET : 0;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	بازگشت k_event_wait_internal(event, events, options, timeout);
 }
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait(struct k_event *event, uint32_t events,
+uint32_t z_vrfy_k_event_wait(ساختار k_event *event, uint32_t events,
 				    bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait(event, events, reset, timeout);
+	بازگشت z_impl_k_event_wait(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_mrsh.c>
+#شامل <zephyr/syscalls/k_event_wait_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 /**
  * Wait for all of the specified events
  */
-uint32_t z_impl_k_event_wait_all(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all(ساختار k_event *event, uint32_t events,
 				 bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : K_EVENT_WAIT_ALL;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	بازگشت k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all(struct k_event *event, uint32_t events,
+uint32_t z_vrfy_k_event_wait_all(ساختار k_event *event, uint32_t events,
 					bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all(event, events, reset, timeout);
+	بازگشت z_impl_k_event_wait_all(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_mrsh.c>
+#شامل <zephyr/syscalls/k_event_wait_all_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_safe(ساختار k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR | K_EVENT_OPTION_RESET)
 				 : K_EVENT_OPTION_CLEAR;
 
-	return k_event_wait_internal(event, events, options, timeout);
+	بازگشت k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_safe(struct k_event *event, uint32_t events,
+uint32_t z_vrfy_k_event_wait_safe(ساختار k_event *event, uint32_t events,
 				  bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_safe(event, events, reset, timeout);
+	بازگشت z_impl_k_event_wait_safe(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_safe_mrsh.c>
+#شامل <zephyr/syscalls/k_event_wait_safe_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+uint32_t z_impl_k_event_wait_all_safe(ساختار k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	uint32_t options = reset ? (K_EVENT_OPTION_CLEAR |
 				    K_EVENT_OPTION_RESET | K_EVENT_WAIT_ALL)
 				 : (K_EVENT_OPTION_CLEAR | K_EVENT_WAIT_ALL);
 
-	return k_event_wait_internal(event, events, options, timeout);
+	بازگشت k_event_wait_internal(event, events, options, timeout);
 }
 
 #ifdef CONFIG_USERSPACE
-uint32_t z_vrfy_k_event_wait_all_safe(struct k_event *event, uint32_t events,
+uint32_t z_vrfy_k_event_wait_all_safe(ساختار k_event *event, uint32_t events,
 				      bool reset, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(event, K_OBJ_EVENT));
-	return z_impl_k_event_wait_all_safe(event, events, reset, timeout);
+	بازگشت z_impl_k_event_wait_all_safe(event, events, reset, timeout);
 }
-#include <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
+#شامل <zephyr/syscalls/k_event_wait_all_safe_mrsh.c>
 #endif /* CONFIG_USERSPACE */

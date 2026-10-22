@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/iterable_sections.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/init.h>
+#شامل <zephyr/linker/linker-defs.h>
+#شامل <zephyr/sys/iterable_sections.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <wait_q.h>
+#شامل <ksched.h>
+#شامل <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+صحیح k_heap_array_get(ساختار k_heap **heap)
 {
-	int num;
+	صحیح رقم;
 
 	/* Pointer to the start of the heap array */
 	STRUCT_SECTION_GET(k_heap, 0, heap);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_شمار(k_heap, &رقم);
+	بازگشت رقم;
 }
 
-void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
+تهی k_heap_init(ساختار k_heap *heap, تهی *mem, size_t bytes)
 {
 	z_waitq_init(&heap->wait_q);
-	heap->lock = (struct k_spinlock) {};
+	heap->lock = (ساختار k_spinlock) {};
 	sys_heap_init(&heap->heap, mem, bytes);
 
 	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
 }
 
-static int statics_init(void)
+ایستا صحیح statics_init(تهی)
 {
 	STRUCT_SECTION_FOREACH(k_heap, heap) {
 		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
 	}
-	return 0;
+	بازگشت 0;
 }
 
 /*
@@ -48,61 +48,61 @@ static int statics_init(void)
  */
 SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_OBJECTS);
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+تعریفنوع تهی * (sys_heap_allocator_t)(ساختار sys_heap *heap, size_t align, size_t bytes);
 
-static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes,
+ایستا تهی *z_heap_alloc_helper(ساختار k_heap *heap, size_t align, size_t bytes,
 				 k_timeout_t timeout,
 				 sys_heap_allocator_t *sys_heap_allocator)
 {
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	تهی *ret = پوچ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_کلید_t کلید = k_spin_lock(&heap->lock);
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
+	وقتی (ret == پوچ) {
 		ret = sys_heap_allocator(&heap->heap, align, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		اگر (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != پوچ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			بشکن;
 		}
 
-		if (!blocked_alloc) {
+		اگر (!blocked_alloc) {
 			blocked_alloc = true;
 
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+		} وگرنه {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(تهی) z_pend_curr(&heap->lock, کلید, &heap->wait_q, timeout);
+		کلید = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
-	return ret;
+	k_spin_unlock(&heap->lock, کلید);
+	بازگشت ret;
 }
 
-void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
+تهی *k_heap_alloc(ساختار k_heap *heap, size_t bytes, k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, alloc, heap, timeout);
 
-	void *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
+	تهی *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
 					sys_heap_noalign_alloc);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
 
-	return ret;
+	بازگشت ret;
 }
 
-void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
+تهی *k_heap_aligned_alloc(ساختار k_heap *heap, size_t align, size_t bytes,
 			k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, aligned_alloc, heap, timeout);
@@ -111,7 +111,7 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	__ASSERT((align & (align - 1)) == 0,
 		 "align must be a power of 2");
 
-	void *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
+	تهی *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
 					sys_heap_aligned_alloc);
 
 	/*
@@ -125,69 +125,69 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
 
-	return ret;
+	بازگشت ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+تهی *k_heap_calloc(ساختار k_heap *heap, size_t رقم, size_t size, k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
 
-	void *ret = NULL;
+	تهی *ret = پوچ;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
+	اگر (!size_mul_overflow(رقم, size, &bounds)) {
 		ret = k_heap_alloc(heap, bounds, timeout);
 	}
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	اگر (ret != پوچ) {
+		(تهی)memset(ret, 0, bounds);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
 
-	return ret;
+	بازگشت ret;
 }
 
-void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
+تهی *k_heap_realloc(ساختار k_heap *heap, تهی *ptr, size_t bytes, k_timeout_t timeout)
 {
 	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	تهی *ret = پوچ;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_کلید_t کلید = k_spin_lock(&heap->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
 
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
+	وقتی (ret == پوچ) {
 		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		اگر (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != پوچ) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			بشکن;
 		}
 
 		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		(تهی) z_pend_curr(&heap->lock, کلید, &heap->wait_q, timeout);
+		کلید = k_spin_lock(&heap->lock);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&heap->lock, کلید);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
 
-	return ret;
+	بازگشت ret;
 }
 
-void k_heap_free(struct k_heap *heap, void *mem)
+تهی k_heap_free(ساختار k_heap *heap, تهی *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_کلید_t کلید = k_spin_lock(&heap->lock);
 
 	sys_heap_free(&heap->heap, mem);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
-	} else {
-		k_spin_unlock(&heap->lock, key);
+	SYS_PORT_TRACING_OBJ_FUNC(k_heap, آزاد, heap);
+	اگر (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
+		z_reschedule(&heap->lock, کلید);
+	} وگرنه {
+		k_spin_unlock(&heap->lock, کلید);
 	}
 }

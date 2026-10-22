@@ -3,176 +3,176 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/math_extras.h>
-#include <kswap.h>
-#include <ksched.h>
-#include <ipi.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/sys/math_extras.h>
+#شامل <kswap.h>
+#شامل <ksched.h>
+#شامل <ipi.h>
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE) && defined(CONFIG_PM)
-#include <zephyr/pm/pm.h>
+#اگر defined(CONFIG_IPI_OPTIMIZE_IDLE) && defined(CONFIG_PM)
+#شامل <zephyr/pm/pm.h>
 #endif
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-static struct k_spinlock ipi_lock;
+ایستا ساختار k_spinlock ipi_lock;
 #endif
 
 #ifdef CONFIG_TRACE_SCHED_IPI
-extern void z_trace_sched_ipi(void);
+بیرونی تهی z_trace_sched_ipi(تهی);
 #endif
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
-static bool sched_ipi_idle_cpu_active(uint32_t cpu)
+#اگر defined(CONFIG_IPI_OPTIMIZE_IDLE)
+ایستا bool sched_ipi_idle_cpu_active(uint32_t cpu)
 {
-#if defined(CONFIG_PM)
-	return pm_state_next_get((uint8_t)cpu)->state == PM_STATE_ACTIVE;
-#else
+#اگر defined(CONFIG_PM)
+	بازگشت pm_state_next_get((uint8_t)cpu)->state == PM_STATE_ACTIVE;
+#وگرنه
 	ARG_UNUSED(cpu);
-	return true;
+	بازگشت true;
 #endif
 }
 
-static inline int sched_ipi_thread_reservation(const struct k_thread *thread)
+ایستا درونخطی صحیح sched_ipi_thread_reservation(ثابت ساختار k_thread *thread)
 {
 	uint32_t reservations = _kernel.sched_ipi_reserved;
 
-	while (reservations != 0U) {
-		unsigned int cpu = (unsigned int)u32_count_trailing_zeros(reservations);
+	وقتی (reservations != 0U) {
+		unsigned صحیح cpu = (unsigned صحیح)u32_شمار_trailing_zeros(reservations);
 
 		reservations &= ~BIT(cpu);
-		if (_kernel.sched_ipi_target[cpu] == thread) {
-			return (int)cpu;
+		اگر (_kernel.sched_ipi_target[cpu] == thread) {
+			بازگشت (صحیح)cpu;
 		}
 	}
 
-	return -1;
+	بازگشت -1;
 }
 
-static void sched_ipi_idle_reserve(uint32_t cpu, struct k_thread *thread)
+ایستا تهی sched_ipi_idle_reserve(uint32_t cpu, ساختار k_thread *thread)
 {
 	uint32_t bit = BIT(cpu);
 
 	__ASSERT_NO_MSG((_kernel.sched_ipi_reserved & bit) == 0U);
-	__ASSERT_NO_MSG(_kernel.sched_ipi_target[cpu] == NULL);
+	__ASSERT_NO_MSG(_kernel.sched_ipi_target[cpu] == پوچ);
 
 	_kernel.sched_ipi_target[cpu] = thread;
 	_kernel.sched_ipi_reserved |= bit;
 }
 
-static void sched_ipi_idle_unreserve(uint32_t cpu)
+ایستا تهی sched_ipi_idle_unreserve(uint32_t cpu)
 {
 	uint32_t bit = BIT(cpu);
 
-	_kernel.sched_ipi_target[cpu] = NULL;
+	_kernel.sched_ipi_target[cpu] = پوچ;
 	_kernel.sched_ipi_reserved &= ~bit;
 }
 
-void ipi_idle_thread_unreserve(struct k_thread *thread)
+تهی ipi_idle_thread_unreserve(ساختار k_thread *thread)
 {
-	int cpu = sched_ipi_thread_reservation(thread);
+	صحیح cpu = sched_ipi_thread_reservation(thread);
 
 	/* Keep pending_ipi intact: its CPU bit may cover another request.
 	 * An already-dispatched scheduling IPI is harmless.
 	 */
-	if (cpu >= 0) {
+	اگر (cpu >= 0) {
 		sched_ipi_idle_unreserve((uint32_t)cpu);
 	}
 }
 
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread)
+bool ipi_idle_thread_rebind(ساختار k_thread *old_thread,
+			    ساختار k_thread *new_thread)
 {
-	int old_cpu;
+	صحیح old_cpu;
 
 	__ASSERT_NO_MSG(old_thread != new_thread);
 
 	old_cpu = sched_ipi_thread_reservation(old_thread);
-	if (old_cpu < 0) {
-		return false;
+	اگر (old_cpu < 0) {
+		بازگشت false;
 	}
 
 	uint32_t cpu = (uint32_t)old_cpu;
 	bool eligible = sched_ipi_idle_cpu_active(cpu);
 
-#if defined(CONFIG_SCHED_CPU_MASK)
+#اگر defined(CONFIG_SCHED_CPU_MASK)
 	eligible = eligible && ((new_thread->base.cpu_mask & BIT(cpu)) != 0U);
 #endif
 
-	if (!eligible) {
+	اگر (!eligible) {
 		sched_ipi_idle_unreserve(cpu);
-		return false;
+		بازگشت false;
 	}
 
 	/* Reuse the outstanding IPI while transferring its coverage. */
 	_kernel.sched_ipi_target[cpu] = new_thread;
-	return true;
+	بازگشت true;
 }
 
-struct k_thread *ipi_idle_reserved_take(void)
+ساختار k_thread *ipi_idle_reserved_take(تهی)
 {
 	uint32_t cpu = _current_cpu->id;
-	struct k_thread *thread = _kernel.sched_ipi_target[cpu];
+	ساختار k_thread *thread = _kernel.sched_ipi_target[cpu];
 
-	__ASSERT_NO_MSG((thread != NULL) ==
+	__ASSERT_NO_MSG((thread != پوچ) ==
 			((_kernel.sched_ipi_reserved & BIT(cpu)) != 0U));
 
-	if (thread != NULL) {
+	اگر (thread != پوچ) {
 		sched_ipi_idle_unreserve(cpu);
 	}
 
-	return thread;
+	بازگشت thread;
 }
 #endif
 
-void flag_ipi(uint32_t ipi_mask)
+تهی flag_ipi(uint32_t ipi_mask)
 {
-#if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+#اگر defined(CONFIG_SCHED_IPI_SUPPORTED)
+	اگر (arch_رقم_cpus() > 1) {
 		atomic_or(&_kernel.pending_ipi, (atomic_val_t)ipi_mask);
 	}
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
 }
 
 /* Create a bitmask of CPUs that need an IPI. Note: sched_spinlock is held. */
-atomic_val_t ipi_mask_create(struct k_thread *thread)
+atomic_val_t ipi_mask_create(ساختار k_thread *thread)
 {
-	if (!IS_ENABLED(CONFIG_IPI_OPTIMIZE)) {
-		return (CONFIG_MP_MAX_NUM_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
+	اگر (!IS_ENABLED(CONFIG_IPI_OPTIMIZE)) {
+		بازگشت (CONFIG_MP_MAX_رقم_CPUS > 1) ? IPI_ALL_CPUS_MASK : 0;
 	}
 
 	uint32_t  ipi_mask = 0;
-	uint32_t  num_cpus = (uint32_t)arch_num_cpus();
+	uint32_t  رقم_cpus = (uint32_t)arch_رقم_cpus();
 	uint32_t  id = _current_cpu->id;
-	struct k_thread *cpu_thread;
+	ساختار k_thread *cpu_thread;
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
+#اگر defined(CONFIG_IPI_OPTIMIZE_IDLE)
 	/* An outstanding idle CPU IPI already covers this thread. */
-	if (sched_ipi_thread_reservation(thread) >= 0) {
-		return 0;
+	اگر (sched_ipi_thread_reservation(thread) >= 0) {
+		بازگشت 0;
 	}
 
 	/* Fast path: the thread's previous CPU is idle and not already reserved.
 	 */
 	uint8_t last = thread->base.cpu;
-	struct k_thread *last_thread = _kernel.cpus[last].current;
+	ساختار k_thread *last_thread = _kernel.cpus[last].current;
 
-	if (last != id &&
-	    last_thread != NULL &&
+	اگر (last != id &&
+	    last_thread != پوچ &&
 	    z_is_idle_thread_object(last_thread) &&
 	    sched_ipi_idle_cpu_active(last) &&
-#if defined(CONFIG_SCHED_CPU_MASK)
+#اگر defined(CONFIG_SCHED_CPU_MASK)
 	    (thread->base.cpu_mask & BIT(last)) != 0 &&
 #endif
 	    (_kernel.sched_ipi_reserved & BIT(last)) == 0U) {
 		sched_ipi_idle_reserve(last, thread);
-		return IPI_CPU_MASK(last);
+		بازگشت IPI_CPU_MASK(last);
 	}
 
 #endif
 
-	for (uint32_t i = 0; i < num_cpus; i++) {
-		if (id == i) {
-			continue;
+	برای (uint32_t i = 0; i < رقم_cpus; i++) {
+		اگر (id == i) {
+			ادامه;
 		}
 
 		/*
@@ -185,41 +185,41 @@ atomic_val_t ipi_mask_create(struct k_thread *thread)
 		 *    (Items 3 & 4 may be overridden by a metaIRQ thread)
 		 */
 
-#if defined(CONFIG_SCHED_CPU_MASK)
-		if ((thread->base.cpu_mask & BIT(i)) == 0) {
-			continue;
+#اگر defined(CONFIG_SCHED_CPU_MASK)
+		اگر ((thread->base.cpu_mask & BIT(i)) == 0) {
+			ادامه;
 		}
 #endif
 
 		cpu_thread = _kernel.cpus[i].current;
 
-		if (cpu_thread == NULL) {
-			continue;
+		اگر (cpu_thread == پوچ) {
+			ادامه;
 		}
 
-#if defined(CONFIG_IPI_OPTIMIZE_IDLE)
-		if ((_kernel.sched_ipi_reserved & BIT(i)) != 0U) {
-			continue;
+#اگر defined(CONFIG_IPI_OPTIMIZE_IDLE)
+		اگر ((_kernel.sched_ipi_reserved & BIT(i)) != 0U) {
+			ادامه;
 		}
-		if (i != (uint32_t)thread->base.cpu &&
+		اگر (i != (uint32_t)thread->base.cpu &&
 		    z_is_idle_thread_object(cpu_thread) &&
 		    sched_ipi_idle_cpu_active(i)) {
 			sched_ipi_idle_reserve(i, thread);
-			return IPI_CPU_MASK(i);
+			بازگشت IPI_CPU_MASK(i);
 		}
 #endif
 
-		if ((z_sched_prio_cmp(cpu_thread, thread) < 0 &&
+		اگر ((z_sched_prio_cmp(cpu_thread, thread) < 0 &&
 		     thread_is_preemptible(cpu_thread)) ||
 		    thread_is_metairq(thread)) {
 			ipi_mask |= BIT(i);
 		}
 	}
 
-	return (atomic_val_t)ipi_mask;
+	بازگشت (atomic_val_t)ipi_mask;
 }
 
-void signal_pending_ipi(void)
+تهی signal_pending_ipi(تهی)
 {
 	/* Drain only the bits for other CPUs. Clearing our own bit here
 	 * would silently drop an IPI destined for us, because
@@ -235,18 +235,18 @@ void signal_pending_ipi(void)
 	 * released (and the other CPU dispatches the IPI).
 	 */
 
-#if defined(CONFIG_SCHED_IPI_SUPPORTED)
-	if (arch_num_cpus() > 1) {
+#اگر defined(CONFIG_SCHED_IPI_SUPPORTED)
+	اگر (arch_رقم_cpus() > 1) {
 		uint32_t self_bit = BIT(_current_cpu->id);
 		uint32_t cpu_bitmap;
 
 		cpu_bitmap = (uint32_t)atomic_and(&_kernel.pending_ipi,
 						  (atomic_val_t)self_bit);
 		cpu_bitmap &= ~self_bit;
-		if (cpu_bitmap != 0) {
+		اگر (cpu_bitmap != 0) {
 #ifdef CONFIG_ARCH_HAS_DIRECTED_IPIS
 			arch_sched_directed_ipi(cpu_bitmap);
-#else
+#وگرنه
 			arch_sched_broadcast_ipi();
 #endif
 		}
@@ -255,28 +255,28 @@ void signal_pending_ipi(void)
 }
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-static struct k_ipi_work *first_ipi_work(sys_dlist_t *list, unsigned int cpu_id)
+ایستا ساختار k_ipi_work *first_ipi_work(sys_dlist_t *list, unsigned صحیح cpu_id)
 {
 	sys_dnode_t *work = sys_dlist_peek_head(list);
 
-	return (work == NULL) ? NULL
-			      : CONTAINER_OF(work, struct k_ipi_work, node[cpu_id]);
+	بازگشت (work == پوچ) ? پوچ
+			      : CONTAINER_OF(work, ساختار k_ipi_work, گره[cpu_id]);
 }
 
-int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
+صحیح k_ipi_work_add(ساختار k_ipi_work *work, uint32_t cpu_bitmask,
 		   k_ipi_func_t func)
 {
-	__ASSERT(work != NULL, "");
-	__ASSERT(func != NULL, "");
+	__ASSERT(work != پوچ, "");
+	__ASSERT(func != پوچ, "");
 
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_کلید_t کلید = k_spin_lock(&ipi_lock);
 
 	/* Verify the IPI work item is not currently in use */
 
-	if (k_event_wait_all(&work->event, work->bitmask,
+	اگر (k_event_wait_all(&work->event, work->bitmask,
 			     false, K_NO_WAIT) != work->bitmask) {
-		k_spin_unlock(&ipi_lock, key);
-		return -EBUSY;
+		k_spin_unlock(&ipi_lock, کلید);
+		بازگشت -EBUSY;
 	}
 
 	/*
@@ -284,7 +284,7 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	 * CPU as the architecture may not support sending an IPI to itself.
 	 */
 
-	unsigned int cpu_id = _current_cpu->id;
+	unsigned صحیح cpu_id = _current_cpu->id;
 
 	cpu_bitmask &= (IPI_ALL_CPUS_MASK & ~BIT(cpu_id));
 
@@ -292,52 +292,52 @@ int k_ipi_work_add(struct k_ipi_work *work, uint32_t cpu_bitmask,
 	work->func = func;
 	work->bitmask = cpu_bitmask;
 
-	for (unsigned int id = 0; id < arch_num_cpus(); id++) {
-		if ((cpu_bitmask & BIT(id)) != 0) {
-			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->node[id]);
+	برای (unsigned صحیح id = 0; id < arch_رقم_cpus(); id++) {
+		اگر ((cpu_bitmask & BIT(id)) != 0) {
+			sys_dlist_append(&_kernel.cpus[id].ipi_workq, &work->گره[id]);
 		}
 	}
 
 	flag_ipi(cpu_bitmask);
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int k_ipi_work_wait(struct k_ipi_work *work, k_timeout_t timeout)
+صحیح k_ipi_work_wait(ساختار k_ipi_work *work, k_timeout_t timeout)
 {
 	uint32_t rv = k_event_wait_all(&work->event, work->bitmask,
 				       false, timeout);
 
-	return (rv == 0) ? -EAGAIN : 0;
+	بازگشت (rv == 0) ? -EAGAIN : 0;
 }
 
-void k_ipi_work_signal(void)
+تهی k_ipi_work_signal(تهی)
 {
 	signal_pending_ipi();
 }
 
-static void ipi_work_process(sys_dlist_t *list, unsigned int cpu_id)
+ایستا تهی ipi_work_process(sys_dlist_t *list, unsigned صحیح cpu_id)
 {
-	k_spinlock_key_t key = k_spin_lock(&ipi_lock);
+	k_spinlock_کلید_t کلید = k_spin_lock(&ipi_lock);
 
-	for (struct k_ipi_work *work = first_ipi_work(list, cpu_id);
-	     work != NULL; work = first_ipi_work(list, cpu_id)) {
-		sys_dlist_remove(&work->node[cpu_id]);
-		k_spin_unlock(&ipi_lock, key);
+	برای (ساختار k_ipi_work *work = first_ipi_work(list, cpu_id);
+	     work != پوچ; work = first_ipi_work(list, cpu_id)) {
+		sys_dlist_remove(&work->گره[cpu_id]);
+		k_spin_unlock(&ipi_lock, کلید);
 
 		work->func(work);
 
-		key = k_spin_lock(&ipi_lock);
+		کلید = k_spin_lock(&ipi_lock);
 		k_event_post(&work->event, BIT(cpu_id));
 	}
 
-	k_spin_unlock(&ipi_lock, key);
+	k_spin_unlock(&ipi_lock, کلید);
 }
 #endif /* CONFIG_SCHED_IPI_SUPPORTED */
 
-void z_sched_ipi(void)
+تهی z_sched_ipi(تهی)
 {
 	/* NOTE: When adding code to this, make sure this is called
 	 * at appropriate location when !CONFIG_SCHED_IPI_SUPPORTED.
@@ -355,7 +355,7 @@ void z_sched_ipi(void)
 #endif
 
 #ifdef CONFIG_SCHED_IPI_SUPPORTED
-	unsigned int cpu_id = _current_cpu->id;
+	unsigned صحیح cpu_id = _current_cpu->id;
 
 	ipi_work_process(&_kernel.cpus[cpu_id].ipi_workq, cpu_id);
 #endif

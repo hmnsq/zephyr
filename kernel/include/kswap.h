@@ -6,19 +6,19 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KSWAP_H_
 #define ZEPHYR_KERNEL_INCLUDE_KSWAP_H_
 
-#include <kspinlock.h>
-#include <ksched.h>
-#include <run_q.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/barrier.h>
-#include <kernel_arch_func.h>
-#include <timeslicing.h>
-#include <usage.h>
+#شامل <kspinlock.h>
+#شامل <ksched.h>
+#شامل <run_q.h>
+#شامل <zephyr/spinlock.h>
+#شامل <zephyr/sys/barrier.h>
+#شامل <kernel_arch_func.h>
+#شامل <timeslicing.h>
+#شامل <usage.h>
 
-#ifdef CONFIG_STACK_SENTINEL
-extern void z_check_stack_sentinel(void);
-#else
-#define z_check_stack_sentinel() /**/
+#ifdef CONFIG_پشته_SENTINEL
+بیرونی تهی z_check_پشته_sentinel(تهی);
+#وگرنه
+#define z_check_پشته_sentinel() /**/
 #endif /* CONFIG_STACK_SENTINEL */
 
 /* In SMP, the irq_lock() is a spinlock which is implicitly released
@@ -28,7 +28,7 @@ extern void z_check_stack_sentinel(void);
  * to restore the lock state to whatever the thread's counter
  * expects.
  */
-void z_smp_release_global_lock(struct k_thread *thread);
+تهی z_smp_release_global_lock(ساختار k_thread *thread);
 
 /* context switching and scheduling-related routines */
 #ifdef CONFIG_USE_SWITCH
@@ -52,12 +52,12 @@ void z_smp_release_global_lock(struct k_thread *thread);
  * switched-to thread, which is going to (obviously) be running its
  * own code and doesn't know it was switched out.
  */
-static inline void z_sched_switch_spin(struct k_thread *thread)
+ایستا درونخطی تهی z_sched_switch_spin(ساختار k_thread *thread)
 {
 #ifdef CONFIG_SMP
-	volatile void **shp = (void *)&thread->switch_handle;
+	فرار تهی **shp = (تهی *)&thread->switch_handle;
 
-	while (*shp == NULL) {
+	وقتی (*shp == پوچ) {
 		arch_spin_relax();
 	}
 	/* Read barrier: don't allow any subsequent loads in the
@@ -76,19 +76,19 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
  * Note that is_spinlock is a compile-time construct which will be
  * optimized out when this function is expanded.
  */
-static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
-					  struct k_spinlock *lock,
+ایستا ALWAYS_INLINE unsigned صحیح do_swap(unsigned صحیح کلید,
+					  ساختار k_spinlock *lock,
 					  bool is_spinlock)
 {
-	struct k_thread *new_thread, *old_thread;
+	ساختار k_thread *new_thread, *old_thread;
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, lock);
+	z_assert_can_swap(کلید, lock);
 #endif /* CONFIG_SPIN_VALIDATE */
 
 	old_thread = _current;
 
-	z_check_stack_sentinel();
+	z_check_پشته_sentinel();
 
 	old_thread->swap_retval = -EAGAIN;
 
@@ -96,29 +96,29 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 	 * have it.  We "release" other spinlocks here.  But we never
 	 * drop the interrupt lock.
 	 */
-	if (is_spinlock && (lock != NULL) && !z_is_sched_spinlock(lock)) {
+	اگر (is_spinlock && (lock != پوچ) && !z_is_sched_spinlock(lock)) {
 		k_spin_release(lock);
 	}
-	if (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
+	اگر (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
 		/* Taking a nested uniprocessor lock in void context is a noop */
-		if (!is_spinlock || !z_is_sched_spinlock(lock)) {
-			(void)z_sched_spinlock_lock();
+		اگر (!is_spinlock || !z_is_sched_spinlock(lock)) {
+			(تهی)z_sched_spinlock_lock();
 		}
 	}
 
 #ifdef CONFIG_SMP
 	new_thread = z_swap_next_thread();
-#else
+#وگرنه
 	new_thread = _kernel.ready_q.cache;
 #endif
 
-	if (new_thread != old_thread) {
+	اگر (new_thread != old_thread) {
 		z_sched_usage_switch(new_thread);
 
 #ifdef CONFIG_SMP
 		new_thread->base.cpu = arch_curr_cpu()->id;
 
-		if (!is_spinlock) {
+		اگر (!is_spinlock) {
 			z_smp_release_global_lock(new_thread);
 		}
 #endif /* CONFIG_SMP */
@@ -132,7 +132,7 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 
 		z_sched_spinlock_transfer_owner(new_thread);
 
-		arch_cohere_stacks(old_thread, NULL, new_thread);
+		arch_cohere_stacks(old_thread, پوچ, new_thread);
 
 #ifdef CONFIG_SMP
 		/* Now add _current back to the run queue, once we are
@@ -143,85 +143,85 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 		 * set of CPUs pick a cycle of threads to run and wait for them
 		 * all to context switch forever.
 		 */
-		if (z_is_thread_queued(old_thread)) {
+		اگر (z_is_thread_queued(old_thread)) {
 			runq_add(old_thread);
 		}
 		signal_pending_ipi();
 #endif /* CONFIG_SMP */
-		void *newsh = new_thread->switch_handle;
+		تهی *newsh = new_thread->switch_handle;
 
-		if (IS_ENABLED(CONFIG_SMP)) {
+		اگر (IS_ENABLED(CONFIG_SMP)) {
 			/* Active threads must have a null here.  And
 			 * it must be seen before the scheduler lock
 			 * is released!
 			 */
-			new_thread->switch_handle = NULL;
+			new_thread->switch_handle = پوچ;
 			barrier_dmem_fence_full(); /* write barrier */
 		}
 		z_sched_spinlock_release();
 		arch_switch(newsh, &old_thread->switch_handle);
-	} else {
+	} وگرنه {
 		z_sched_spinlock_release();
 	}
 
-	if (is_spinlock) {
-		arch_irq_unlock(key);
-	} else {
-		irq_unlock(key);
+	اگر (is_spinlock) {
+		arch_irq_unlock(کلید);
+	} وگرنه {
+		irq_unlock(کلید);
 	}
 
-	return _current->swap_retval;
+	بازگشت _current->swap_retval;
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+ایستا درونخطی صحیح z_swap_irqlock(unsigned صحیح کلید)
 {
-	return do_swap(key, NULL, false);
+	بازگشت do_swap(کلید, پوچ, false);
 }
 
-static inline int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+ایستا درونخطی صحیح z_swap(ساختار k_spinlock *lock, k_spinlock_کلید_t کلید)
 {
-	return do_swap(key.key, lock, true);
+	بازگشت do_swap(کلید.کلید, lock, true);
 }
 
-static inline void z_swap_unlocked(void)
+ایستا درونخطی تهی z_swap_unlocked(تهی)
 {
-	(void) do_swap(arch_irq_lock(), NULL, true);
+	(تهی) do_swap(arch_irq_lock(), پوچ, true);
 }
 
-#else /* !CONFIG_USE_SWITCH */
+#وگرنه /* !CONFIG_USE_SWITCH */
 
 
-static inline void z_sched_switch_spin(struct k_thread *thread)
+ایستا درونخطی تهی z_sched_switch_spin(ساختار k_thread *thread)
 {
 	ARG_UNUSED(thread);
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+ایستا درونخطی صحیح z_swap_irqlock(unsigned صحیح کلید)
 {
-	int ret;
-	z_check_stack_sentinel();
+	صحیح ret;
+	z_check_پشته_sentinel();
 
 #ifdef CONFIG_SPIN_VALIDATE
-	z_assert_can_swap(key, NULL);
+	z_assert_can_swap(کلید, پوچ);
 #endif /* CONFIG_SPIN_VALIDATE */
 
-	ret = arch_swap(key);
-	return ret;
+	ret = arch_swap(کلید);
+	بازگشت ret;
 }
 
 /* If !USE_SWITCH, then spinlocks are guaranteed degenerate as we
  * can't be in SMP.  The k_spin_release() call is just for validation
  * handling.
  */
-static ALWAYS_INLINE int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+ایستا ALWAYS_INLINE صحیح z_swap(ساختار k_spinlock *lock, k_spinlock_کلید_t کلید)
 {
 	k_spin_release(lock);
-	return z_swap_irqlock(key.key);
+	بازگشت z_swap_irqlock(کلید.کلید);
 }
 
-static inline void z_swap_unlocked(void)
+ایستا درونخطی تهی z_swap_unlocked(تهی)
 {
-	(void) z_swap_irqlock(arch_irq_lock());
+	(تهی) z_swap_irqlock(arch_irq_lock());
 }
 
 #endif /* !CONFIG_USE_SWITCH */
@@ -229,9 +229,9 @@ static inline void z_swap_unlocked(void)
 /**
  * @brief - Like z_swap() but it is known that the scheduler's spinlock is already held.
  */
-static inline int z_swap_locked(k_spinlock_key_t key)
+ایستا درونخطی صحیح z_swap_locked(k_spinlock_کلید_t کلید)
 {
-	return z_swap(&_sched_spinlock, key);
+	بازگشت z_swap(&_sched_spinlock, کلید);
 }
 
 /**
@@ -243,6 +243,6 @@ static inline int z_swap_locked(k_spinlock_key_t key)
  *
  * The memory of the dummy thread can be completely uninitialized.
  */
-void z_dummy_thread_init(struct k_thread *dummy_thread);
+تهی z_dummy_thread_init(ساختار k_thread *dummy_thread);
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_KSWAP_H_ */

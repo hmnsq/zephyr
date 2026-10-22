@@ -4,42 +4,42 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/internal/syscall_handler.h>
+#شامل <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+ایستا ساختار k_object *validate_kernel_object(ثابت تهی *obj,
+					       شمارش k_objects otype,
+					       شمارش _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	ساختار k_object *ko;
+	صحیح ret;
 
 	ko = k_object_find(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
+	اگر (ret != 0) {
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
 #endif /* CONFIG_LOG */
-		return NULL;
+		بازگشت پوچ;
 	}
 
-	return ko;
+	بازگشت ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+ایستا ALWAYS_INLINE ساختار k_object *validate_any_object(ثابت تهی *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	بازگشت validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(ثابت تهی *obj, شمارش k_objects otype)
 {
-	struct k_object *ko;
+	ساختار k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	بازگشت (ko != پوچ);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,47 +49,47 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+ایستا درونخطی تهی z_vrfy_k_object_access_grant(ثابت تهی *object,
+						ساختار k_thread *thread)
 {
-	struct k_object *ko;
+	ساختار k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied",
+	K_OOPS(K_SYSCALL_VERIFY_پیام(ko != پوچ, "object %p access denied",
 				    object));
 	k_thread_perms_set(ko, thread);
 }
-#include <zephyr/syscalls/k_object_access_grant_mrsh.c>
+#شامل <zephyr/syscalls/k_object_access_grant_mrsh.c>
 
 /*
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+ایستا درونخطی صحیح z_vrfy_k_object_access_check(ثابت تهی *object)
 {
-	return z_impl_k_object_access_check(object);
+	بازگشت z_impl_k_object_access_check(object);
 }
-#include <zephyr/syscalls/k_object_access_check_mrsh.c>
+#شامل <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+ایستا درونخطی تهی z_vrfy_k_object_release(ثابت تهی *object)
 {
-	struct k_object *ko;
+	ساختار k_object *ko;
 
 	ko = validate_any_object(object);
-	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
+	K_OOPS(K_SYSCALL_VERIFY_پیام(ko != پوچ, "object %p access denied", object));
 	k_thread_perms_clear(ko, _current);
 }
-#include <zephyr/syscalls/k_object_release_mrsh.c>
+#شامل <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+ایستا درونخطی تهی *z_vrfy_k_object_alloc(شمارش k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	بازگشت z_impl_k_object_alloc(otype);
 }
-#include <zephyr/syscalls/k_object_alloc_mrsh.c>
+#شامل <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+ایستا درونخطی تهی *z_vrfy_k_object_alloc_size(شمارش k_objects otype, size_t size)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	بازگشت z_impl_k_object_alloc_size(otype, size);
 }
-#include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
+#شامل <zephyr/syscalls/k_object_alloc_size_mrsh.c>

@@ -4,89 +4,89 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#شامل <zephyr/kernel.h>
 
-#include <zephyr/timing/timing.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
+#شامل <zephyr/timing/timing.h>
+#شامل <ksched.h>
+#شامل <zephyr/spinlock.h>
+#شامل <zephyr/sys/check.h>
 
 /* Need one of these for this to work */
-#if !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
+#اگر !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
 #error "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
 #endif /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
-static struct k_spinlock usage_lock;
+ایستا ساختار k_spinlock usage_lock;
 
-static uint32_t usage_now(void)
+ایستا uint32_t usage_now(تهی)
 {
 	uint32_t now;
 
 #ifdef CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
 	now = (uint32_t)timing_counter_get();
-#else
+#وگرنه
 	now = k_cycle_get_32();
 #endif /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
 
 	/* Edge case: we use a zero as a null ("stop() already called") */
-	return (now == 0) ? 1 : now;
+	بازگشت (now == 0) ? 1 : now;
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-static void sched_cpu_update_usage(struct _cpu *cpu, uint32_t cycles)
+ایستا تهی sched_cpu_update_usage(ساختار _cpu *cpu, uint32_t cycles)
 {
-	if (!cpu->usage->track_usage) {
-		return;
+	اگر (!cpu->usage->track_usage) {
+		بازگشت;
 	}
 
-	if (cpu->current != cpu->idle_thread) {
+	اگر (cpu->current != cpu->idle_thread) {
 		cpu->usage->total += cycles;
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 		cpu->usage->current += cycles;
 
-		if (cpu->usage->longest < cpu->usage->current) {
+		اگر (cpu->usage->longest < cpu->usage->current) {
 			cpu->usage->longest = cpu->usage->current;
 		}
-	} else {
+	} وگرنه {
 		cpu->usage->current = 0;
-		cpu->usage->num_windows++;
+		cpu->usage->رقم_windows++;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 }
-#else
-#define sched_cpu_update_usage(cpu, cycles)   do { } while (0)
+#وگرنه
+#define sched_cpu_update_usage(cpu, cycles)   انجامبده { } وقتی (0)
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-static void sched_thread_update_usage(struct k_thread *thread, uint32_t cycles)
+ایستا تهی sched_thread_update_usage(ساختار k_thread *thread, uint32_t cycles)
 {
 	thread->base.usage.total += cycles;
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	thread->base.usage.current += cycles;
 
-	if (thread->base.usage.longest < thread->base.usage.current) {
+	اگر (thread->base.usage.longest < thread->base.usage.current) {
 		thread->base.usage.longest = thread->base.usage.current;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_start(struct k_thread *thread)
+تهی z_sched_usage_start(ساختار k_thread *thread)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 
 	_current_cpu->usage0 = usage_now();   /* Always update */
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.num_windows++;
+	اگر (thread->base.usage.track_usage) {
+		thread->base.usage.رقم_windows++;
 		thread->base.usage.current = 0;
 	}
 
-	k_spin_unlock(&usage_lock, key);
-#else
+	k_spin_unlock(&usage_lock, کلید);
+#وگرنه
 	/* One write through a volatile pointer doesn't require
 	 * synchronization as long as _usage() treats it as volatile
 	 * (we can't race with _stop() by design).
@@ -96,23 +96,23 @@ void z_sched_usage_start(struct k_thread *thread)
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_stop(void)
+تهی z_sched_usage_stop(تهی)
 {
-	struct _cpu *cpu = _current_cpu;
+	ساختار _cpu *cpu = _current_cpu;
 
 	/* Only this CPU writes usage0, and callers keep local IRQs masked. */
-	if (cpu->usage0 == 0U) {
-		return;
+	اگر (cpu->usage0 == 0U) {
+		بازگشت;
 	}
 
-	k_spinlock_key_t k = k_spin_lock(&usage_lock);
+	k_spinlock_کلید_t k = k_spin_lock(&usage_lock);
 
 	uint32_t u0 = cpu->usage0;
 
-	if (u0 != 0) {
+	اگر (u0 != 0) {
 		uint32_t cycles = usage_now() - u0;
 
-		if (cpu->current->base.usage.track_usage) {
+		اگر (cpu->current->base.usage.track_usage) {
 			sched_thread_update_usage(cpu->current, cycles);
 		}
 
@@ -124,17 +124,17 @@ void z_sched_usage_stop(void)
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
+تهی z_sched_cpu_usage(uint8_t cpu_id, ساختار k_thread_runtime_stats *stats)
 {
-	k_spinlock_key_t  key;
-	struct _cpu *cpu;
+	k_spinlock_کلید_t  کلید;
+	ساختار _cpu *cpu;
 	uint32_t pending = 0U;
 	bool pending_is_idle = false;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 	cpu = &_kernel.cpus[cpu_id];
 
-	if (cpu == _current_cpu) {
+	اگر (cpu == _current_cpu) {
 		uint32_t  now = usage_now();
 		uint32_t cycles = now - cpu->usage0;
 
@@ -145,14 +145,14 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		 * that information up-to-date.
 		 */
 
-		if (cpu->current->base.usage.track_usage) {
+		اگر (cpu->current->base.usage.track_usage) {
 			sched_thread_update_usage(cpu->current, cycles);
 		}
 
 		sched_cpu_update_usage(cpu, cycles);
 
 		cpu->usage0 = now;
-	} else if (cpu->usage->track_usage) {
+	} وگرنه اگر (cpu->usage->track_usage) {
 		/*
 		 * Getting stats for another CPU. Its counters only advance when
 		 * it context switches or reports on itself, so the time it has
@@ -174,11 +174,11 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 	stats->current_cycles   = cpu->usage->current;
 	stats->peak_cycles      = cpu->usage->longest;
 
-	if (cpu->usage->num_windows == 0) {
+	اگر (cpu->usage->رقم_windows == 0) {
 		stats->average_cycles = 0;
-	} else {
+	} وگرنه {
 		stats->average_cycles = stats->total_cycles /
-					cpu->usage->num_windows;
+					cpu->usage->رقم_windows;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
@@ -188,21 +188,21 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 
 	stats->execution_cycles = stats->total_cycles + stats->idle_cycles;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats)
+تهی z_sched_thread_usage(ساختار k_thread *thread,
+			  ساختار k_thread_runtime_stats *stats)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t  key;
+	ساختار _cpu *cpu;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 	cpu = _current_cpu;
 
 
-	if (thread == cpu->current) {
+	اگر (thread == cpu->current) {
 		uint32_t now = usage_now();
 		uint32_t cycles = now - cpu->usage0;
 
@@ -213,7 +213,7 @@ void z_sched_thread_usage(struct k_thread *thread,
 		 * that information up-to-date.
 		 */
 
-		if (thread->base.usage.track_usage) {
+		اگر (thread->base.usage.track_usage) {
 			sched_thread_update_usage(thread, cycles);
 		}
 
@@ -231,11 +231,11 @@ void z_sched_thread_usage(struct k_thread *thread,
 	stats->current_cycles = thread->base.usage.current;
 	stats->peak_cycles    = thread->base.usage.longest;
 
-	if (thread->base.usage.num_windows == 0) {
+	اگر (thread->base.usage.رقم_windows == 0) {
 		stats->average_cycles = 0;
-	} else {
+	} وگرنه {
 		stats->average_cycles = stats->total_cycles /
-					thread->base.usage.num_windows;
+					thread->base.usage.رقم_windows;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
@@ -243,27 +243,27 @@ void z_sched_thread_usage(struct k_thread *thread,
 	stats->idle_cycles = 0;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-int k_thread_runtime_stats_enable(k_tid_t  thread)
+صحیح k_thread_runtime_stats_enable(k_tid_t  thread)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == پوچ) {
+		بازگشت -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	کلید = k_spin_lock(&usage_lock);
+	ساختار _cpu *cpu = _current_cpu;
 
-	if (!thread->base.usage.track_usage) {
+	اگر (!thread->base.usage.track_usage) {
 		thread->base.usage.track_usage = true;
-		thread->base.usage.num_windows++;
+		thread->base.usage.رقم_windows++;
 		thread->base.usage.current = 0;
 
-		if (thread == cpu->current) {
+		اگر (thread == cpu->current) {
 			uint32_t now = usage_now();
 
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
@@ -272,26 +272,26 @@ int k_thread_runtime_stats_enable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int k_thread_runtime_stats_disable(k_tid_t  thread)
+صحیح k_thread_runtime_stats_disable(k_tid_t  thread)
 {
-	k_spinlock_key_t key;
+	k_spinlock_کلید_t کلید;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == پوچ) {
+		بازگشت -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	کلید = k_spin_lock(&usage_lock);
+	ساختار _cpu *cpu = _current_cpu;
 
-	if (thread->base.usage.track_usage) {
+	اگر (thread->base.usage.track_usage) {
 		thread->base.usage.track_usage = false;
 
-		if (thread == cpu->current) {
+		اگر (thread == cpu->current) {
 			uint32_t now = usage_now();
 			uint32_t cycles = now - cpu->usage0;
 
@@ -302,25 +302,25 @@ int k_thread_runtime_stats_disable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
 bool k_thread_runtime_stats_is_enabled(k_tid_t thread)
 {
-	return thread->base.usage.track_usage;
+	بازگشت thread->base.usage.track_usage;
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void k_sys_runtime_stats_enable(void)
+تهی k_sys_runtime_stats_enable(تهی)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 
-	if (_current_cpu->usage->track_usage) {
+	اگر (_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already enabled on the current CPU
@@ -328,33 +328,33 @@ void k_sys_runtime_stats_enable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_lock, کلید);
+		بازگشت;
 	}
 
 	/* Enable gathering of runtime stats on each CPU */
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned صحیح رقم_cpus = arch_رقم_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	برای (unsigned صحیح i = 0; i < رقم_cpus; i++) {
 		_kernel.cpus[i].usage->track_usage = true;
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		_kernel.cpus[i].usage->num_windows++;
+		_kernel.cpus[i].usage->رقم_windows++;
 		_kernel.cpus[i].usage->current = 0;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 }
 
-void k_sys_runtime_stats_disable(void)
+تهی k_sys_runtime_stats_disable(تهی)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t key;
+	ساختار _cpu *cpu;
+	k_spinlock_کلید_t کلید;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 
-	if (!_current_cpu->usage->track_usage) {
+	اگر (!_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already disabled on the current CPU
@@ -362,67 +362,67 @@ void k_sys_runtime_stats_disable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_lock, کلید);
+		بازگشت;
 	}
 
 	uint32_t now = usage_now();
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned صحیح رقم_cpus = arch_رقم_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	برای (unsigned صحیح i = 0; i < رقم_cpus; i++) {
 		cpu = &_kernel.cpus[i];
-		if (cpu->usage0 != 0) {
+		اگر (cpu->usage0 != 0) {
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
 		}
 		cpu->usage->track_usage = false;
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats)
+صحیح z_thread_stats_raw(ساختار k_obj_core *obj_core, تهی *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	کلید = k_spin_lock(&usage_lock);
+	memcpy(stats, obj_core->stats, اندازه(ساختار k_cycle_stats));
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats)
+صحیح z_thread_stats_query(ساختار k_obj_core *obj_core, تهی *stats)
 {
-	struct k_thread *thread;
+	ساختار k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, ساختار k_thread, obj_core);
 
 	z_sched_thread_usage(thread, stats);
 
-	return 0;
+	بازگشت 0;
 }
 
-int z_thread_stats_reset(struct k_obj_core *obj_core)
+صحیح z_thread_stats_reset(ساختار k_obj_core *obj_core)
 {
-	k_spinlock_key_t  key;
-	struct k_cycle_stats  *stats;
-	struct k_thread *thread;
+	k_spinlock_کلید_t  کلید;
+	ساختار k_cycle_stats  *stats;
+	ساختار k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
-	key = k_spin_lock(&usage_lock);
+	thread = CONTAINER_OF(obj_core, ساختار k_thread, obj_core);
+	کلید = k_spin_lock(&usage_lock);
 	stats = obj_core->stats;
 
 	stats->total = 0ULL;
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	stats->current = 0ULL;
 	stats->longest = 0ULL;
-	stats->num_windows = (thread->base.usage.track_usage) ?  1U : 0U;
+	stats->رقم_windows = (thread->base.usage.track_usage) ?  1U : 0U;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	if (thread != _current_cpu->current) {
+	اگر (thread != _current_cpu->current) {
 
 		/*
 		 * If the thread is not running, there is nothing else to do.
@@ -432,9 +432,9 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 		 * window.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
+		k_spin_unlock(&usage_lock, کلید);
 
-		return 0;
+		بازگشت 0;
 	}
 
 	/* Update the current CPU stats. */
@@ -445,79 +445,79 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 
 	_current_cpu->usage0 = now;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int z_thread_stats_disable(struct k_obj_core *obj_core)
+صحیح z_thread_stats_disable(ساختار k_obj_core *obj_core)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+	ساختار k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, ساختار k_thread, obj_core);
 
-	return k_thread_runtime_stats_disable(thread);
-#else
-	return -ENOTSUP;
+	بازگشت k_thread_runtime_stats_disable(thread);
+#وگرنه
+	بازگشت -ENOTSUP;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-int z_thread_stats_enable(struct k_obj_core *obj_core)
+صحیح z_thread_stats_enable(ساختار k_obj_core *obj_core)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+	ساختار k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, ساختار k_thread, obj_core);
 
-	return k_thread_runtime_stats_enable(thread);
-#else
-	return -ENOTSUP;
+	بازگشت k_thread_runtime_stats_enable(thread);
+#وگرنه
+	بازگشت -ENOTSUP;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats)
+صحیح z_cpu_stats_raw(ساختار k_obj_core *obj_core, تهی *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	کلید = k_spin_lock(&usage_lock);
+	memcpy(stats, obj_core->stats, اندازه(ساختار k_cycle_stats));
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats)
+صحیح z_cpu_stats_query(ساختار k_obj_core *obj_core, تهی *stats)
 {
-	struct _cpu  *cpu;
+	ساختار _cpu  *cpu;
 
-	cpu = CONTAINER_OF(obj_core, struct _cpu, obj_core);
+	cpu = CONTAINER_OF(obj_core, ساختار _cpu, obj_core);
 
 	z_sched_cpu_usage(cpu->id, stats);
 
-	return 0;
+	بازگشت 0;
 }
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats)
+صحیح z_kernel_stats_raw(ساختار k_obj_core *obj_core, تهی *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_کلید_t  کلید;
 
-	key = k_spin_lock(&usage_lock);
+	کلید = k_spin_lock(&usage_lock);
 	memcpy(stats, obj_core->stats,
-	       CONFIG_MP_MAX_NUM_CPUS * sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	       CONFIG_MP_MAX_رقم_CPUS * اندازه(ساختار k_cycle_stats));
+	k_spin_unlock(&usage_lock, کلید);
 
-	return 0;
+	بازگشت 0;
 }
 
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats)
+صحیح z_kernel_stats_query(ساختار k_obj_core *obj_core, تهی *stats)
 {
 	ARG_UNUSED(obj_core);
 
-	return k_thread_runtime_stats_all_get(stats);
+	بازگشت k_thread_runtime_stats_all_get(stats);
 }
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */

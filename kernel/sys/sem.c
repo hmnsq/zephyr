@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#شامل <zephyr/kernel.h>
+#شامل <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+صحیح sys_sem_init(ساختار sys_sem *sem, unsigned صحیح initial_شمار,
+		 unsigned صحیح limit)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_شمار, limit);
 
-	return 0;
+	بازگشت 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+صحیح sys_sem_give(ساختار sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	بازگشت 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+صحیح sys_sem_take(ساختار sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	صحیح ret_مقدار = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_مقدار = k_sem_take(&sem->kernel_sem, timeout);
+	اگر ((ret_مقدار == -EAGAIN) || (ret_مقدار == -EBUSY)) {
+		ret_مقدار = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	بازگشت ret_مقدار;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned صحیح sys_sem_شمار_get(ساختار sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	بازگشت k_sem_شمار_get(&sem->kernel_sem);
 }

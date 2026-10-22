@@ -7,26 +7,26 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_IPI_H_
 #define ZEPHYR_KERNEL_INCLUDE_IPI_H_
 
-#include <zephyr/kernel.h>
-#include <stdint.h>
-#include <zephyr/sys/atomic.h>
+#شامل <zephyr/kernel.h>
+#شامل <stdint.h>
+#شامل <zephyr/sys/atomic.h>
 
-#define IPI_ALL_CPUS_MASK  (UINT32_MAX >> (32 - CONFIG_MP_MAX_NUM_CPUS))
+#define IPI_ALL_CPUS_MASK  (UINT32_MAX >> (32 - CONFIG_MP_MAX_رقم_CPUS))
 
 #define IPI_CPU_MASK(cpu_id)   \
 	(IS_ENABLED(CONFIG_IPI_OPTIMIZE) ? BIT(cpu_id) : IPI_ALL_CPUS_MASK)
 
 
-void z_sched_ipi(void);
+تهی z_sched_ipi(تهی);
 
 /* defined in ipi.c when CONFIG_SMP=y */
 #ifdef CONFIG_SMP
-void flag_ipi(uint32_t ipi_mask);
-void signal_pending_ipi(void);
-atomic_val_t ipi_mask_create(struct k_thread *thread);
-#else
-#define flag_ipi(ipi_mask) do { } while (false)
-#define signal_pending_ipi() do { } while (false)
+تهی flag_ipi(uint32_t ipi_mask);
+تهی signal_pending_ipi(تهی);
+atomic_val_t ipi_mask_create(ساختار k_thread *thread);
+#وگرنه
+#define flag_ipi(ipi_mask) انجامبده { } وقتی (false)
+#define signal_pending_ipi() انجامبده { } وقتی (false)
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_IPI_OPTIMIZE_IDLE
@@ -34,7 +34,7 @@ atomic_val_t ipi_mask_create(struct k_thread *thread);
  * Consume and return the thread covered by the current CPU's reservation.
  * Returns NULL if no reservation exists. Caller must hold _sched_spinlock.
  */
-struct k_thread *ipi_idle_reserved_take(void);
+ساختار k_thread *ipi_idle_reserved_take(تهی);
 
 /*
  * Remove a thread's reservation before it leaves the run queue or changes
@@ -44,7 +44,7 @@ struct k_thread *ipi_idle_reserved_take(void);
  * Caller must hold _sched_spinlock. Safe if no reservation exists; does not
  * cancel a pending IPI.
  */
-void ipi_idle_thread_unreserve(struct k_thread *thread);
+تهی ipi_idle_thread_unreserve(ساختار k_thread *thread);
 
 /*
  * Transfer coverage from old_thread to new_thread using an outstanding idle
@@ -53,13 +53,13 @@ void ipi_idle_thread_unreserve(struct k_thread *thread);
  *
  * Caller must hold _sched_spinlock.
  */
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread);
-#else
-#define ipi_idle_reserved_take() NULL
-#define ipi_idle_thread_unreserve(thread) do { \
+bool ipi_idle_thread_rebind(ساختار k_thread *old_thread,
+			    ساختار k_thread *new_thread);
+#وگرنه
+#define ipi_idle_reserved_take() پوچ
+#define ipi_idle_thread_unreserve(thread) انجامبده { \
 	ARG_UNUSED(thread); \
-} while (false)
+} وقتی (false)
 #define ipi_idle_thread_rebind(old_thread, new_thread) false
 #endif /* CONFIG_IPI_OPTIMIZE_IDLE */
 

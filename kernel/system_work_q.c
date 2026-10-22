@@ -11,17 +11,17 @@
  * System workqueue.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
+#شامل <zephyr/kernel.h>
+#شامل <kernel_internal.h>
 
-static K_KERNEL_STACK_DEFINE(sys_work_q_stack,
-			     CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE);
+ایستا K_KERNEL_پشته_DEFINE(sys_work_q_پشته,
+			     CONFIG_SYSTEM_WORKQUEUE_پشته_SIZE);
 
-struct k_work_q k_sys_work_q;
+ساختار k_work_q k_sys_work_q;
 
-static void sys_work_q_init(void)
+ایستا تهی sys_work_q_init(تهی)
 {
-	static const struct k_work_queue_config cfg = {
+	ایستا ثابت ساختار k_work_queue_config cfg = {
 		.name = "sysworkq",
 		.no_yield = IS_ENABLED(CONFIG_SYSTEM_WORKQUEUE_NO_YIELD),
 		.essential = true,
@@ -29,8 +29,8 @@ static void sys_work_q_init(void)
 	};
 
 	k_work_queue_start(&k_sys_work_q,
-			    sys_work_q_stack,
-			    K_KERNEL_STACK_SIZEOF(sys_work_q_stack),
+			    sys_work_q_پشته,
+			    K_KERNEL_پشته_SIZEOF(sys_work_q_پشته),
 			    CONFIG_SYSTEM_WORKQUEUE_PRIORITY, &cfg);
 }
 

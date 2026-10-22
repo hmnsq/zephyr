@@ -20,78 +20,78 @@
  * translation unit. The per-node helpers live in kernel/include/timeout_q.h.
  */
 
-#include <zephyr/sys/dlist.h>
+#شامل <zephyr/sys/dlist.h>
 
-static sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
+ایستا sys_dlist_t timeout_list = SYS_DLIST_STATIC_INIT(&timeout_list);
 
-static inline struct _timeout *z_timeout_q_first(void)
+ایستا درونخطی ساختار _timeout *z_timeout_q_first(تهی)
 {
 	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	بازگشت (t == پوچ) ? پوچ : CONTAINER_OF(t, ساختار _timeout, گره);
 }
 
-static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
+ایستا درونخطی ساختار _timeout *z_timeout_q_next(ساختار _timeout *t)
 {
-	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
+	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->گره);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	بازگشت (n == پوچ) ? پوچ : CONTAINER_OF(n, ساختار _timeout, گره);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
  * if @to is now the earliest pending timeout.
  */
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ایستا درونخطی bool z_timeout_q_درج(ساختار _timeout *to, k_ticks_t dticks)
 {
-	struct _timeout *t;
+	ساختار _timeout *t;
 
 	to->dticks = dticks;
-	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
-		if (t->dticks > to->dticks) {
+	برای (t = z_timeout_q_first(); t != پوچ; t = z_timeout_q_next(t)) {
+		اگر (t->dticks > to->dticks) {
 			t->dticks -= to->dticks;
-			sys_dlist_insert(&t->node, &to->node);
-			return z_timeout_q_first() == to;
+			sys_dlist_درج(&t->گره, &to->گره);
+			بازگشت z_timeout_q_first() == to;
 		}
 		to->dticks -= t->dticks;
 	}
 
-	sys_dlist_append(&timeout_list, &to->node);
-	return z_timeout_q_first() == to;
+	sys_dlist_append(&timeout_list, &to->گره);
+	بازگشت z_timeout_q_first() == to;
 }
 
 /* Remove an arbitrary timeout from the queue, absorbing its delta into the
  * successor so the remaining deltas stay valid. Returns true if @to was the
  * earliest pending timeout. Used only by the abort path, never from announce.
  */
-static inline bool z_timeout_q_remove(struct _timeout *to)
+ایستا درونخطی bool z_timeout_q_remove(ساختار _timeout *to)
 {
 	bool was_first = (z_timeout_q_first() == to);
-	struct _timeout *n = z_timeout_q_next(to);
+	ساختار _timeout *n = z_timeout_q_next(to);
 
-	if (n != NULL) {
+	اگر (n != پوچ) {
 		n->dticks += to->dticks;
 	}
-	sys_dlist_remove(&to->node);
+	sys_dlist_remove(&to->گره);
 
-	return was_first;
+	بازگشت was_first;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
  * verified that @to is active.
  */
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ایستا درونخطی k_ticks_t z_timeout_q_remainder(ثابت ساختار _timeout *to)
 {
 	k_ticks_t ticks = 0;
 
-	for (struct _timeout *t = z_timeout_q_first(); t != NULL;
+	برای (ساختار _timeout *t = z_timeout_q_first(); t != پوچ;
 	     t = z_timeout_q_next(t)) {
 		ticks += t->dticks;
-		if (to == t) {
-			break;
+		اگر (to == t) {
+			بشکن;
 		}
 	}
 
-	return ticks;
+	بازگشت ticks;
 }
 
 /* Ticks from (curr_tick + ticks_elapsed) until the next expiry, clamped to
@@ -101,11 +101,11 @@ static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
  * the queue is empty. The announce-range cap is applied centrally by
  * next_timeout() in timeout.c.
  */
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+ایستا درونخطی k_ticks_t z_timeout_q_next_expiry(تهی)
 {
-	struct _timeout *to = z_timeout_q_first();
+	ساختار _timeout *to = z_timeout_q_first();
 
-	return (to == NULL) ? K_TICKS_FOREVER : to->dticks;
+	بازگشت (to == پوچ) ? K_TICKS_FOREVER : to->dticks;
 }
 
 /* --- announce-loop helpers (see sys_clock_announce_locked() in timeout.c) --- */
@@ -114,22 +114,22 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
  * (here: the earliest expiry). A value larger than any announce window when
  * the queue is empty.
  */
-static inline int32_t z_timeout_q_next_gap(void)
+ایستا درونخطی int32_t z_timeout_q_next_gap(تهی)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ساختار _timeout *t = z_timeout_q_first();
 
-	return (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
+	بازگشت (t == پوچ) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. For the delta list this shifts the head
  * closer to expiry; a head whose gap is fully consumed reads dticks == 0 and
  * is then drained by z_timeout_q_pop_due(). The caller advances curr_tick.
  */
-static inline void z_timeout_q_advance(int32_t dt)
+ایستا درونخطی تهی z_timeout_q_advance(int32_t dt)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ساختار _timeout *t = z_timeout_q_first();
 
-	if (t != NULL) {
+	اگر (t != پوچ) {
 		t->dticks -= dt;
 	}
 }
@@ -140,17 +140,17 @@ static inline void z_timeout_q_advance(int32_t dt)
  * curr_tick was advanced to match, so the successor's stored delta stays
  * valid without propagation.
  */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+ایستا درونخطی ساختار _timeout *z_timeout_q_برداشت_due(تهی)
 {
-	struct _timeout *t = z_timeout_q_first();
+	ساختار _timeout *t = z_timeout_q_first();
 
-	if ((t == NULL) || (t->dticks != 0)) {
-		return NULL;
+	اگر ((t == پوچ) || (t->dticks != 0)) {
+		بازگشت پوچ;
 	}
 
-	sys_dlist_remove(&t->node);
+	sys_dlist_remove(&t->گره);
 
-	return t;
+	بازگشت t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */
