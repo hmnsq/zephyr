@@ -17,7 +17,7 @@
 
 #ifdef CONFIG_STACK_SENTINEL
 extern void z_check_stack_sentinel(void);
-#else
+#아니면
 #define z_check_stack_sentinel() /**/
 #endif /* CONFIG_STACK_SENTINEL */
 
@@ -57,7 +57,7 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
 #ifdef CONFIG_SMP
 	volatile void **shp = (void *)&thread->switch_handle;
 
-	while (*shp == NULL) {
+	동안 (*shp == NULL) {
 		arch_spin_relax();
 	}
 	/* Read barrier: don't allow any subsequent loads in the
@@ -76,7 +76,7 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
  * Note that is_spinlock is a compile-time construct which will be
  * optimized out when this function is expanded.
  */
-static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
+static ALWAYS_INLINE unsigned 정수 do_swap(unsigned 정수 key,
 					  struct k_spinlock *lock,
 					  bool is_spinlock)
 {
@@ -96,29 +96,29 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 	 * have it.  We "release" other spinlocks here.  But we never
 	 * drop the interrupt lock.
 	 */
-	if (is_spinlock && (lock != NULL) && !z_is_sched_spinlock(lock)) {
+	만약 (is_spinlock && (lock != NULL) && !z_is_sched_spinlock(lock)) {
 		k_spin_release(lock);
 	}
-	if (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
+	만약 (IS_ENABLED(CONFIG_SMP) || IS_ENABLED(CONFIG_SPIN_VALIDATE)) {
 		/* Taking a nested uniprocessor lock in void context is a noop */
-		if (!is_spinlock || !z_is_sched_spinlock(lock)) {
+		만약 (!is_spinlock || !z_is_sched_spinlock(lock)) {
 			(void)z_sched_spinlock_lock();
 		}
 	}
 
 #ifdef CONFIG_SMP
 	new_thread = z_swap_next_thread();
-#else
+#아니면
 	new_thread = _kernel.ready_q.cache;
 #endif
 
-	if (new_thread != old_thread) {
+	만약 (new_thread != old_thread) {
 		z_sched_usage_switch(new_thread);
 
 #ifdef CONFIG_SMP
 		new_thread->base.cpu = arch_curr_cpu()->id;
 
-		if (!is_spinlock) {
+		만약 (!is_spinlock) {
 			z_smp_release_global_lock(new_thread);
 		}
 #endif /* CONFIG_SMP */
@@ -143,14 +143,14 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 		 * set of CPUs pick a cycle of threads to run and wait for them
 		 * all to context switch forever.
 		 */
-		if (z_is_thread_queued(old_thread)) {
+		만약 (z_is_thread_queued(old_thread)) {
 			runq_add(old_thread);
 		}
 		signal_pending_ipi();
 #endif /* CONFIG_SMP */
 		void *newsh = new_thread->switch_handle;
 
-		if (IS_ENABLED(CONFIG_SMP)) {
+		만약 (IS_ENABLED(CONFIG_SMP)) {
 			/* Active threads must have a null here.  And
 			 * it must be seen before the scheduler lock
 			 * is released!
@@ -160,27 +160,27 @@ static ALWAYS_INLINE unsigned int do_swap(unsigned int key,
 		}
 		z_sched_spinlock_release();
 		arch_switch(newsh, &old_thread->switch_handle);
-	} else {
+	} 아니면 {
 		z_sched_spinlock_release();
 	}
 
-	if (is_spinlock) {
+	만약 (is_spinlock) {
 		arch_irq_unlock(key);
-	} else {
+	} 아니면 {
 		irq_unlock(key);
 	}
 
-	return _current->swap_retval;
+	반환 _current->swap_retval;
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+static inline 정수 z_swap_irqlock(unsigned 정수 key)
 {
-	return do_swap(key, NULL, false);
+	반환 do_swap(key, NULL, false);
 }
 
-static inline int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+static inline 정수 z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
 {
-	return do_swap(key.key, lock, true);
+	반환 do_swap(key.key, lock, true);
 }
 
 static inline void z_swap_unlocked(void)
@@ -188,7 +188,7 @@ static inline void z_swap_unlocked(void)
 	(void) do_swap(arch_irq_lock(), NULL, true);
 }
 
-#else /* !CONFIG_USE_SWITCH */
+#아니면 /* !CONFIG_USE_SWITCH */
 
 
 static inline void z_sched_switch_spin(struct k_thread *thread)
@@ -196,9 +196,9 @@ static inline void z_sched_switch_spin(struct k_thread *thread)
 	ARG_UNUSED(thread);
 }
 
-static inline int z_swap_irqlock(unsigned int key)
+static inline 정수 z_swap_irqlock(unsigned 정수 key)
 {
-	int ret;
+	정수 ret;
 	z_check_stack_sentinel();
 
 #ifdef CONFIG_SPIN_VALIDATE
@@ -206,17 +206,17 @@ static inline int z_swap_irqlock(unsigned int key)
 #endif /* CONFIG_SPIN_VALIDATE */
 
 	ret = arch_swap(key);
-	return ret;
+	반환 ret;
 }
 
 /* If !USE_SWITCH, then spinlocks are guaranteed degenerate as we
  * can't be in SMP.  The k_spin_release() call is just for validation
  * handling.
  */
-static ALWAYS_INLINE int z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
+static ALWAYS_INLINE 정수 z_swap(struct k_spinlock *lock, k_spinlock_key_t key)
 {
 	k_spin_release(lock);
-	return z_swap_irqlock(key.key);
+	반환 z_swap_irqlock(key.key);
 }
 
 static inline void z_swap_unlocked(void)
@@ -229,9 +229,9 @@ static inline void z_swap_unlocked(void)
 /**
  * @brief - Like z_swap() but it is known that the scheduler's spinlock is already held.
  */
-static inline int z_swap_locked(k_spinlock_key_t key)
+static inline 정수 z_swap_locked(k_spinlock_key_t key)
 {
-	return z_swap(&_sched_spinlock, key);
+	반환 z_swap(&_sched_spinlock, key);
 }
 
 /**

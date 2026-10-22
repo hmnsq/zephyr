@@ -36,17 +36,17 @@ static inline void flag_set(uint32_t *flagp,
 static inline bool flag_test(const uint32_t *flagp,
 			     uint32_t bit)
 {
-	return (*flagp & BIT(bit)) != 0U;
+	반환 (*flagp & BIT(bit)) != 0U;
 }
 
 static inline bool flag_test_and_clear(uint32_t *flagp,
-				       int bit)
+				       정수 bit)
 {
 	bool ret = flag_test(flagp, bit);
 
 	flag_clear(flagp, bit);
 
-	return ret;
+	반환 ret;
 }
 
 static inline void flags_set(uint32_t *flagp,
@@ -57,7 +57,7 @@ static inline void flags_set(uint32_t *flagp,
 
 static inline uint32_t flags_get(const uint32_t *flagp)
 {
-	return *flagp;
+	반환 *flagp;
 }
 
 /* Lock to protect the internal state of all work items, work queues,
@@ -141,10 +141,10 @@ static void finalize_cancel_locked(struct k_work *work)
 	 * attempt to cancel it; each waiter must be woken.
 	 */
 	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, node) {
-		if (wc->work == work) {
+		만약 (wc->work == work) {
 			sys_slist_remove(&pending_cancels, prev, &wc->node);
 			k_sem_give(&wc->sem);
-		} else {
+		} 아니면 {
 			prev = &wc->node;
 		}
 	}
@@ -161,19 +161,19 @@ void k_work_init(struct k_work *work,
 	SYS_PORT_TRACING_OBJ_INIT(k_work, work);
 }
 
-static inline int work_busy_get_locked(const struct k_work *work)
+static inline 정수 work_busy_get_locked(const struct k_work *work)
 {
-	return flags_get(&work->flags) & K_WORK_MASK;
+	반환 flags_get(&work->flags) & K_WORK_MASK;
 }
 
-int k_work_busy_get(const struct k_work *work)
+정수 k_work_busy_get(const struct k_work *work)
 {
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_busy_get_locked(work);
+	정수 ret = work_busy_get_locked(work);
 
 	k_spin_unlock(&work_lock, key);
 
-	return ret;
+	반환 ret;
 }
 
 /* Add a flusher work item to the queue.
@@ -193,10 +193,10 @@ static void queue_flusher_locked(struct k_work_q *queue,
 {
 	init_flusher(flusher);
 
-	if ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
+	만약 ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
 		sys_slist_insert(&queue->pending, &work->node,
 				 &flusher->work.node);
-	} else {
+	} 아니면 {
 		sys_slist_prepend(&queue->pending, &flusher->work.node);
 	}
 }
@@ -211,7 +211,7 @@ static void queue_flusher_locked(struct k_work_q *queue,
 static inline void queue_remove_locked(struct k_work_q *queue,
 				       struct k_work *work)
 {
-	if (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
+	만약 (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
 		(void)sys_slist_find_and_remove(&queue->pending, &work->node);
 	}
 }
@@ -231,11 +231,11 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
 {
 	bool rv = false;
 
-	if (queue != NULL) {
+	만약 (queue != NULL) {
 		rv = z_sched_wake(&queue->notifyq, 0, NULL);
 	}
 
-	return rv;
+	반환 rv;
 }
 
 /* Submit an work item to a queue if queue state allows new work.
@@ -257,14 +257,14 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
  * @retval -ENODEV if the queue is not started
  * @retval -EBUSY if the submission was rejected (draining, plugged)
  */
-static inline int queue_submit_locked(struct k_work_q *queue,
+static inline 정수 queue_submit_locked(struct k_work_q *queue,
 				      struct k_work *work)
 {
-	if (queue == NULL) {
-		return -EINVAL;
+	만약 (queue == NULL) {
+		반환 -EINVAL;
 	}
 
-	int ret;
+	정수 ret;
 	bool chained = (_current == queue->thread_id) && !k_is_in_isr();
 	bool draining = flag_test(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
 	bool plugged = flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
@@ -276,19 +276,19 @@ static inline int queue_submit_locked(struct k_work_q *queue,
 	 * * -EBUSY if plugged and not draining
 	 * * otherwise OK
 	 */
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	만약 (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
 		ret = -ENODEV;
-	} else if (draining && !chained) {
+	} 아니면 만약 (draining && !chained) {
 		ret = -EBUSY;
-	} else if (plugged && !draining) {
+	} 아니면 만약 (plugged && !draining) {
 		ret = -EBUSY;
-	} else {
+	} 아니면 {
 		sys_slist_append(&queue->pending, &work->node);
 		ret = 1;
 		(void)notify_queue_locked(queue);
 	}
 
-	return ret;
+	반환 ret;
 }
 
 /* Attempt to submit work to a queue.
@@ -317,21 +317,21 @@ static inline int queue_submit_locked(struct k_work_q *queue,
  * @retval -EINVAL if no queue is provided
  * @retval -ENODEV if the queue is not started
  */
-static int submit_to_queue_locked(struct k_work *work,
+static 정수 submit_to_queue_locked(struct k_work *work,
 				  struct k_work_q **queuep)
 {
-	int ret = 0;
+	정수 ret = 0;
 
-	if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	만약 (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Disallowed */
 		ret = -EBUSY;
-	} else if (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
+	} 아니면 만약 (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
 		/* Not currently queued */
 		ret = 1;
 
 		/* If no queue specified resubmit to last queue.
 		 */
-		if (*queuep == NULL) {
+		만약 (*queuep == NULL) {
 			*queuep = work->queue;
 		}
 
@@ -339,29 +339,29 @@ static int submit_to_queue_locked(struct k_work *work,
 		 * queue it's running on to prevent handler
 		 * re-entrancy.
 		 */
-		if (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
+		만약 (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
 			__ASSERT_NO_MSG(work->queue != NULL);
 			*queuep = work->queue;
 			ret = 2;
 		}
 
-		int rc = queue_submit_locked(*queuep, work);
+		정수 rc = queue_submit_locked(*queuep, work);
 
-		if (rc < 0) {
+		만약 (rc < 0) {
 			ret = rc;
-		} else {
+		} 아니면 {
 			flag_set(&work->flags, K_WORK_QUEUED_BIT);
 			work->queue = *queuep;
 		}
-	} else {
+	} 아니면 {
 		/* Already queued, do nothing. */
 	}
 
-	if (ret <= 0) {
+	만약 (ret <= 0) {
 		*queuep = NULL;
 	}
 
-	return ret;
+	반환 ret;
 }
 
 /* Submit work to a queue
@@ -375,7 +375,7 @@ static int submit_to_queue_locked(struct k_work *work,
  *
  * @retval see submit_to_queue_locked()
  */
-int z_work_submit_to_queue(struct k_work_q *queue,
+정수 z_work_submit_to_queue(struct k_work_q *queue,
 		  struct k_work *work)
 {
 	__ASSERT_NO_MSG(work != NULL);
@@ -383,39 +383,39 @@ int z_work_submit_to_queue(struct k_work_q *queue,
 
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
-	int ret = submit_to_queue_locked(work, &queue);
+	정수 ret = submit_to_queue_locked(work, &queue);
 
 	/* No need to reschedule if the submission failed. */
-	if (ret > 0) {
+	만약 (ret > 0) {
 		z_reschedule(&work_lock, key);
-	} else {
+	} 아니면 {
 		k_spin_unlock(&work_lock, key);
 	}
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_submit_to_queue(struct k_work_q *queue,
+정수 k_work_submit_to_queue(struct k_work_q *queue,
 			    struct k_work *work)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit_to_queue, queue, work);
 
-	int ret = z_work_submit_to_queue(queue, work);
+	정수 ret = z_work_submit_to_queue(queue, work);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit_to_queue, queue, work, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_submit(struct k_work *work)
+정수 k_work_submit(struct k_work *work)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
 
-	int ret = z_work_submit_to_queue(&k_sys_work_q, work);
+	정수 ret = z_work_submit_to_queue(&k_sys_work_q, work);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
 
-	return ret;
+	반환 ret;
 }
 
 /* Flush the work item if necessary.
@@ -439,7 +439,7 @@ static bool work_flush_locked(struct k_work *work,
 	bool need_flush = (flags_get(&work->flags)
 			   & (K_WORK_QUEUED | K_WORK_RUNNING)) != 0U;
 
-	if (need_flush) {
+	만약 (need_flush) {
 		struct k_work_q *queue = work->queue;
 
 		__ASSERT_NO_MSG(queue != NULL);
@@ -448,7 +448,7 @@ static bool work_flush_locked(struct k_work *work,
 		notify_queue_locked(queue);
 	}
 
-	return need_flush;
+	반환 need_flush;
 }
 
 bool k_work_flush(struct k_work *work,
@@ -472,7 +472,7 @@ bool k_work_flush(struct k_work *work,
 	k_spin_unlock(&work_lock, key);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	만약 (need_flush) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
 		k_sem_take(&flusher->sem, K_FOREVER);
@@ -480,7 +480,7 @@ bool k_work_flush(struct k_work *work,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
 
-	return need_flush;
+	반환 need_flush;
 }
 
 /* Execute the non-waiting steps necessary to cancel a work item.
@@ -494,10 +494,10 @@ bool k_work_flush(struct k_work *work,
  *
  * @return k_busy_wait() captured under lock
  */
-static int cancel_async_locked(struct k_work *work)
+static 정수 cancel_async_locked(struct k_work *work)
 {
 	/* If we haven't already started canceling, do it now. */
-	if (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	만약 (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Remove it from the queue, if it's queued. */
 		queue_remove_locked(work->queue, work);
 	}
@@ -505,14 +505,14 @@ static int cancel_async_locked(struct k_work *work)
 	/* If it's still busy after it's been dequeued, then flag it
 	 * as canceling.
 	 */
-	int ret = work_busy_get_locked(work);
+	정수 ret = work_busy_get_locked(work);
 
-	if (ret != 0) {
+	만약 (ret != 0) {
 		flag_set(&work->flags, K_WORK_CANCELING_BIT);
 		ret = work_busy_get_locked(work);
 	}
 
-	return ret;
+	반환 ret;
 }
 
 /* Complete cancellation necessary, release work lock, and wait if
@@ -539,14 +539,14 @@ static bool cancel_sync_locked(struct k_work *work,
 	 * completion, which is indicated when finish_cancel() gets
 	 * invoked.
 	 */
-	if (ret) {
+	만약 (ret) {
 		init_work_cancel(canceller, work);
 	}
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_cancel(struct k_work *work)
+정수 k_work_cancel(struct k_work *work)
 {
 	__ASSERT_NO_MSG(work != NULL);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
@@ -554,13 +554,13 @@ int k_work_cancel(struct k_work *work)
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
 
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_async_locked(work);
+	정수 ret = cancel_async_locked(work);
 
 	k_spin_unlock(&work_lock, key);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
 
-	return ret;
+	반환 ret;
 }
 
 bool k_work_cancel_sync(struct k_work *work,
@@ -581,24 +581,24 @@ bool k_work_cancel_sync(struct k_work *work,
 	bool pending = (work_busy_get_locked(work) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
+	만약 (pending) {
 		(void)cancel_async_locked(work);
 		need_wait = cancel_sync_locked(work, canceller);
 	}
 
 	k_spin_unlock(&work_lock, key);
 
-	if (need_wait) {
+	만약 (need_wait) {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
-	return pending;
+	반환 pending;
 }
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+#만약 defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
 static void work_timeout_handler(struct _timeout *record)
 {
 	struct k_work_q *queue = CONTAINER_OF(record, struct k_work_q, work_timeout_record);
@@ -622,16 +622,16 @@ static void work_timeout_handler(struct _timeout *record)
 	 * wrong worker. work_timeout_stop_locked() aborts the timeout, which
 	 * flags it superseded; bail on that too.
 	 */
-	if (queue->finished || z_timeout_inflight_superseded(record)) {
+	만약 (queue->finished || z_timeout_inflight_superseded(record)) {
 		k_spin_unlock(&work_lock, key);
-		return;
+		반환;
 	}
 	queue->finished = true;
 
 	k_spin_unlock(&work_lock, key);
 
 	name = k_thread_name_get(queue->thread_id);
-	if (name == NULL) {
+	만약 (name == NULL) {
 		name = "";
 		space = "";
 	}
@@ -646,8 +646,8 @@ static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *wor
 {
 	queue->finished = false;
 
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	만약 (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		반환;
 	}
 
 	queue->work = work;
@@ -656,8 +656,8 @@ static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *wor
 
 static void work_timeout_stop_locked(struct k_work_q *queue)
 {
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	만약 (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		반환;
 	}
 
 	(void)z_try_abort_timeout(&queue->work_timeout_record);
@@ -675,7 +675,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 
 	struct k_work_q *queue = (struct k_work_q *)workq_ptr;
 
-	while (true) {
+	동안 (true) {
 		sys_snode_t *node;
 		struct k_work *work = NULL;
 		k_work_handler_t handler = NULL;
@@ -684,7 +684,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 
 		/* Check for and prepare any new work. */
 		node = sys_slist_get(&queue->pending);
-		if (node != NULL) {
+		만약 (node != NULL) {
 			/* Mark that there's some work active that's
 			 * not on the pending list.
 			 */
@@ -706,7 +706,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * This means that if node is not NULL, then work will not be NULL.
 			 */
 			handler = work->handler;
-		} else if (flag_test_and_clear(&queue->flags,
+		} 아니면 만약 (flag_test_and_clear(&queue->flags,
 					       K_WORK_QUEUE_DRAIN_BIT)) {
 			/* Not busy and draining: move threads waiting for
 			 * drain to ready state.  The held spinlock inhibits
@@ -718,20 +718,20 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * submissions.
 			 */
 			(void)z_sched_wake_all(&queue->drainq, 1, NULL);
-		} else if (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
+		} 아니면 만약 (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
 			/* User has requested that the queue stop. Clear the status flags and exit.
 			 */
 			flags_set(&queue->flags, 0);
 			k_spin_unlock(&work_lock, key);
-			return;
-		} else {
+			반환;
+		} 아니면 {
 			/* No work is available and no queue state requires
 			 * special handling.
 			 */
 			;
 		}
 
-		if (work == NULL) {
+		만약 (work == NULL) {
 			/* Nothing's had a chance to add work since we took
 			 * the lock, and we didn't find work nor got asked to
 			 * stop.  Just go to sleep: when something happens the
@@ -743,7 +743,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			continue;
 		}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+#만약 defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
 		work_timeout_start_locked(queue, work);
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
@@ -759,15 +759,15 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		 */
 		key = k_spin_lock(&work_lock);
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		if (queue->finished) {
+#만약 defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		만약 (queue->finished) {
 			/*
 			 * The work item timeout handler has flagged this work
 			 * thread for taking too long and is going to abort it.
 			 * Do not proceed to the next work item.
 			 */
 			k_spin_unlock(&work_lock, key);
-			while (1) {
+			동안 (1) {
 				k_sleep(K_FOREVER);
 			}
 			CODE_UNREACHABLE;
@@ -777,10 +777,10 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 		flag_clear(&work->flags, K_WORK_RUNNING_BIT);
-		if (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
+		만약 (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
 			finalize_flush_locked(work);
 		}
-		if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+		만약 (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 			finalize_cancel_locked(work);
 		}
 
@@ -792,7 +792,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		/* Optionally yield to prevent the work queue from
 		 * starving other threads.
 		 */
-		if (yield) {
+		만약 (yield) {
 			k_yield();
 		}
 	}
@@ -815,18 +815,18 @@ void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *
 
 	uint32_t flags = K_WORK_QUEUE_STARTED;
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	만약 ((cfg != NULL) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
+	만약 ((cfg != NULL) && (cfg->name != NULL)) {
 		k_thread_name_set(_current, cfg->name);
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#만약 defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	만약 ((cfg != NULL) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} 아니면 {
 		queue->work_timeout = K_FOREVER;
 	}
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
@@ -842,7 +842,7 @@ void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *
 void k_work_queue_start(struct k_work_q *queue,
 			k_thread_stack_t *stack,
 			size_t stack_size,
-			int prio,
+			정수 prio,
 			const struct k_work_queue_config *cfg)
 {
 	__ASSERT_NO_MSG(queue);
@@ -862,7 +862,7 @@ void k_work_queue_start(struct k_work_q *queue,
 	z_waitq_init(&queue->notifyq);
 	z_waitq_init(&queue->drainq);
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	만약 ((cfg != NULL) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
@@ -876,18 +876,18 @@ void k_work_queue_start(struct k_work_q *queue,
 			      work_queue_main, queue, NULL, NULL,
 			      prio, 0, K_FOREVER);
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
+	만약 ((cfg != NULL) && (cfg->name != NULL)) {
 		k_thread_name_set(&queue->thread, cfg->name);
 	}
 
-	if ((cfg != NULL) && (cfg->essential)) {
+	만약 ((cfg != NULL) && (cfg->essential)) {
 		queue->thread.base.user_options |= K_ESSENTIAL;
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#만약 defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	만약 ((cfg != NULL) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} 아니면 {
 		queue->work_timeout = K_FOREVER;
 	}
 #endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
@@ -900,7 +900,7 @@ void k_work_queue_start(struct k_work_q *queue,
 	TOOLCHAIN_ENABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 }
 
-int k_work_queue_drain(struct k_work_q *queue,
+정수 k_work_queue_drain(struct k_work_q *queue,
 		       bool plug)
 {
 	__ASSERT_NO_MSG(queue);
@@ -908,40 +908,40 @@ int k_work_queue_drain(struct k_work_q *queue,
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
 
-	int ret = 0;
+	정수 ret = 0;
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
-	if (((flags_get(&queue->flags)
+	만약 (((flags_get(&queue->flags)
 	      & (K_WORK_QUEUE_BUSY | K_WORK_QUEUE_DRAIN)) != 0U)
 	    || plug
 	    || !sys_slist_is_empty(&queue->pending)) {
 		flag_set(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-		if (plug) {
+		만약 (plug) {
 			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
 		}
 
 		notify_queue_locked(queue);
 		ret = z_sched_wait(&work_lock, key, &queue->drainq,
 				   K_FOREVER, NULL);
-	} else {
+	} 아니면 {
 		k_spin_unlock(&work_lock, key);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_queue_unplug(struct k_work_q *queue)
+정수 k_work_queue_unplug(struct k_work_q *queue)
 {
 	__ASSERT_NO_MSG(queue);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
 
-	int ret = -EALREADY;
+	정수 ret = -EALREADY;
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
-	if (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	만약 (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
 		ret = 0;
 	}
 
@@ -949,49 +949,49 @@ int k_work_queue_unplug(struct k_work_q *queue)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
+정수 k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
 {
 	__ASSERT_NO_MSG(queue);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
 
-	if (queue->thread_id) {
-		if (z_is_thread_essential(queue->thread_id)) {
-			return -ENOTSUP;
+	만약 (queue->thread_id) {
+		만약 (z_is_thread_essential(queue->thread_id)) {
+			반환 -ENOTSUP;
 		}
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	만약 (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
 		k_spin_unlock(&work_lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
-		return -EALREADY;
+		반환 -EALREADY;
 	}
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	만약 (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
 		k_spin_unlock(&work_lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
-		return -EBUSY;
+		반환 -EBUSY;
 	}
 
 	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
 	notify_queue_locked(queue);
 	k_spin_unlock(&work_lock, key);
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
-	if (k_thread_join(queue->thread_id, timeout)) {
+	만약 (k_thread_join(queue->thread_id, timeout)) {
 		key = k_spin_lock(&work_lock);
 		flag_clear(&queue->flags, K_WORK_QUEUE_STOP_BIT);
 		k_spin_unlock(&work_lock, key);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
-		return -ETIMEDOUT;
+		반환 -ETIMEDOUT;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
-	return 0;
+	반환 0;
 }
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
@@ -1015,7 +1015,7 @@ static void work_timeout(struct _timeout *to)
 	 * flag_test_and_clear() first owns the outcome. If unschedule_locked
 	 * got here first, the bit is clear and we bail.
 	 */
-	if (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
+	만약 (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
 		queue = dw->queue;
 		(void)submit_to_queue_locked(wp, &queue);
 	}
@@ -1036,20 +1036,20 @@ void k_work_init_delayable(struct k_work_delayable *dwork,
 	SYS_PORT_TRACING_OBJ_INIT(k_work_delayable, dwork);
 }
 
-static inline int work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
+static inline 정수 work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
 {
-	return flags_get(&dwork->work.flags) & K_WORK_MASK;
+	반환 flags_get(&dwork->work.flags) & K_WORK_MASK;
 }
 
-int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
+정수 k_work_delayable_busy_get(const struct k_work_delayable *dwork)
 {
 	__ASSERT_NO_MSG(dwork != NULL);
 
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_delayable_busy_get_locked(dwork);
+	정수 ret = work_delayable_busy_get_locked(dwork);
 
 	k_spin_unlock(&work_lock, key);
-	return ret;
+	반환 ret;
 }
 
 /* Attempt to schedule a work item for future (maybe immediate)
@@ -1075,15 +1075,15 @@ int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
  * @retval from submit_to_queue_locked() if delay is K_NO_WAIT; otherwise
  * @retval 1 to indicate successfully scheduled.
  */
-static int schedule_for_queue_locked(struct k_work_q **queuep,
+static 정수 schedule_for_queue_locked(struct k_work_q **queuep,
 				     struct k_work_delayable *dwork,
 				     k_timeout_t delay)
 {
-	int ret = 1;
+	정수 ret = 1;
 	struct k_work *work = &dwork->work;
 
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		return submit_to_queue_locked(work, queuep);
+	만약 (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		반환 submit_to_queue_locked(work, queuep);
 	}
 
 	flag_set(&work->flags, K_WORK_DELAYED_BIT);
@@ -1092,7 +1092,7 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
 	/* Add timeout */
 	z_add_timeout(&dwork->timeout, work_timeout, delay);
 
-	return ret;
+	반환 ret;
 }
 
 /* Unschedule delayable work.
@@ -1125,15 +1125,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
 	 * true, and either is unsafe while the handler is still about
 	 * to dereference dwork->work.flags.
 	 */
-	if (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
-		while (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
+	만약 (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
+		동안 (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
 			k_spin_unlock(&work_lock, *key);
 			*key = k_spin_lock(&work_lock);
 		}
 		ret = true;
 	}
 
-	return ret;
+	반환 ret;
 }
 
 /* Full cancellation of a delayable work item.
@@ -1147,15 +1147,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
  *
  * @return k_work_busy_get() flags
  */
-static int cancel_delayable_async_locked(struct k_work_delayable *dwork,
+static 정수 cancel_delayable_async_locked(struct k_work_delayable *dwork,
 					 k_spinlock_key_t *key)
 {
 	(void)unschedule_locked(dwork, key);
 
-	return cancel_async_locked(&dwork->work);
+	반환 cancel_async_locked(&dwork->work);
 }
 
-int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+정수 k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
 			      k_timeout_t delay)
 {
 	__ASSERT_NO_MSG(queue != NULL);
@@ -1164,11 +1164,11 @@ int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *d
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule_for_queue, queue, dwork, delay);
 
 	struct k_work *work = &dwork->work;
-	int ret = 0;
+	정수 ret = 0;
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
 	/* Schedule the work item if it's idle or running. */
-	if ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
+	만약 ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
 		ret = schedule_for_queue_locked(&queue, dwork, delay);
 	}
 
@@ -1176,21 +1176,21 @@ int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *d
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
+정수 k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule, dwork, delay);
 
-	int ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
+	정수 ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule, dwork, delay, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+정수 k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
 				k_timeout_t delay)
 {
 	__ASSERT_NO_MSG(queue != NULL);
@@ -1198,7 +1198,7 @@ int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable 
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
 
-	int ret;
+	정수 ret;
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
 	/* Remove any active scheduling. */
@@ -1211,34 +1211,34 @@ int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable 
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
+정수 k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
 
-	int ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
+	정수 ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
 
-	return ret;
+	반환 ret;
 }
 
-int k_work_cancel_delayable(struct k_work_delayable *dwork)
+정수 k_work_cancel_delayable(struct k_work_delayable *dwork)
 {
 	__ASSERT_NO_MSG(dwork != NULL);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
 
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_delayable_async_locked(dwork, &key);
+	정수 ret = cancel_delayable_async_locked(dwork, &key);
 
 	k_spin_unlock(&work_lock, key);
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
 
-	return ret;
+	반환 ret;
 }
 
 bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
@@ -1258,19 +1258,19 @@ bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
 	bool pending = (work_delayable_busy_get_locked(dwork) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
+	만약 (pending) {
 		(void)cancel_delayable_async_locked(dwork, &key);
 		need_wait = cancel_sync_locked(&dwork->work, canceller);
 	}
 
 	k_spin_unlock(&work_lock, key);
 
-	if (need_wait) {
+	만약 (need_wait) {
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
-	return pending;
+	반환 pending;
 }
 
 bool k_work_flush_delayable(struct k_work_delayable *dwork,
@@ -1290,18 +1290,18 @@ bool k_work_flush_delayable(struct k_work_delayable *dwork,
 	k_spinlock_key_t key = k_spin_lock(&work_lock);
 
 	/* If it's idle release the lock and return immediately. */
-	if (work_busy_get_locked(work) == 0U) {
+	만약 (work_busy_get_locked(work) == 0U) {
 		k_spin_unlock(&work_lock, key);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
 
-		return false;
+		반환 false;
 	}
 
 	/* If unscheduling did something then submit it.  Ignore a
 	 * failed submission (e.g. when cancelling).
 	 */
-	if (unschedule_locked(dwork, &key)) {
+	만약 (unschedule_locked(dwork, &key)) {
 		struct k_work_q *queue = dwork->queue;
 
 		(void)submit_to_queue_locked(work, &queue);
@@ -1313,13 +1313,13 @@ bool k_work_flush_delayable(struct k_work_delayable *dwork,
 	k_spin_unlock(&work_lock, key);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	만약 (need_flush) {
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
 
-	return need_flush;
+	반환 need_flush;
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */

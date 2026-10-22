@@ -36,16 +36,16 @@ BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
  */
 static inline void update_metairq_preempt(struct k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	if (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
+#만약 (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+	만약 (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
 	    !thread_is_preemptible(_current)) {
 		/* Record new preemption */
 		_current_cpu->metairq_preempted = _current;
-	} else if (!thread_is_metairq(thread)) {
+	} 아니면 만약 (!thread_is_metairq(thread)) {
 		/* Returning from existing preemption */
 		_current_cpu->metairq_preempted = NULL;
 	}
-#else
+#아니면
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
@@ -63,7 +63,7 @@ static inline void update_metairq_preempt(struct k_thread *thread)
  */
 static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+#만약 (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
 	/* MetaIRQs must always attempt to return back to a cooperative thread
 	 * they preempted and not whatever happens to be highest priority now.
 	 * The cooperative thread was promised it wouldn't be preempted (by
@@ -71,16 +71,16 @@ static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
 	 */
 	struct k_thread *mirqp = _current_cpu->metairq_preempted;
 
-	if (mirqp != NULL && (thread == NULL || !thread_is_metairq(thread))) {
-		if (z_is_thread_ready(mirqp)) {
-			return mirqp;
+	만약 (mirqp != NULL && (thread == NULL || !thread_is_metairq(thread))) {
+		만약 (z_is_thread_ready(mirqp)) {
+			반환 mirqp;
 		}
 		_current_cpu->metairq_preempted = NULL;
 	}
-#else
+#아니면
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
-	return thread;
+	반환 thread;
 }
 
 /**
@@ -94,10 +94,10 @@ static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
  */
 static inline bool metairq_current_requeue_allowed(void)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	return _current != _current_cpu->metairq_preempted;
-#else
-	return true;
+#만약 (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+	반환 _current != _current_cpu->metairq_preempted;
+#아니면
+	반환 true;
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
@@ -112,16 +112,16 @@ static inline bool metairq_current_requeue_allowed(void)
  */
 static inline void z_metairq_preempted_clear(struct k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	unsigned int cpu_id = 0;
+#만약 (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+	unsigned 정수 cpu_id = 0;
 
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
+#만약 defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
 	cpu_id = thread->base.cpu;
 #endif
-	if (_kernel.cpus[cpu_id].metairq_preempted == thread) {
+	만약 (_kernel.cpus[cpu_id].metairq_preempted == thread) {
 		_kernel.cpus[cpu_id].metairq_preempted = NULL;
 	}
-#else
+#아니면
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }

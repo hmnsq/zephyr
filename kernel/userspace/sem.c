@@ -16,14 +16,14 @@ static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value < minimum) {
+		만약 (old_value < minimum) {
 			break;
 		}
 
 		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+	} 동안 (atomic_cas(val, old_value, new_value) == 0);
 
-	return old_value;
+	반환 old_value;
 }
 
 static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
@@ -33,73 +33,73 @@ static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value >= maximum) {
+		만약 (old_value >= maximum) {
 			break;
 		}
 
 		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+	} 동안 (atomic_cas(val, old_value, new_value) == 0U);
 
-	return old_value;
+	반환 old_value;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+정수 sys_sem_init(struct sys_sem *sem, unsigned 정수 initial_count,
+		 unsigned 정수 limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
+	만약 ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
 	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+		반환 -EINVAL;
 	}
 
 	(void)atomic_set(&sem->futex.val, initial_count);
 	sem->limit = limit;
 
-	return 0;
+	반환 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+정수 sys_sem_give(struct sys_sem *sem)
 {
-	int ret = 0;
+	정수 ret = 0;
 	atomic_t old_value;
 
 	old_value = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	만약 (old_value < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		만약 (ret > 0) {
+			반환 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} 아니면 만약 (old_value >= sem->limit) {
+		반환 -EAGAIN;
+	} 아니면 {
 		;
 	}
-	return ret;
+	반환 ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+정수 sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
+	정수 ret = 0;
 	atomic_t old_value;
 
 	do {
 		old_value = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		만약 (old_value > 0) {
+			반환 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} 동안 (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	반환 ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned 정수 sys_sem_count_get(struct sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	정수 value = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	반환 (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
 }

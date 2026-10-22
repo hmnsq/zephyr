@@ -17,7 +17,7 @@ static struct k_spinlock *z_held_spinlock[CONFIG_MP_MAX_NUM_CPUS];
 /* Total spinlock hold count per CPU, incremented on every lock and
  * decremented on every unlock regardless of nesting depth.
  */
-static int z_held_spinlock_count[CONFIG_MP_MAX_NUM_CPUS];
+static 정수 z_held_spinlock_count[CONFIG_MP_MAX_NUM_CPUS];
 
 /* Sentinel: set in swap_data by the ztest harness before force-aborting a
  * thread that holds a lock after an expected panic/assert.
@@ -28,12 +28,12 @@ bool z_spin_lock_valid(struct k_spinlock *l)
 {
 	uintptr_t thread_cpu = l->thread_cpu;
 
-	if (thread_cpu != 0U) {
-		if ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
-			return false;
+	만약 (thread_cpu != 0U) {
+		만약 ((thread_cpu & SPIN_CPU_ID_MASK) == _current_cpu->id) {
+			반환 false;
 		}
 	}
-	return true;
+	반환 true;
 }
 EXPORT_SYMBOL(z_spin_lock_valid);
 
@@ -51,25 +51,25 @@ bool z_spin_unlock_valid(struct k_spinlock *l)
 
 	l->thread_cpu = 0;
 
-	if (z_held_spinlock[cpu_id] == l) {
+	만약 (z_held_spinlock[cpu_id] == l) {
 		z_held_spinlock[cpu_id] = NULL;
 	}
 
-	if (arch_is_in_isr() &&
+	만약 (arch_is_in_isr() &&
 	    (_raw_current->base.thread_state & _THREAD_DUMMY) != 0) {
 		/* Edge case where an ISR aborted _current */
 		z_held_spinlock_count[cpu_id]--;
 		__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
 			 "spinlock unlock with no matching lock");
-		return true;
+		반환 true;
 	}
-	if (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
-		return false;
+	만약 (tcpu != (cpu_id | (uintptr_t)_raw_current)) {
+		반환 false;
 	}
 	z_held_spinlock_count[cpu_id]--;
 	__ASSERT(z_held_spinlock_count[cpu_id] >= 0,
 		 "spinlock unlock with no matching lock");
-	return true;
+	반환 true;
 }
 EXPORT_SYMBOL(z_spin_unlock_valid);
 
@@ -79,7 +79,7 @@ void z_spin_lock_set_owner(struct k_spinlock *l)
 
 	l->thread_cpu = cpu_id | (uintptr_t)_raw_current;
 
-	if (z_held_spinlock[cpu_id] == NULL) {
+	만약 (z_held_spinlock[cpu_id] == NULL) {
 		z_held_spinlock[cpu_id] = l;
 	}
 	z_held_spinlock_count[cpu_id]++;
@@ -116,17 +116,17 @@ void z_spin_validate_reset(bool lock_held)
 /* Internal: caller must ensure IRQs are disabled. */
 static inline struct k_spinlock *z_spin_get_held_lock_locked(uint8_t cpu_id)
 {
-	return z_held_spinlock[cpu_id];
+	반환 z_held_spinlock[cpu_id];
 }
 
 #ifdef CONFIG_TEST
 struct k_spinlock *z_spin_get_held_lock(void)
 {
-	unsigned int key = arch_irq_lock();
+	unsigned 정수 key = arch_irq_lock();
 	struct k_spinlock *l = z_spin_get_held_lock_locked(_current_cpu->id);
 
 	arch_irq_unlock(key);
-	return l;
+	반환 l;
 }
 #endif /* CONFIG_TEST */
 
@@ -143,21 +143,21 @@ struct k_spinlock *z_spin_get_held_lock(void)
  * section — i.e. breaking the lock of someone higher up the call stack,
  * which is forbidden.
  */
-void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
+void z_assert_can_swap(unsigned 정수 key, struct k_spinlock *swap_lock)
 {
 	uint8_t cpu_id = _current_cpu->id;
 	struct k_spinlock *held = z_spin_get_held_lock_locked(cpu_id);
-	int count = z_held_spinlock_count[cpu_id];
-	int extra = (swap_lock != NULL) ? count - 1 : count;
+	정수 count = z_held_spinlock_count[cpu_id];
+	정수 extra = (swap_lock != NULL) ? count - 1 : count;
 
 	ARG_UNUSED(held);
 	ARG_UNUSED(extra);
 
 	/* ztest expected-fault: thread aborted with a lock held.*/
-	if ((_current->base.thread_state & _THREAD_DEAD) &&
+	만약 ((_current->base.thread_state & _THREAD_DEAD) &&
 	    _current->base.swap_data == (void *)&z_spinlock_abort_sentinel) {
 		z_spin_validate_reset(swap_lock != NULL);
-	} else {
+	} 아니면 {
 		__ASSERT(extra >= 0,
 			 "swap_lock %p is not tracked in the spinlock hold count!", swap_lock);
 
@@ -187,7 +187,7 @@ void z_assert_can_swap(unsigned int key, struct k_spinlock *swap_lock)
 #ifdef CONFIG_KERNEL_COHERENCE
 bool z_spin_lock_mem_coherent(struct k_spinlock *l)
 {
-	return sys_cache_is_mem_coherent((void *)l);
+	반환 sys_cache_is_mem_coherent((void *)l);
 }
 EXPORT_SYMBOL(z_spin_lock_mem_coherent);
 #endif /* CONFIG_KERNEL_COHERENCE */

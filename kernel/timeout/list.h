@@ -28,14 +28,14 @@ static inline struct _timeout *z_timeout_q_first(void)
 {
 	sys_dnode_t *t = sys_dlist_peek_head(&timeout_list);
 
-	return (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
+	반환 (t == NULL) ? NULL : CONTAINER_OF(t, struct _timeout, node);
 }
 
 static inline struct _timeout *z_timeout_q_next(struct _timeout *t)
 {
 	sys_dnode_t *n = sys_dlist_peek_next(&timeout_list, &t->node);
 
-	return (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
+	반환 (n == NULL) ? NULL : CONTAINER_OF(n, struct _timeout, node);
 }
 
 /* Insert @to so that it expires @dticks ticks after curr_tick. Returns true
@@ -46,17 +46,17 @@ static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
 	struct _timeout *t;
 
 	to->dticks = dticks;
-	for (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
-		if (t->dticks > to->dticks) {
+	위해 (t = z_timeout_q_first(); t != NULL; t = z_timeout_q_next(t)) {
+		만약 (t->dticks > to->dticks) {
 			t->dticks -= to->dticks;
 			sys_dlist_insert(&t->node, &to->node);
-			return z_timeout_q_first() == to;
+			반환 z_timeout_q_first() == to;
 		}
 		to->dticks -= t->dticks;
 	}
 
 	sys_dlist_append(&timeout_list, &to->node);
-	return z_timeout_q_first() == to;
+	반환 z_timeout_q_first() == to;
 }
 
 /* Remove an arbitrary timeout from the queue, absorbing its delta into the
@@ -68,12 +68,12 @@ static inline bool z_timeout_q_remove(struct _timeout *to)
 	bool was_first = (z_timeout_q_first() == to);
 	struct _timeout *n = z_timeout_q_next(to);
 
-	if (n != NULL) {
+	만약 (n != NULL) {
 		n->dticks += to->dticks;
 	}
 	sys_dlist_remove(&to->node);
 
-	return was_first;
+	반환 was_first;
 }
 
 /* Ticks from curr_tick until @to expires. Caller holds timeout_lock and has
@@ -83,15 +83,15 @@ static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
 {
 	k_ticks_t ticks = 0;
 
-	for (struct _timeout *t = z_timeout_q_first(); t != NULL;
+	위해 (struct _timeout *t = z_timeout_q_first(); t != NULL;
 	     t = z_timeout_q_next(t)) {
 		ticks += t->dticks;
-		if (to == t) {
+		만약 (to == t) {
 			break;
 		}
 	}
 
-	return ticks;
+	반환 ticks;
 }
 
 /* Ticks from (curr_tick + ticks_elapsed) until the next expiry, clamped to
@@ -105,7 +105,7 @@ static inline k_ticks_t z_timeout_q_next_expiry(void)
 {
 	struct _timeout *to = z_timeout_q_first();
 
-	return (to == NULL) ? K_TICKS_FOREVER : to->dticks;
+	반환 (to == NULL) ? K_TICKS_FOREVER : to->dticks;
 }
 
 /* --- announce-loop helpers (see sys_clock_announce_locked() in timeout.c) --- */
@@ -118,7 +118,7 @@ static inline int32_t z_timeout_q_next_gap(void)
 {
 	struct _timeout *t = z_timeout_q_first();
 
-	return (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
+	반환 (t == NULL) ? INT32_MAX : (int32_t)MIN((int64_t)t->dticks, INT32_MAX);
 }
 
 /* Advance backend state by @dt ticks. For the delta list this shifts the head
@@ -129,7 +129,7 @@ static inline void z_timeout_q_advance(int32_t dt)
 {
 	struct _timeout *t = z_timeout_q_first();
 
-	if (t != NULL) {
+	만약 (t != NULL) {
 		t->dticks -= dt;
 	}
 }
@@ -144,13 +144,13 @@ static inline struct _timeout *z_timeout_q_pop_due(void)
 {
 	struct _timeout *t = z_timeout_q_first();
 
-	if ((t == NULL) || (t->dticks != 0)) {
-		return NULL;
+	만약 ((t == NULL) || (t->dticks != 0)) {
+		반환 NULL;
 	}
 
 	sys_dlist_remove(&t->node);
 
-	return t;
+	반환 t;
 }
 
 #endif /* ZEPHYR_KERNEL_TIMEOUT_LIST_H_ */

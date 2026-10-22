@@ -12,9 +12,9 @@
 
 LOG_MODULE_REGISTER(sys_clock_hw_cycles, CONFIG_KERNEL_LOG_LEVEL);
 
-unsigned int z_clock_hw_cycles_per_sec = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC;
+unsigned 정수 z_clock_hw_cycles_per_sec = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC;
 
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#만약 defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
 /*
  * Weak default: only publish the new frequency value.
  * System timer drivers that rescale the cycle counter, cache derived
@@ -22,14 +22,14 @@ unsigned int z_clock_hw_cycles_per_sec = CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC;
  */
 void __weak z_sys_clock_hw_cycles_per_sec_update(uint32_t new_hz)
 {
-	if (new_hz == 0U) {
-		return;
+	만약 (new_hz == 0U) {
+		반환;
 	}
 
 	uint32_t old_hz = (uint32_t)z_clock_hw_cycles_per_sec;
 
-	if (old_hz == new_hz) {
-		return;
+	만약 (old_hz == new_hz) {
+		반환;
 	}
 
 	z_clock_hw_cycles_per_sec = new_hz;
@@ -40,12 +40,12 @@ void __weak z_sys_clock_hw_cycles_per_sec_update(uint32_t new_hz)
 }
 #endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 
-#if defined(CONFIG_TIMER_READS_ITS_FREQUENCY_AT_RUNTIME) || \
+#만약 defined(CONFIG_TIMER_READS_ITS_FREQUENCY_AT_RUNTIME) || \
 	defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
 #ifdef CONFIG_USERSPACE
-static inline unsigned int z_vrfy_sys_clock_hw_cycles_per_sec_runtime_get(void)
+static inline unsigned 정수 z_vrfy_sys_clock_hw_cycles_per_sec_runtime_get(void)
 {
-	return z_impl_sys_clock_hw_cycles_per_sec_runtime_get();
+	반환 z_impl_sys_clock_hw_cycles_per_sec_runtime_get();
 }
 #include <zephyr/syscalls/sys_clock_hw_cycles_per_sec_runtime_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
