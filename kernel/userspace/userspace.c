@@ -5,24 +5,24 @@
  */
 
 
-#include <zephyr/kernel.h>
-#include <string.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/rb.h>
-#include <zephyr/sys/sys_io.h>
-#include <ksched.h>
-#include <zephyr/syscall.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/device.h>
-#include <stdbool.h>
-#include <zephyr/app_memory/app_memdomain.h>
-#include <zephyr/sys/libc-hooks.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/sys/util.h>
-#include <inttypes.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/cache.h>
-#include <kernel_internal.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <string.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/sys/rb.h>
+#ضمن <zephyr/sys/sys_io.h>
+#ضمن <ksched.h>
+#ضمن <zephyr/syscall.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/device.h>
+#ضمن <stdbool.h>
+#ضمن <zephyr/app_memory/app_memdomain.h>
+#ضمن <zephyr/sys/libc-hooks.h>
+#ضمن <zephyr/sys/mutex.h>
+#ضمن <zephyr/sys/util.h>
+#ضمن <inttypes.h>
+#ضمن <zephyr/linker/linker-defs.h>
+#ضمن <zephyr/cache.h>
+#ضمن <kernel_internal.h>
 
 #ifdef Z_LIBC_PARTITION_EXISTS
 K_APPMEM_PARTITION_DEFINE(z_libc_partition);
@@ -36,7 +36,7 @@ K_APPMEM_PARTITION_DEFINE(z_libc_partition);
 K_APPMEM_PARTITION_DEFINE(k_mbedtls_partition);
 #endif /* CONFIG_MBEDTLS */
 
-#include <zephyr/logging/log.h>
+#ضمن <zephyr/logging/log.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* The originally synchronization strategy made heavy use of recursive
@@ -48,7 +48,7 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
  * not.
  */
 #ifdef CONFIG_DYNAMIC_OBJECTS
-static struct k_spinlock lists_lock;       /* kobj dlist */
+ساكن بنية k_spinlock lists_lock;       /* kobj dlist */
 
 #ifdef CONFIG_GEN_PRIV_STACKS
 /* On ARM & ARC MPU & RISC-V PMP we may have two different alignment requirement
@@ -56,67 +56,67 @@ static struct k_spinlock lists_lock;       /* kobj dlist */
  * stack and other for the user stack, so we need to account the
  * worst alignment scenario and reserve space for that.
  */
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-#define STACK_ELEMENT_DATA_SIZE(size) \
-	(sizeof(struct z_stack_data) + CONFIG_PRIVILEGED_STACK_SIZE + \
-	Z_THREAD_STACK_OBJ_ALIGN(size) + K_THREAD_STACK_LEN(size))
-#else
-#define STACK_ELEMENT_DATA_SIZE(size) (sizeof(struct z_stack_data) + \
-	K_THREAD_STACK_LEN(size))
+#إذا defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+#define مكدس_ELEMENT_DATA_SIZE(size) \
+	(حجم(بنية z_مكدس_data) + CONFIG_PRIVILEGED_مكدس_SIZE + \
+	Z_THREAD_مكدس_OBJ_ALIGN(size) + K_THREAD_مكدس_LEN(size))
+#وإلا
+#define مكدس_ELEMENT_DATA_SIZE(size) (حجم(بنية z_مكدس_data) + \
+	K_THREAD_مكدس_LEN(size))
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-#else
-#define STACK_ELEMENT_DATA_SIZE(size) K_THREAD_STACK_LEN(size)
+#وإلا
+#define مكدس_ELEMENT_DATA_SIZE(size) K_THREAD_مكدس_LEN(size)
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 #endif /* CONFIG_DYNAMIC_OBJECTS */
-static struct k_spinlock obj_lock;         /* kobj struct data */
+ساكن بنية k_spinlock obj_lock;         /* kobj struct data */
 
 #define MAX_THREAD_BITS (CONFIG_MAX_THREAD_BYTES * BITS_PER_BYTE)
 
 #ifdef CONFIG_DYNAMIC_OBJECTS
-extern uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
+خارجي uint8_t _thread_idx_map[CONFIG_MAX_THREAD_BYTES];
 
-extern int z_msgq_cleanup(struct k_msgq *q, bool locked);
-extern int z_stack_cleanup(struct k_stack *stack, bool locked);
-extern int z_timer_cleanup(struct k_timer *timer, bool locked);
+خارجي صحيح z_msgq_cleanup(بنية k_msgq *q, bool locked);
+خارجي صحيح z_مكدس_cleanup(بنية k_مكدس *مكدس, bool locked);
+خارجي صحيح z_timer_cleanup(بنية k_timer *timer, bool locked);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked);
+ساكن فراغ unref_check(بنية k_object *ko, uintptr_t index, bool locked);
 
-const char *otype_to_str(enum k_objects otype)
+ثابت حرف *otype_to_str(تعداد k_objects otype)
 {
-	const char *ret;
+	ثابت حرف *ret;
 	/* -fdata-sections doesn't work right except in very recent
 	 * GCC and these literal strings would appear in the binary even if
 	 * otype_to_str was omitted by the linker
 	 */
 #ifdef CONFIG_LOG
-	switch (otype) {
+	بدل (otype) {
 	/* otype-to-str.h is generated automatically during build by
 	 * gen_kobject_list.py
 	 */
-	case K_OBJ_ANY:
+	حالة K_OBJ_ANY:
 		ret = "generic";
-		break;
-	case K_OBJ_DRIVER_ANY:
+		اكسر;
+	حالة K_OBJ_DRIVER_ANY:
 		ret = "generic driver";
-		break;
-#include <zephyr/otype-to-str.h>
-	default:
+		اكسر;
+#ضمن <zephyr/otype-to-str.h>
+	افتراضي:
 		ret = "?";
-		break;
+		اكسر;
 	}
-#else
+#وإلا
 	ARG_UNUSED(otype);
-	ret = NULL;
+	ret = عدم;
 #endif /* CONFIG_LOG */
-	return ret;
+	إرجاع ret;
 }
 
-struct perm_ctx {
-	int parent_id;
-	int child_id;
-	struct k_thread *parent;
+بنية perm_ctx {
+	صحيح parent_id;
+	صحيح child_id;
+	بنية k_thread *parent;
 };
 
 #ifdef CONFIG_GEN_PRIV_STACKS
@@ -124,15 +124,15 @@ struct perm_ctx {
  * mode stacks are allocated as an array. The base of the array is
  * aligned to Z_PRIVILEGE_STACK_ALIGN, and all members must be as well.
  */
-uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
+uint8_t *z_priv_مكدس_find(k_thread_مكدس_t *مكدس)
 {
-	struct k_object *obj = k_object_find(stack);
+	بنية k_object *obj = k_object_find(مكدس);
 
-	__ASSERT(obj != NULL, "stack object not found");
-	__ASSERT(obj->type == K_OBJ_THREAD_STACK_ELEMENT,
+	__ASSERT(obj != عدم, "stack object not found");
+	__ASSERT(obj->type == K_OBJ_THREAD_مكدس_ELEMENT,
 		 "bad stack object");
 
-	return obj->data.stack_data->priv;
+	إرجاع obj->data.مكدس_data->priv;
 }
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
@@ -152,113 +152,113 @@ uint8_t *z_priv_stack_find(k_thread_stack_t *stack)
  */
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 #define DYN_OBJ_DATA_ALIGN_K_THREAD	(ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT)
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD	(sizeof(void *))
+#وإلا
+#define DYN_OBJ_DATA_ALIGN_K_THREAD	(حجم(فراغ *))
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
 
-#ifdef CONFIG_DYNAMIC_THREAD_STACK_SIZE
-#if defined(CONFIG_MPU_STACK_GUARD) || defined(CONFIG_PMP_STACK_GUARD)
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_STACK_SIZE)
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(CONFIG_PRIVILEGED_STACK_SIZE)
+#ifdef CONFIG_DYNAMIC_THREAD_مكدس_SIZE
+#إذا defined(CONFIG_MPU_مكدس_GUARD) || defined(CONFIG_PMP_مكدس_GUARD)
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_مكدس \
+	Z_THREAD_مكدس_OBJ_ALIGN(CONFIG_DYNAMIC_THREAD_مكدس_SIZE)
+#وإلا
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_مكدس \
+	Z_THREAD_مكدس_OBJ_ALIGN(CONFIG_PRIVILEGED_مكدس_SIZE)
 #endif /* CONFIG_MPU_STACK_GUARD || CONFIG_PMP_STACK_GUARD */
-#else
-#define DYN_OBJ_DATA_ALIGN_K_THREAD_STACK \
-	Z_THREAD_STACK_OBJ_ALIGN(ARCH_STACK_PTR_ALIGN)
+#وإلا
+#define DYN_OBJ_DATA_ALIGN_K_THREAD_مكدس \
+	Z_THREAD_مكدس_OBJ_ALIGN(ARCH_مكدس_PTR_ALIGN)
 #endif /* CONFIG_DYNAMIC_THREAD_STACK_SIZE */
 
 #define DYN_OBJ_DATA_ALIGN		\
-	MAX(DYN_OBJ_DATA_ALIGN_K_THREAD, (sizeof(void *)))
+	MAX(DYN_OBJ_DATA_ALIGN_K_THREAD, (حجم(فراغ *)))
 
-struct dyn_obj {
-	struct k_object kobj;
+بنية dyn_obj {
+	بنية k_object kobj;
 	sys_dnode_t dobj_list;
 
 	/* The object itself */
-	void *data;
+	فراغ *data;
 };
 
-extern struct k_object *z_object_gperf_find(const void *obj);
-extern void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func,
-					     void *context);
+خارجي بنية k_object *z_object_gperf_find(ثابت فراغ *obj);
+خارجي فراغ z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func,
+					     فراغ *context);
 
 /*
  * Linked list of allocated kernel objects, for iteration over all allocated
  * objects (and potentially deleting them during iteration).
  */
-static sys_dlist_t obj_list = SYS_DLIST_STATIC_INIT(&obj_list);
+ساكن sys_dlist_t obj_list = SYS_DLIST_STATIC_INIT(&obj_list);
 
 /*
  * TODO: Write some hash table code that will replace obj_list.
  */
 
-static size_t obj_size_get(enum k_objects otype)
+ساكن size_t obj_size_get(تعداد k_objects otype)
 {
 	size_t ret;
 
-	switch (otype) {
-#include <zephyr/otype-to-size.h>
-	default:
-		ret = sizeof(const struct device);
-		break;
+	بدل (otype) {
+#ضمن <zephyr/otype-to-size.h>
+	افتراضي:
+		ret = حجم(ثابت بنية device);
+		اكسر;
 	}
 
-	return ret;
+	إرجاع ret;
 }
 
-static size_t obj_align_get(enum k_objects otype)
+ساكن size_t obj_align_get(تعداد k_objects otype)
 {
 	size_t ret;
 
-	switch (otype) {
-	case K_OBJ_THREAD:
+	بدل (otype) {
+	حالة K_OBJ_THREAD:
 #ifdef ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT
 		ret = ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT;
-#else
-		ret = __alignof(struct dyn_obj);
+#وإلا
+		ret = __alignof(بنية dyn_obj);
 #endif /* ARCH_DYNAMIC_OBJ_K_THREAD_ALIGNMENT */
-		break;
-	default:
-		ret = __alignof(struct dyn_obj);
-		break;
+		اكسر;
+	افتراضي:
+		ret = __alignof(بنية dyn_obj);
+		اكسر;
 	}
 
-	return ret;
+	إرجاع ret;
 }
 
-static struct dyn_obj *dyn_object_find_locked(const void *obj)
+ساكن بنية dyn_obj *dyn_object_find_locked(ثابت فراغ *obj)
 {
-	struct dyn_obj *node;
+	بنية dyn_obj *عقدة;
 
 	/* For any dynamically allocated kernel object, the object
 	 * pointer is just a member of the containing struct dyn_obj,
 	 * so just a little arithmetic is necessary to locate the
 	 * corresponding struct rbnode
 	 */
-	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, node, dobj_list) {
-		if (node->kobj.name == obj) {
-			return node;
+	SYS_DLIST_FOR_EACH_CONTAINER(&obj_list, عقدة, dobj_list) {
+		إذا (عقدة->kobj.name == obj) {
+			إرجاع عقدة;
 		}
 	}
 
-	return NULL;
+	إرجاع عدم;
 }
 
-static struct dyn_obj *dyn_object_find(const void *obj)
+ساكن بنية dyn_obj *dyn_object_find(ثابت فراغ *obj)
 {
-	struct dyn_obj *node;
-	k_spinlock_key_t key;
+	بنية dyn_obj *عقدة;
+	k_spinlock_مفتاح_t مفتاح;
 
-	key = k_spin_lock(&lists_lock);
-	node = dyn_object_find_locked(obj);
-	k_spin_unlock(&lists_lock, key);
+	مفتاح = k_spin_lock(&lists_lock);
+	عقدة = dyn_object_find_locked(obj);
+	k_spin_unlock(&lists_lock, مفتاح);
 
-	return node;
+	إرجاع عقدة;
 }
 
-static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
+ساكن فراغ clear_perms_cb(بنية k_object *ko, فراغ *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -281,21 +281,21 @@ static void clear_perms_cb(struct k_object *ko, void *ctx_ptr)
  *
  * @return true if successful, false if failed
  **/
-static bool thread_idx_alloc(uintptr_t *tidx)
+ساكن bool thread_idx_alloc(uintptr_t *tidx)
 {
-	int i;
-	int idx;
-	int base;
+	صحيح i;
+	صحيح idx;
+	صحيح base;
 	bool ret = false;
-	k_spinlock_key_t key;
+	k_spinlock_مفتاح_t مفتاح;
 
 	base = 0;
-	key = k_spin_lock(&lists_lock);
-	for (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+	مفتاح = k_spin_lock(&lists_lock);
+	لكل (i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
 		idx = find_lsb_set(_thread_idx_map[i]);
 
-		if (idx != 0) {
-			struct dyn_obj *obj, *next;
+		إذا (idx != 0) {
+			بنية dyn_obj *obj, *next;
 
 			*tidx = base + (idx - 1);
 
@@ -306,21 +306,21 @@ static bool thread_idx_alloc(uintptr_t *tidx)
 
 			/* Clear permission from all objects */
 
-			z_object_gperf_wordlist_foreach(clear_perms_cb, (void *)*tidx);
+			z_object_gperf_wordlist_foreach(clear_perms_cb, (فراغ *)*tidx);
 
 			SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
-				clear_perms_cb(&obj->kobj, (void *)*tidx);
+				clear_perms_cb(&obj->kobj, (فراغ *)*tidx);
 			}
 
 			ret = true;
-			break;
+			اكسر;
 		}
 
 		base += 8;
 	}
 
-	k_spin_unlock(&lists_lock, key);
-	return ret;
+	k_spin_unlock(&lists_lock, مفتاح);
+	إرجاع ret;
 }
 
 /**
@@ -333,65 +333,65 @@ static bool thread_idx_alloc(uintptr_t *tidx)
  *
  * @param tidx The thread index to be freed
  **/
-static void thread_idx_free(uintptr_t tidx)
+ساكن فراغ thread_idx_free(uintptr_t tidx)
 {
-	struct dyn_obj *obj, *next;
+	بنية dyn_obj *obj, *next;
 
-	z_object_gperf_wordlist_foreach(clear_perms_cb, (void *)tidx);
+	z_object_gperf_wordlist_foreach(clear_perms_cb, (فراغ *)tidx);
 
 	/* Hold lists_lock so two concurrent k_object_free() calls on thread indices
 	 * within the same byte cannot lose a bit in the non-atomic |=.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&lists_lock);
 
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
-		clear_perms_cb(&obj->kobj, (void *)tidx);
+		clear_perms_cb(&obj->kobj, (فراغ *)tidx);
 	}
 
 	/* Figure out which bits to set in _thread_idx_map[] and set it. */
-	int base = tidx / NUM_BITS(_thread_idx_map[0]);
-	int offset = tidx % NUM_BITS(_thread_idx_map[0]);
+	صحيح base = tidx / رقم_BITS(_thread_idx_map[0]);
+	صحيح offset = tidx % رقم_BITS(_thread_idx_map[0]);
 
 	_thread_idx_map[base] |= BIT(offset);
 
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, مفتاح);
 }
 
-static struct k_object *dynamic_object_create(enum k_objects otype, size_t align,
+ساكن بنية k_object *dynamic_object_create(تعداد k_objects otype, size_t align,
 					      size_t size)
 {
-	struct dyn_obj *dyn;
+	بنية dyn_obj *dyn;
 
-	dyn = z_thread_aligned_alloc(align, sizeof(struct dyn_obj));
-	if (dyn == NULL) {
-		return NULL;
+	dyn = z_thread_aligned_alloc(align, حجم(بنية dyn_obj));
+	إذا (dyn == عدم) {
+		إرجاع عدم;
 	}
 
-	if (otype == K_OBJ_THREAD_STACK_ELEMENT) {
+	إذا (otype == K_OBJ_THREAD_مكدس_ELEMENT) {
 		size_t adjusted_size;
 
-		if (size == 0) {
+		إذا (size == 0) {
 			k_free(dyn);
-			return NULL;
+			إرجاع عدم;
 		}
 
-		adjusted_size = STACK_ELEMENT_DATA_SIZE(size);
-		if (adjusted_size < size) {
+		adjusted_size = مكدس_ELEMENT_DATA_SIZE(size);
+		إذا (adjusted_size < size) {
 			/* The size adjustment above overflowed, which would
 			 * hand out an allocation smaller than requested.
 			 */
 			k_free(dyn);
-			return NULL;
+			إرجاع عدم;
 		}
 
-		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_STACK,
+		dyn->data = z_thread_aligned_alloc(DYN_OBJ_DATA_ALIGN_K_THREAD_مكدس,
 						     adjusted_size);
-		if (dyn->data == NULL) {
+		إذا (dyn->data == عدم) {
 			k_free(dyn);
-			return NULL;
+			إرجاع عدم;
 		}
 
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_مكدس_CACHED
 		/* With kernel coherence enabled, it is possible that the stack
 		 * has been allocated on uncached area. This has an implications on
 		 * performance as memory access is not cached.
@@ -399,103 +399,103 @@ static struct k_object *dynamic_object_create(enum k_objects otype, size_t align
 		 * cached area such that the thread object will have its stack
 		 * inside cached area.
 		 */
-		if (sys_cache_is_ptr_uncached(dyn->data)) {
+		إذا (sys_cache_is_ptr_uncached(dyn->data)) {
 			dyn->data = sys_cache_cached_ptr_get(dyn->data);
 		}
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 
 #ifdef CONFIG_GEN_PRIV_STACKS
-		struct z_stack_data *stack_data = (struct z_stack_data *)
-			((uint8_t *)dyn->data + adjusted_size - sizeof(*stack_data));
-#if defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
-		stack_data->priv = (void *)ROUND_UP(((uint8_t *)dyn->data + size),
-			  Z_THREAD_STACK_OBJ_ALIGN(size));
-#else
-		stack_data->priv = (uint8_t *)dyn->data;
+		بنية z_مكدس_data *مكدس_data = (بنية z_مكدس_data *)
+			((uint8_t *)dyn->data + adjusted_size - حجم(*مكدس_data));
+#إذا defined(CONFIG_ARM_MPU) || defined(CONFIG_ARC_MPU) || defined(CONFIG_RISCV_PMP)
+		مكدس_data->priv = (فراغ *)ROUND_UP(((uint8_t *)dyn->data + size),
+			  Z_THREAD_مكدس_OBJ_ALIGN(size));
+#وإلا
+		مكدس_data->priv = (uint8_t *)dyn->data;
 #endif /* CONFIG_ARM_MPU || CONFIG_ARC_MPU || CONFIG_RISCV_PMP */
-		stack_data->size = adjusted_size;
-		dyn->kobj.data.stack_data = stack_data;
+		مكدس_data->size = adjusted_size;
+		dyn->kobj.data.مكدس_data = مكدس_data;
 		dyn->kobj.name = dyn->data;
-#else
+#وإلا
 		dyn->kobj.name = dyn->data;
-		dyn->kobj.data.stack_size = adjusted_size;
+		dyn->kobj.data.مكدس_size = adjusted_size;
 #endif /* CONFIG_GEN_PRIV_STACKS */
-	} else {
+	} وإلا {
 		size_t total_size = obj_size_get(otype) + size;
 
-		if (total_size < size) {
+		إذا (total_size < size) {
 			k_free(dyn);
-			return NULL;
+			إرجاع عدم;
 		}
 
 		dyn->data = z_thread_aligned_alloc(align, total_size);
-		if (dyn->data == NULL) {
+		إذا (dyn->data == عدم) {
 			k_free(dyn);
-			return NULL;
+			إرجاع عدم;
 		}
 		dyn->kobj.name = dyn->data;
 	}
 
 	dyn->kobj.type = otype;
 	dyn->kobj.flags = 0;
-	(void)memset(dyn->kobj.perms, 0, CONFIG_MAX_THREAD_BYTES);
+	(فراغ)memset(dyn->kobj.perms, 0, CONFIG_MAX_THREAD_BYTES);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&lists_lock);
 
 	sys_dlist_append(&obj_list, &dyn->dobj_list);
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, مفتاح);
 
-	return &dyn->kobj;
+	إرجاع &dyn->kobj;
 }
 
-struct k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
+بنية k_object *k_object_create_dynamic_aligned(size_t align, size_t size)
 {
-	struct k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
+	بنية k_object *obj = dynamic_object_create(K_OBJ_ANY, align, size);
 
-	if (obj == NULL) {
+	إذا (obj == عدم) {
 		LOG_ERR("could not allocate kernel object, out of memory");
 	}
 
-	return obj;
+	إرجاع obj;
 }
 
-static void *z_object_alloc(enum k_objects otype, size_t size)
+ساكن فراغ *z_object_alloc(تعداد k_objects otype, size_t size)
 {
-	struct k_object *zo;
+	بنية k_object *zo;
 	uintptr_t tidx = 0;
 
-	if ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
+	إذا ((otype <= K_OBJ_ANY) || (otype >= K_OBJ_LAST)) {
 		LOG_ERR("bad object type %d requested", otype);
-		return NULL;
+		إرجاع عدم;
 	}
 
-	switch (otype) {
-	case K_OBJ_THREAD:
-		if (!thread_idx_alloc(&tidx)) {
+	بدل (otype) {
+	حالة K_OBJ_THREAD:
+		إذا (!thread_idx_alloc(&tidx)) {
 			LOG_ERR("out of free thread indexes");
-			return NULL;
+			إرجاع عدم;
 		}
-		break;
+		اكسر;
 	/* The following are currently not allowed at all */
-	case K_OBJ_SYS_MUTEX:			/* Lives in user memory */
-	case K_OBJ_NET_SOCKET:			/* Indeterminate size */
+	حالة K_OBJ_SYS_MUTEX:			/* Lives in user memory */
+	حالة K_OBJ_NET_SOCKET:			/* Indeterminate size */
 		LOG_ERR("forbidden object type '%s' requested",
 			otype_to_str(otype));
-		return NULL;
-	default:
+		إرجاع عدم;
+	افتراضي:
 		/* Remainder within bounds are permitted */
-		break;
+		اكسر;
 	}
 
 	zo = dynamic_object_create(otype, obj_align_get(otype), size);
-	if (zo == NULL) {
-		if (otype == K_OBJ_THREAD) {
+	إذا (zo == عدم) {
+		إذا (otype == K_OBJ_THREAD) {
 			thread_idx_free(tidx);
 		}
-		return NULL;
+		إرجاع عدم;
 	}
 
-	if (otype == K_OBJ_THREAD) {
+	إذا (otype == K_OBJ_THREAD) {
 		zo->data.thread_id = tidx;
 	}
 
@@ -509,22 +509,22 @@ static void *z_object_alloc(enum k_objects otype, size_t size)
 	 */
 	zo->flags |= K_OBJ_FLAG_ALLOC;
 
-	return zo->name;
+	إرجاع zo->name;
 }
 
-void *z_impl_k_object_alloc(enum k_objects otype)
+فراغ *z_impl_k_object_alloc(تعداد k_objects otype)
 {
-	return z_object_alloc(otype, 0);
+	إرجاع z_object_alloc(otype, 0);
 }
 
-void *z_impl_k_object_alloc_size(enum k_objects otype, size_t size)
+فراغ *z_impl_k_object_alloc_size(تعداد k_objects otype, size_t size)
 {
-	return z_object_alloc(otype, size);
+	إرجاع z_object_alloc(otype, size);
 }
 
-void k_object_free(void *obj)
+فراغ k_object_free(فراغ *obj)
 {
-	struct dyn_obj *dyn = NULL;
+	بنية dyn_obj *dyn = عدم;
 	bool free_thread_idx = false;
 	uintptr_t thread_idx = 0;
 
@@ -537,51 +537,51 @@ void k_object_free(void *obj)
 	 * another CPU cannot save a pointer to a node that we are
 	 * about to unlink and free.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&lists_lock);
 
 	dyn = dyn_object_find_locked(obj);
 
-	if (dyn != NULL) {
+	إذا (dyn != عدم) {
 		sys_dlist_remove(&dyn->dobj_list);
 
-		if (dyn->kobj.type == K_OBJ_THREAD) {
+		إذا (dyn->kobj.type == K_OBJ_THREAD) {
 			free_thread_idx = true;
 			thread_idx = dyn->kobj.data.thread_id;
 		}
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, مفتاح);
 
 	/* thread_idx_free() acquires lists_lock itself to serialize the
 	 * non-atomic bitmap update against concurrent frees, so it must
 	 * run with the lock dropped here.
 	 */
-	if (free_thread_idx) {
+	إذا (free_thread_idx) {
 		thread_idx_free(thread_idx);
 	}
 
-	if (dyn != NULL) {
+	إذا (dyn != عدم) {
 #ifdef CONFIG_OBJ_CORE
-		if (dyn->kobj.type != K_OBJ_THREAD_STACK_ELEMENT) {
+		إذا (dyn->kobj.type != K_OBJ_THREAD_مكدس_ELEMENT) {
 			k_obj_core_evict_range(obj, obj_size_get(dyn->kobj.type));
 		}
 #endif /* CONFIG_OBJ_CORE */
-#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED
+#ifdef CONFIG_DYNAMIC_OBJECTS_FORCE_مكدس_CACHED
 		/* We may have nudged the pointer to point to the cached area
 		 * in dynamic_object_create() when we first created the thread
 		 * stack object. So we need to restore the uncached one before
 		 * freeing it.
 		 */
-		if (dyn->kobj.type == K_OBJ_THREAD_STACK_ELEMENT) {
-			uint8_t *stack;
+		إذا (dyn->kobj.type == K_OBJ_THREAD_مكدس_ELEMENT) {
+			uint8_t *مكدس;
 
-			if (sys_cache_is_ptr_cached(dyn->data)) {
-				stack = sys_cache_uncached_ptr_get(dyn->data);
-			} else {
-				stack = dyn->data;
+			إذا (sys_cache_is_ptr_cached(dyn->data)) {
+				مكدس = sys_cache_uncached_ptr_get(dyn->data);
+			} وإلا {
+				مكدس = dyn->data;
 			}
 
-			k_free(stack);
-		} else
+			k_free(مكدس);
+		} وإلا
 #endif /* CONFIG_DYNAMIC_OBJECTS_FORCE_STACK_CACHED */
 		{
 			k_free(dyn->data);
@@ -590,40 +590,40 @@ void k_object_free(void *obj)
 	}
 }
 
-struct k_object *k_object_find(const void *obj)
+بنية k_object *k_object_find(ثابت فراغ *obj)
 {
-	struct k_object *ret;
+	بنية k_object *ret;
 
 	ret = z_object_gperf_find(obj);
 
-	if (ret == NULL) {
-		struct dyn_obj *dyn;
+	إذا (ret == عدم) {
+		بنية dyn_obj *dyn;
 
 		/* The cast to pointer-to-non-const violates MISRA
 		 * 11.8 but is justified since we know dynamic objects
 		 * were not declared with a const qualifier.
 		 */
 		dyn = dyn_object_find(obj);
-		if (dyn != NULL) {
+		إذا (dyn != عدم) {
 			ret = &dyn->kobj;
 		}
 	}
 
-	return ret;
+	إرجاع ret;
 }
 
-void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+فراغ k_object_wordlist_foreach(_wordlist_cb_func_t func, فراغ *context)
 {
-	struct dyn_obj *obj, *next;
+	بنية dyn_obj *obj, *next;
 
 	z_object_gperf_wordlist_foreach(func, context);
 
-	k_spinlock_key_t key = k_spin_lock(&lists_lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&lists_lock);
 
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&obj_list, obj, next, dobj_list) {
 		func(&obj->kobj, context);
 	}
-	k_spin_unlock(&lists_lock, key);
+	k_spin_unlock(&lists_lock, مفتاح);
 }
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 
@@ -634,40 +634,40 @@ void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
  */
 #ifdef CONFIG_DYNAMIC_OBJECTS
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *z_object_gperf_find(const void *obj)
+__weak بنية k_object *z_object_gperf_find(ثابت فراغ *obj)
 {
 	ARG_UNUSED(obj);
-	return NULL;
+	إرجاع عدم;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak void z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+__weak فراغ z_object_gperf_wordlist_foreach(_wordlist_cb_func_t func, فراغ *context)
 {
 	ARG_UNUSED(func);
 	ARG_UNUSED(context);
 }
-#else
+#وإلا
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak struct k_object *k_object_find(const void *obj)
+__weak بنية k_object *k_object_find(ثابت فراغ *obj)
 {
-	return NULL;
+	إرجاع عدم;
 }
 Z_GENERIC_SECTION(.kobject_data.text.dummies)
-__weak void k_object_wordlist_foreach(_wordlist_cb_func_t func, void *context)
+__weak فراغ k_object_wordlist_foreach(_wordlist_cb_func_t func, فراغ *context)
 {
 }
 #endif
 
-static unsigned int thread_index_get(struct k_thread *thread)
+ساكن unsigned صحيح thread_index_get(بنية k_thread *thread)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	ko = k_object_find(thread);
 
-	if (ko == NULL) {
-		return -1;
+	إذا (ko == عدم) {
+		إرجاع -1;
 	}
 
-	return ko->data.thread_id;
+	إرجاع ko->data.thread_id;
 }
 
 /* Caller must hold lists_lock for the duration of this call so that the
@@ -677,27 +677,27 @@ static unsigned int thread_index_get(struct k_thread *thread)
  * Note: The 'locked' parameter in this function refers to the scheduler's
  * spinlock.
  */
-static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
+ساكن فراغ unref_check(بنية k_object *ko, uintptr_t index, bool locked)
 {
-	k_spinlock_key_t key = k_spin_lock(&obj_lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&obj_lock);
 
 	sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 
 #ifdef CONFIG_DYNAMIC_OBJECTS
-	if ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
+	إذا ((ko->flags & K_OBJ_FLAG_ALLOC) == 0U) {
 		/* skip unref check for static kernel object */
-		goto out;
+		اذهب out;
 	}
 
-	void *vko = ko;
+	فراغ *vko = ko;
 
-	struct dyn_obj *dyn = CONTAINER_OF(vko, struct dyn_obj, kobj);
+	بنية dyn_obj *dyn = CONTAINER_OF(vko, بنية dyn_obj, kobj);
 
-	__ASSERT(IS_PTR_ALIGNED(dyn, struct dyn_obj), "unaligned z_object");
+	__ASSERT(IS_PTR_ALIGNED(dyn, بنية dyn_obj), "unaligned z_object");
 
-	for (int i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
-		if (ko->perms[i] != 0U) {
-			goto out;
+	لكل (صحيح i = 0; i < CONFIG_MAX_THREAD_BYTES; i++) {
+		إذا (ko->perms[i] != 0U) {
+			اذهب out;
 		}
 	}
 
@@ -706,26 +706,26 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	 * marked as uninitialized when all references are gone. What
 	 * specifically needs to happen depends on the object type.
 	 */
-	switch (ko->type) {
-	case K_OBJ_MSGQ:
-		(void)z_msgq_cleanup((struct k_msgq *)ko->name, locked);
-		break;
-	case K_OBJ_STACK:
-		(void)z_stack_cleanup((struct k_stack *)ko->name, locked);
-		break;
-	case K_OBJ_TIMER:
+	بدل (ko->type) {
+	حالة K_OBJ_MSGQ:
+		(فراغ)z_msgq_cleanup((بنية k_msgq *)ko->name, locked);
+		اكسر;
+	حالة K_OBJ_مكدس:
+		(فراغ)z_مكدس_cleanup((بنية k_مكدس *)ko->name, locked);
+		اكسر;
+	حالة K_OBJ_TIMER:
 		/* k_timer_cleanup() does not check whether the timer has
 		 * been initialized; calling it on an uninitialized timer
 		 * would read garbage from an uninitialized dnode. Guard
 		 * explicitly here.
 		 */
-		if ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
-			(void)z_timer_cleanup((struct k_timer *)ko->name, locked);
+		إذا ((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U) {
+			(فراغ)z_timer_cleanup((بنية k_timer *)ko->name, locked);
 		}
-		break;
-	default:
+		اكسر;
+	افتراضي:
 		/* Nothing to do */
-		break;
+		اكسر;
 	}
 
 	sys_dlist_remove(&dyn->dobj_list);
@@ -733,62 +733,62 @@ static void unref_check(struct k_object *ko, uintptr_t index, bool locked)
 	k_free(dyn);
 out:
 #endif /* CONFIG_DYNAMIC_OBJECTS */
-	k_spin_unlock(&obj_lock, key);
+	k_spin_unlock(&obj_lock, مفتاح);
 }
 
-static void wordlist_cb(struct k_object *ko, void *ctx_ptr)
+ساكن فراغ wordlist_cb(بنية k_object *ko, فراغ *ctx_ptr)
 {
-	struct perm_ctx *ctx = (struct perm_ctx *)ctx_ptr;
+	بنية perm_ctx *ctx = (بنية perm_ctx *)ctx_ptr;
 
-	if (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
-				  ((struct k_thread *)ko->name != ctx->parent)) {
+	إذا (sys_bitfield_test_bit((mem_addr_t)&ko->perms, ctx->parent_id) &&
+				  ((بنية k_thread *)ko->name != ctx->parent)) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, ctx->child_id);
 	}
 }
 
-void k_thread_perms_inherit(struct k_thread *parent, struct k_thread *child)
+فراغ k_thread_perms_inherit(بنية k_thread *parent, بنية k_thread *child)
 {
-	struct perm_ctx ctx = {
+	بنية perm_ctx ctx = {
 		thread_index_get(parent),
 		thread_index_get(child),
 		parent
 	};
 
-	if ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
+	إذا ((ctx.parent_id != -1) && (ctx.child_id != -1)) {
 		k_object_wordlist_foreach(wordlist_cb, &ctx);
 	}
 }
 
-void k_thread_perms_set(struct k_object *ko, struct k_thread *thread)
+فراغ k_thread_perms_set(بنية k_object *ko, بنية k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	صحيح index = thread_index_get(thread);
 
-	if (index != -1) {
+	إذا (index != -1) {
 		sys_bitfield_set_bit((mem_addr_t)&ko->perms, index);
 	}
 }
 
-void k_thread_perms_clear(struct k_object *ko, struct k_thread *thread)
+فراغ k_thread_perms_clear(بنية k_object *ko, بنية k_thread *thread)
 {
-	int index = thread_index_get(thread);
+	صحيح index = thread_index_get(thread);
 
-	if (index != -1) {
+	إذا (index != -1) {
 		sys_bitfield_clear_bit((mem_addr_t)&ko->perms, index);
 		/* unref_check() requires lists_lock so its dlist remove is
 		 * SMP-safe.
 		 */
 #ifdef CONFIG_DYNAMIC_OBJECTS
-		k_spinlock_key_t key = k_spin_lock(&lists_lock);
+		k_spinlock_مفتاح_t مفتاح = k_spin_lock(&lists_lock);
 
 		unref_check(ko, index, false);
-		k_spin_unlock(&lists_lock, key);
-#else
+		k_spin_unlock(&lists_lock, مفتاح);
+#وإلا
 		unref_check(ko, index, false);
 #endif /* CONFIG_DYNAMIC_OBJECTS */
 	}
 }
 
-static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
+ساكن فراغ clear_perms_cb_locked(بنية k_object *ko, فراغ *ctx_ptr)
 {
 	uintptr_t id = (uintptr_t)ctx_ptr;
 
@@ -802,158 +802,158 @@ static void clear_perms_cb_locked(struct k_object *ko, void *ctx_ptr)
  * be passed down to the lower layers so that they do not try to reacquire the
  * spinlock (leading to deadlock).
  */
-void k_thread_perms_all_clear(struct k_thread *thread)
+فراغ k_thread_perms_all_clear(بنية k_thread *thread)
 {
 	uintptr_t index = thread_index_get(thread);
 
-	if ((int)index != -1) {
-		k_object_wordlist_foreach(clear_perms_cb_locked, (void *)index);
+	إذا ((صحيح)index != -1) {
+		k_object_wordlist_foreach(clear_perms_cb_locked, (فراغ *)index);
 	}
 }
 
-static int thread_perms_test(struct k_object *ko)
+ساكن صحيح thread_perms_test(بنية k_object *ko)
 {
-	int index;
+	صحيح index;
 
-	if ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
-		return 1;
+	إذا ((ko->flags & K_OBJ_FLAG_PUBLIC) != 0U) {
+		إرجاع 1;
 	}
 
 	index = thread_index_get(_current);
-	if (index != -1) {
-		return sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
+	إذا (index != -1) {
+		إرجاع sys_bitfield_test_bit((mem_addr_t)&ko->perms, index);
 	}
-	return 0;
+	إرجاع 0;
 }
 
-static void dump_permission_error(struct k_object *ko)
+ساكن فراغ dump_permission_error(بنية k_object *ko)
 {
-	int index = thread_index_get(_current);
+	صحيح index = thread_index_get(_current);
 	LOG_ERR("thread %p (%d) does not have permission on %s %p",
 		_current, index,
 		otype_to_str(ko->type), ko->name);
-	LOG_HEXDUMP_ERR(ko->perms, sizeof(ko->perms), "permission bitmap");
+	LOG_HEXDUMP_ERR(ko->perms, حجم(ko->perms), "permission bitmap");
 }
 
-void k_object_dump_error(int retval, const void *obj, struct k_object *ko,
-			enum k_objects otype)
+فراغ k_object_dump_error(صحيح retval, ثابت فراغ *obj, بنية k_object *ko,
+			تعداد k_objects otype)
 {
-	switch (retval) {
-	case -EBADF:
+	بدل (retval) {
+	حالة -EBADF:
 		LOG_ERR("%p is not a valid %s", obj, otype_to_str(otype));
-		if (ko == NULL) {
+		إذا (ko == عدم) {
 			LOG_ERR("address is not a known kernel object");
-		} else {
+		} وإلا {
 			LOG_ERR("address is actually a %s",
 				otype_to_str(ko->type));
 		}
-		break;
-	case -EPERM:
+		اكسر;
+	حالة -EPERM:
 		dump_permission_error(ko);
-		break;
-	case -EINVAL:
+		اكسر;
+	حالة -EINVAL:
 		LOG_ERR("%p used before initialization", obj);
-		break;
-	case -EADDRINUSE:
+		اكسر;
+	حالة -EADDRINUSE:
 		LOG_ERR("%p %s in use", obj, otype_to_str(otype));
-		break;
-	default:
+		اكسر;
+	افتراضي:
 		/* Not handled error */
-		break;
+		اكسر;
 	}
 }
 
-void z_impl_k_object_access_grant(const void *object, struct k_thread *thread)
+فراغ z_impl_k_object_access_grant(ثابت فراغ *object, بنية k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	بنية k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	إذا (ko != عدم) {
 		k_thread_perms_set(ko, thread);
 	}
 }
 
-void k_object_access_revoke(const void *object, struct k_thread *thread)
+فراغ k_object_access_revoke(ثابت فراغ *object, بنية k_thread *thread)
 {
-	struct k_object *ko = k_object_find(object);
+	بنية k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	إذا (ko != عدم) {
 		k_thread_perms_clear(ko, thread);
 	}
 }
 
-void k_object_access_revoke_others(const void *object)
+فراغ k_object_access_revoke_others(ثابت فراغ *object)
 {
-	struct k_object *ko = k_object_find(object);
+	بنية k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
+	إذا (ko != عدم) {
+		(فراغ)memset(ko->perms, 0, حجم(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags &= ~K_OBJ_FLAG_PUBLIC;
 	}
 }
 
-void z_impl_k_object_release(const void *object)
+فراغ z_impl_k_object_release(ثابت فراغ *object)
 {
 	k_object_access_revoke(object, _current);
 }
 
-void k_object_access_all_grant(const void *object)
+فراغ k_object_access_all_grant(ثابت فراغ *object)
 {
-	struct k_object *ko = k_object_find(object);
+	بنية k_object *ko = k_object_find(object);
 
-	if (ko != NULL) {
+	إذا (ko != عدم) {
 		ko->flags |= K_OBJ_FLAG_PUBLIC;
 	}
 }
 
-int k_object_validate(struct k_object *ko, enum k_objects otype,
-		       enum _obj_init_check init)
+صحيح k_object_validate(بنية k_object *ko, تعداد k_objects otype,
+		       تعداد _obj_init_check init)
 {
-	if (unlikely(ko == NULL)) {
-		return -EBADF;
+	إذا (unlikely(ko == عدم)) {
+		إرجاع -EBADF;
 	}
 
-	if (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
-		if ((otype != K_OBJ_DRIVER_ANY) ||
+	إذا (unlikely((otype != K_OBJ_ANY) && (otype != ko->type))) {
+		إذا ((otype != K_OBJ_DRIVER_ANY) ||
 		    (ko->type < K_OBJ_DRIVER_FIRST) ||
 		    (ko->type > K_OBJ_DRIVER_LAST)) {
-			return -EBADF;
+			إرجاع -EBADF;
 		}
 	}
 
 	/* Manipulation of any kernel objects by a user thread requires that
 	 * thread be granted access first, even for uninitialized objects
 	 */
-	if (unlikely(thread_perms_test(ko) == 0)) {
-		return -EPERM;
+	إذا (unlikely(thread_perms_test(ko) == 0)) {
+		إرجاع -EPERM;
 	}
 
 	/* Initialization state checks. _OBJ_INIT_ANY, we don't care */
-	if (likely(init == _OBJ_INIT_TRUE)) {
+	إذا (likely(init == _OBJ_INIT_TRUE)) {
 		/* Object MUST be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
-			return -EINVAL;
+		إذا (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) == 0U)) {
+			إرجاع -EINVAL;
 		}
-	} else if (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
+	} وإلا إذا (init == _OBJ_INIT_FALSE) { /* _OBJ_INIT_FALSE case */
 		/* Object MUST NOT be initialized */
-		if (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
-			return -EADDRINUSE;
+		إذا (unlikely((ko->flags & K_OBJ_FLAG_INITIALIZED) != 0U)) {
+			إرجاع -EADDRINUSE;
 		}
-	} else {
+	} وإلا {
 		/* _OBJ_INIT_ANY */
 	}
 
-	return 0;
+	إرجاع 0;
 }
 
-int z_impl_k_object_access_check(const void *object)
+صحيح z_impl_k_object_access_check(ثابت فراغ *object)
 {
-	return k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
+	إرجاع k_object_validate(k_object_find(object), K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-void k_object_init(const void *obj)
+فراغ k_object_init(ثابت فراغ *obj)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	/* By the time we get here, if the caller was from userspace, all the
 	 * necessary checks have been done in k_object_validate(), which takes
@@ -964,37 +964,37 @@ void k_object_init(const void *obj)
 	 */
 
 	ko = k_object_find(obj);
-	if (ko == NULL) {
+	إذا (ko == عدم) {
 		/* Supervisor threads can ignore rules about kernel objects
 		 * and may declare them on stacks, etc. Such objects will never
 		 * be usable from userspace, but we shouldn't explode.
 		 */
-		return;
+		إرجاع;
 	}
 
 	/* Allows non-initialization system calls to be made on this object */
 	ko->flags |= K_OBJ_FLAG_INITIALIZED;
 }
 
-void k_object_recycle(const void *obj)
+فراغ k_object_recycle(ثابت فراغ *obj)
 {
-	struct k_object *ko = k_object_find(obj);
+	بنية k_object *ko = k_object_find(obj);
 
-	if (ko != NULL) {
-		(void)memset(ko->perms, 0, sizeof(ko->perms));
+	إذا (ko != عدم) {
+		(فراغ)memset(ko->perms, 0, حجم(ko->perms));
 		k_thread_perms_set(ko, _current);
 		ko->flags |= K_OBJ_FLAG_INITIALIZED;
 	}
 }
 
-void k_object_uninit(const void *obj)
+فراغ k_object_uninit(ثابت فراغ *obj)
 {
-	struct k_object *ko;
+	بنية k_object *ko;
 
 	/* See comments in k_object_init() */
 	ko = k_object_find(obj);
-	if (ko == NULL) {
-		return;
+	إذا (ko == عدم) {
+		إرجاع;
 	}
 
 	ko->flags &= ~K_OBJ_FLAG_INITIALIZED;
@@ -1003,70 +1003,70 @@ void k_object_uninit(const void *obj)
 /*
  * Copy to/from helper functions used in syscall handlers
  */
-void *k_usermode_alloc_from_copy(const void *src, size_t size)
+فراغ *k_usermode_alloc_from_copy(ثابت فراغ *src, size_t size)
 {
-	void *dst = NULL;
+	فراغ *dst = عدم;
 
 	/* Does the caller in user mode have access to read this memory? */
-	if (K_SYSCALL_MEMORY_READ(src, size)) {
-		goto out_err;
+	إذا (K_SYSCALL_MEMORY_READ(src, size)) {
+		اذهب out_err;
 	}
 
 	dst = z_thread_malloc(size);
-	if (dst == NULL) {
+	إذا (dst == عدم) {
 		LOG_ERR("out of thread resource pool memory (%zu)", size);
-		goto out_err;
+		اذهب out_err;
 	}
 
-	(void)memcpy(dst, src, size);
+	(فراغ)memcpy(dst, src, size);
 out_err:
-	return dst;
+	إرجاع dst;
 }
 
-static int user_copy(void *dst, const void *src, size_t size, bool to_user)
+ساكن صحيح user_copy(فراغ *dst, ثابت فراغ *src, size_t size, bool to_user)
 {
-	int ret = EFAULT;
+	صحيح ret = EFAULT;
 
 	/* Does the caller in user mode have access to this memory? */
-	if (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
+	إذا (to_user ? K_SYSCALL_MEMORY_WRITE(dst, size) :
 			K_SYSCALL_MEMORY_READ(src, size)) {
-		goto out_err;
+		اذهب out_err;
 	}
 
-	(void)memcpy(dst, src, size);
+	(فراغ)memcpy(dst, src, size);
 	ret = 0;
 out_err:
-	return ret;
+	إرجاع ret;
 }
 
-int k_usermode_from_copy(void *dst, const void *src, size_t size)
+صحيح k_usermode_from_copy(فراغ *dst, ثابت فراغ *src, size_t size)
 {
-	return user_copy(dst, src, size, false);
+	إرجاع user_copy(dst, src, size, false);
 }
 
-int k_usermode_to_copy(void *dst, const void *src, size_t size)
+صحيح k_usermode_to_copy(فراغ *dst, ثابت فراغ *src, size_t size)
 {
-	return user_copy(dst, src, size, true);
+	إرجاع user_copy(dst, src, size, true);
 }
 
-char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
+حرف *k_usermode_string_alloc_copy(ثابت حرف *src, size_t maxlen)
 {
 	size_t actual_len;
-	int err;
-	char *ret = NULL;
+	صحيح err;
+	حرف *ret = عدم;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
-		goto out;
+	إذا (err != 0) {
+		اذهب out;
 	}
-	if (actual_len == maxlen) {
+	إذا (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
-		goto out;
+		اذهب out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	إذا (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
-		goto out;
+		اذهب out;
 	}
 
 	ret = k_usermode_alloc_from_copy(src, actual_len);
@@ -1075,33 +1075,33 @@ char *k_usermode_string_alloc_copy(const char *src, size_t maxlen)
 	 * checks. Ensure what we actually copied is still terminated
 	 * properly.
 	 */
-	if (ret != NULL) {
+	إذا (ret != عدم) {
 		ret[actual_len - 1U] = '\0';
 	}
 out:
-	return ret;
+	إرجاع ret;
 }
 
-int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
+صحيح k_usermode_string_copy(حرف *dst, ثابت حرف *src, size_t maxlen)
 {
 	size_t actual_len;
-	int ret, err;
+	صحيح ret, err;
 
 	actual_len = k_usermode_string_nlen(src, maxlen, &err);
-	if (err != 0) {
+	إذا (err != 0) {
 		ret = EFAULT;
-		goto out;
+		اذهب out;
 	}
-	if (actual_len == maxlen) {
+	إذا (actual_len == maxlen) {
 		/* Not NULL terminated */
 		LOG_ERR("string too long %p (%zu)", src, actual_len);
 		ret = EINVAL;
-		goto out;
+		اذهب out;
 	}
-	if (size_add_overflow(actual_len, 1, &actual_len)) {
+	إذا (size_add_overflow(actual_len, 1, &actual_len)) {
 		LOG_ERR("overflow");
 		ret = EINVAL;
-		goto out;
+		اذهب out;
 	}
 
 	ret = k_usermode_from_copy(dst, src, actual_len);
@@ -1109,26 +1109,26 @@ int k_usermode_string_copy(char *dst, const char *src, size_t maxlen)
 	/* See comment above in k_usermode_string_alloc_copy() */
 	dst[actual_len - 1] = '\0';
 out:
-	return ret;
+	إرجاع ret;
 }
 
 /*
  * Application memory region initialization
  */
 
-extern char __app_shmem_regions_start[];
-extern char __app_shmem_regions_end[];
+خارجي حرف __app_shmem_regions_start[];
+خارجي حرف __app_shmem_regions_end[];
 
-static void app_shmem_bss_zero(void)
+ساكن فراغ app_shmem_bss_zero(فراغ)
 {
-	struct z_app_region *region, *end;
+	بنية z_app_region *region, *end;
 
 
-	end = (struct z_app_region *)&__app_shmem_regions_end[0];
-	region = (struct z_app_region *)&__app_shmem_regions_start[0];
+	end = (بنية z_app_region *)&__app_shmem_regions_end[0];
+	region = (بنية z_app_region *)&__app_shmem_regions_start[0];
 
-	for ( ; region < end; region++) {
-		(void)memset(region->bss_start, 0, region->bss_size);
+	لكل ( ; region < end; region++) {
+		(فراغ)memset(region->bss_start, 0, region->bss_size);
 	}
 }
 
@@ -1138,10 +1138,10 @@ K_KERNEL_INIT_PRE(app_shmem_bss_zero);
  * Default handlers if otherwise unimplemented
  */
 
-static uintptr_t handler_bad_syscall(uintptr_t bad_id, uintptr_t arg2,
+ساكن uintptr_t handler_bad_syscall(uintptr_t bad_id, uintptr_t arg2,
 				     uintptr_t arg3, uintptr_t arg4,
 				     uintptr_t arg5, uintptr_t arg6,
-				     void *ssf)
+				     فراغ *ssf)
 {
 	ARG_UNUSED(arg2);
 	ARG_UNUSED(arg3);
@@ -1154,9 +1154,9 @@ static uintptr_t handler_bad_syscall(uintptr_t bad_id, uintptr_t arg2,
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static uintptr_t handler_no_syscall(uintptr_t arg1, uintptr_t arg2,
+ساكن uintptr_t handler_no_syscall(uintptr_t arg1, uintptr_t arg2,
 				    uintptr_t arg3, uintptr_t arg4,
-				    uintptr_t arg5, uintptr_t arg6, void *ssf)
+				    uintptr_t arg5, uintptr_t arg6, فراغ *ssf)
 {
 	ARG_UNUSED(arg1);
 	ARG_UNUSED(arg2);
@@ -1170,4 +1170,4 @@ static uintptr_t handler_no_syscall(uintptr_t arg1, uintptr_t arg2,
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-#include <zephyr/syscall_dispatch.c>
+#ضمن <zephyr/syscall_dispatch.c>

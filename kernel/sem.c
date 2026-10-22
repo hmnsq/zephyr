@@ -17,17 +17,17 @@
  * having to poll.
  */
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <wait_q.h>
+#ضمن <zephyr/sys/dlist.h>
+#ضمن <ksched.h>
+#ضمن <scheduler.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/tracing/tracing.h>
+#ضمن <zephyr/sys/check.h>
 
 /* Optional striped locks reduce the performance impact of a system-wide
  * semaphore lock without the significant extra RAM required by per-object
@@ -38,50 +38,50 @@
 /* A k_spinlock can be zero-sized on uniprocessor configurations. Keep the
  * default lock scalar because arrays of empty structures are not portable.
  */
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-static struct k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
-#else
-static struct k_spinlock sem_lock;
+#إذا defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
+ساكن بنية k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
+#وإلا
+ساكن بنية k_spinlock sem_lock;
 #endif
 
-static inline struct k_spinlock *sem_spinlock_get(struct k_sem *sem)
+ساكن مضمن بنية k_spinlock *sem_spinlock_get(بنية k_sem *sem)
 {
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
+#إذا defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
 	BUILD_ASSERT(IS_POWER_OF_TWO(CONFIG_SEM_LOCK_STRIPES),
 		     "CONFIG_SEM_LOCK_STRIPES must be a power of two");
 
 	/* Hash the naturally aligned semaphore address into a lock stripe. */
-	return &sem_locks[((uintptr_t)sem / __alignof(struct k_sem)) %
+	إرجاع &sem_locks[((uintptr_t)sem / __alignof(بنية k_sem)) %
 			  CONFIG_SEM_LOCK_STRIPES];
-#else
+#وإلا
 	ARG_UNUSED(sem);
-	return &sem_lock;
+	إرجاع &sem_lock;
 #endif
 }
 
 #ifdef CONFIG_OBJ_CORE_SEM
-K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, عدم);
 #endif /* CONFIG_OBJ_CORE_SEM */
 
-int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+صحيح z_impl_k_sem_init(بنية k_sem *sem, unsigned صحيح initial_تعداد,
+		      unsigned صحيح limit)
 {
 	/*
 	 * Limit cannot be zero and count cannot be greater than limit
 	 */
-	CHECKIF(limit == 0U || initial_count > limit) {
+	CHECKIF(limit == 0U || initial_تعداد > limit) {
 		SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
 
-		return -EINVAL;
+		إرجاع -EINVAL;
 	}
 
-	sem->count = initial_count;
+	sem->تعداد_2 = initial_تعداد;
 	sem->limit = limit;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
 
 	z_waitq_init(&sem->wait_q);
-#if defined(CONFIG_POLL)
+#إذا defined(CONFIG_POLL)
 	sys_dlist_init(&sem->poll_events);
 #endif /* CONFIG_POLL */
 	k_object_init(sem);
@@ -90,137 +90,137 @@ int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 	k_obj_core_init_and_link(K_OBJ_CORE(sem), &obj_type_sem);
 #endif /* CONFIG_OBJ_CORE_SEM */
 
-	return 0;
+	إرجاع 0;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+صحيح z_vrfy_k_sem_init(بنية k_sem *sem, unsigned صحيح initial_تعداد,
+		      unsigned صحيح limit)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sem, K_OBJ_SEM));
-	return z_impl_k_sem_init(sem, initial_count, limit);
+	إرجاع z_impl_k_sem_init(sem, initial_تعداد, limit);
 }
-#include <zephyr/syscalls/k_sem_init_mrsh.c>
+#ضمن <zephyr/syscalls/k_sem_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-static inline bool sem_handle_poll_events(struct k_sem *sem)
+ساكن مضمن bool sem_handle_poll_events(بنية k_sem *sem)
 {
 #ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
-#else
+	إرجاع z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
+#وإلا
 	ARG_UNUSED(sem);
-	return false;
+	إرجاع false;
 #endif /* CONFIG_POLL */
 }
 
-void z_impl_k_sem_give(struct k_sem *sem)
+فراغ z_impl_k_sem_give(بنية k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	بنية k_spinlock *lock = sem_spinlock_get(sem);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(lock);
 	bool resched;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
 
-	if (z_sched_wake(&sem->wait_q, 0, NULL)) {
+	إذا (z_sched_wake(&sem->wait_q, 0, عدم)) {
 		resched = true;
-	} else {
-		sem->count += (sem->count != sem->limit) ? 1U : 0U;
+	} وإلا {
+		sem->تعداد_2 += (sem->تعداد_2 != sem->limit) ? 1U : 0U;
 		resched = sem_handle_poll_events(sem);
 	}
 
-	if (unlikely(resched)) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	إذا (unlikely(resched)) {
+		z_reschedule(lock, مفتاح);
+	} وإلا {
+		k_spin_unlock(lock, مفتاح);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_sem_give(struct k_sem *sem)
+ساكن مضمن فراغ z_vrfy_k_sem_give(بنية k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_give(sem);
 }
-#include <zephyr/syscalls/k_sem_give_mrsh.c>
+#ضمن <zephyr/syscalls/k_sem_give_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+صحيح z_impl_k_sem_take(بنية k_sem *sem, k_timeout_t timeout)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	int ret;
+	بنية k_spinlock *lock = sem_spinlock_get(sem);
+	صحيح ret;
 
 	__ASSERT(((arch_is_in_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
 
-	if (likely(sem->count > 0U)) {
-		sem->count--;
-		k_spin_unlock(lock, key);
+	إذا (likely(sem->تعداد_2 > 0U)) {
+		sem->تعداد_2--;
+		k_spin_unlock(lock, مفتاح);
 		ret = 0;
-		goto out;
+		اذهب out;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(lock, key);
+	إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(lock, مفتاح);
 		ret = -EBUSY;
-		goto out;
+		اذهب out;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
 
-	ret = z_pend_curr(lock, key, &sem->wait_q, timeout);
+	ret = z_pend_curr(lock, مفتاح, &sem->wait_q, timeout);
 
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
 
-	return ret;
+	إرجاع ret;
 }
 
-void z_impl_k_sem_reset(struct k_sem *sem)
+فراغ z_impl_k_sem_reset(بنية k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	بنية k_spinlock *lock = sem_spinlock_get(sem);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(lock);
 	bool resched = false;
 
-	while (z_sched_wake(&sem->wait_q, -EAGAIN, NULL)) {
+	بينما (z_sched_wake(&sem->wait_q, -EAGAIN, عدم)) {
 		resched = true;
 	}
-	sem->count = 0;
+	sem->تعداد_2 = 0;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, reset, sem);
 
-	if (resched) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	إذا (resched) {
+		z_reschedule(lock, مفتاح);
+	} وإلا {
+		k_spin_unlock(lock, مفتاح);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+ساكن مضمن صحيح z_vrfy_k_sem_take(بنية k_sem *sem, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_take(sem, timeout);
+	إرجاع z_impl_k_sem_take(sem, timeout);
 }
-#include <zephyr/syscalls/k_sem_take_mrsh.c>
+#ضمن <zephyr/syscalls/k_sem_take_mrsh.c>
 
-static inline void z_vrfy_k_sem_reset(struct k_sem *sem)
+ساكن مضمن فراغ z_vrfy_k_sem_reset(بنية k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_reset(sem);
 }
-#include <zephyr/syscalls/k_sem_reset_mrsh.c>
+#ضمن <zephyr/syscalls/k_sem_reset_mrsh.c>
 
-static inline unsigned int z_vrfy_k_sem_count_get(struct k_sem *sem)
+ساكن مضمن unsigned صحيح z_vrfy_k_sem_تعداد_get(بنية k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_count_get(sem);
+	إرجاع z_impl_k_sem_تعداد_get(sem);
 }
-#include <zephyr/syscalls/k_sem_count_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_sem_count_get_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */

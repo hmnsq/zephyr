@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#ضمن <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/kernel/thread_stack.h>
+#ضمن <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_مكدس_t *z_impl_k_thread_مكدس_alloc(size_t size, صحيح flags)
 {
 	ARG_UNUSED(size);
 	ARG_UNUSED(flags);
 
-	return NULL;
+	إرجاع عدم;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+ساكن مضمن k_thread_مكدس_t *z_vrfy_k_thread_مكدس_alloc(size_t size, صحيح flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	إرجاع z_impl_k_thread_مكدس_alloc(size, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+صحيح z_impl_k_thread_مكدس_free(k_thread_مكدس_t *مكدس)
 {
-	ARG_UNUSED(stack);
+	ARG_UNUSED(مكدس);
 
-	return -ENOSYS;
+	إرجاع -ENOSYS;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+ساكن مضمن صحيح z_vrfy_k_thread_مكدس_free(k_thread_مكدس_t *مكدس)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	إرجاع z_impl_k_thread_مكدس_free(مكدس);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#ضمن <zephyr/syscalls/k_thread_stack_free_mrsh.c>
 #endif /* CONFIG_USERSPACE */

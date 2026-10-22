@@ -2,29 +2,29 @@
  * Copyright The Zephyr Project Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <run_q.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kspinlock.h>
+#ضمن <ksched.h>
+#ضمن <zephyr/sys/__assert.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <run_q.h>
+#ضمن <wait_q.h>
+#ضمن <scheduler.h>
 
 
-void z_sched_init(void)
+فراغ z_sched_init(فراغ)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
+	لكل (صحيح i = 0; i < CONFIG_MP_MAX_رقم_CPUS; i++) {
 		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
 	}
-#else
+#وإلا
 	_priq_run_init(&_kernel.ready_q.runq);
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-void k_sched_lock(void)
+فراغ k_sched_lock(فراغ)
 {
 	Z_SCHED_SPINLOCK {
 		SYS_PORT_TRACING_FUNC(k_thread, sched_lock);
@@ -38,61 +38,61 @@ void k_sched_lock(void)
 	}
 }
 
-void k_sched_unlock(void)
+فراغ k_sched_unlock(فراغ)
 {
 	SYS_PORT_TRACING_FUNC(k_thread, sched_unlock);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_مفتاح_t مفتاح = z_sched_spinlock_lock();
 
 	__ASSERT(_current->base.sched_locked != 0U, "");
 	__ASSERT(!arch_is_in_isr(), "");
 	++_current->base.sched_locked;
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(مفتاح);
 }
 
-void z_impl_k_reschedule(void)
+فراغ z_impl_k_reschedule(فراغ)
 {
-	k_spinlock_key_t key;
+	k_spinlock_مفتاح_t مفتاح;
 
-	key = z_sched_spinlock_lock();
+	مفتاح = z_sched_spinlock_lock();
 
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(مفتاح);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_reschedule(void)
+ساكن مضمن فراغ z_vrfy_k_reschedule(فراغ)
 {
 	z_impl_k_reschedule();
 }
-#include <zephyr/syscalls/k_reschedule_mrsh.c>
+#ضمن <zephyr/syscalls/k_reschedule_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-k_tid_t z_impl_k_sched_current_thread_query(void)
+k_tid_t z_impl_k_sched_current_thread_query(فراغ)
 {
-	return _current;
+	إرجاع _current;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_tid_t z_vrfy_k_sched_current_thread_query(void)
+ساكن مضمن k_tid_t z_vrfy_k_sched_current_thread_query(فراغ)
 {
-	return z_impl_k_sched_current_thread_query();
+	إرجاع z_impl_k_sched_current_thread_query();
 }
-#include <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
+#ضمن <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
-		       _waitq_post_walk_cb_t post_func, void *data)
+صحيح z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+		       _waitq_post_walk_cb_t post_func, فراغ *data)
 {
-	struct k_thread *thread;
-	int  status = 0;
+	بنية k_thread *thread;
+	صحيح  status = 0;
 
 	Z_SCHED_SPINLOCK {
 #ifndef CONFIG_WAITQ_SCALABLE
-		struct k_thread *tmp;
+		بنية k_thread *tmp;
 
 		_WAIT_Q_FOR_EACH_SAFE(wait_q, thread, tmp)
-#else /* !CONFIG_WAITQ_SCALABLE */
+#وإلا /* !CONFIG_WAITQ_SCALABLE */
 		_WAIT_Q_FOR_EACH(wait_q, thread)
 #endif /* !CONFIG_WAITQ_SCALABLE */
 		{
@@ -104,8 +104,8 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 			 */
 
 			status = walk_func(thread, data);
-			if (status != 0) {
-				break;
+			إذا (status != 0) {
+				اكسر;
 			}
 		}
 
@@ -114,12 +114,12 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		 * still holding the scheduler spinlock to enable atomic
 		 * operations (from the scheduler's point of view).
 		 */
-		if (post_func != NULL) {
+		إذا (post_func != عدم) {
 			post_func(status, data);
 		}
 	}
 
-	return status;
+	إرجاع status;
 }
 
 
@@ -127,13 +127,13 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
-		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
+صحيح z_sched_wait(بنية k_spinlock *lock, k_spinlock_مفتاح_t مفتاح,
+		 _wait_q_t *wait_q, k_timeout_t timeout, فراغ **data)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	صحيح ret = z_pend_curr(lock, مفتاح, wait_q, timeout);
 
-	if (data != NULL) {
+	إذا (data != عدم) {
 		*data = _current->base.swap_data;
 	}
-	return ret;
+	إرجاع ret;
 }
