@@ -17,5 +17,5 @@
  */
 uint32_t sys_kernel_version_get(void)
 {
-	return KERNELVERSION;
+	ပြန်ပေး KERNELVERSION;
 }

@@ -19,7 +19,7 @@
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
+FUNC_NORETURN __weak void arch_system_halt(unsigned ကိန်းပြည့် reason)
 {
 	ARG_UNUSED(reason);
 
@@ -28,23 +28,23 @@ FUNC_NORETURN __weak void arch_system_halt(unsigned int reason)
 	 */
 
 	(void)arch_irq_lock();
-	for (;;) {
+	အတွက် (;;) {
 		/* Spin endlessly */
 	}
 }
 /* LCOV_EXCL_STOP */
 
 /* LCOV_EXCL_START */
-__weak void k_sys_fatal_error_handler(unsigned int reason,
-				      const struct arch_esf *esf)
+__weak void k_sys_fatal_error_handler(unsigned ကိန်းပြည့် reason,
+				      const sa_nracanaa arch_esf *esf)
 {
 	ARG_UNUSED(esf);
 	LOG_PANIC();
 
-#if CONFIG_RESET_ON_FATAL_ERROR
+#အကယ်၍ CONFIG_RESET_ON_FATAL_ERROR
 	EXCEPTION_DUMP("Resetting system");
 	sys_reboot(SYS_REBOOT_WARM);
-#else
+#မဟုတ်ပါက
 	EXCEPTION_DUMP("Halting system");
 	arch_system_halt(reason);
 #endif /* CONFIG_RESET_ON_FATAL_ERROR */
@@ -53,50 +53,50 @@ __weak void k_sys_fatal_error_handler(unsigned int reason,
 }
 /* LCOV_EXCL_STOP */
 
-static const char *thread_name_get(struct k_thread *thread)
+static const var_na *thread_name_get(sa_nracanaa k_thread *thread)
 {
-	const char *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
+	const var_na *thread_name = (thread != NULL) ? k_thread_name_get(thread) : NULL;
 
-	if ((thread_name == NULL) || (thread_name[0] == '\0')) {
+	အကယ်၍ ((thread_name == NULL) || (thread_name[0] == '\0')) {
 		thread_name = "unknown";
 	}
 
-	return thread_name;
+	ပြန်ပေး thread_name;
 }
 
-static const char *reason_to_str(unsigned int reason)
+static const var_na *reason_to_str(unsigned ကိန်းပြည့် reason)
 {
 	switch (reason) {
-	case K_ERR_CPU_EXCEPTION:
-		return "CPU exception";
-	case K_ERR_SPURIOUS_IRQ:
-		return "Unhandled interrupt";
-	case K_ERR_STACK_CHK_FAIL:
-		return "Stack overflow";
-	case K_ERR_KERNEL_OOPS:
-		return "Kernel oops";
-	case K_ERR_KERNEL_PANIC:
-		return "Kernel panic";
+	pak_sa K_ERR_CPU_EXCEPTION:
+		ပြန်ပေး "CPU exception";
+	pak_sa K_ERR_SPURIOUS_IRQ:
+		ပြန်ပေး "Unhandled interrupt";
+	pak_sa K_ERR_STACK_CHK_FAIL:
+		ပြန်ပေး "Stack overflow";
+	pak_sa K_ERR_KERNEL_OOPS:
+		ပြန်ပေး "Kernel oops";
+	pak_sa K_ERR_KERNEL_PANIC:
+		ပြန်ပေး "Kernel panic";
 	default:
-		return "Unknown error";
+		ပြန်ပေး "Unknown error";
 	}
 }
 
 /* LCOV_EXCL_START */
-FUNC_NORETURN void k_fatal_halt(unsigned int reason)
+FUNC_NORETURN void k_fatal_halt(unsigned ကိန်းပြည့် reason)
 {
 	arch_system_halt(reason);
 }
 /* LCOV_EXCL_STOP */
 
-void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
+void z_fatal_error(unsigned ကိန်းပြည့် reason, const sa_nracanaa arch_esf *esf)
 {
 	/* We can't allow this code to be preempted, but don't need to
 	 * synchronize between CPUs, so an arch-layer lock is
 	 * appropriate.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
+	unsigned ကိန်းပြည့် key = arch_irq_lock();
+	sa_nracanaa k_thread *thread = IS_ENABLED(CONFIG_MULTITHREADING) ?
 			_current : NULL;
 
 	/* The printk lock is not trustworthy from here on: this context may
@@ -117,13 +117,13 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 *
 	 * See #17656
 	 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-	if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#အကယ်၍ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+	အကယ်၍ ((esf != NULL) && arch_is_in_nested_exception(esf)) {
 		EXCEPTION_DUMP("Fault during interrupt handling");
 	}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	အကယ်၍ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		EXCEPTION_DUMP("Current thread: %p (%s)", thread, thread_name_get(thread));
 	}
 
@@ -134,12 +134,12 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * which breaks builds when the option is off (implicit declaration).
 	 */
 #ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
-	unsigned int coredump_irq_cookie;
+	unsigned ကိန်းပြည့် coredump_irq_cookie;
 
 	arch_coredump_fatal_irq_unlock(key, &coredump_irq_cookie);
 	coredump(reason, esf, thread);
 	key = arch_coredump_fatal_irq_lock(&coredump_irq_cookie);
-#else
+#မဟုတ်ပါက
 	coredump(reason, esf, thread);
 #endif
 
@@ -158,41 +158,41 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 	 * Note that k_thread_abort() returns on some architectures but
 	 * not others; e.g. on ARC, x86_64, Xtensa with ASM2, ARM
 	 */
-	if (!IS_ENABLED(CONFIG_TEST)) {
+	အကယ်၍ (!IS_ENABLED(CONFIG_TEST)) {
 		__ASSERT(reason != K_ERR_KERNEL_PANIC,
 			 "Attempted to recover from a kernel panic condition");
 		/* FIXME: #17656 */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#အကယ်၍ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		အကယ်၍ ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#အကယ်၍ defined(CONFIG_STACK_SENTINEL)
+			အကယ်၍ (reason != K_ERR_STACK_CHK_FAIL) {
 				__ASSERT(0,
 				 "Attempted to recover from a fatal error in ISR");
 			 }
 #endif /* CONFIG_STACK_SENTINEL */
 		}
 #endif /* CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
-	} else {
+	} မဟုတ်ပါက {
 		/* Test mode */
-#if defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
-		if ((esf != NULL) && arch_is_in_nested_exception(esf)) {
+#အကယ်၍ defined(CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION)
+		အကယ်၍ ((esf != NULL) && arch_is_in_nested_exception(esf)) {
 			/* Abort the thread only on STACK Sentinel check fail. */
-#if defined(CONFIG_STACK_SENTINEL)
-			if (reason != K_ERR_STACK_CHK_FAIL) {
+#အကယ်၍ defined(CONFIG_STACK_SENTINEL)
+			အကယ်၍ (reason != K_ERR_STACK_CHK_FAIL) {
 				arch_irq_unlock(key);
-				return;
+				ပြန်ပေး;
 			}
-#else
+#မဟုတ်ပါက
 			arch_irq_unlock(key);
-			return;
+			ပြန်ပေး;
 #endif /* CONFIG_STACK_SENTINEL */
-		} else {
+		} မဟုတ်ပါက {
 			/* Abort the thread only if the fault is not due to
 			 * a spurious ISR handler triggered.
 			 */
-			if (reason == K_ERR_SPURIOUS_IRQ) {
+			အကယ်၍ (reason == K_ERR_SPURIOUS_IRQ) {
 				arch_irq_unlock(key);
-				return;
+				ပြန်ပေး;
 			}
 		}
 #endif /*CONFIG_ARCH_HAS_NESTED_EXCEPTION_DETECTION */
@@ -200,7 +200,7 @@ void z_fatal_error(unsigned int reason, const struct arch_esf *esf)
 
 	arch_irq_unlock(key);
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	အကယ်၍ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_thread_abort(thread);
 	}
 }

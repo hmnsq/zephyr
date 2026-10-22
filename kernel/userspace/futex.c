@@ -37,31 +37,31 @@
  *   waiting for a futex can boost the holders priority.
  */
 static _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
-static struct k_spinlock futex_lock;
+static sa_nracanaa k_spinlock futex_lock;
 
 /**
  * Context structure for walking the futex wait queue
  */
-struct futex_walk_data {
+sa_nracanaa futex_walk_data {
 	/**
 	 * List head of threads to wake up during post op (NULL if empty)
 	 * This is an intermediate value filled by the walk op
 	 * Must be initialized to NULL before the walk
 	 */
-	struct k_thread *head;
+	sa_nracanaa k_thread *head;
 	/**
 	 * Futex address
 	 * This is an input to the walk
 	 */
-	struct k_futex *futex;
+	sa_nracanaa k_futex *futex;
 	/**
 	 * Number of threads that have been woken up
 	 * This is an output of the walk and must be initialized to zero
 	 */
-	int woken;
+	ကိန်းပြည့် woken;
 };
 
-static void futex_post_walk_op(int status, void *data)
+static void futex_post_walk_op(ကိန်းပြည့် status, void *data)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
@@ -69,20 +69,20 @@ static void futex_post_walk_op(int status, void *data)
 	 * is invoked with _sched_spinlock held.
 	 */
 	ARG_UNUSED(status);
-	struct futex_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	sa_nracanaa futex_walk_data *walk_data = data;
+	sa_nracanaa k_thread *thread, *next;
 
 	thread = walk_data->head;
 
 	/* Wake up threads if any */
-	while (thread != NULL) {
+	နေစဉ် (thread != NULL) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * walk_data->head will only ever be non-NULL for wake-one,
 		 * which has no "next" thread to wake by definition.
 		 */
 		next = NULL;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+#မဟုတ်ပါက  /* !CONFIG_WAITQ_SCALABLE */
 		next = thread->next_wake_link;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
@@ -95,14 +95,14 @@ static void futex_post_walk_op(int status, void *data)
 	}
 }
 
-static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
+static ကိန်းပြည့် futex_wake_one_walk_op(sa_nracanaa k_thread *thread, void *data)
 {
-	struct futex_walk_data *walk_data = data;
+	sa_nracanaa futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	အကယ်၍ (thread->futex_pointer == walk_data->futex) {
 		/* Find the highest priority thread */
-		if (walk_data->head == NULL ||
+		အကယ်၍ (walk_data->head == NULL ||
 		    z_is_prio_higher(thread->base.prio, walk_data->head->base.prio)) {
 			/*
 			 * next_wake_link is initialized to NULL in z_impl_k_futex_wait so
@@ -112,15 +112,15 @@ static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
 		}
 	}
 
-	return 0;
+	ပြန်ပေး 0;
 }
 
-static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
+static ကိန်းပြည့် futex_wake_all_walk_op(sa_nracanaa k_thread *thread, void *data)
 {
-	struct futex_walk_data *walk_data = data;
+	sa_nracanaa futex_walk_data *walk_data = data;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	အကယ်၍ (thread->futex_pointer == walk_data->futex) {
 #ifndef CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
@@ -131,19 +131,19 @@ static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
 		arch_thread_return_value_set(thread, 0);
 		z_sched_wake_thread_locked(thread);
 		walk_data->woken++;
-#else  /* !CONFIG_WAITQ_SCALABLE */
+#မဟုတ်ပါက  /* !CONFIG_WAITQ_SCALABLE */
 		thread->next_wake_link = walk_data->head;
 		walk_data->head = thread;
 #endif /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	ပြန်ပေး 0;
 }
 
-int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
+ကိန်းပြည့် z_impl_k_futex_wake(sa_nracanaa k_futex *futex, bool wake_all)
 {
 	k_spinlock_key_t key;
-	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
+	sa_nracanaa futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
 
 	key = k_spin_lock(&futex_lock);
 
@@ -165,35 +165,35 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 			   (wake_all) ? futex_wake_all_walk_op : futex_wake_one_walk_op,
 			   futex_post_walk_op, &walk_data);
 
-	if (walk_data.woken == 0) {
+	အကယ်၍ (walk_data.woken == 0) {
 		k_spin_unlock(&futex_lock, key);
-	} else {
+	} မဟုတ်ပါက {
 		z_reschedule(&futex_lock, key);
 	}
 
-	return walk_data.woken;
+	ပြန်ပေး walk_data.woken;
 }
 
-static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
+static anta_hstha ကိန်းပြည့် z_vrfy_k_futex_wake(sa_nracanaa k_futex *futex, bool wake_all)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	အကယ်၍ (K_SYSCALL_MEMORY_WRITE(futex, parimaa_na(sa_nracanaa k_futex)) != 0) {
+		ပြန်ပေး -EACCES;
 	}
 
-	return z_impl_k_futex_wake(futex, wake_all);
+	ပြန်ပေး z_impl_k_futex_wake(futex, wake_all);
 }
 #include <zephyr/syscalls/k_futex_wake_mrsh.c>
 
-int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+ကိန်းပြည့် z_impl_k_futex_wait(sa_nracanaa k_futex *futex, ကိန်းပြည့် expected, k_timeout_t timeout)
 {
-	int ret;
+	ကိန်းပြည့် ret;
 	k_spinlock_key_t key;
 
 	key = k_spin_lock(&futex_lock);
 
-	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
+	အကယ်၍ (atomic_get(&futex->val) != (atomic_val_t)expected) {
 		k_spin_unlock(&futex_lock, key);
-		return -EAGAIN;
+		ပြန်ပေး -EAGAIN;
 	}
 
 	/*
@@ -205,19 +205,19 @@ int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout
 	_current->next_wake_link = NULL;
 #endif /* CONFIG_WAITQ_SCALABLE */
 	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
-	if (ret == -EAGAIN) {
+	အကယ်၍ (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}
 
-	return ret;
+	ပြန်ပေး ret;
 }
 
-static inline int z_vrfy_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+static anta_hstha ကိန်းပြည့် z_vrfy_k_futex_wait(sa_nracanaa k_futex *futex, ကိန်းပြည့် expected, k_timeout_t timeout)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	အကယ်၍ (K_SYSCALL_MEMORY_WRITE(futex, parimaa_na(sa_nracanaa k_futex)) != 0) {
+		ပြန်ပေး -EACCES;
 	}
 
-	return z_impl_k_futex_wait(futex, expected, timeout);
+	ပြန်ပေး z_impl_k_futex_wait(futex, expected, timeout);
 }
 #include <zephyr/syscalls/k_futex_wait_mrsh.c>

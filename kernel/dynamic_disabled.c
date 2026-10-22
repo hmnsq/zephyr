@@ -10,35 +10,35 @@
 #include <zephyr/kernel/thread_stack.h>
 #include <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, ကိန်းပြည့် flags)
 {
 	ARG_UNUSED(size);
 	ARG_UNUSED(flags);
 
-	return NULL;
+	ပြန်ပေး NULL;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+static anta_hstha k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, ကိန်းပြည့် flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	ပြန်ပေး z_impl_k_thread_stack_alloc(size, flags);
 }
 #include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+ကိန်းပြည့် z_impl_k_thread_stack_free(k_thread_stack_t *stack)
 {
 	ARG_UNUSED(stack);
 
-	return -ENOSYS;
+	ပြန်ပေး -ENOSYS;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+static anta_hstha ကိန်းပြည့် z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	ပြန်ပေး z_impl_k_thread_stack_free(stack);
 }
 #include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
 #endif /* CONFIG_USERSPACE */
