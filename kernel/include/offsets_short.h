@@ -4,58 +4,58 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
-#define ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
 
-#include <zephyr/offsets.h>
-#include <offsets_short_arch.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/offsets.h>
+#ಅನ್ತರ್ಭಾವ <offsets_short_arch.h>
 
 /* kernel */
 
 /* main */
-#ifndef CONFIG_SMP
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_SMP
 /* Relies on _kernel.cpu being the first member of _kernel and having 1 element
  */
-#define _kernel_offset_to_nested \
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_nested \
 	(___cpu_t_nested_OFFSET)
 
-#define _kernel_offset_to_irq_stack \
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_irq_ರಾಶಿ \
 	(___cpu_t_irq_stack_OFFSET)
 
-#define _kernel_offset_to_current \
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_current \
 	(___cpu_t_current_OFFSET)
 
-#if defined(CONFIG_FPU_SHARING)
-#define _kernel_offset_to_fp_ctx \
+#ಆದರೆ defined(CONFIG_FPU_SHARING)
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
-#endif /* CONFIG_FPU_SHARING */
-#endif /* CONFIG_SMP */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_FPU_SHARING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SMP */
 
-#define _kernel_offset_to_idle \
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_idle \
 	(___kernel_t_idle_OFFSET)
 
-#define _kernel_offset_to_ready_q_cache \
+#ವ್ಯಾಖ್ಯಾನಿಸು kernel_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_ready_q_cache \
 	(___kernel_t_ready_q_OFFSET + ___ready_q_t_cache_OFFSET)
 
 /* end - kernel */
 
-/* threads */
+/*ಎಳೆಗಳು*/
 
 /* main */
 
-#define _thread_offset_to_callee_saved \
+#ವ್ಯಾಖ್ಯಾನಿಸು thread_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_callee_saved \
 	(___thread_t_callee_saved_OFFSET)
 
-#ifdef CONFIG_THREAD_LOCAL_STORAGE
-#define _thread_offset_to_tls \
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_THREAD_LOCAL_STORAGE
+#ವ್ಯಾಖ್ಯಾನಿಸು thread_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_tls \
 	(___thread_t_tls_OFFSET)
-#endif /* CONFIG_THREAD_LOCAL_STORAGE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_THREAD_LOCAL_STORAGE */
 
-/* base */
+/*ತಳ*/
 
-#define _thread_offset_to_user_options \
+#ವ್ಯಾಖ್ಯಾನಿಸು thread_ಸ್ಥಾನಾಂತರ_ಗಮ್ಯ_user_options \
 	(___thread_t_base_OFFSET + ___thread_base_t_user_options_OFFSET)
 
 /* end - threads */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_ */

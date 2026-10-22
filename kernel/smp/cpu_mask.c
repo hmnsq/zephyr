@@ -3,69 +3,69 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <kspinlock.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
 
 # ifdef CONFIG_SMP
 /* The mask width scales with CONFIG_MP_MAX_NUM_CPUS, up to 32 bits */
-BUILD_ASSERT(CONFIG_MP_MAX_NUM_CPUS <= 32, "Too many CPUs for mask word");
+BUILD_ASSERT(CONFIG_MP_MAX_ಅಂಕೆ_CPUS <= 32, "Too many CPUs for mask word");
 # endif /* CONFIG_SMP */
 
 
-static int cpu_mask_mod(k_tid_t thread, uint32_t enable_mask, uint32_t disable_mask)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ cpu_ಮುಖವಾಡ_mod(k_tid_t thread, uint32_t enable_ಮುಖವಾಡ, uint32_t disable_ಮುಖವಾಡ)
 {
-	int ret = 0;
+	ಪೂರ್ಣಾಂಕ ret = 0;
 
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_CPU_ಮುಖವಾಡ_PIN_ONLY
 	__ASSERT(z_is_thread_prevented_from_running(thread),
 		 "Running threads cannot change CPU pin");
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 
 	Z_SCHED_SPINLOCK {
-		if (z_is_thread_prevented_from_running(thread)) {
-			thread->base.cpu_mask |= enable_mask;
-			thread->base.cpu_mask  &= ~disable_mask;
+		ಆದರೆ (z_is_thread_prevented_from_running(thread)) {
+			thread->ತಳ.cpu_ಮುಖವಾಡ |= enable_ಮುಖವಾಡ;
+			thread->ತಳ.cpu_ಮುಖವಾಡ  &= ~disable_ಮುಖವಾಡ;
 
-#if defined(CONFIG_ASSERT) && defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
-			uint32_t m = thread->base.cpu_mask;
+#ಆದರೆ defined(CONFIG_ASSERT) && defined(CONFIG_SCHED_CPU_ಮುಖವಾಡ_PIN_ONLY)
+			uint32_t m = thread->ತಳ.cpu_ಮುಖವಾಡ;
 
 			__ASSERT(m != 0 && (m & (m - 1)) == 0,
 				 "PIN_ONLY requires exactly one CPU in mask");
-#endif /* defined(CONFIG_ASSERT) && defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY) */
+#ಆದರೆ_ಅಂತ್ಯ /* defined(CONFIG_ASSERT) && defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY) */
 
-		} else {
+		} ಇಲ್ಲದಿದ್ದರೆ {
 			ret = -EINVAL;
 		}
 	}
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-int k_thread_cpu_mask_clear(k_tid_t thread)
+ಪೂರ್ಣಾಂಕ k_thread_cpu_ಮುಖವಾಡ_clear(k_tid_t thread)
 {
-	return cpu_mask_mod(thread, 0, 0xffffffff);
+	ಹಿಂತಿರುಗಿ cpu_ಮುಖವಾಡ_mod(thread, 0, 0xffffffff);
 }
 
-int k_thread_cpu_mask_enable_all(k_tid_t thread)
+ಪೂರ್ಣಾಂಕ k_thread_cpu_ಮುಖವಾಡ_enable_all(k_tid_t thread)
 {
-	return cpu_mask_mod(thread, 0xffffffff, 0);
+	ಹಿಂತಿರುಗಿ cpu_ಮುಖವಾಡ_mod(thread, 0xffffffff, 0);
 }
 
-int k_thread_cpu_mask_enable(k_tid_t thread, int cpu)
+ಪೂರ್ಣಾಂಕ k_thread_cpu_ಮುಖವಾಡ_enable(k_tid_t thread, ಪೂರ್ಣಾಂಕ cpu)
 {
-	return cpu_mask_mod(thread, BIT(cpu), 0);
+	ಹಿಂತಿರುಗಿ cpu_ಮುಖವಾಡ_mod(thread, ಬಿಟ್(cpu), 0);
 }
 
-int k_thread_cpu_mask_disable(k_tid_t thread, int cpu)
+ಪೂರ್ಣಾಂಕ k_thread_cpu_ಮುಖವಾಡ_disable(k_tid_t thread, ಪೂರ್ಣಾಂಕ cpu)
 {
-	return cpu_mask_mod(thread, 0, BIT(cpu));
+	ಹಿಂತಿರುಗಿ cpu_ಮುಖವಾಡ_mod(thread, 0, ಬಿಟ್(cpu));
 }
 
-int k_thread_cpu_pin(k_tid_t thread, int cpu)
+ಪೂರ್ಣಾಂಕ k_thread_cpu_pin(k_tid_t thread, ಪೂರ್ಣಾಂಕ cpu)
 {
-	uint32_t mask = BIT(cpu);
+	uint32_t ಮುಖವಾಡ = ಬಿಟ್(cpu);
 
-	return cpu_mask_mod(thread, mask, ~mask);
+	ಹಿಂತಿರುಗಿ cpu_ಮುಖವಾಡ_mod(thread, ಮುಖವಾಡ, ~ಮುಖವಾಡ);
 }

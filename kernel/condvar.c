@@ -4,145 +4,145 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
 
-#ifdef CONFIG_OBJ_CORE_CONDVAR
-K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_CONDVAR */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_CONDVAR
+K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, ಖಾಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_CONDVAR */
 
-static struct k_spinlock condvar_lock;
+ಸ್ಥಿರ ರಚನೆ k_spinlock condvar_ಬೀಗ;
 
-int z_impl_k_condvar_init(struct k_condvar *condvar)
+ಪೂರ್ಣಾಂಕ z_impl_k_condvar_init(ರಚನೆ k_condvar *condvar)
 {
 	z_waitq_init(&condvar->wait_q);
 	k_object_init(condvar);
 
-#ifdef CONFIG_OBJ_CORE_CONDVAR
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_CONDVAR
 	k_obj_core_init_and_link(K_OBJ_CORE(condvar), &obj_type_condvar);
-#endif /* CONFIG_OBJ_CORE_CONDVAR */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_CONDVAR */
 
-	SYS_PORT_TRACING_OBJ_INIT(k_condvar, condvar, 0);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_INIT(k_condvar, condvar, 0);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_init(struct k_condvar *condvar)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಪೂರ್ಣಾಂಕ z_vrfy_k_condvar_init(ರಚನೆ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_init(condvar);
+	ಹಿಂತಿರುಗಿ z_impl_k_condvar_init(condvar);
 }
-#include <zephyr/syscalls/k_condvar_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_init_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_signal(struct k_condvar *condvar)
+ಪೂರ್ಣಾಂಕ z_impl_k_condvar_signal(ರಚನೆ k_condvar *condvar)
 {
-	k_spinlock_key_t key = k_spin_lock(&condvar_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&condvar_ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, signal, condvar);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_condvar, ಸಂಕೇತ, condvar);
 
-	if (z_sched_wake(&condvar->wait_q, 0, NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_condvar, signal, condvar, K_FOREVER);
-		z_reschedule(&condvar_lock, key);
-	} else {
-		k_spin_unlock(&condvar_lock, key);
+	ಆದರೆ (z_sched_wake(&condvar->wait_q, 0, ಖಾಲಿ)) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_condvar, ಸಂಕೇತ, condvar, K_FOREVER);
+		z_reschedule(&condvar_ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&condvar_ಬೀಗ, ಕೀಲಿ);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, signal, condvar, 0);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_condvar, ಸಂಕೇತ, condvar, 0);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_signal(struct k_condvar *condvar)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಪೂರ್ಣಾಂಕ z_vrfy_k_condvar_signal(ರಚನೆ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_signal(condvar);
+	ಹಿಂತಿರುಗಿ z_impl_k_condvar_signal(condvar);
 }
-#include <zephyr/syscalls/k_condvar_signal_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_signal_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_broadcast(struct k_condvar *condvar)
+ಪೂರ್ಣಾಂಕ z_impl_k_condvar_ಪ್ರಸಾರ(ರಚನೆ k_condvar *condvar)
 {
-	k_spinlock_key_t key;
-	int woken = 0;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ woken = 0;
 
-	key = k_spin_lock(&condvar_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&condvar_ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, broadcast, condvar);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_condvar, ಪ್ರಸಾರ, condvar);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&condvar->wait_q, 0, NULL)) {
+	ಆಗ (z_sched_wake(&condvar->wait_q, 0, ಖಾಲಿ)) {
 		woken++;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, broadcast, condvar, woken);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_condvar, ಪ್ರಸಾರ, condvar, woken);
 
 
-	if (woken == 0) {
-		k_spin_unlock(&condvar_lock, key);
-	} else {
-		z_reschedule(&condvar_lock, key);
+	ಆದರೆ (woken == 0) {
+		k_spin_unlock(&condvar_ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		z_reschedule(&condvar_ಬೀಗ, ಕೀಲಿ);
 	}
 
-	return woken;
+	ಹಿಂತಿರುಗಿ woken;
 }
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_broadcast(struct k_condvar *condvar)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಪೂರ್ಣಾಂಕ z_vrfy_k_condvar_ಪ್ರಸಾರ(ರಚನೆ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_broadcast(condvar);
+	ಹಿಂತಿರುಗಿ z_impl_k_condvar_ಪ್ರಸಾರ(condvar);
 }
-#include <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+ಪೂರ್ಣಾಂಕ z_impl_k_condvar_wait(ರಚನೆ k_condvar *condvar, ರಚನೆ k_mutex *mutex,
 			  k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int ret = -EAGAIN;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ret = -EAGAIN;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
 
-	if (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
+	ಆದರೆ (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
 		/* No wait: per POSIX semantics, the mutex must remain locked when
 		 * k_condvar_wait() returns. Returning -EAGAIN immediately without
 		 * touching the mutex preserves the calling-thread-holds-mutex
 		 * invariant.
 		 */
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
-		return ret;
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
+		ಹಿಂತಿರುಗಿ ret;
 	}
 
-	key = k_spin_lock(&condvar_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&condvar_ಬೀಗ);
 	k_mutex_unlock(mutex);
 
-	ret = z_pend_curr(&condvar_lock, key, &condvar->wait_q, timeout);
+	ret = z_pend_curr(&condvar_ಬೀಗ, ಕೀಲಿ, &condvar->wait_q, timeout);
 
 	/* Always re-acquire the mutex before returning, even on timeout.
 	 * This matches POSIX semantics: the mutex must be locked by the
 	 * calling thread when pthread_cond_wait() returns, regardless of
 	 * whether it was signaled or timed out.
 	 */
-	k_mutex_lock(mutex, K_FOREVER);
+	k_mutex_ಬೀಗ(mutex, K_FOREVER);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಪೂರ್ಣಾಂಕ z_vrfy_k_condvar_wait(ರಚನೆ k_condvar *condvar, ರಚನೆ k_mutex *mutex,
 			  k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
 	K_OOPS(K_SYSCALL_OBJ(mutex, K_OBJ_MUTEX));
-	return z_impl_k_condvar_wait(condvar, mutex, timeout);
+	ಹಿಂತಿರುಗಿ z_impl_k_condvar_wait(condvar, mutex, timeout);
 }
-#include <zephyr/syscalls/k_condvar_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_wait_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */

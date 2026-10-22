@@ -4,139 +4,139 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/timing/timing.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/timing/timing.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/check.h>
 
 /* Need one of these for this to work */
-#if !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
-#error "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
-#endif /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
+#ಆದರೆ !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
+#ದೋಷ "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
+#ಆದರೆ_ಅಂತ್ಯ /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
-static struct k_spinlock usage_lock;
+ಸ್ಥಿರ ರಚನೆ k_spinlock usage_ಬೀಗ;
 
-static uint32_t usage_now(void)
+ಸ್ಥಿರ uint32_t usage_now(ಶೂನ್ಯ)
 {
 	uint32_t now;
 
-#ifdef CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
 	now = (uint32_t)timing_counter_get();
-#else
-	now = k_cycle_get_32();
-#endif /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
+#ಇಲ್ಲದಿದ್ದರೆ
+	now = k_ಚಕ್ರ_get_32();
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
 
 	/* Edge case: we use a zero as a null ("stop() already called") */
-	return (now == 0) ? 1 : now;
+	ಹಿಂತಿರುಗಿ (now == 0) ? 1 : now;
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-static void sched_cpu_update_usage(struct _cpu *cpu, uint32_t cycles)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ALL
+ಸ್ಥಿರ ಶೂನ್ಯ sched_cpu_update_usage(ರಚನೆ _cpu *cpu, uint32_t ಚಕ್ರಗಳು)
 {
-	if (!cpu->usage->track_usage) {
-		return;
+	ಆದರೆ (!cpu->usage->track_usage) {
+		ಹಿಂತಿರುಗಿ;
 	}
 
-	if (cpu->current != cpu->idle_thread) {
-		cpu->usage->total += cycles;
+	ಆದರೆ (cpu->current != cpu->idle_thread) {
+		cpu->usage->ಒಟ್ಟು += ಚಕ್ರಗಳು;
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		cpu->usage->current += cycles;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+		cpu->usage->current += ಚಕ್ರಗಳು;
 
-		if (cpu->usage->longest < cpu->usage->current) {
+		ಆದರೆ (cpu->usage->longest < cpu->usage->current) {
 			cpu->usage->longest = cpu->usage->current;
 		}
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		cpu->usage->current = 0;
-		cpu->usage->num_windows++;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+		cpu->usage->ಅಂಕೆ_windows++;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 }
-#else
-#define sched_cpu_update_usage(cpu, cycles)   do { } while (0)
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು sched_cpu_update_usage(cpu, ಚಕ್ರಗಳು)   ಮಾಡು { } ಆಗ (0)
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-static void sched_thread_update_usage(struct k_thread *thread, uint32_t cycles)
+ಸ್ಥಿರ ಶೂನ್ಯ sched_thread_update_usage(ರಚನೆ k_thread *thread, uint32_t ಚಕ್ರಗಳು)
 {
-	thread->base.usage.total += cycles;
+	thread->ತಳ.usage.ಒಟ್ಟು += ಚಕ್ರಗಳು;
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	thread->base.usage.current += cycles;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	thread->ತಳ.usage.current += ಚಕ್ರಗಳು;
 
-	if (thread->base.usage.longest < thread->base.usage.current) {
-		thread->base.usage.longest = thread->base.usage.current;
+	ಆದರೆ (thread->ತಳ.usage.longest < thread->ತಳ.usage.current) {
+		thread->ತಳ.usage.longest = thread->ತಳ.usage.current;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_start(struct k_thread *thread)
+ಶೂನ್ಯ z_sched_usage_ಆರಂಭ(ರಚನೆ k_thread *thread)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	k_spinlock_key_t  key;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 
 	_current_cpu->usage0 = usage_now();   /* Always update */
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.num_windows++;
-		thread->base.usage.current = 0;
+	ಆದರೆ (thread->ತಳ.usage.track_usage) {
+		thread->ತಳ.usage.ಅಂಕೆ_windows++;
+		thread->ತಳ.usage.current = 0;
 	}
 
-	k_spin_unlock(&usage_lock, key);
-#else
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
+#ಇಲ್ಲದಿದ್ದರೆ
 	/* One write through a volatile pointer doesn't require
 	 * synchronization as long as _usage() treats it as volatile
 	 * (we can't race with _stop() by design).
 	 */
 
 	_current_cpu->usage0 = usage_now();
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_stop(void)
+ಶೂನ್ಯ z_sched_usage_stop(ಶೂನ್ಯ)
 {
-	struct _cpu *cpu = _current_cpu;
+	ರಚನೆ _cpu *cpu = _current_cpu;
 
 	/* Only this CPU writes usage0, and callers keep local IRQs masked. */
-	if (cpu->usage0 == 0U) {
-		return;
+	ಆದರೆ (cpu->usage0 == 0U) {
+		ಹಿಂತಿರುಗಿ;
 	}
 
-	k_spinlock_key_t k = k_spin_lock(&usage_lock);
+	k_spinlock_ಕೀಲಿ_t k = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 
 	uint32_t u0 = cpu->usage0;
 
-	if (u0 != 0) {
-		uint32_t cycles = usage_now() - u0;
+	ಆದರೆ (u0 != 0) {
+		uint32_t ಚಕ್ರಗಳು = usage_now() - u0;
 
-		if (cpu->current->base.usage.track_usage) {
-			sched_thread_update_usage(cpu->current, cycles);
+		ಆದರೆ (cpu->current->ತಳ.usage.track_usage) {
+			sched_thread_update_usage(cpu->current, ಚಕ್ರಗಳು);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, ಚಕ್ರಗಳು);
 	}
 
 	cpu->usage0 = 0;
-	k_spin_unlock(&usage_lock, k);
+	k_spin_unlock(&usage_ಬೀಗ, k);
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ALL
+ಶೂನ್ಯ z_sched_cpu_usage(uint8_t cpu_id, ರಚನೆ k_thread_runtime_stats *stats)
 {
-	k_spinlock_key_t  key;
-	struct _cpu *cpu;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
+	ರಚನೆ _cpu *cpu;
 	uint32_t pending = 0U;
 	bool pending_is_idle = false;
 
-	key = k_spin_lock(&usage_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 	cpu = &_kernel.cpus[cpu_id];
 
-	if (cpu == _current_cpu) {
+	ಆದರೆ (cpu == _current_cpu) {
 		uint32_t  now = usage_now();
-		uint32_t cycles = now - cpu->usage0;
+		uint32_t ಚಕ್ರಗಳು = now - cpu->usage0;
 
 		/*
 		 * Getting stats for the current CPU. Update both its
@@ -145,14 +145,14 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		 * that information up-to-date.
 		 */
 
-		if (cpu->current->base.usage.track_usage) {
-			sched_thread_update_usage(cpu->current, cycles);
+		ಆದರೆ (cpu->current->ತಳ.usage.track_usage) {
+			sched_thread_update_usage(cpu->current, ಚಕ್ರಗಳು);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, ಚಕ್ರಗಳು);
 
 		cpu->usage0 = now;
-	} else if (cpu->usage->track_usage) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (cpu->usage->track_usage) {
 		/*
 		 * Getting stats for another CPU. Its counters only advance when
 		 * it context switches or reports on itself, so the time it has
@@ -168,43 +168,43 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		pending_is_idle = (cpu->current == cpu->idle_thread);
 	}
 
-	stats->total_cycles     = cpu->usage->total +
+	stats->ಒಟ್ಟು_ಚಕ್ರಗಳು     = cpu->usage->ಒಟ್ಟು +
 				  (pending_is_idle ? 0U : pending);
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	stats->current_cycles   = cpu->usage->current;
-	stats->peak_cycles      = cpu->usage->longest;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->current_ಚಕ್ರಗಳು   = cpu->usage->current;
+	stats->peak_ಚಕ್ರಗಳು      = cpu->usage->longest;
 
-	if (cpu->usage->num_windows == 0) {
-		stats->average_cycles = 0;
-	} else {
-		stats->average_cycles = stats->total_cycles /
-					cpu->usage->num_windows;
+	ಆದರೆ (cpu->usage->ಅಂಕೆ_windows == 0) {
+		stats->ಸರಾಸರಿ_ಮೌಲ್ಯ_ಚಕ್ರಗಳು = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		stats->ಸರಾಸರಿ_ಮೌಲ್ಯ_ಚಕ್ರಗಳು = stats->ಒಟ್ಟು_ಚಕ್ರಗಳು /
+					cpu->usage->ಅಂಕೆ_windows;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	stats->idle_cycles =
-		_kernel.cpus[cpu_id].idle_thread->base.usage.total +
+	stats->idle_ಚಕ್ರಗಳು =
+		_kernel.cpus[cpu_id].idle_thread->ತಳ.usage.ಒಟ್ಟು +
 		(pending_is_idle ? pending : 0U);
 
-	stats->execution_cycles = stats->total_cycles + stats->idle_cycles;
+	stats->execution_ಚಕ್ರಗಳು = stats->ಒಟ್ಟು_ಚಕ್ರಗಳು + stats->idle_ಚಕ್ರಗಳು;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats)
+ಶೂನ್ಯ z_sched_thread_usage(ರಚನೆ k_thread *thread,
+			  ರಚನೆ k_thread_runtime_stats *stats)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t  key;
+	ರಚನೆ _cpu *cpu;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 	cpu = _current_cpu;
 
 
-	if (thread == cpu->current) {
+	ಆದರೆ (thread == cpu->current) {
 		uint32_t now = usage_now();
-		uint32_t cycles = now - cpu->usage0;
+		uint32_t ಚಕ್ರಗಳು = now - cpu->usage0;
 
 		/*
 		 * Getting stats for the current thread. Update both the
@@ -213,57 +213,57 @@ void z_sched_thread_usage(struct k_thread *thread,
 		 * that information up-to-date.
 		 */
 
-		if (thread->base.usage.track_usage) {
-			sched_thread_update_usage(thread, cycles);
+		ಆದರೆ (thread->ತಳ.usage.track_usage) {
+			sched_thread_update_usage(thread, ಚಕ್ರಗಳು);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, ಚಕ್ರಗಳು);
 
 		cpu->usage0 = now;
 	}
 
-	stats->execution_cycles = thread->base.usage.total;
-	stats->total_cycles     = thread->base.usage.total;
+	stats->execution_ಚಕ್ರಗಳು = thread->ತಳ.usage.ಒಟ್ಟು;
+	stats->ಒಟ್ಟು_ಚಕ್ರಗಳು     = thread->ತಳ.usage.ಒಟ್ಟು;
 
 	/* Copy-out the thread's usage stats */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	stats->current_cycles = thread->base.usage.current;
-	stats->peak_cycles    = thread->base.usage.longest;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->current_ಚಕ್ರಗಳು = thread->ತಳ.usage.current;
+	stats->peak_ಚಕ್ರಗಳು    = thread->ತಳ.usage.longest;
 
-	if (thread->base.usage.num_windows == 0) {
-		stats->average_cycles = 0;
-	} else {
-		stats->average_cycles = stats->total_cycles /
-					thread->base.usage.num_windows;
+	ಆದರೆ (thread->ತಳ.usage.ಅಂಕೆ_windows == 0) {
+		stats->ಸರಾಸರಿ_ಮೌಲ್ಯ_ಚಕ್ರಗಳು = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		stats->ಸರಾಸರಿ_ಮೌಲ್ಯ_ಚಕ್ರಗಳು = stats->ಒಟ್ಟು_ಚಕ್ರಗಳು /
+					thread->ತಳ.usage.ಅಂಕೆ_windows;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-	stats->idle_cycles = 0;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ALL
+	stats->idle_ಚಕ್ರಗಳು = 0;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-int k_thread_runtime_stats_enable(k_tid_t  thread)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+ಪೂರ್ಣಾಂಕ k_thread_runtime_stats_enable(k_tid_t  thread)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
+	ರಚನೆ _cpu *cpu = _current_cpu;
 
-	if (!thread->base.usage.track_usage) {
-		thread->base.usage.track_usage = true;
-		thread->base.usage.num_windows++;
-		thread->base.usage.current = 0;
+	ಆದರೆ (!thread->ತಳ.usage.track_usage) {
+		thread->ತಳ.usage.track_usage = true;
+		thread->ತಳ.usage.ಅಂಕೆ_windows++;
+		thread->ತಳ.usage.current = 0;
 
-		if (thread == cpu->current) {
+		ಆದರೆ (thread == cpu->current) {
 			uint32_t now = usage_now();
 
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
@@ -272,55 +272,55 @@ int k_thread_runtime_stats_enable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int k_thread_runtime_stats_disable(k_tid_t  thread)
+ಪೂರ್ಣಾಂಕ k_thread_runtime_stats_disable(k_tid_t  thread)
 {
-	k_spinlock_key_t key;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
+	ರಚನೆ _cpu *cpu = _current_cpu;
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.track_usage = false;
+	ಆದರೆ (thread->ತಳ.usage.track_usage) {
+		thread->ತಳ.usage.track_usage = false;
 
-		if (thread == cpu->current) {
+		ಆದರೆ (thread == cpu->current) {
 			uint32_t now = usage_now();
-			uint32_t cycles = now - cpu->usage0;
+			uint32_t ಚಕ್ರಗಳು = now - cpu->usage0;
 
-			sched_thread_update_usage(thread, cycles);
-			sched_cpu_update_usage(cpu, cycles);
+			sched_thread_update_usage(thread, ಚಕ್ರಗಳು);
+			sched_cpu_update_usage(cpu, ಚಕ್ರಗಳು);
 
 			cpu->usage0 = now;
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
 bool k_thread_runtime_stats_is_enabled(k_tid_t thread)
 {
-	return thread->base.usage.track_usage;
+	ಹಿಂತಿರುಗಿ thread->ತಳ.usage.track_usage;
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void k_sys_runtime_stats_enable(void)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ALL
+ಶೂನ್ಯ k_sys_runtime_stats_enable(ಶೂನ್ಯ)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 
-	if (_current_cpu->usage->track_usage) {
+	ಆದರೆ (_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already enabled on the current CPU
@@ -328,33 +328,33 @@ void k_sys_runtime_stats_enable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ;
 	}
 
 	/* Enable gathering of runtime stats on each CPU */
 
-	unsigned int num_cpus = arch_num_cpus();
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಅಂಕೆ_cpus = arch_ಅಂಕೆ_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	ಗಾಗಿ (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ i = 0; i < ಅಂಕೆ_cpus; i++) {
 		_kernel.cpus[i].usage->track_usage = true;
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		_kernel.cpus[i].usage->num_windows++;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+		_kernel.cpus[i].usage->ಅಂಕೆ_windows++;
 		_kernel.cpus[i].usage->current = 0;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 }
 
-void k_sys_runtime_stats_disable(void)
+ಶೂನ್ಯ k_sys_runtime_stats_disable(ಶೂನ್ಯ)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t key;
+	ರಚನೆ _cpu *cpu;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 
-	if (!_current_cpu->usage->track_usage) {
+	ಆದರೆ (!_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already disabled on the current CPU
@@ -362,67 +362,67 @@ void k_sys_runtime_stats_disable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ;
 	}
 
 	uint32_t now = usage_now();
 
-	unsigned int num_cpus = arch_num_cpus();
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಅಂಕೆ_cpus = arch_ಅಂಕೆ_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	ಗಾಗಿ (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ i = 0; i < ಅಂಕೆ_cpus; i++) {
 		cpu = &_kernel.cpus[i];
-		if (cpu->usage0 != 0) {
+		ಆದರೆ (cpu->usage0 != 0) {
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
 		}
 		cpu->usage->track_usage = false;
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-#ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_THREAD
+ಪೂರ್ಣಾಂಕ z_thread_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
+	ಸ್ಮರಣೆ_ನಕಲು(stats, obj_core->stats, ಗಾತ್ರ(ರಚನೆ k_ಚಕ್ರ_stats));
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats)
+ಪೂರ್ಣಾಂಕ z_thread_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	struct k_thread *thread;
+	ರಚನೆ k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_ದ(obj_core, ರಚನೆ k_thread, obj_core);
 
 	z_sched_thread_usage(thread, stats);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_thread_stats_reset(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ z_thread_stats_reset(ರಚನೆ k_obj_core *obj_core)
 {
-	k_spinlock_key_t  key;
-	struct k_cycle_stats  *stats;
-	struct k_thread *thread;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
+	ರಚನೆ k_ಚಕ್ರ_stats  *stats;
+	ರಚನೆ k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
-	key = k_spin_lock(&usage_lock);
+	thread = CONTAINER_ದ(obj_core, ರಚನೆ k_thread, obj_core);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
 	stats = obj_core->stats;
 
-	stats->total = 0ULL;
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->ಒಟ್ಟು = 0ULL;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	stats->current = 0ULL;
 	stats->longest = 0ULL;
-	stats->num_windows = (thread->base.usage.track_usage) ?  1U : 0U;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	stats->ಅಂಕೆ_windows = (thread->ತಳ.usage.track_usage) ?  1U : 0U;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	if (thread != _current_cpu->current) {
+	ಆದರೆ (thread != _current_cpu->current) {
 
 		/*
 		 * If the thread is not running, there is nothing else to do.
@@ -432,9 +432,9 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 		 * window.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
+		k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
 	/* Update the current CPU stats. */
@@ -445,79 +445,79 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 
 	_current_cpu->usage0 = now;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_thread_stats_disable(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ z_thread_stats_disable(ರಚನೆ k_obj_core *obj_core)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	ರಚನೆ k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_ದ(obj_core, ರಚನೆ k_thread, obj_core);
 
-	return k_thread_runtime_stats_disable(thread);
-#else
-	return -ENOTSUP;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	ಹಿಂತಿರುಗಿ k_thread_runtime_stats_disable(thread);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಹಿಂತಿರುಗಿ -ENOTSUP;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-int z_thread_stats_enable(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ z_thread_stats_enable(ರಚನೆ k_obj_core *obj_core)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	ರಚನೆ k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_ದ(obj_core, ರಚನೆ k_thread, obj_core);
 
-	return k_thread_runtime_stats_enable(thread);
-#else
-	return -ENOTSUP;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	ಹಿಂತಿರುಗಿ k_thread_runtime_stats_enable(thread);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಹಿಂತಿರುಗಿ -ENOTSUP;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
-#endif /* CONFIG_OBJ_CORE_STATS_THREAD */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_THREAD */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
+ಪೂರ್ಣಾಂಕ z_cpu_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
+	ಸ್ಮರಣೆ_ನಕಲು(stats, obj_core->stats, ಗಾತ್ರ(ರಚನೆ k_ಚಕ್ರ_stats));
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats)
+ಪೂರ್ಣಾಂಕ z_cpu_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	struct _cpu  *cpu;
+	ರಚನೆ _cpu  *cpu;
 
-	cpu = CONTAINER_OF(obj_core, struct _cpu, obj_core);
+	cpu = CONTAINER_ದ(obj_core, ರಚನೆ _cpu, obj_core);
 
 	z_sched_cpu_usage(cpu->id, stats);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
+ಪೂರ್ಣಾಂಕ z_kernel_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats,
-	       CONFIG_MP_MAX_NUM_CPUS * sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&usage_ಬೀಗ);
+	ಸ್ಮರಣೆ_ನಕಲು(stats, obj_core->stats,
+	       CONFIG_MP_MAX_ಅಂಕೆ_CPUS * ಗಾತ್ರ(ರಚನೆ k_ಚಕ್ರ_stats));
+	k_spin_unlock(&usage_ಬೀಗ, ಕೀಲಿ);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats)
+ಪೂರ್ಣಾಂಕ z_kernel_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats)
 {
-	ARG_UNUSED(obj_core);
+	ARG_ಬಳಸದ(obj_core);
 
-	return k_thread_runtime_stats_all_get(stats);
+	ಹಿಂತಿರುಗಿ k_thread_runtime_stats_all_get(stats);
 }
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */

@@ -11,29 +11,29 @@
  * This file contains private kernel APIs that are not architecture-specific.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_KERNEL_ಆಂತರಿಕ_H
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_KERNEL_ಆಂತರಿಕ_H
 
-#include <zephyr/kernel.h>
-#include <kernel_arch_interface.h>
-#include <kthread.h>
-#include <string.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <kernel_arch_interface.h>
+#ಅನ್ತರ್ಭಾವ <kthread.h>
+#ಅನ್ತರ್ಭಾವ <string.h>
 
-#ifndef _ASMLANGUAGE
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ _ASMLANGUAGE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
+ಬಾಹ್ಯ "C" {
+#ಆದರೆ_ಅಂತ್ಯ
 
 /* Initialize per-CPU kernel data */
-void z_init_cpu(int id);
+ಶೂನ್ಯ z_init_cpu(ಪೂರ್ಣಾಂಕ id);
 
 /* Initialize a thread */
-void z_init_thread_base(struct _thread_base *thread_base, int priority,
-			uint32_t initial_state, unsigned int options);
+ಶೂನ್ಯ z_init_thread_ತಳ(ರಚನೆ thread_ತಳ *thread_ತಳ_2, ಪೂರ್ಣಾಂಕ ಆದ್ಯತೆ,
+			uint32_t initial_state, ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ options);
 
 
-FUNC_NORETURN void z_cstart(void);
+FUNC_NORETURN ಶೂನ್ಯ z_cstart(ಶೂನ್ಯ);
 
 /*
  * Lean kernel-internal init model.
@@ -46,19 +46,19 @@ FUNC_NORETURN void z_cstart(void);
  * provides. The entry holds a single function pointer (no device back-pointer
  * and no priority), so it is half the size of a SYS_INIT init_entry.
  */
-struct k_kernel_init_pre_entry {
-	void (*init_fn)(void);
+ರಚನೆ k_kernel_init_pre_ನಮೂದು {
+	ಶೂನ್ಯ (*init_fn)(ಶೂನ್ಯ);
 };
 
-struct k_kernel_init_post_entry {
-	void (*init_fn)(void);
+ರಚನೆ k_kernel_init_post_ನಮೂದು {
+	ಶೂನ್ಯ (*init_fn)(ಶೂನ್ಯ);
 };
 
 /* Register a kernel init function to run before multithreading starts (the
  * PRE_KERNEL phase), ahead of PRE_KERNEL device init.
  */
-#define K_KERNEL_INIT_PRE(_fn)                                                 \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_pre_entry,          \
+#ವ್ಯಾಖ್ಯಾನಿಸು K_KERNEL_INIT_PRE(_fn)                                                 \
+	ಸ್ಥಿರ ಸ್ಥಿರಾಂಕ STRUCT_SECTION_ITERABLE(k_kernel_init_pre_ನಮೂದು,          \
 					     _kernel_init_pre_##_fn) = {       \
 		.init_fn = (_fn),                                              \
 	}
@@ -66,20 +66,20 @@ struct k_kernel_init_post_entry {
 /* Register a kernel init function to run after the kernel is up (the
  * POST_KERNEL phase), before POST_KERNEL device init.
  */
-#define K_KERNEL_INIT_POST(_fn)                                                \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_post_entry,         \
+#ವ್ಯಾಖ್ಯಾನಿಸು K_KERNEL_INIT_POST(_fn)                                                \
+	ಸ್ಥಿರ ಸ್ಥಿರಾಂಕ STRUCT_SECTION_ITERABLE(k_kernel_init_post_ನಮೂದು,         \
 					     _kernel_init_post_##_fn) = {      \
 		.init_fn = (_fn),                                              \
 	}
 
-extern FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-			  void *p1, void *p2, void *p3);
+ಬಾಹ್ಯ FUNC_NORETURN ಶೂನ್ಯ z_thread_ನಮೂದು(k_thread_ನಮೂದು_t ನಮೂದು,
+			  ಶೂನ್ಯ *p1, ಶೂನ್ಯ *p2, ಶೂನ್ಯ *p3);
 
-extern char *z_setup_new_thread(struct k_thread *new_thread,
-				k_thread_stack_t *stack, size_t stack_size,
-				k_thread_entry_t entry,
-				void *p1, void *p2, void *p3,
-				int prio, uint32_t options, const char *name);
+ಬಾಹ್ಯ ಅಕ್ಷರ *z_ಸಿದ್ಧತೆ_new_thread(ರಚನೆ k_thread *new_thread,
+				k_thread_ರಾಶಿ_t *ರಾಶಿ, size_t ರಾಶಿ_ಗಾತ್ರ,
+				k_thread_ನಮೂದು_t ನಮೂದು,
+				ಶೂನ್ಯ *p1, ಶೂನ್ಯ *p2, ಶೂನ್ಯ *p3,
+				ಪೂರ್ಣಾಂಕ prio, uint32_t options, ಸ್ಥಿರಾಂಕ ಅಕ್ಷರ *name);
 
 /**
  * @brief Allocate aligned memory from the current thread's resource pool
@@ -95,7 +95,7 @@ extern char *z_setup_new_thread(struct k_thread *new_thread,
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_aligned_alloc(size_t align, size_t size);
+ಶೂನ್ಯ *z_thread_aligned_alloc(size_t align, size_t ಗಾತ್ರ_2);
 
 /**
  * @brief Allocate some memory from the current thread's resource pool
@@ -110,66 +110,66 @@ void *z_thread_aligned_alloc(size_t align, size_t size);
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_malloc(size_t size);
+ಶೂನ್ಯ *z_thread_malloc(size_t ಗಾತ್ರ_2);
 
 
-#ifdef CONFIG_USE_SWITCH
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USE_SWITCH
 /* This is a arch function traditionally, but when the switch-based
  * z_swap() is in use it's a simple inline provided by the kernel.
  */
-static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ
+arch_thread_return_ಮೌಲ್ಯ_ಗಣ(ರಚನೆ k_thread *thread, ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಮೌಲ್ಯ)
 {
-	thread->swap_retval = value;
+	thread->ಅದಲುಬದಲು_retval = ಮೌಲ್ಯ;
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-static ALWAYS_INLINE void
-z_thread_return_value_set_with_data(struct k_thread *thread,
-				   unsigned int value,
-				   void *data)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ
+z_thread_return_ಮೌಲ್ಯ_ಗಣ_with_ದತ್ತಾಂಶ(ರಚನೆ k_thread *thread,
+				   ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಮೌಲ್ಯ,
+				   ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	arch_thread_return_value_set(thread, value);
-	thread->base.swap_data = data;
+	arch_thread_return_ಮೌಲ್ಯ_ಗಣ(thread, ಮೌಲ್ಯ);
+	thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
 }
 
-#ifdef CONFIG_SMP
-extern void z_smp_init(void);
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-extern void smp_timer_init(void);
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
-#endif /* CONFIG_SMP */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SMP
+ಬಾಹ್ಯ ಶೂನ್ಯ z_smp_init(ಶೂನ್ಯ);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
+ಬಾಹ್ಯ ಶೂನ್ಯ smp_timer_init(ಶೂನ್ಯ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SMP */
 
-extern void z_early_rand_get(uint8_t *buf, size_t length);
+ಬಾಹ್ಯ ಶೂನ್ಯ z_early_rand_get(uint8_t *buf, size_t ಉದ್ದಳತೆ);
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-extern int z_stack_adjust_initialized;
-#endif /* CONFIG_STACK_POINTER_RANDOM */
+#ಆದರೆ defined(CONFIG_ರಾಶಿ_ಸೂಚಕ_RANDOM) && (CONFIG_ರಾಶಿ_ಸೂಚಕ_RANDOM != 0)
+ಬಾಹ್ಯ ಪೂರ್ಣಾಂಕ z_ರಾಶಿ_adjust_initialized;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_STACK_POINTER_RANDOM */
 
-#ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_main_thread;
-#endif /* CONFIG_MULTITHREADING */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_MULTITHREADING
+ಬಾಹ್ಯ ರಚನೆ k_thread z_main_thread;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_MULTITHREADING */
 
 
-K_KERNEL_STACK_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_NUM_CPUS,
-				    CONFIG_ISR_STACK_SIZE);
-K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_KERNEL_ರಾಶಿ_ARRAY_DECLARE(z_ಅಡಚಣೆ_stacks, CONFIG_MP_MAX_ಅಂಕೆ_CPUS,
+				    CONFIG_ISR_ರಾಶಿ_ಗಾತ್ರ);
+K_THREAD_ರಾಶಿ_DECLARE(z_main_ರಾಶಿ, CONFIG_MAIN_ರಾಶಿ_ಗಾತ್ರ);
 
-#ifdef CONFIG_GEN_PRIV_STACKS
-extern uint8_t *z_priv_stack_find(k_thread_stack_t *stack);
-#endif /* CONFIG_GEN_PRIV_STACKS */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_GEN_PRIV_STACKS
+ಬಾಹ್ಯ uint8_t *z_priv_ರಾಶಿ_ಕಂಡುಹಿಡಿ(k_thread_ರಾಶಿ_t *ರಾಶಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_GEN_PRIV_STACKS */
 
 /* Calculate stack usage. */
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
+ಪೂರ್ಣಾಂಕ z_ರಾಶಿ_space_get(ಸ್ಥಿರಾಂಕ uint8_t *ರಾಶಿ_ಆರಂಭ, size_t ಗಾತ್ರ_2, size_t *ಬಳಸದ_ptr);
 
-#ifdef CONFIG_USERSPACE
-bool z_stack_is_user_capable(k_thread_stack_t *stack);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+bool z_ರಾಶಿ_is_user_capable(k_thread_ರಾಶಿ_t *ರಾಶಿ);
 
 /* Memory domain setup hook, called from z_setup_new_thread() */
-void z_mem_domain_init_thread(struct k_thread *thread);
+ಶೂನ್ಯ z_mem_domain_init_thread(ರಚನೆ k_thread *thread);
 
 /* Memory domain teardown hook, called from z_thread_abort() */
-void z_mem_domain_exit_thread(struct k_thread *thread);
+ಶೂನ್ಯ z_mem_domain_exit_thread(ರಚನೆ k_thread *thread);
 
 /* This spinlock:
  *
@@ -181,50 +181,50 @@ void z_mem_domain_exit_thread(struct k_thread *thread);
  * Uniprocessor systems can get away with just locking interrupts but this is
  * not recommended.
  */
-extern struct k_spinlock z_mem_domain_lock;
-#endif /* CONFIG_USERSPACE */
+ಬಾಹ್ಯ ರಚನೆ k_spinlock z_mem_domain_ಬೀಗ;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_GDBSTUB
-struct gdb_ctx;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_GDBSTUB
+ರಚನೆ gdb_ctx;
 
 /* Should be called by the arch layer. This is the gdbstub main loop
  * and synchronously communicate with gdb on host.
  */
-extern int z_gdb_main_loop(struct gdb_ctx *ctx);
-#endif /* CONFIG_GDBSTUB */
+ಬಾಹ್ಯ ಪೂರ್ಣಾಂಕ z_gdb_main_loop(ರಚನೆ gdb_ctx *ctx);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_GDBSTUB */
 
-#ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
-void z_thread_mark_switched_in(void);
-void z_thread_mark_switched_out(void);
-#else
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_INSTRUMENT_THREAD_SWITCHING
+ಶೂನ್ಯ z_thread_mark_switched_ಒಳ(ಶೂನ್ಯ);
+ಶೂನ್ಯ z_thread_mark_switched_ಹೊರಹೋಗು(ಶೂನ್ಯ);
+#ಇಲ್ಲದಿದ್ದರೆ
 
 /**
  * @brief Called after a thread has been selected to run
  */
-#define z_thread_mark_switched_in()
+#ವ್ಯಾಖ್ಯಾನಿಸು z_thread_mark_switched_ಒಳ()
 
 /**
  * @brief Called before a thread has been selected to run
  */
 
-#define z_thread_mark_switched_out()
+#ವ್ಯಾಖ್ಯಾನಿಸು z_thread_mark_switched_ಹೊರಹೋಗು()
 
-#endif /* CONFIG_INSTRUMENT_THREAD_SWITCHING */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
 /* Init hook for page frame management, invoked immediately upon entry of
  * main thread, before POST_KERNEL tasks
  */
-void z_mem_manage_init(void);
+ಶೂನ್ಯ z_mem_manage_init(ಶೂನ್ಯ);
 
 /**
  * @brief Finalize page frame management at the end of boot process.
  */
-void z_mem_manage_boot_finish(void);
+ಶೂನ್ಯ z_mem_manage_boot_ಮುಕ್ತಾಯ(ಶೂನ್ಯ);
 
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state);
 
-#ifdef CONFIG_PM
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_PM
 
 /* When the kernel is about to go idle, it calls this function to notify the
  * power management subsystem, that the kernel is ready to enter the idle state.
@@ -248,13 +248,13 @@ bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state);
  */
 bool pm_system_suspend(int32_t ticks);
 
-#endif /* CONFIG_PM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_PM */
 
-#ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
 /**
  * Initialize the timing histograms for demand paging.
  */
-void z_paging_histogram_init(void);
+ಶೂನ್ಯ z_paging_histogram_init(ಶೂನ್ಯ);
 
 /**
  * Increment the counter in the timing histogram.
@@ -262,27 +262,27 @@ void z_paging_histogram_init(void);
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
-			    uint32_t cycles);
-#endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
+ಶೂನ್ಯ z_paging_histogram_inc(ರಚನೆ k_mem_paging_histogram_t *hist,
+			    uint32_t ಚಕ್ರಗಳು);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-#ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_reset(struct k_obj_core *obj_core);
-int z_thread_stats_disable(struct k_obj_core *obj_core);
-int z_thread_stats_enable(struct k_obj_core *obj_core);
-#endif /* CONFIG_OBJ_CORE_STATS_THREAD */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_THREAD
+ಪೂರ್ಣಾಂಕ z_thread_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
+ಪೂರ್ಣಾಂಕ z_thread_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
+ಪೂರ್ಣಾಂಕ z_thread_stats_reset(ರಚನೆ k_obj_core *obj_core);
+ಪೂರ್ಣಾಂಕ z_thread_stats_disable(ರಚನೆ k_obj_core *obj_core);
+ಪೂರ್ಣಾಂಕ z_thread_stats_enable(ರಚನೆ k_obj_core *obj_core);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_THREAD */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
+ಪೂರ್ಣಾಂಕ z_cpu_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
+ಪೂರ್ಣಾಂಕ z_cpu_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
 
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+ಪೂರ್ಣಾಂಕ z_kernel_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
+ಪೂರ್ಣಾಂಕ z_kernel_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#if defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
+#ಆದರೆ defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
 /**
  * Perform cleanup at the end of k_thread_abort().
  *
@@ -296,7 +296,7 @@ int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
  *
  * @param thread Pointer to thread to be cleaned up.
  */
-void k_thread_abort_cleanup(struct k_thread *thread);
+ಶೂನ್ಯ k_thread_abort_cleanup(ರಚನೆ k_thread *thread);
 
 /**
  * Check if thread is the same as the one waiting for cleanup.
@@ -308,13 +308,13 @@ void k_thread_abort_cleanup(struct k_thread *thread);
  *
  * @param thread Pointer to thread to be checked.
  */
-void k_thread_abort_cleanup_check_reuse(struct k_thread *thread);
-#endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
+ಶೂನ್ಯ k_thread_abort_cleanup_check_reuse(ರಚನೆ k_thread *thread);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 
-#ifdef __cplusplus
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-#endif /* _ASMLANGUAGE */
+#ಆದರೆ_ಅಂತ್ಯ /* _ASMLANGUAGE */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_ */

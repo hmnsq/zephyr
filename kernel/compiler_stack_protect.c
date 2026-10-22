@@ -17,12 +17,12 @@
  * function __stack_chk_fail and global variable __stack_chk_guard.
  */
 
-#include <zephyr/toolchain.h> /* compiler specific configurations */
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h> /* compiler specific configurations */
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <zephyr/kernel.h>
-#include <zephyr/app_memory/app_memdomain.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/linker/sections.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/app_memory/app_memdomain.h>
 
 /**
  *
@@ -32,12 +32,12 @@
  *
  * @note This function does not return.
  */
-void _StackCheckHandler(void)
+ಶೂನ್ಯ ರಾಶಿ_Check_Handler(ಶೂನ್ಯ)
 {
 	/* Stack canary error is a software fatal condition; treat it as such.
 	 */
-	z_except_reason(K_ERR_STACK_CHK_FAIL);
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	z_except_reason(K_ERR_ರಾಶಿ_CHK_FAIL);
+	ಸಂಕೇತ_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
 /* Global variable */
@@ -46,17 +46,17 @@ void _StackCheckHandler(void)
  * Symbol referenced by GCC compiler generated code for canary value.
  * The canary value gets initialized in z_cstart().
  */
-#ifdef CONFIG_STACK_CANARIES_TLS
-#ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
-__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#endif
-#elif CONFIG_USERSPACE
-K_APP_DMEM(z_libc_partition) volatile uintptr_t __stack_chk_guard;
-#else
-__noinit volatile uintptr_t __stack_chk_guard;
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ರಾಶಿ_CANARIES_TLS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ರಾಶಿ_CANARIES_TLS_PREPEND
+__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL ಅಸ್ಥಿರ uintptr_t __stack_chk_guard;
+#ಇಲ್ಲದಿದ್ದರೆ
+Z_THREAD_LOCAL ಅಸ್ಥಿರ uintptr_t __stack_chk_guard;
+#ಆದರೆ_ಅಂತ್ಯ
+#ಅಥವಾಆದರೆ CONFIG_USERSPACE
+K_APP_DMEM(z_libc_ವಿಭಜನೆ) ಅಸ್ಥಿರ uintptr_t __stack_chk_guard;
+#ಇಲ್ಲದಿದ್ದರೆ
+__noinit ಅಸ್ಥಿರ uintptr_t __stack_chk_guard;
+#ಆದರೆ_ಅಂತ್ಯ
 
 /**
  *
@@ -65,4 +65,4 @@ __noinit volatile uintptr_t __stack_chk_guard;
  * This routine is invoked when a stack canary error is detected, indicating
  * a buffer overflow or stack corruption problem.
  */
-FUNC_ALIAS(_StackCheckHandler, __stack_chk_fail, void);
+FUNC_ALIAS(ರಾಶಿ_Check_Handler, __stack_chk_fail, ಶೂನ್ಯ);

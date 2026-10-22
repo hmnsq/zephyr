@@ -8,61 +8,61 @@
  * @brief Mailboxes.
  */
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <string.h>
-#include <zephyr/sys/dlist.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/linker/sections.h>
+#ಅನ್ತರ್ಭಾವ <string.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/dlist.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <kthread.h>
-#include <scheduler.h>
-#include <kernel_internal.h>
-#include <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <kthread.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
 
-#define SYNCHRONOUS_MATCH_FOUND  1
-#define ASYNCHRONOUS_MATCH_FOUND 2
+#ವ್ಯಾಖ್ಯಾನಿಸು SYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು  1
+#ವ್ಯಾಖ್ಯಾನಿಸು ASYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು 2
 
-struct mbox_walk_data {
-	struct k_thread *thread;
-	struct k_mbox_msg *msg;
+ರಚನೆ mbox_walk_ದತ್ತಾಂಶ {
+	ರಚನೆ k_thread *thread;
+	ರಚನೆ k_mbox_ಸಂದೇಶ *ಸಂದೇಶ;
 };
 
-#ifdef CONFIG_OBJ_CORE_MAILBOX
-K_OBJ_TYPE_DEFINE(obj_type_mailbox, k_mbox, K_OBJ_TYPE_MBOX_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_MAILBOX */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_MAILBOX
+K_OBJ_TYPE_DEFINE(obj_type_mailbox, k_mbox, K_OBJ_TYPE_MBOX_ID, ಖಾಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_MAILBOX */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
 
 /* asynchronous message descriptor type */
-struct k_mbox_async {
-	struct _thread_base thread;		/* dummy thread object */
-	struct k_mbox_msg tx_msg;	/* transmit message descriptor */
+ರಚನೆ k_mbox_async {
+	ರಚನೆ thread_ತಳ thread;		/* dummy thread object */
+	ರಚನೆ k_mbox_ಸಂದೇಶ tx_ಸಂದೇಶ;	/* transmit message descriptor */
 };
 
 /* stack of unused asynchronous message descriptors */
-K_STACK_DEFINE(async_msg_free, CONFIG_NUM_MBOX_ASYNC_MSGS);
+K_ರಾಶಿ_DEFINE(async_ಸಂದೇಶ_free, CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS);
 
 /* allocate an asynchronous message descriptor */
-static inline void mbox_async_alloc(struct k_mbox_async **async)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ mbox_async_alloc(ರಚನೆ k_mbox_async **async)
 {
-	(void)k_stack_pop(&async_msg_free, (stack_data_t *)async, K_FOREVER);
+	(ಶೂನ್ಯ)k_ರಾಶಿ_ತೆಗೆ(&async_ಸಂದೇಶ_free, (ರಾಶಿ_ದತ್ತಾಂಶ_t *)async, K_FOREVER);
 }
 
 /* free an asynchronous message descriptor */
-static inline void mbox_async_free(struct k_mbox_async *async)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ mbox_async_free(ರಚನೆ k_mbox_async *async)
 {
-	k_stack_push(&async_msg_free, (stack_data_t)async);
+	k_ರಾಶಿ_ತಳ್ಳು(&async_ಸಂದೇಶ_free, (ರಾಶಿ_ದತ್ತಾಂಶ_t)async);
 }
 
 /*
  * Do run-time initialization of mailbox object subsystem.
  */
-static void init_mbox_module(void)
+ಸ್ಥಿರ ಶೂನ್ಯ init_mbox_module(ಶೂನ್ಯ)
 {
 	/* array of asynchronous message descriptors */
-	static struct k_mbox_async __noinit async_msg[CONFIG_NUM_MBOX_ASYNC_MSGS];
+	ಸ್ಥಿರ ರಚನೆ k_mbox_async __noinit async_ಸಂದೇಶ[CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS];
 
 	/*
 	 * Create pool of asynchronous message descriptors.
@@ -76,11 +76,11 @@ static void init_mbox_module(void)
 	 * that governs access to them.
 	 */
 
-	int i;
+	ಪೂರ್ಣಾಂಕ i;
 
-	for (i = 0; i < CONFIG_NUM_MBOX_ASYNC_MSGS; i++) {
-		z_init_thread_base(&async_msg[i].thread, 0, _THREAD_DUMMY, 0);
-		k_stack_push(&async_msg_free, (stack_data_t)&async_msg[i]);
+	ಗಾಗಿ (i = 0; i < CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS; i++) {
+		z_init_thread_ತಳ(&async_ಸಂದೇಶ[i].thread, 0, _THREAD_DUMMY, 0);
+		k_ರಾಶಿ_ತಳ್ಳು(&async_ಸಂದೇಶ_free, (ರಾಶಿ_ದತ್ತಾಂಶ_t)&async_ಸಂದೇಶ[i]);
 	}
 
 	/* Complete initialization of statically defined mailboxes. */
@@ -88,19 +88,19 @@ static void init_mbox_module(void)
 
 K_KERNEL_INIT_PRE(init_mbox_module);
 
-#endif /* CONFIG_NUM_MBOX_ASYNC_MSGS > 0 */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_NUM_MBOX_ASYNC_MSGS > 0 */
 
-void k_mbox_init(struct k_mbox *mbox)
+ಶೂನ್ಯ k_mbox_init(ರಚನೆ k_mbox *mbox)
 {
-	z_waitq_init(&mbox->tx_msg_queue);
-	z_waitq_init(&mbox->rx_msg_queue);
-	mbox->lock = (struct k_spinlock) {};
+	z_waitq_init(&mbox->tx_ಸಂದೇಶ_ಸರತಿ);
+	z_waitq_init(&mbox->rx_ಸಂದೇಶ_ಸರತಿ);
+	mbox->ಬೀಗ = (ರಚನೆ k_spinlock) {};
 
-#ifdef CONFIG_OBJ_CORE_MAILBOX
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_MAILBOX
 	k_obj_core_init_and_link(K_OBJ_CORE(mbox), &obj_type_mailbox);
-#endif /* CONFIG_OBJ_CORE_MAILBOX */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_MAILBOX */
 
-	SYS_PORT_TRACING_OBJ_INIT(k_mbox, mbox);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_INIT(k_mbox, mbox);
 }
 
 /**
@@ -116,40 +116,40 @@ void k_mbox_init(struct k_mbox *mbox)
  * @retval 0 Success.
  * @retval -1 Not matched.
  */
-static int mbox_message_match(struct k_mbox_msg *tx_msg,
-			       struct k_mbox_msg *rx_msg)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ mbox_ಸಂದೇಶ_ಹೊಂದಿಕೆ(ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ,
+			       ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ)
 {
-	uint32_t temp_info;
+	uint32_t ತಾತ್ಕಾಲಿಕ_info;
 
-	if (((tx_msg->tx_target_thread == (k_tid_t)K_ANY) ||
-	     (tx_msg->tx_target_thread == rx_msg->tx_target_thread)) &&
-	    ((rx_msg->rx_source_thread == (k_tid_t)K_ANY) ||
-	     (rx_msg->rx_source_thread == tx_msg->rx_source_thread))) {
+	ಆದರೆ (((tx_ಸಂದೇಶ->tx_ಗುರಿ_thread == (k_tid_t)K_ANY) ||
+	     (tx_ಸಂದೇಶ->tx_ಗುರಿ_thread == rx_ಸಂದೇಶ->tx_ಗುರಿ_thread)) &&
+	    ((rx_ಸಂದೇಶ->rx_ಮೂಲ_thread == (k_tid_t)K_ANY) ||
+	     (rx_ಸಂದೇಶ->rx_ಮೂಲ_thread == tx_ಸಂದೇಶ->rx_ಮೂಲ_thread))) {
 
 		/* update thread identifier fields for both descriptors */
-		rx_msg->rx_source_thread = tx_msg->rx_source_thread;
-		tx_msg->tx_target_thread = rx_msg->tx_target_thread;
+		rx_ಸಂದೇಶ->rx_ಮೂಲ_thread = tx_ಸಂದೇಶ->rx_ಮೂಲ_thread;
+		tx_ಸಂದೇಶ->tx_ಗುರಿ_thread = rx_ಸಂದೇಶ->tx_ಗುರಿ_thread;
 
 		/* update application info fields for both descriptors */
-		temp_info = rx_msg->info;
-		rx_msg->info = tx_msg->info;
-		tx_msg->info = temp_info;
+		ತಾತ್ಕಾಲಿಕ_info = rx_ಸಂದೇಶ->info;
+		rx_ಸಂದೇಶ->info = tx_ಸಂದೇಶ->info;
+		tx_ಸಂದೇಶ->info = ತಾತ್ಕಾಲಿಕ_info;
 
 		/* update data size field for receiver only */
-		if (rx_msg->size > tx_msg->size) {
-			rx_msg->size = tx_msg->size;
+		ಆದರೆ (rx_ಸಂದೇಶ->ಗಾತ್ರ_2 > tx_ಸಂದೇಶ->ಗಾತ್ರ_2) {
+			rx_ಸಂದೇಶ->ಗಾತ್ರ_2 = tx_ಸಂದೇಶ->ಗಾತ್ರ_2;
 		}
 
 		/* update data location fields for receiver only */
-		rx_msg->tx_data = tx_msg->tx_data;
+		rx_ಸಂದೇಶ->tx_ದತ್ತಾಂಶ = tx_ಸಂದೇಶ->tx_ದತ್ತಾಂಶ;
 
 		/* update syncing thread field for receiver only */
-		rx_msg->_syncing_thread = tx_msg->_syncing_thread;
+		rx_ಸಂದೇಶ->_syncing_thread = tx_ಸಂದೇಶ->_syncing_thread;
 
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
-	return -1;
+	ಹಿಂತಿರುಗಿ -1;
 }
 
 /**
@@ -159,80 +159,80 @@ static int mbox_message_match(struct k_mbox_msg *tx_msg,
  *
  * @param rx_msg Pointer to receive message descriptor.
  */
-static void mbox_message_dispose(struct k_mbox_msg *rx_msg)
+ಸ್ಥಿರ ಶೂನ್ಯ mbox_ಸಂದೇಶ_dispose(ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ)
 {
-	struct k_thread *sending_thread;
-	struct k_mbox_msg *tx_msg;
+	ರಚನೆ k_thread *sending_thread;
+	ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ;
 
 	/* do nothing if message was disposed of when it was received */
-	if (rx_msg->_syncing_thread == NULL) {
-		return;
+	ಆದರೆ (rx_ಸಂದೇಶ->_syncing_thread == ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ;
 	}
 
 	/* recover sender info */
-	sending_thread = rx_msg->_syncing_thread;
-	rx_msg->_syncing_thread = NULL;
-	tx_msg = (struct k_mbox_msg *)sending_thread->base.swap_data;
+	sending_thread = rx_ಸಂದೇಶ->_syncing_thread;
+	rx_ಸಂದೇಶ->_syncing_thread = ಖಾಲಿ;
+	tx_ಸಂದೇಶ = (ರಚನೆ k_mbox_ಸಂದೇಶ *)sending_thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ;
 
 	/* update data size field for sender */
-	tx_msg->size = rx_msg->size;
+	tx_ಸಂದೇಶ->ಗಾತ್ರ_2 = rx_ಸಂದೇಶ->ಗಾತ್ರ_2;
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
 	/*
 	 * asynchronous send: free asynchronous message descriptor +
 	 * dummy thread pair, then give semaphore (if needed)
 	 */
-	if (is_thread_dummy(sending_thread)) {
-		struct k_sem *async_sem = tx_msg->_async_sem;
+	ಆದರೆ (is_thread_dummy(sending_thread)) {
+		ರಚನೆ k_sem *async_sem = tx_ಸಂದೇಶ->_async_sem;
 
-		mbox_async_free((struct k_mbox_async *)sending_thread);
-		if (async_sem != NULL) {
+		mbox_async_free((ರಚನೆ k_mbox_async *)sending_thread);
+		ಆದರೆ (async_sem != ಖಾಲಿ) {
 			k_sem_give(async_sem);
 		}
-		return;
+		ಹಿಂತಿರುಗಿ;
 	}
-#endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 
 	/*
 	 * synchronous send: wake up sending thread
 	 * Lock scheduler's spinlock as thread internals are being modified.
 	 */
 
-	k_spinlock_key_t key = k_spin_lock(&_sched_spinlock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&_sched_spinlock);
 
-	arch_thread_return_value_set(sending_thread, 0);
+	arch_thread_return_ಮೌಲ್ಯ_ಗಣ(sending_thread, 0);
 	z_mark_thread_as_not_pending(sending_thread);
 	z_sched_ready_locked(sending_thread);
 
-	z_reschedule(&_sched_spinlock, key);
+	z_reschedule(&_sched_spinlock, ಕೀಲಿ);
 }
 
-static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ mbox_ಸಂದೇಶ_put_walk_op(ರಚನೆ k_thread *thread, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
-	struct k_mbox_msg *rx_msg;
+	ರಚನೆ mbox_walk_ದತ್ತಾಂಶ *walk_ದತ್ತಾಂಶ = (ರಚನೆ mbox_walk_ದತ್ತಾಂಶ *)ದತ್ತಾಂಶ;
+	ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ;
 
-	rx_msg = (struct k_mbox_msg *)thread->base.swap_data;
+	rx_ಸಂದೇಶ = (ರಚನೆ k_mbox_ಸಂದೇಶ *)thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ;
 
-	if (mbox_message_match(walk_data->msg, rx_msg) != 0) {
+	ಆದರೆ (mbox_ಸಂದೇಶ_ಹೊಂದಿಕೆ(walk_ದತ್ತಾಂಶ->ಸಂದೇಶ, rx_ಸಂದೇಶ) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
 
 	unpend_thread_no_timeout(thread);
-	(void)z_try_abort_thread_timeout(thread);
-	arch_thread_return_value_set(thread, 0);
+	(ಶೂನ್ಯ)z_try_abort_thread_timeout(thread);
+	arch_thread_return_ಮೌಲ್ಯ_ಗಣ(thread, 0);
 	z_sched_ready_locked(thread);
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (is_thread_dummy(walk_data->thread)) {
-		return ASYNCHRONOUS_MATCH_FOUND;
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
+	ಆದರೆ (is_thread_dummy(walk_ದತ್ತಾಂಶ->thread)) {
+		ಹಿಂತಿರುಗಿ ASYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು;
 	}
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-	return SYNCHRONOUS_MATCH_FOUND;
+	ಹಿಂತಿರುಗಿ SYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು;
 }
 
 /**
@@ -251,35 +251,35 @@ static int mbox_message_put_walk_op(struct k_thread *thread, void *data)
  * @retval -ENOMSG Failed immediately.
  * @retval -EAGAIN Timed out.
  */
-static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ mbox_ಸಂದೇಶ_put(ರಚನೆ k_mbox *mbox, ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ,
 			     k_timeout_t timeout)
 {
-	struct k_thread *sending_thread;
-	k_spinlock_key_t key;
+	ರಚನೆ k_thread *sending_thread;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
 
 	/* save sender id so it can be used during message matching */
-	tx_msg->rx_source_thread = _current;
+	tx_ಸಂದೇಶ->rx_ಮೂಲ_thread = _current;
 
 	/* finish readying sending thread (actual or dummy) for send */
-	sending_thread = tx_msg->_syncing_thread;
-	sending_thread->base.swap_data = tx_msg;
+	sending_thread = tx_ಸಂದೇಶ->_syncing_thread;
+	sending_thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ = tx_ಸಂದೇಶ;
 
 	/* search mailbox's rx queue for a compatible receiver */
-	key = k_spin_lock(&mbox->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&mbox->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, message_put, mbox, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_mbox, ಸಂದೇಶ_put, mbox, timeout);
 
-	struct mbox_walk_data walk_data;
-	int status;
+	ರಚನೆ mbox_walk_ದತ್ತಾಂಶ walk_ದತ್ತಾಂಶ;
+	ಪೂರ್ಣಾಂಕ ಸ್ಥಿತಿ_2;
 
-	walk_data.thread = sending_thread;
-	walk_data.msg = tx_msg;
+	walk_ದತ್ತಾಂಶ.thread = sending_thread;
+	walk_ದತ್ತಾಂಶ.ಸಂದೇಶ = tx_ಸಂದೇಶ;
 
 	/* Search the wait queue for the first matching receiver */
 
-	status = z_sched_waitq_walk(&mbox->rx_msg_queue,
-				    mbox_message_put_walk_op, NULL,
-				    &walk_data);
+	ಸ್ಥಿತಿ_2 = z_sched_waitq_walk(&mbox->rx_ಸಂದೇಶ_ಸರತಿ,
+				    mbox_ಸಂದೇಶ_put_walk_op, ಖಾಲಿ,
+				    &walk_ದತ್ತಾಂಶ);
 
 	/*
 	 * <status> will be one of the following:
@@ -288,86 +288,86 @@ static int mbox_message_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	 *   0                        - no match found
 	 */
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-	if (status == ASYNCHRONOUS_MATCH_FOUND) {
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
+	ಆದರೆ (ಸ್ಥಿತಿ_2 == ASYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು) {
 		/*
 		 * Swap out current thread if receiver has priority, otherwise
 		 * let it continue. Note that the dummy sending thread sits
 		 * (unqueued) until the receiver consumes the message.
 		 */
 
-		z_reschedule(&mbox->lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
+		z_reschedule(&mbox->ಬೀಗ, ಕೀಲಿ);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, ಸಂದೇಶ_put, mbox,
 					       timeout, 0);
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-	if (status == SYNCHRONOUS_MATCH_FOUND) {
+	ಆದರೆ (ಸ್ಥಿತಿ_2 == SYNCHRONOUS_ಹೊಂದಿಕೆ_ಸಿಕ್ಕಿತು) {
 		/*
 		 * Pend current thread until the receiver
 		 * consumes the message.
 		 */
 
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox,
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_mbox, ಸಂದೇಶ_put, mbox,
 						   timeout);
 
-		int ret = z_pend_curr(&mbox->lock, key, NULL, K_FOREVER);
+		ಪೂರ್ಣಾಂಕ ret = z_pend_curr(&mbox->ಬೀಗ, ಕೀಲಿ, ಖಾಲಿ, K_FOREVER);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox,
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, ಸಂದೇಶ_put, mbox,
 					       timeout, ret);
 
-		return ret;
+		ಹಿಂತಿರುಗಿ ret;
 	}
 
 	/* didn't find a matching receiver: don't wait for one */
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, -ENOMSG);
+	ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, ಸಂದೇಶ_put, mbox, timeout, -ENOMSG);
 
-		k_spin_unlock(&mbox->lock, key);
-		return -ENOMSG;
+		k_spin_unlock(&mbox->ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ -ENOMSG;
 	}
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
 	/* asynchronous send: dummy thread waits on tx queue for receiver */
-	if (is_thread_dummy(sending_thread)) {
-		z_pend_thread(sending_thread, &mbox->tx_msg_queue, K_FOREVER);
-		k_spin_unlock(&mbox->lock, key);
-		return 0;
+	ಆದರೆ (is_thread_dummy(sending_thread)) {
+		z_pend_thread(sending_thread, &mbox->tx_ಸಂದೇಶ_ಸರತಿ, K_FOREVER);
+		k_spin_unlock(&mbox->ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ 0;
 	}
-#endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, message_put, mbox, timeout);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_NUM_MBOX_ASYNC_MSGS */
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_mbox, ಸಂದೇಶ_put, mbox, timeout);
 
 	/* synchronous send: sender waits on tx queue for receiver or timeout */
-	int ret = z_pend_curr(&mbox->lock, key, &mbox->tx_msg_queue, timeout);
+	ಪೂರ್ಣಾಂಕ ret = z_pend_curr(&mbox->ಬೀಗ, ಕೀಲಿ, &mbox->tx_ಸಂದೇಶ_ಸರತಿ, timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, message_put, mbox, timeout, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, ಸಂದೇಶ_put, mbox, timeout, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-int k_mbox_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
+ಪೂರ್ಣಾಂಕ k_mbox_put(ರಚನೆ k_mbox *mbox, ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ,
 	       k_timeout_t timeout)
 {
 	/* configure things for a synchronous send, then send the message */
-	tx_msg->_syncing_thread = _current;
+	tx_ಸಂದೇಶ->_syncing_thread = _current;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, put, mbox, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_mbox, put, mbox, timeout);
 
-	int ret = mbox_message_put(mbox, tx_msg, timeout);
+	ಪೂರ್ಣಾಂಕ ret = mbox_ಸಂದೇಶ_put(mbox, tx_ಸಂದೇಶ, timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, put, mbox, timeout, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, put, mbox, timeout, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#if (CONFIG_NUM_MBOX_ASYNC_MSGS > 0)
-void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
-		      struct k_sem *sem)
+#ಆದರೆ (CONFIG_ಅಂಕೆ_MBOX_ASYNC_MSGS > 0)
+ಶೂನ್ಯ k_mbox_async_put(ರಚನೆ k_mbox *mbox, ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ,
+		      ರಚನೆ k_sem *sem)
 {
-	struct k_mbox_async *async;
+	ರಚನೆ k_mbox_async *async;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, async_put, mbox, sem);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_mbox, async_put, mbox, sem);
 
 	/*
 	 * allocate an asynchronous message descriptor, configure both parts,
@@ -375,31 +375,31 @@ void k_mbox_async_put(struct k_mbox *mbox, struct k_mbox_msg *tx_msg,
 	 */
 	mbox_async_alloc(&async);
 
-	async->thread.prio = _current->base.prio;
+	async->thread.prio = _current->ತಳ.prio;
 
-	async->tx_msg = *tx_msg;
-	async->tx_msg._syncing_thread = (struct k_thread *)&async->thread;
-	async->tx_msg._async_sem = sem;
+	async->tx_ಸಂದೇಶ = *tx_ಸಂದೇಶ;
+	async->tx_ಸಂದೇಶ._syncing_thread = (ರಚನೆ k_thread *)&async->thread;
+	async->tx_ಸಂದೇಶ._async_sem = sem;
 
-	(void)mbox_message_put(mbox, &async->tx_msg, K_FOREVER);
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, async_put, mbox, sem);
+	(ಶೂನ್ಯ)mbox_ಸಂದೇಶ_put(mbox, &async->tx_ಸಂದೇಶ, K_FOREVER);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, async_put, mbox, sem);
 }
-#endif /* CONFIG_NUM_MBOX_ASYNC_MSGS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_NUM_MBOX_ASYNC_MSGS */
 
-void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
+ಶೂನ್ಯ k_mbox_ದತ್ತಾಂಶ_get(ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ, ಶೂನ್ಯ *ಬಫರ್)
 {
 	/* handle case where data is to be discarded */
-	if (buffer == NULL) {
-		rx_msg->size = 0;
-		mbox_message_dispose(rx_msg);
-		return;
+	ಆದರೆ (ಬಫರ್ == ಖಾಲಿ) {
+		rx_ಸಂದೇಶ->ಗಾತ್ರ_2 = 0;
+		mbox_ಸಂದೇಶ_dispose(rx_ಸಂದೇಶ);
+		ಹಿಂತಿರುಗಿ;
 	}
 
 	/* copy message data to buffer, then dispose of message */
-	if ((rx_msg->tx_data != NULL) && (rx_msg->size > 0U)) {
-		(void)memcpy(buffer, rx_msg->tx_data, rx_msg->size);
+	ಆದರೆ ((rx_ಸಂದೇಶ->tx_ದತ್ತಾಂಶ != ಖಾಲಿ) && (rx_ಸಂದೇಶ->ಗಾತ್ರ_2 > 0U)) {
+		(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ಬಫರ್, rx_ಸಂದೇಶ->tx_ದತ್ತಾಂಶ, rx_ಸಂದೇಶ->ಗಾತ್ರ_2);
 	}
-	mbox_message_dispose(rx_msg);
+	mbox_ಸಂದೇಶ_dispose(rx_ಸಂದೇಶ);
 }
 
 /**
@@ -418,98 +418,98 @@ void k_mbox_data_get(struct k_mbox_msg *rx_msg, void *buffer)
  *
  * @retval 0 Always returns 0.
  */
-static int mbox_message_data_check(struct k_mbox_msg *rx_msg, void *buffer)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ mbox_ಸಂದೇಶ_ದತ್ತಾಂಶ_check(ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ, ಶೂನ್ಯ *ಬಫರ್)
 {
-	if (buffer != NULL) {
+	ಆದರೆ (ಬಫರ್ != ಖಾಲಿ) {
 		/* retrieve data now, then dispose of message */
-		k_mbox_data_get(rx_msg, buffer);
-	} else if (rx_msg->size == 0U) {
+		k_mbox_ದತ್ತಾಂಶ_get(rx_ಸಂದೇಶ, ಬಫರ್);
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (rx_ಸಂದೇಶ->ಗಾತ್ರ_2 == 0U) {
 		/* there is no data to get, so just dispose of message */
-		mbox_message_dispose(rx_msg);
-	} else {
+		mbox_ಸಂದೇಶ_dispose(rx_ಸಂದೇಶ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		/* keep message around for later data retrieval */
 	}
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-static int mbox_get_walk_op(struct k_thread *thread, void *data)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ mbox_get_walk_op(ರಚನೆ k_thread *thread, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	struct mbox_walk_data *walk_data = (struct mbox_walk_data *)data;
-	struct k_mbox_msg *tx_msg;
+	ರಚನೆ mbox_walk_ದತ್ತಾಂಶ *walk_ದತ್ತಾಂಶ = (ರಚನೆ mbox_walk_ದತ್ತಾಂಶ *)ದತ್ತಾಂಶ;
+	ರಚನೆ k_mbox_ಸಂದೇಶ *tx_ಸಂದೇಶ;
 
-	tx_msg = (struct k_mbox_msg *)thread->base.swap_data;
+	tx_ಸಂದೇಶ = (ರಚನೆ k_mbox_ಸಂದೇಶ *)thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ;
 
-	if (mbox_message_match(tx_msg, walk_data->msg) != 0) {
+	ಆದರೆ (mbox_ಸಂದೇಶ_ಹೊಂದಿಕೆ(tx_ಸಂದೇಶ, walk_ದತ್ತಾಂಶ->ಸಂದೇಶ) != 0) {
 		/* No match. Proceed to next in wait queue */
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
 	/* Final step in the walk. Remove thread from wait queue. */
 
 	unpend_thread_no_timeout(thread);
 
-	(void)z_try_abort_thread_timeout(thread);
+	(ಶೂನ್ಯ)z_try_abort_thread_timeout(thread);
 
-	return 1;
+	ಹಿಂತಿರುಗಿ 1;
 }
 
-int k_mbox_get(struct k_mbox *mbox, struct k_mbox_msg *rx_msg, void *buffer,
+ಪೂರ್ಣಾಂಕ k_mbox_get(ರಚನೆ k_mbox *mbox, ರಚನೆ k_mbox_ಸಂದೇಶ *rx_ಸಂದೇಶ, ಶೂನ್ಯ *ಬಫರ್,
 	       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
 
 	/* save receiver id so it can be used during message matching */
-	rx_msg->tx_target_thread = _current;
+	rx_ಸಂದೇಶ->tx_ಗುರಿ_thread = _current;
 
 	/* search mailbox's tx queue for a compatible sender */
-	key = k_spin_lock(&mbox->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&mbox->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mbox, get, mbox, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_mbox, get, mbox, timeout);
 
-	struct mbox_walk_data walk_data;
-	int status;
+	ರಚನೆ mbox_walk_ದತ್ತಾಂಶ walk_ದತ್ತಾಂಶ;
+	ಪೂರ್ಣಾಂಕ ಸ್ಥಿತಿ_2;
 
-	walk_data.thread = NULL;   /* Unused by walk operation */
-	walk_data.msg = rx_msg;
+	walk_ದತ್ತಾಂಶ.thread = ಖಾಲಿ;   /* Unused by walk operation */
+	walk_ದತ್ತಾಂಶ.ಸಂದೇಶ = rx_ಸಂದೇಶ;
 
 	/* Search the wait queue for the first matching sender */
 
-	status = z_sched_waitq_walk(&mbox->tx_msg_queue,
-				    mbox_get_walk_op, NULL, &walk_data);
+	ಸ್ಥಿತಿ_2 = z_sched_waitq_walk(&mbox->tx_ಸಂದೇಶ_ಸರತಿ,
+				    mbox_get_walk_op, ಖಾಲಿ, &walk_ದತ್ತಾಂಶ);
 
-	if (status != 0) {
+	ಆದರೆ (ಸ್ಥಿತಿ_2 != 0) {
 		/* Matching sender found */
-		k_spin_unlock(&mbox->lock, key);
-		result = 0;
+		k_spin_unlock(&mbox->ಬೀಗ, ಕೀಲಿ);
+		ಫಲಿತಾಂಶ = 0;
 
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
 	/* didn't find a matching sender */
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a matching sender to appear */
-		k_spin_unlock(&mbox->lock, key);
+		k_spin_unlock(&mbox->ಬೀಗ, ಕೀಲಿ);
 
-		result = -ENOMSG;
-		goto out;
+		ಫಲಿತಾಂಶ = -ENOMSG;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mbox, get, mbox, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_mbox, get, mbox, timeout);
 
 	/* wait until a matching sender appears or a timeout occurs */
-	_current->base.swap_data = rx_msg;
-	result = z_pend_curr(&mbox->lock, key, &mbox->rx_msg_queue, timeout);
+	_current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ = rx_ಸಂದೇಶ;
+	ಫಲಿತಾಂಶ = z_pend_curr(&mbox->ಬೀಗ, ಕೀಲಿ, &mbox->rx_ಸಂದೇಶ_ಸರತಿ, timeout);
 
-out:
+ಹೊರಹೋಗು:
 	/* consume message data immediately, if needed */
-	if (result == 0) {
-		result = mbox_message_data_check(rx_msg, buffer);
+	ಆದರೆ (ಫಲಿತಾಂಶ == 0) {
+		ಫಲಿತಾಂಶ = mbox_ಸಂದೇಶ_ದತ್ತಾಂಶ_check(rx_ಸಂದೇಶ, ಬಫರ್);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mbox, get, mbox, timeout, result);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_mbox, get, mbox, timeout, ಫಲಿತಾಂಶ);
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }

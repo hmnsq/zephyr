@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
-#include <ksched.h>
-#include <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
 
 /*
  * Kernel futex implementation
@@ -36,116 +36,116 @@
  *   expected to be the TID of the holder, so that a higher priority thread
  *   waiting for a futex can boost the holders priority.
  */
-static _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
-static struct k_spinlock futex_lock;
+ಸ್ಥಿರ _wait_q_t futex_wait_q = Z_WAIT_Q_INIT(&futex_wait_q);
+ಸ್ಥಿರ ರಚನೆ k_spinlock futex_ಬೀಗ;
 
 /**
  * Context structure for walking the futex wait queue
  */
-struct futex_walk_data {
+ರಚನೆ futex_walk_ದತ್ತಾಂಶ {
 	/**
 	 * List head of threads to wake up during post op (NULL if empty)
 	 * This is an intermediate value filled by the walk op
 	 * Must be initialized to NULL before the walk
 	 */
-	struct k_thread *head;
+	ರಚನೆ k_thread *ತಲೆ;
 	/**
 	 * Futex address
 	 * This is an input to the walk
 	 */
-	struct k_futex *futex;
+	ರಚನೆ k_futex *futex;
 	/**
 	 * Number of threads that have been woken up
 	 * This is an output of the walk and must be initialized to zero
 	 */
-	int woken;
+	ಪೂರ್ಣಾಂಕ woken;
 };
 
-static void futex_post_walk_op(int status, void *data)
+ಸ್ಥಿರ ಶೂನ್ಯ futex_post_walk_op(ಪೂರ್ಣಾಂಕ ಸ್ಥಿತಿ_2, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
 	/*
 	 * Note: z_sched_wake_thread_locked() is safe
 	 * to call here because this walk_op callback
 	 * is invoked with _sched_spinlock held.
 	 */
-	ARG_UNUSED(status);
-	struct futex_walk_data *walk_data = data;
-	struct k_thread *thread, *next;
+	ARG_ಬಳಸದ(ಸ್ಥಿತಿ_2);
+	ರಚನೆ futex_walk_ದತ್ತಾಂಶ *walk_ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
+	ರಚನೆ k_thread *thread, *ಮುಂದಿನ;
 
-	thread = walk_data->head;
+	thread = walk_ದತ್ತಾಂಶ->ತಲೆ;
 
 	/* Wake up threads if any */
-	while (thread != NULL) {
-#ifndef CONFIG_WAITQ_SCALABLE
+	ಆಗ (thread != ಖಾಲಿ) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_WAITQ_SCALABLE
 		/*
 		 * walk_data->head will only ever be non-NULL for wake-one,
 		 * which has no "next" thread to wake by definition.
 		 */
-		next = NULL;
-#else  /* !CONFIG_WAITQ_SCALABLE */
-		next = thread->next_wake_link;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+		ಮುಂದಿನ = ಖಾಲಿ;
+#ಇಲ್ಲದಿದ್ದರೆ  /* !CONFIG_WAITQ_SCALABLE */
+		ಮುಂದಿನ = thread->ಮುಂದಿನ_wake_link;
+#ಆದರೆ_ಅಂತ್ಯ /* !CONFIG_WAITQ_SCALABLE */
 
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(ಶೂನ್ಯ)z_try_abort_thread_timeout(thread);
+		arch_thread_return_ಮೌಲ್ಯ_ಗಣ(thread, 0);
 		z_sched_wake_thread_locked(thread);
-		walk_data->woken++;
+		walk_ದತ್ತಾಂಶ->woken++;
 
-		thread = next;
+		thread = ಮುಂದಿನ;
 	}
 }
 
-static int futex_wake_one_walk_op(struct k_thread *thread, void *data)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ futex_wake_one_walk_op(ರಚನೆ k_thread *thread, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	struct futex_walk_data *walk_data = data;
+	ರಚನೆ futex_walk_ದತ್ತಾಂಶ *walk_ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
+	ಆದರೆ (thread->futex_ಸೂಚಕ == walk_ದತ್ತಾಂಶ->futex) {
 		/* Find the highest priority thread */
-		if (walk_data->head == NULL ||
-		    z_is_prio_higher(thread->base.prio, walk_data->head->base.prio)) {
+		ಆದರೆ (walk_ದತ್ತಾಂಶ->ತಲೆ == ಖಾಲಿ ||
+		    z_is_prio_higher(thread->ತಳ.prio, walk_ದತ್ತಾಂಶ->ತಲೆ->ತಳ.prio)) {
 			/*
 			 * next_wake_link is initialized to NULL in z_impl_k_futex_wait so
 			 * this is always a single thread
 			 */
-			walk_data->head = thread;
+			walk_ದತ್ತಾಂಶ->ತಲೆ = thread;
 		}
 	}
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-static int futex_wake_all_walk_op(struct k_thread *thread, void *data)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ futex_wake_all_walk_op(ರಚನೆ k_thread *thread, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	struct futex_walk_data *walk_data = data;
+	ರಚನೆ futex_walk_ದತ್ತಾಂಶ *walk_ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
 
 	/* Ignore threads waiting on different futexes */
-	if (thread->futex_pointer == walk_data->futex) {
-#ifndef CONFIG_WAITQ_SCALABLE
+	ಆದರೆ (thread->futex_ಸೂಚಕ == walk_ದತ್ತಾಂಶ->futex) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_WAITQ_SCALABLE
 		/*
 		 * Note: z_sched_wake_thread_locked() is safe
 		 * to call here because this walk_op callback
 		 * is invoked with _sched_spinlock held.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		(ಶೂನ್ಯ)z_try_abort_thread_timeout(thread);
+		arch_thread_return_ಮೌಲ್ಯ_ಗಣ(thread, 0);
 		z_sched_wake_thread_locked(thread);
-		walk_data->woken++;
-#else  /* !CONFIG_WAITQ_SCALABLE */
-		thread->next_wake_link = walk_data->head;
-		walk_data->head = thread;
-#endif /* !CONFIG_WAITQ_SCALABLE */
+		walk_ದತ್ತಾಂಶ->woken++;
+#ಇಲ್ಲದಿದ್ದರೆ  /* !CONFIG_WAITQ_SCALABLE */
+		thread->ಮುಂದಿನ_wake_link = walk_ದತ್ತಾಂಶ->ತಲೆ;
+		walk_ದತ್ತಾಂಶ->ತಲೆ = thread;
+#ಆದರೆ_ಅಂತ್ಯ /* !CONFIG_WAITQ_SCALABLE */
 	}
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
+ಪೂರ್ಣಾಂಕ z_impl_k_futex_wake(ರಚನೆ k_futex *futex, bool wake_all)
 {
-	k_spinlock_key_t key;
-	struct futex_walk_data walk_data = {.head = NULL, .futex = futex, .woken = 0};
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ರಚನೆ futex_walk_ದತ್ತಾಂಶ walk_ದತ್ತಾಂಶ = {.ತಲೆ = ಖಾಲಿ, .futex = futex, .woken = 0};
 
-	key = k_spin_lock(&futex_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&futex_ಬೀಗ);
 
 	/*
 	 * Walk through the wait queue to find threads waiting on this futex.
@@ -163,61 +163,61 @@ int z_impl_k_futex_wake(struct k_futex *futex, bool wake_all)
 	 */
 	z_sched_waitq_walk(&futex_wait_q,
 			   (wake_all) ? futex_wake_all_walk_op : futex_wake_one_walk_op,
-			   futex_post_walk_op, &walk_data);
+			   futex_post_walk_op, &walk_ದತ್ತಾಂಶ);
 
-	if (walk_data.woken == 0) {
-		k_spin_unlock(&futex_lock, key);
-	} else {
-		z_reschedule(&futex_lock, key);
+	ಆದರೆ (walk_ದತ್ತಾಂಶ.woken == 0) {
+		k_spin_unlock(&futex_ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		z_reschedule(&futex_ಬೀಗ, ಕೀಲಿ);
 	}
 
-	return walk_data.woken;
+	ಹಿಂತಿರುಗಿ walk_ದತ್ತಾಂಶ.woken;
 }
 
-static inline int z_vrfy_k_futex_wake(struct k_futex *futex, bool wake_all)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_futex_wake(ರಚನೆ k_futex *futex, bool wake_all)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	ಆದರೆ (K_SYSCALL_ಸ್ಮರಣೆ_WRITE(futex, ಗಾತ್ರ(ರಚನೆ k_futex)) != 0) {
+		ಹಿಂತಿರುಗಿ -EACCES;
 	}
 
-	return z_impl_k_futex_wake(futex, wake_all);
+	ಹಿಂತಿರುಗಿ z_impl_k_futex_wake(futex, wake_all);
 }
-#include <zephyr/syscalls/k_futex_wake_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_futex_wake_mrsh.c>
 
-int z_impl_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+ಪೂರ್ಣಾಂಕ z_impl_k_futex_wait(ರಚನೆ k_futex *futex, ಪೂರ್ಣಾಂಕ expected, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
+	ಪೂರ್ಣಾಂಕ ret;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
 
-	key = k_spin_lock(&futex_lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&futex_ಬೀಗ);
 
-	if (atomic_get(&futex->val) != (atomic_val_t)expected) {
-		k_spin_unlock(&futex_lock, key);
-		return -EAGAIN;
+	ಆದರೆ (atomic_get(&futex->val) != (atomic_val_t)expected) {
+		k_spin_unlock(&futex_ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ -EAGAIN;
 	}
 
 	/*
 	 * Store futex pointer we are waiting on, so that it can be used to filter
 	 * futexes when walking the wait queue
 	 */
-	_current->futex_pointer = futex;
-#ifdef CONFIG_WAITQ_SCALABLE
-	_current->next_wake_link = NULL;
-#endif /* CONFIG_WAITQ_SCALABLE */
-	ret = z_pend_curr(&futex_lock, key, &futex_wait_q, timeout);
-	if (ret == -EAGAIN) {
+	_current->futex_ಸೂಚಕ = futex;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_WAITQ_SCALABLE
+	_current->ಮುಂದಿನ_wake_link = ಖಾಲಿ;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_WAITQ_SCALABLE */
+	ret = z_pend_curr(&futex_ಬೀಗ, ಕೀಲಿ, &futex_wait_q, timeout);
+	ಆದರೆ (ret == -EAGAIN) {
 		ret = -ETIMEDOUT;
 	}
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-static inline int z_vrfy_k_futex_wait(struct k_futex *futex, int expected, k_timeout_t timeout)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_futex_wait(ರಚನೆ k_futex *futex, ಪೂರ್ಣಾಂಕ expected, k_timeout_t timeout)
 {
-	if (K_SYSCALL_MEMORY_WRITE(futex, sizeof(struct k_futex)) != 0) {
-		return -EACCES;
+	ಆದರೆ (K_SYSCALL_ಸ್ಮರಣೆ_WRITE(futex, ಗಾತ್ರ(ರಚನೆ k_futex)) != 0) {
+		ಹಿಂತಿರುಗಿ -EACCES;
 	}
 
-	return z_impl_k_futex_wait(futex, expected, timeout);
+	ಹಿಂತಿರುಗಿ z_impl_k_futex_wait(futex, expected, timeout);
 }
-#include <zephyr/syscalls/k_futex_wait_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_futex_wait_mrsh.c>

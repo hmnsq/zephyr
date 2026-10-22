@@ -10,538 +10,538 @@
  */
 
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <string.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/check.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/linker/sections.h>
+#ಅನ್ತರ್ಭಾವ <string.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/dlist.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/math_extras.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/check.h>
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
-K_OBJ_TYPE_DEFINE(obj_type_msgq, k_msgq, K_OBJ_TYPE_MSGQ_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_MSGQ
+K_OBJ_TYPE_DEFINE(obj_type_msgq, k_msgq, K_OBJ_TYPE_MSGQ_ID, ಖಾಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_MSGQ */
 
-static inline bool msgq_handle_poll_events(struct k_msgq *msgq)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool msgq_handle_poll_events(ರಚನೆ k_msgq *msgq)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&msgq->poll_events,
-					K_POLL_STATE_MSGQ_DATA_AVAILABLE);
-#else
-	ARG_UNUSED(msgq);
-	return false;
-#endif /* CONFIG_POLL */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_POLL
+	ಹಿಂತಿರುಗಿ z_handle_obj_poll_events(&msgq->poll_events,
+					K_POLL_STATE_MSGQ_ದತ್ತಾಂಶ_ಲಭ್ಯ);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(msgq);
+	ಹಿಂತಿರುಗಿ false;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_POLL */
 }
 
-void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
+ಶೂನ್ಯ k_msgq_init(ರಚನೆ k_msgq *msgq, ಅಕ್ಷರ *ಬಫರ್, size_t ಸಂದೇಶ_ಗಾತ್ರ,
 		 uint32_t max_msgs)
 {
-	__ASSERT_NO_MSG(!size_mul_overflow(max_msgs, msg_size, &(size_t){0}));
-	__ASSERT_NO_MSG(!size_add_overflow((size_t)(uintptr_t)buffer, max_msgs * msg_size,
+	__ASSERT_NO_MSG(!ಗಾತ್ರ_mul_ಅತಿಪ್ರವಾಹ(max_msgs, ಸಂದೇಶ_ಗಾತ್ರ, &(size_t){0}));
+	__ASSERT_NO_MSG(!ಗಾತ್ರ_ಕೂಡಿಸು_ಅತಿಪ್ರವಾಹ((size_t)(uintptr_t)ಬಫರ್, max_msgs * ಸಂದೇಶ_ಗಾತ್ರ,
 					&(size_t){0}));
 
-	msgq->msg_size = msg_size;
+	msgq->ಸಂದೇಶ_ಗಾತ್ರ = ಸಂದೇಶ_ಗಾತ್ರ;
 	msgq->max_msgs = max_msgs;
-	msgq->buffer_start = buffer;
-	msgq->buffer_end = buffer + (max_msgs * msg_size);
-	msgq->read_ptr = buffer;
-	msgq->write_ptr = buffer;
-	msgq->used_msgs = 0;
+	msgq->ಬಫರ್_ಆರಂಭ = ಬಫರ್;
+	msgq->ಬಫರ್_ಕೊನೆ = ಬಫರ್ + (max_msgs * ಸಂದೇಶ_ಗಾತ್ರ);
+	msgq->read_ptr = ಬಫರ್;
+	msgq->write_ptr = ಬಫರ್;
+	msgq->ಬಳಸಿದ_msgs = 0;
 	msgq->flags = 0;
 	z_waitq_init(&msgq->wait_q);
-	msgq->lock = (struct k_spinlock) {};
-#ifdef CONFIG_POLL
+	msgq->ಬೀಗ = (ರಚನೆ k_spinlock) {};
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_POLL
 	sys_dlist_init(&msgq->poll_events);
-#endif	/* CONFIG_POLL */
+#ಆದರೆ_ಅಂತ್ಯ	/* CONFIG_POLL */
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_MSGQ
 	k_obj_core_init_and_link(K_OBJ_CORE(msgq), &obj_type_msgq);
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_MSGQ */
 
-	SYS_PORT_TRACING_OBJ_INIT(k_msgq, msgq);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_INIT(k_msgq, msgq);
 
 	k_object_init(msgq);
 }
 
-int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_alloc_init(ರಚನೆ k_msgq *msgq, size_t ಸಂದೇಶ_ಗಾತ್ರ,
 			    uint32_t max_msgs)
 {
-	void *buffer;
-	int ret;
-	size_t total_size;
+	ಶೂನ್ಯ *ಬಫರ್;
+	ಪೂರ್ಣಾಂಕ ret;
+	size_t ಒಟ್ಟು_ಗಾತ್ರ;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
 
-	if (size_mul_overflow(msg_size, max_msgs, &total_size)) {
+	ಆದರೆ (ಗಾತ್ರ_mul_ಅತಿಪ್ರವಾಹ(ಸಂದೇಶ_ಗಾತ್ರ, max_msgs, &ಒಟ್ಟು_ಗಾತ್ರ)) {
 		ret = -EINVAL;
-	} else {
-		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_msgq_init(msgq, buffer, msg_size, max_msgs);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		ಬಫರ್ = z_thread_malloc(ಒಟ್ಟು_ಗಾತ್ರ);
+		ಆದರೆ (ಬಫರ್ != ಖಾಲಿ) {
+			k_msgq_init(msgq, ಬಫರ್, ಸಂದೇಶ_ಗಾತ್ರ, max_msgs);
 			msgq->flags = K_MSGQ_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} ಇಲ್ಲದಿದ್ದರೆ {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, alloc_init, msgq, ret);
-	return ret;
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, alloc_init, msgq, ret);
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_alloc_init(ರಚನೆ k_msgq *msgq, size_t ಸಂದೇಶ_ಗಾತ್ರ,
 			    uint32_t max_msgs)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(msgq, K_OBJ_MSGQ));
 
-	return z_impl_k_msgq_alloc_init(msgq, msg_size, max_msgs);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_alloc_init(msgq, ಸಂದೇಶ_ಗಾತ್ರ, max_msgs);
 }
-#include <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
+ಪೂರ್ಣಾಂಕ z_msgq_cleanup(ರಚನೆ k_msgq *msgq, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, cleanup, msgq);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_msgq, cleanup, msgq);
 
-	int ret = 0;
+	ಪೂರ್ಣಾಂಕ ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&msgq->lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	CHECKIF(locked && (z_waitq_head_locked(&msgq->wait_q) != NULL)) {
+	CHECKIF(locked && (z_waitq_ತಲೆ_locked(&msgq->wait_q) != ಖಾಲಿ)) {
 		ret = -EBUSY;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	CHECKIF(!locked && (z_waitq_head(&msgq->wait_q) != NULL)) {
+	CHECKIF(!locked && (z_waitq_ತಲೆ(&msgq->wait_q) != ಖಾಲಿ)) {
 		ret = -EBUSY;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	if ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
-		k_free(msgq->buffer_start);
+	ಆದರೆ ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
+		k_free(msgq->ಬಫರ್_ಆರಂಭ);
 		msgq->flags &= ~K_MSGQ_FLAG_ALLOC;
 		freed = true;
 	}
 
-out:
-	k_spin_unlock(&msgq->lock, key);
+ಹೊರಹೋಗು:
+	k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
-	if (freed) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_MSGQ
+	ಆದರೆ (freed) {
 		k_obj_core_unlink(K_OBJ_CORE(msgq));
 	}
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_MSGQ */
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, cleanup, msgq, ret);
-	return ret;
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, cleanup, msgq, ret);
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-int k_msgq_cleanup(struct k_msgq *msgq)
+ಪೂರ್ಣಾಂಕ k_msgq_cleanup(ರಚನೆ k_msgq *msgq)
 {
-	return z_msgq_cleanup(msgq, false);
+	ಹಿಂತಿರುಗಿ z_msgq_cleanup(msgq, false);
 }
 
-static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
-			k_timeout_t timeout, bool put_at_back)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ put_ಸಂದೇಶ_ಒಳ_ಸರತಿ(ರಚನೆ k_msgq *msgq, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ದತ್ತಾಂಶ,
+			k_timeout_t timeout, bool put_at_ಹಿಂಭಾಗ)
 {
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_ಒಳ_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	struct k_thread *pending_thread = NULL;
-	k_spinlock_key_t key;
-	int result;
+	ರಚನೆ k_thread *pending_thread = ಖಾಲಿ;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	if (put_at_back) {
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put_front, msgq, timeout);
+	ಆದರೆ (put_at_ಹಿಂಭಾಗ) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_msgq, put_front, msgq, timeout);
 	}
 
-	if (msgq->used_msgs < msgq->max_msgs) {
+	ಆದರೆ (msgq->ಬಳಸಿದ_msgs < msgq->max_msgs) {
 		/* message queue isn't full. Try to hand the message
 		 * directly to the longest-waiting receiver, atomically
 		 * under the scheduler's spinlock so a racing in-flight timeout
 		 * handler cannot wake the receiver before the message
 		 * has been copied into its buffer.
 		 */
-		LOCK_SCHED_SPINLOCK {
-			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
+		ಬೀಗ_SCHED_SPINLOCK {
+			pending_thread = z_unpend_ಮೊದಲ_thread_locked(&msgq->wait_q);
+			ಆದರೆ (pending_thread != ಖಾಲಿ) {
 				/* copy into the receiver's buffer */
-				(void)memcpy(pending_thread->base.swap_data, data,
-					     msgq->msg_size);
-				arch_thread_return_value_set(pending_thread, 0);
+				(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(pending_thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ, ದತ್ತಾಂಶ,
+					     msgq->ಸಂದೇಶ_ಗಾತ್ರ);
+				arch_thread_return_ಮೌಲ್ಯ_ಗಣ(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
 		}
-		if (pending_thread == NULL) {
-			size_t msg_size = msgq->msg_size;
-			char *slot;
+		ಆದರೆ (pending_thread == ಖಾಲಿ) {
+			size_t ಸಂದೇಶ_ಗಾತ್ರ = msgq->ಸಂದೇಶ_ಗಾತ್ರ;
+			ಅಕ್ಷರ *ಸ್ಥಾನ;
 
-			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
-					(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
-					((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-						msgq->msg_size));
+			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->ಬಫರ್_ಆರಂಭ) &&
+					(msgq->write_ptr <= (msgq->ಬಫರ್_ಕೊನೆ - 1)) &&
+					((size_t)(uintptr_t)(msgq->ಬಫರ್_ಕೊನೆ - msgq->write_ptr) >=
+						msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 			/*
 			 * Pick the slot and update the ring state from
 			 * registers first: the compiler cannot tell that the
 			 * copy leaves the queue fields alone, so copying last
 			 * saves it re-reading them afterwards.
 			 */
-			if (put_at_back) {
+			ಆದರೆ (put_at_ಹಿಂಭಾಗ) {
 				/*
 				 * to write a message to the back of the queue,
 				 * take the slot write_ptr points at and
 				 * advance write_ptr past it
 				 */
-				char *next;
+				ಅಕ್ಷರ *ಮುಂದಿನ;
 
-				slot = msgq->write_ptr;
-				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
-					next = msgq->buffer_start;
+				ಸ್ಥಾನ = msgq->write_ptr;
+				ಮುಂದಿನ = ಸ್ಥಾನ + ಸಂದೇಶ_ಗಾತ್ರ;
+				ಆದರೆ (ಮುಂದಿನ == msgq->ಬಫರ್_ಕೊನೆ) {
+					ಮುಂದಿನ = msgq->ಬಫರ್_ಆರಂಭ;
 				}
-				msgq->write_ptr = next;
-			} else {
+				msgq->write_ptr = ಮುಂದಿನ;
+			} ಇಲ್ಲದಿದ್ದರೆ {
 				/*
 				 * to write a message to the head of the queue,
 				 * first decrement the read pointer (to open
 				 * space at the front of the queue) then copy
 				 * the message to the newly created space.
 				 */
-				slot = msgq->read_ptr;
-				if (slot == msgq->buffer_start) {
-					slot = msgq->buffer_end;
+				ಸ್ಥಾನ = msgq->read_ptr;
+				ಆದರೆ (ಸ್ಥಾನ == msgq->ಬಫರ್_ಆರಂಭ) {
+					ಸ್ಥಾನ = msgq->ಬಫರ್_ಕೊನೆ;
 				}
-				slot -= msg_size;
-				msgq->read_ptr = slot;
+				ಸ್ಥಾನ -= ಸಂದೇಶ_ಗಾತ್ರ;
+				msgq->read_ptr = ಸ್ಥಾನ;
 			}
-			msgq->used_msgs++;
-			(void)memcpy(slot, data, msg_size);
+			msgq->ಬಳಸಿದ_msgs++;
+			(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ಸ್ಥಾನ, ದತ್ತಾಂಶ, ಸಂದೇಶ_ಗಾತ್ರ);
 			resched = msgq_handle_poll_events(msgq);
 		}
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		ಫಲಿತಾಂಶ = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for message space to become available */
-		result = -ENOMSG;
-	} else {
-		if (put_at_back) {
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put, msgq, timeout);
-		} else {
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put_front, msgq, timeout);
+		ಫಲಿತಾಂಶ = -ENOMSG;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		ಆದರೆ (put_at_ಹಿಂಭಾಗ) {
+			SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put, msgq, timeout);
+		} ಇಲ್ಲದಿದ್ದರೆ {
+			SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put_front, msgq, timeout);
 		}
 
 		/* wait for put message success, failure, or timeout */
-		_current->base.swap_data = (void *) data;
+		_current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ = (ಶೂನ್ಯ *) ದತ್ತಾಂಶ;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
+		ಫಲಿತಾಂಶ = z_pend_curr(&msgq->ಬೀಗ, ಕೀಲಿ, &msgq->wait_q, timeout);
 
-		if (put_at_back) {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-		} else {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
+		ಆದರೆ (put_at_ಹಿಂಭಾಗ) {
+			SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, ಫಲಿತಾಂಶ);
+		} ಇಲ್ಲದಿದ್ದರೆ {
+			SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, ಫಲಿತಾಂಶ);
 		}
 
-		return result;
+		ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 	}
 
-	if (put_at_back) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
+	ಆದರೆ (put_at_ಹಿಂಭಾಗ) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, ಫಲಿತಾಂಶ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, ಫಲಿತಾಂಶ);
 	}
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	ಆದರೆ (resched) {
+		z_reschedule(&msgq->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 	}
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }
 
 
-int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout)
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_put(ರಚನೆ k_msgq *msgq, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ದತ್ತಾಂಶ, k_timeout_t timeout)
 {
-	return put_msg_in_queue(msgq, data, timeout, true);
+	ಹಿಂತಿರುಗಿ put_ಸಂದೇಶ_ಒಳ_ಸರತಿ(msgq, ದತ್ತಾಂಶ, timeout, true);
 }
 
-int z_impl_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_put_front(ರಚನೆ k_msgq *msgq, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	return put_msg_in_queue(msgq, data, K_NO_WAIT, false);
+	ಹಿಂತಿರುಗಿ put_ಸಂದೇಶ_ಒಳ_ಸರತಿ(msgq, ದತ್ತಾಂಶ, K_NO_WAIT, false);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_put(struct k_msgq *msgq, const void *data,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_put(ರಚನೆ k_msgq *msgq, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ದತ್ತಾಂಶ,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_READ(ದತ್ತಾಂಶ, msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
-	return z_impl_k_msgq_put(msgq, data, timeout);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_put(msgq, ದತ್ತಾಂಶ, timeout);
 }
-#include <zephyr/syscalls/k_msgq_put_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_put_mrsh.c>
 
-static inline int z_vrfy_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_put_front(ರಚನೆ k_msgq *msgq, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_READ(ದತ್ತಾಂಶ, msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
-	return z_impl_k_msgq_put_front(msgq, data);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_put_front(msgq, ದತ್ತಾಂಶ);
 }
-#include <zephyr/syscalls/k_msgq_put_front_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_put_front_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_get_attrs(struct k_msgq *msgq, struct k_msgq_attrs *attrs)
+ಶೂನ್ಯ z_impl_k_msgq_get_attrs(ರಚನೆ k_msgq *msgq, ರಚನೆ k_msgq_attrs *attrs)
 {
-	attrs->msg_size = msgq->msg_size;
+	attrs->ಸಂದೇಶ_ಗಾತ್ರ = msgq->ಸಂದೇಶ_ಗಾತ್ರ;
 	attrs->max_msgs = msgq->max_msgs;
-	attrs->used_msgs = msgq->used_msgs;
+	attrs->ಬಳಸಿದ_msgs = msgq->ಬಳಸಿದ_msgs;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_get_attrs(struct k_msgq *msgq,
-					   struct k_msgq_attrs *attrs)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_vrfy_k_msgq_get_attrs(ರಚನೆ k_msgq *msgq,
+					   ರಚನೆ k_msgq_attrs *attrs)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(attrs, sizeof(struct k_msgq_attrs)));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_WRITE(attrs, ಗಾತ್ರ(ರಚನೆ k_msgq_attrs)));
 	z_impl_k_msgq_get_attrs(msgq, attrs);
 }
-#include <zephyr/syscalls/k_msgq_get_attrs_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_get_attrs_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_get(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ, k_timeout_t timeout)
 {
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_ಒಳ_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	k_spinlock_key_t key;
-	struct k_thread *pending_thread;
-	int result;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ರಚನೆ k_thread *pending_thread;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
 
-	if (likely(msgq->used_msgs > 0U)) {
-		size_t msg_size = msgq->msg_size;
-		char *slot = msgq->read_ptr;
-		char *next = slot + msg_size;
+	ಆದರೆ (likely(msgq->ಬಳಸಿದ_msgs > 0U)) {
+		size_t ಸಂದೇಶ_ಗಾತ್ರ = msgq->ಸಂದೇಶ_ಗಾತ್ರ;
+		ಅಕ್ಷರ *ಸ್ಥಾನ = msgq->read_ptr;
+		ಅಕ್ಷರ *ಮುಂದಿನ = ಸ್ಥಾನ + ಸಂದೇಶ_ಗಾತ್ರ;
 
 		/* drop the message from the queue, then copy it out */
-		if (next == msgq->buffer_end) {
-			next = msgq->buffer_start;
+		ಆದರೆ (ಮುಂದಿನ == msgq->ಬಫರ್_ಕೊನೆ) {
+			ಮುಂದಿನ = msgq->ಬಫರ್_ಆರಂಭ;
 		}
-		msgq->read_ptr = next;
-		msgq->used_msgs--;
+		msgq->read_ptr = ಮುಂದಿನ;
+		msgq->ಬಳಸಿದ_msgs--;
 
-		(void)memcpy(data, slot, msg_size);
+		(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ದತ್ತಾಂಶ, ಸ್ಥಾನ, ಸಂದೇಶ_ಗಾತ್ರ);
 
 		/* sanity-check write_ptr in case we hand the slot to a sender */
-		__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
-				(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
-				((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-					msgq->msg_size));
+		__ASSERT_NO_MSG((msgq->write_ptr >= msgq->ಬಫರ್_ಆರಂಭ) &&
+				(msgq->write_ptr <= (msgq->ಬಫರ್_ಕೊನೆ - 1)) &&
+				((size_t)(uintptr_t)(msgq->ಬಫರ್_ಕೊನೆ - msgq->write_ptr) >=
+					msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
 		/* handle first thread waiting to write (if any). Done
 		 * atomically under the scheduler's spinlock so we read the
 		 * sender's swap_data and complete the wake before any
 		 * racing in-flight timeout handler can wake the sender.
 		 */
-		LOCK_SCHED_SPINLOCK {
-			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
-				SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
+		ಬೀಗ_SCHED_SPINLOCK {
+			pending_thread = z_unpend_ಮೊದಲ_thread_locked(&msgq->wait_q);
+			ಆದರೆ (pending_thread != ಖಾಲಿ) {
+				SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 				/* add the sender's pending message to the queue */
-				slot = msgq->write_ptr;
-				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
-					next = msgq->buffer_start;
+				ಸ್ಥಾನ = msgq->write_ptr;
+				ಮುಂದಿನ = ಸ್ಥಾನ + ಸಂದೇಶ_ಗಾತ್ರ;
+				ಆದರೆ (ಮುಂದಿನ == msgq->ಬಫರ್_ಕೊನೆ) {
+					ಮುಂದಿನ = msgq->ಬಫರ್_ಆರಂಭ;
 				}
-				msgq->write_ptr = next;
-				msgq->used_msgs++;
+				msgq->write_ptr = ಮುಂದಿನ;
+				msgq->ಬಳಸಿದ_msgs++;
 
-				(void)memcpy(slot, pending_thread->base.swap_data, msg_size);
+				(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ಸ್ಥಾನ, pending_thread->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ, ಸಂದೇಶ_ಗಾತ್ರ);
 
-				arch_thread_return_value_set(pending_thread, 0);
+				arch_thread_return_ಮೌಲ್ಯ_ಗಣ(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
 		}
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		ಫಲಿತಾಂಶ = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
+		ಫಲಿತಾಂಶ = -ENOMSG;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 		/* wait for get message success or timeout */
-		_current->base.swap_data = data;
+		_current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
-		return result;
+		ಫಲಿತಾಂಶ = z_pend_curr(&msgq->ಬೀಗ, ಕೀಲಿ, &msgq->wait_q, timeout);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, ಫಲಿತಾಂಶ);
+		ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, ಫಲಿತಾಂಶ);
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	ಆದರೆ (resched) {
+		z_reschedule(&msgq->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 	}
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_get(struct k_msgq *msgq, void *data,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_get(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_WRITE(ದತ್ತಾಂಶ, msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
-	return z_impl_k_msgq_get(msgq, data, timeout);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_get(msgq, ದತ್ತಾಂಶ, timeout);
 }
-#include <zephyr/syscalls/k_msgq_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_get_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_peek(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
 
-	key = k_spin_lock(&msgq->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	if (msgq->used_msgs > 0U) {
+	ಆದರೆ (msgq->ಬಳಸಿದ_msgs > 0U) {
 		/* take first available message from queue */
-		(void)memcpy(data, msgq->read_ptr, msgq->msg_size);
-		result = 0;
-	} else {
+		(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ದತ್ತಾಂಶ, msgq->read_ptr, msgq->ಸಂದೇಶ_ಗಾತ್ರ);
+		ಫಲಿತಾಂಶ = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
+		ಫಲಿತಾಂಶ = -ENOMSG;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_msgq, peek, msgq, ಫಲಿತಾಂಶ);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek(struct k_msgq *msgq, void *data)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_peek(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_WRITE(ದತ್ತಾಂಶ, msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
-	return z_impl_k_msgq_peek(msgq, data);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_peek(msgq, ದತ್ತಾಂಶ);
 }
-#include <zephyr/syscalls/k_msgq_peek_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_peek_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+ಪೂರ್ಣಾಂಕ z_impl_k_msgq_peek_at(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ, uint32_t idx)
 {
-	k_spinlock_key_t key;
-	int result;
-	uint32_t bytes_to_end;
-	uint32_t byte_offset;
-	char *start_addr;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
+	uint32_t ಬೈಟುಗಳು_ಗಮ್ಯ_ಕೊನೆ;
+	uint32_t byte_ಸ್ಥಾನಾಂತರ;
+	ಅಕ್ಷರ *ಆರಂಭ_addr;
 
-	key = k_spin_lock(&msgq->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	if (msgq->used_msgs > idx) {
-		bytes_to_end = (msgq->buffer_end - msgq->read_ptr);
-		byte_offset = idx * msgq->msg_size;
-		start_addr = msgq->read_ptr;
+	ಆದರೆ (msgq->ಬಳಸಿದ_msgs > idx) {
+		ಬೈಟುಗಳು_ಗಮ್ಯ_ಕೊನೆ = (msgq->ಬಫರ್_ಕೊನೆ - msgq->read_ptr);
+		byte_ಸ್ಥಾನಾಂತರ = idx * msgq->ಸಂದೇಶ_ಗಾತ್ರ;
+		ಆರಂಭ_addr = msgq->read_ptr;
 		/* check item available in start/end of ring buffer */
-		if (bytes_to_end <= byte_offset) {
+		ಆದರೆ (ಬೈಟುಗಳು_ಗಮ್ಯ_ಕೊನೆ <= byte_ಸ್ಥಾನಾಂತರ) {
 			/* Tweak the values in case */
-			byte_offset -= bytes_to_end;
+			byte_ಸ್ಥಾನಾಂತರ -= ಬೈಟುಗಳು_ಗಮ್ಯ_ಕೊನೆ;
 			/* wrap-around is required */
-			start_addr = msgq->buffer_start;
+			ಆರಂಭ_addr = msgq->ಬಫರ್_ಆರಂಭ;
 		}
-		(void)memcpy(data, start_addr + byte_offset, msgq->msg_size);
-		result = 0;
-	} else {
+		(ಶೂನ್ಯ)ಸ್ಮರಣೆ_ನಕಲು(ದತ್ತಾಂಶ, ಆರಂಭ_addr + byte_ಸ್ಥಾನಾಂತರ, msgq->ಸಂದೇಶ_ಗಾತ್ರ);
+		ಫಲಿತಾಂಶ = 0;
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
+		ಫಲಿತಾಂಶ = -ENOMSG;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_msgq, peek, msgq, ಫಲಿತಾಂಶ);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_msgq_peek_at(ರಚನೆ k_msgq *msgq, ಶೂನ್ಯ *ದತ್ತಾಂಶ, uint32_t idx)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_WRITE(ದತ್ತಾಂಶ, msgq->ಸಂದೇಶ_ಗಾತ್ರ));
 
-	return z_impl_k_msgq_peek_at(msgq, data, idx);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_peek_at(msgq, ದತ್ತಾಂಶ, idx);
 }
-#include <zephyr/syscalls/k_msgq_peek_at_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_peek_at_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_purge(struct k_msgq *msgq)
+ಶೂನ್ಯ z_impl_k_msgq_purge(ರಚನೆ k_msgq *msgq)
 {
-	k_spinlock_key_t key;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&msgq->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&msgq->wait_q, -ENOMSG, NULL)) {
+	ಆಗ (z_sched_wake(&msgq->wait_q, -ENOMSG, ಖಾಲಿ)) {
 		resched = true;
 	}
 
-	msgq->used_msgs = 0;
+	msgq->ಬಳಸಿದ_msgs = 0;
 	msgq->read_ptr = msgq->write_ptr;
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	ಆದರೆ (resched) {
+		z_reschedule(&msgq->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&msgq->ಬೀಗ, ಕೀಲಿ);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_purge(struct k_msgq *msgq)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_vrfy_k_msgq_purge(ರಚನೆ k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	z_impl_k_msgq_purge(msgq);
 }
-#include <zephyr/syscalls/k_msgq_purge_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_purge_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_free_get(struct k_msgq *msgq)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ uint32_t z_vrfy_k_msgq_ಅಂಕೆ_free_get(ರಚನೆ k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_free_get(msgq);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_ಅಂಕೆ_free_get(msgq);
 }
-#include <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_used_get(struct k_msgq *msgq)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ uint32_t z_vrfy_k_msgq_ಅಂಕೆ_ಬಳಸಿದ_get(ರಚನೆ k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_used_get(msgq);
+	ಹಿಂತಿರುಗಿ z_impl_k_msgq_ಅಂಕೆ_ಬಳಸಿದ_get(msgq);
 }
-#include <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */

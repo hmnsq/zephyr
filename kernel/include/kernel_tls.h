@@ -11,10 +11,10 @@
  * Kernel APIs related to thread local storage.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 
-#include <zephyr/linker/linker-defs.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/linker/linker-defs.h>
 
 /**
  * @brief Return the total size of TLS data/bss areas
@@ -26,14 +26,14 @@
  *
  * @return Total size of TLS data/bss areas
  */
-static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ FUNC_NO_ರಾಶಿ_PROTECTOR size_t z_tls_ದತ್ತಾಂಶ_ಗಾತ್ರ(ಶೂನ್ಯ)
 {
-	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
+	size_t ಗಾತ್ರ_2 = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
-	size += (size_t)(uintptr_t)__stack_chk_size;
-#endif
-	return size;
+#ಆದರೆ defined(CONFIG_ರಾಶಿ_CANARIES_TLS_PREPEND)
+	ಗಾತ್ರ_2 += (size_t)(uintptr_t)__stack_chk_size;
+#ಆದರೆ_ಅಂತ್ಯ
+	ಹಿಂತಿರುಗಿ ಗಾತ್ರ_2;
 }
 
 /**
@@ -44,24 +44,24 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  *
  * @param dest Pointer to destination
  */
-static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ FUNC_NO_ರಾಶಿ_PROTECTOR ಶೂನ್ಯ z_tls_copy(ಅಕ್ಷರ *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#ಆದರೆ defined(CONFIG_ರಾಶಿ_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
-	memcpy(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
+	ಸ್ಮರಣೆ_ನಕಲು(dest, __stack_chk_start, (size_t)(uintptr_t)__stack_chk_size);
 	dest += (size_t)(uintptr_t)__stack_chk_size;
 
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	ಸ್ಮರಣೆ_ನಕಲು(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+#ಇಲ್ಲದಿದ್ದರೆ
 	/* Copy initialized data (tdata) */
-	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
+	ಸ್ಮರಣೆ_ನಕಲು(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 	/* Clear BSS data (tbss) */
 	memset(dest, 0, (size_t)(uintptr_t)__tbss_size);
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_ */

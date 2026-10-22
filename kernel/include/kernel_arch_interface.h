@@ -14,30 +14,30 @@
  * For all inline functions prototyped here, the implementation is expected
  * to be provided by arch/ARCH/include/kernel_arch_func.h
  */
-#ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_
-#define ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_
 
-#include <zephyr/kernel.h>
-#include <zephyr/arch/arch_interface.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/arch/arch_interface.h>
 
-#ifndef _ASMLANGUAGE
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ _ASMLANGUAGE
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
+ಬಾಹ್ಯ "C" {
+#ಆದರೆ_ಅಂತ್ಯ
 
 /**
  * @addtogroup arch-timing
  * @{
  */
-#ifdef CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT
 /**
  * Architecture-specific implementation of busy-waiting
  *
  * @param usec_to_wait Wait period, in microseconds
  */
-void arch_busy_wait(uint32_t usec_to_wait);
-#endif /* CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT */
+ಶೂನ್ಯ arch_busy_wait(uint32_t usec_ಗಮ್ಯ_wait);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT */
 
 /** @} */
 
@@ -73,11 +73,11 @@ void arch_busy_wait(uint32_t usec_to_wait);
  * @param p2 2nd entry point parameter
  * @param p3 3rd entry point parameter
  */
-void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
-		     char *stack_ptr, k_thread_entry_t entry,
-		     void *p1, void *p2, void *p3);
+ಶೂನ್ಯ arch_new_thread(ರಚನೆ k_thread *thread, k_thread_ರಾಶಿ_t *ರಾಶಿ,
+		     ಅಕ್ಷರ *ರಾಶಿ_ptr, k_thread_ನಮೂದು_t ನಮೂದು,
+		     ಶೂನ್ಯ *p1, ಶೂನ್ಯ *p2, ಶೂನ್ಯ *p3);
 
-#ifdef CONFIG_USE_SWITCH
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USE_SWITCH
 /** Cooperative context switch primitive
  *
  * The action of arch_switch() should be to switch to a new context
@@ -128,11 +128,11 @@ void arch_new_thread(struct k_thread *thread, k_thread_stack_t *stack,
  * @param switched_from Pointer to outgoing thread's switch handle storage
  *        location, which must be updated.
  */
-static inline void arch_switch(void *switch_to, void **switched_from);
-#endif /* CONFIG_USE_SWITCH */
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ arch_switch(ಶೂನ್ಯ *switch_ಗಮ್ಯ, ಶೂನ್ಯ **switched_from);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USE_SWITCH */
 
-#if !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
-#if defined(__DOXYGEN__)
+#ಆದರೆ !defined(CONFIG_USE_SWITCH) || defined(__DOXYGEN__)
+#ಆದರೆ defined(__DOXYGEN__)
 /**
  * Cooperatively context switch
  *
@@ -145,8 +145,8 @@ static inline void arch_switch(void *switch_to, void **switched_from);
  * @return If woken from blocking on some kernel object, the result of that
  *         blocking operation.
  */
-int arch_swap(unsigned int key);
-#endif /* __DOXYGEN__ */
+ಪೂರ್ಣಾಂಕ arch_ಅದಲುಬದಲು(ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಕೀಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* __DOXYGEN__ */
 
 /**
  * Set the return value for the specified thread.
@@ -156,11 +156,11 @@ int arch_swap(unsigned int key);
  * @param thread Pointer to thread object
  * @param value value to set as return value
  */
-static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
-#endif /* !CONFIG_USE_SWITCH || __DOXYGEN__ */
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ
+arch_thread_return_ಮೌಲ್ಯ_ಗಣ(ರಚನೆ k_thread *thread, ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಮೌಲ್ಯ);
+#ಆದರೆ_ಅಂತ್ಯ /* !CONFIG_USE_SWITCH || __DOXYGEN__ */
 
-#ifdef CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARCH_HAS_CUSTOM_ಅದಲುಬದಲು_ಗಮ್ಯ_MAIN
 /**
  * Custom logic for entering main thread context at early boot
  *
@@ -171,9 +171,9 @@ arch_thread_return_value_set(struct k_thread *thread, unsigned int value);
  * @param stack_ptr Initial stack pointer
  * @param _main Entry point for application main function.
  */
-void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
-				k_thread_entry_t _main);
-#endif /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
+ಶೂನ್ಯ arch_switch_ಗಮ್ಯ_main_thread(ರಚನೆ k_thread *main_thread, ಅಕ್ಷರ *ರಾಶಿ_ptr,
+				k_thread_ನಮೂದು_t _main);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARCH_HAS_CUSTOM_SWAP_TO_MAIN */
 
 /**
  * @brief Save coprocessor states on an IPI
@@ -182,9 +182,9 @@ void arch_switch_to_main_thread(struct k_thread *main_thread, char *stack_ptr,
  * switches. It saves the relevant coprocessor context(s) before signalling the
  * waiting CPU that it has finished.
  */
-void arch_ipi_lazy_coprocessors_save(void);
+ಶೂನ್ಯ arch_ipi_lazy_coprocessors_save(ಶೂನ್ಯ);
 
-#if defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
+#ಆದರೆ defined(CONFIG_FPU) && defined(CONFIG_FPU_SHARING)
 /**
  * @brief Disable floating point context preservation
  *
@@ -198,7 +198,7 @@ void arch_ipi_lazy_coprocessors_save(void);
  * @retval -EINVAL  If the floating point disabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_disable(struct k_thread *thread);
+ಪೂರ್ಣಾಂಕ arch_float_disable(ರಚನೆ k_thread *thread);
 
 /**
  * @brief Enable floating point context preservation
@@ -218,8 +218,8 @@ int arch_float_disable(struct k_thread *thread);
  * @retval -EINVAL  If the floating point enabling could not be performed.
  * @retval -ENOTSUP If the operation is not supported
  */
-int arch_float_enable(struct k_thread *thread, unsigned int options);
-#endif /* CONFIG_FPU && CONFIG_FPU_SHARING */
+ಪೂರ್ಣಾಂಕ arch_float_enable(ರಚನೆ k_thread *thread, ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ options);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_FPU && CONFIG_FPU_SHARING */
 
 /**
  * @brief Disable coprocessor context preservation
@@ -227,9 +227,9 @@ int arch_float_enable(struct k_thread *thread, unsigned int options);
  * This function serves as a catchall for disabling the preservation of
  * coprocessor context information when aborting a thread.
  */
-int arch_coprocessors_disable(struct k_thread *thread);
+ಪೂರ್ಣಾಂಕ arch_coprocessors_disable(ರಚನೆ k_thread *thread);
 
-#if defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET)
+#ಆದರೆ defined(CONFIG_USERSPACE) && defined(CONFIG_ARCH_HAS_THREAD_PRIV_ರಾಶಿ_SPACE_GET)
 /**
  * @brief Obtain privileged stack usage information for the specified thread
  *
@@ -253,9 +253,9 @@ int arch_coprocessors_disable(struct k_thread *thread);
  * @return -EINVAL Thread is uninitialized or exited or not a user thread
  * @return -EFAULT Bad memory address for unused_ptr
  */
-int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stack_size,
-				     size_t *unused_ptr);
-#endif /* CONFIG_USERSPACE && CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET */
+ಪೂರ್ಣಾಂಕ arch_thread_priv_ರಾಶಿ_space_get(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread, size_t *ರಾಶಿ_ಗಾತ್ರ,
+				     size_t *ಬಳಸದ_ptr);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE && CONFIG_ARCH_HAS_THREAD_PRIV_STACK_SPACE_GET */
 
 /** @} */
 
@@ -265,7 +265,7 @@ int arch_thread_priv_stack_space_get(const struct k_thread *thread, size_t *stac
  * @{
  */
 /** Halt the system, optionally propagating a reason code */
-FUNC_NORETURN void arch_system_halt(unsigned int reason);
+FUNC_NORETURN ಶೂನ್ಯ arch_system_halt(ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ reason);
 
 /** @} */
 
@@ -284,7 +284,7 @@ FUNC_NORETURN void arch_system_halt(unsigned int reason);
  *
  * @return true if we are in interrupt context
  */
-static inline bool arch_is_in_isr(void);
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool arch_is_ಒಳ_isr(ಶೂನ್ಯ);
 
 /** @} */
 
@@ -338,7 +338,7 @@ static inline bool arch_is_in_isr(void);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
+ಪೂರ್ಣಾಂಕ arch_mem_map(ಶೂನ್ಯ *virt, uintptr_t phys, size_t ಗಾತ್ರ_2, uint32_t flags);
 
 /**
  * Remove mappings for a provided virtual address range
@@ -371,7 +371,7 @@ int arch_mem_map(void *virt, uintptr_t phys, size_t size, uint32_t flags);
  * @retval -errno Other negative error codes may be returned by
  *                architecture-specific implementations for other failure modes
  */
-int arch_mem_unmap(void *addr, size_t size);
+ಪೂರ್ಣಾಂಕ arch_mem_unmap(ಶೂನ್ಯ *addr, size_t ಗಾತ್ರ_2);
 
 /**
  * Update page frame database with reserved pages
@@ -383,7 +383,7 @@ int arch_mem_unmap(void *addr, size_t size);
  * k_mem_page_frames with K_PAGE_FRAME_RESERVED. This function is called at
  * early system initialization with mm_lock held.
  */
-void arch_reserved_pages_update(void);
+ಶೂನ್ಯ arch_reserved_ಪುಟಗಳು_update(ಶೂನ್ಯ);
 
 /**
  * Update all page tables for a paged-out data page
@@ -404,7 +404,7 @@ void arch_reserved_pages_update(void);
  *
  * This API is part of infrastructure still under development and may change.
  */
-void arch_mem_page_out(void *addr, uintptr_t location);
+ಶೂನ್ಯ arch_mem_ಪುಟ_ಹೊರಹೋಗು(ಶೂನ್ಯ *addr, uintptr_t location);
 
 /**
  * Update all page tables for a paged-in data page
@@ -423,7 +423,7 @@ void arch_mem_page_out(void *addr, uintptr_t location);
  *
  * This API is part of infrastructure still under development and may change.
  */
-void arch_mem_page_in(void *addr, uintptr_t phys);
+ಶೂನ್ಯ arch_mem_ಪುಟ_ಒಳ(ಶೂನ್ಯ *addr, uintptr_t phys);
 
 /**
  * Update current page tables for a temporary mapping
@@ -439,20 +439,20 @@ void arch_mem_page_in(void *addr, uintptr_t phys);
  *
  * This API is part of infrastructure still under development and may change.
  */
-void arch_mem_scratch(uintptr_t phys);
+ಶೂನ್ಯ arch_mem_scratch(uintptr_t phys);
 
 /**
  * Status of a particular page location.
  */
-enum arch_page_location {
+ಎಣಿಕೆ arch_ಪುಟ_location {
 	/** The page has been evicted to the backing store. */
-	ARCH_PAGE_LOCATION_PAGED_OUT,
+	ARCH_ಪುಟ_LOCATION_PAGED_ಹೊರಹೋಗು,
 
 	/** The page is resident in memory. */
-	ARCH_PAGE_LOCATION_PAGED_IN,
+	ARCH_ಪುಟ_LOCATION_PAGED_ಒಳ,
 
 	/** The page is not mapped. */
-	ARCH_PAGE_LOCATION_BAD
+	ARCH_ಪುಟ_LOCATION_BAD
 };
 
 /**
@@ -482,7 +482,7 @@ enum arch_page_location {
  * @retval ARCH_PAGE_LOCATION_BAD The page is un-mapped or otherwise has had
  *         invalid access
  */
-enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
+ಎಣಿಕೆ arch_ಪುಟ_location arch_ಪುಟ_location_get(ಶೂನ್ಯ *addr, uintptr_t *location);
 
 /**
  * @def ARCH_DATA_PAGE_ACCESSED
@@ -493,9 +493,9 @@ enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
  *
  * This bit is undefined if ARCH_DATA_PAGE_LOADED is not set.
  */
-#ifdef __DOXYGEN__
-#define ARCH_DATA_PAGE_ACCESSED
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __DOXYGEN__
+#ವ್ಯಾಖ್ಯಾನಿಸು ARCH_ದತ್ತಾಂಶ_ಪುಟ_ACCESSED
+#ಆದರೆ_ಅಂತ್ಯ
 
  /**
   * @def ARCH_DATA_PAGE_DIRTY
@@ -507,9 +507,9 @@ enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
   *
   * This bit is undefined if ARCH_DATA_PAGE_LOADED is not set.
   */
-#ifdef __DOXYGEN__
-#define ARCH_DATA_PAGE_DIRTY
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __DOXYGEN__
+#ವ್ಯಾಖ್ಯಾನಿಸು ARCH_ದತ್ತಾಂಶ_ಪುಟ_DIRTY
+#ಆದರೆ_ಅಂತ್ಯ
 
  /**
   * @def ARCH_DATA_PAGE_LOADED
@@ -518,9 +518,9 @@ enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
   *
   * If un-set, the data page is paged out or not mapped.
   */
-#ifdef __DOXYGEN__
-#define ARCH_DATA_PAGE_LOADED
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __DOXYGEN__
+#ವ್ಯಾಖ್ಯಾನಿಸು ARCH_ದತ್ತಾಂಶ_ಪುಟ_LOADED
+#ಆದರೆ_ಅಂತ್ಯ
 
 /**
  * @def ARCH_DATA_PAGE_NOT_MAPPED
@@ -528,9 +528,9 @@ enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
  * If ARCH_DATA_PAGE_LOADED is un-set, this will indicate that the page
  * is not mapped at all. This bit is undefined if ARCH_DATA_PAGE_LOADED is set.
  */
-#ifdef __DOXYGEN__
-#define ARCH_DATA_PAGE_NOT_MAPPED
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __DOXYGEN__
+#ವ್ಯಾಖ್ಯಾನಿಸು ARCH_ದತ್ತಾಂಶ_ಪುಟ_NOT_MAPPED
+#ಆದರೆ_ಅಂತ್ಯ
 
 /**
  * Retrieve page characteristics from the page table(s)
@@ -579,7 +579,7 @@ enum arch_page_location arch_page_location_get(void *addr, uintptr_t *location);
  * @retval Value with ARCH_DATA_PAGE_* bits set reflecting the data page
  *         configuration
  */
-uintptr_t arch_page_info_get(void *addr, uintptr_t *location,
+uintptr_t arch_ಪುಟ_info_get(ಶೂನ್ಯ *addr, uintptr_t *location,
 			     bool clear_accessed);
 
 /** @} */
@@ -606,9 +606,9 @@ uintptr_t arch_page_info_get(void *addr, uintptr_t *location,
  * @param c Character to print
  * @return The character printed
  */
-int arch_printk_char_out(int c);
+ಪೂರ್ಣಾಂಕ arch_printk_char_ಹೊರಹೋಗು(ಪೂರ್ಣಾಂಕ c);
 
-#ifdef CONFIG_ARCH_HAS_THREAD_NAME_HOOK
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_ARCH_HAS_THREAD_NAME_HOOK
 /**
  * Set thread name hook
  *
@@ -621,8 +621,8 @@ int arch_printk_char_out(int c);
  * @retval 0        On success.
  * @retval -EAGAIN  If the operation could not be performed.
  */
-int arch_thread_name_set(struct k_thread *thread, const char *str);
-#endif /* CONFIG_ARCH_HAS_THREAD_NAME_HOOK */
+ಪೂರ್ಣಾಂಕ arch_thread_name_ಗಣ(ರಚನೆ k_thread *thread, ಸ್ಥಿರಾಂಕ ಅಕ್ಷರ *str);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_ARCH_HAS_THREAD_NAME_HOOK */
 
 /**
  * Architecture-specific kernel initialization hook
@@ -630,10 +630,10 @@ int arch_thread_name_set(struct k_thread *thread, const char *str);
  * This function is invoked near the top of z_cstart, for additional
  * architecture-specific setup before the rest of the kernel is brought up.
  */
-static inline void arch_kernel_init(void);
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ arch_kernel_init(ಶೂನ್ಯ);
 
 /** Do nothing and return. Yawn. */
-static inline void arch_nop(void);
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ arch_nop(ಶೂನ್ಯ);
 
 /** @} */
 
@@ -650,19 +650,19 @@ static inline void arch_nop(void);
  *
  * @param esf Exception Stack Frame (arch-specific)
  */
-void arch_coredump_info_dump(const struct arch_esf *esf);
+ಶೂನ್ಯ arch_coredump_info_dump(ಸ್ಥಿರಾಂಕ ರಚನೆ arch_esf *esf);
 
 /**
  * @brief Get the target code specified by the architecture.
  */
-uint16_t arch_coredump_tgt_code_get(void);
+uint16_t arch_coredump_tgt_ಸಂಕೇತ_get(ಶೂನ್ಯ);
 
 /**
  * @brief Get the stack pointer of the thread.
  */
-uintptr_t arch_coredump_stack_ptr_get(const struct k_thread *thread);
+uintptr_t arch_coredump_ರಾಶಿ_ptr_get(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread);
 
-#if defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
+#ಆದರೆ defined(CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS) || defined(__DOXYGEN__)
 
 /**
  * @brief Freeze every other online CPU and capture its live register state
@@ -675,12 +675,12 @@ uintptr_t arch_coredump_stack_ptr_get(const struct k_thread *thread);
  * Must be paired with a later call to arch_coredump_thaw_other_cpus() so
  * frozen CPUs resume; must not be called from more than one CPU at a time.
  */
-void arch_coredump_freeze_other_cpus(void);
+ಶೂನ್ಯ arch_coredump_freeze_other_cpus(ಶೂನ್ಯ);
 
 /**
  * @brief Release every CPU frozen by arch_coredump_freeze_other_cpus()
  */
-void arch_coredump_thaw_other_cpus(void);
+ಶೂನ್ಯ arch_coredump_thaw_other_cpus(ಶೂನ್ಯ);
 
 /**
  * @brief Emit a live register snapshot captured for the given CPU index
@@ -691,11 +691,11 @@ void arch_coredump_thaw_other_cpus(void);
  *
  * @param cpu CPU index (0..CONFIG_MP_MAX_NUM_CPUS-1)
  */
-void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
+ಶೂನ್ಯ arch_coredump_cpu_snapshot_dump(ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ cpu);
 
-#endif /* CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_COREDUMP_SMP_FREEZE_CPUS */
 
-#if defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
+#ಆದರೆ defined(CONFIG_USERSPACE) || defined(__DOXYGEN__)
 
 /**
  * @brief Architecture-specific handling of dumping privileged stack
@@ -704,11 +704,11 @@ void arch_coredump_cpu_snapshot_dump(unsigned int cpu);
  *
  * @param thread Pointer to thread object
  */
-void arch_coredump_priv_stack_dump(struct k_thread *thread);
+ಶೂನ್ಯ arch_coredump_priv_ರಾಶಿ_dump(ರಚನೆ k_thread *thread);
 
-#endif /* CONFIG_USERSPACE || __DOXYGEN__ */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE || __DOXYGEN__ */
 
-#ifdef CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS
 
 /**
  * @brief Allow device IRQs while running coredump on the fatal path
@@ -725,7 +725,7 @@ void arch_coredump_priv_stack_dump(struct k_thread *thread);
  * @param key IRQ lock key from the enclosing z_fatal_error()
  * @param cookie Arch-specific storage (unsigned int); ignored on the weak default
  */
-void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
+ಶೂನ್ಯ arch_coredump_fatal_irq_unlock(ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಕೀಲಿ, ಶೂನ್ಯ *cookie);
 
 /**
  * @brief Restore interrupt masking after coredump on the fatal path
@@ -737,9 +737,9 @@ void arch_coredump_fatal_irq_unlock(unsigned int key, void *cookie);
  *
  * @return Fresh IRQ lock key from arch_irq_lock() after restoring masks
  */
-unsigned int arch_coredump_fatal_irq_lock(void *cookie);
+ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ arch_coredump_fatal_irq_ಬೀಗ(ಶೂನ್ಯ *cookie);
 
-#endif /* CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_DEBUG_COREDUMP_FATAL_UNLOCK_IRQS */
 
 /** @} */
 
@@ -759,17 +759,17 @@ unsigned int arch_coredump_fatal_irq_lock(void *cookie);
  * @param stack_ptr Stack pointer
  * @return Number of bytes taken by the TLS area
  */
-size_t arch_tls_stack_setup(struct k_thread *new_thread, char *stack_ptr);
+size_t arch_tls_ರಾಶಿ_ಸಿದ್ಧತೆ(ರಚನೆ k_thread *new_thread, ಅಕ್ಷರ *ರಾಶಿ_ptr);
 
 /** @} */
 
 /* Include arch-specific inline function implementation */
-#include <kernel_arch_func.h>
+#ಅನ್ತರ್ಭಾವ <kernel_arch_func.h>
 
-#ifdef __cplusplus
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-#endif /* _ASMLANGUAGE */
+#ಆದರೆ_ಅಂತ್ಯ /* _ASMLANGUAGE */
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_KERNEL_ARCH_INTERFACE_H_ */

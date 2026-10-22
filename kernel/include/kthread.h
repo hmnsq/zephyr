@@ -5,200 +5,200 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_THREAD_H_
-#define ZEPHYR_KERNEL_INCLUDE_THREAD_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_THREAD_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_THREAD_H_
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <timeout_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <timeout_q.h>
 
 
-#define Z_STATE_STR_DUMMY       "dummy"
-#define Z_STATE_STR_PENDING     "pending"
-#define Z_STATE_STR_SLEEPING    "sleeping"
-#define Z_STATE_STR_DEAD        "dead"
-#define Z_STATE_STR_SUSPENDED   "suspended"
-#define Z_STATE_STR_ABORTING    "aborting"
-#define Z_STATE_STR_SUSPENDING  "suspending"
-#define Z_STATE_STR_QUEUED      "queued"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_DUMMY       "dummy"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_PENDING     "pending"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_SLEEPING    "sleeping"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_DEAD        "dead"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_SUSPENDED   "suspended"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_ABORTING    "aborting"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_SUSPENDING  "suspending"
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_STATE_STR_QUEUED      "queued"
 
-#ifdef CONFIG_THREAD_MONITOR
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_THREAD_MONITOR
 /* This lock protects the linked list of active threads; i.e. the
  * initial _kernel.threads pointer and the linked list made up of
  * thread->next_thread (until NULL)
  */
-extern struct k_spinlock z_thread_monitor_lock;
-#endif /* CONFIG_THREAD_MONITOR */
+ಬಾಹ್ಯ ರಚನೆ k_spinlock z_thread_monitor_ಬೀಗ;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_THREAD_MONITOR */
 
-#ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_idle_threads[CONFIG_MP_MAX_NUM_CPUS];
-#endif /* CONFIG_MULTITHREADING */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_MULTITHREADING
+ಬಾಹ್ಯ ರಚನೆ k_thread z_idle_ಎಳೆಗಳು[CONFIG_MP_MAX_ಅಂಕೆ_CPUS];
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_MULTITHREADING */
 
-void idle(void *unused1, void *unused2, void *unused3);
+ಶೂನ್ಯ idle(ಶೂನ್ಯ *unused1, ಶೂನ್ಯ *unused2, ಶೂನ್ಯ *unused3);
 
 /* clean up when a thread is aborted */
 
-#if defined(CONFIG_THREAD_MONITOR)
-void z_thread_monitor_exit(struct k_thread *thread);
-#else
-#define z_thread_monitor_exit(thread) \
-	do {/* nothing */    \
-	} while (false)
-#endif /* CONFIG_THREAD_MONITOR */
+#ಆದರೆ defined(CONFIG_THREAD_MONITOR)
+ಶೂನ್ಯ z_thread_monitor_exit(ರಚನೆ k_thread *thread);
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು z_thread_monitor_exit(thread) \
+	ಮಾಡು {/* nothing */    \
+	} ಆಗ (false)
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_THREAD_MONITOR */
 
-void z_thread_abort(struct k_thread *thread);
+ಶೂನ್ಯ z_thread_abort(ರಚನೆ k_thread *thread);
 
-static inline void thread_schedule_new(struct k_thread *thread, k_timeout_t delay)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ thread_ವೇಳಾಪಟ್ಟಿ_new(ರಚನೆ k_thread *thread, k_timeout_t delay)
 {
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		k_thread_start(thread);
-	} else {
-		z_add_thread_timeout(thread, delay);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
+	ಆದರೆ (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		k_thread_ಆರಂಭ(thread);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		z_ಕೂಡಿಸು_thread_timeout(thread, delay);
 	}
-#else
-	if (!K_TIMEOUT_EQ(delay, K_FOREVER)) {
-		k_thread_start(thread);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಆದರೆ (!K_TIMEOUT_EQ(delay, K_FOREVER)) {
+		k_thread_ಆರಂಭ(thread);
 	}
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
 }
 
-static inline int thread_is_preemptible(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ thread_is_preemptible(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
 	/* explanation in kernel_struct.h */
-	return thread->base.preempt <= _PREEMPT_THRESHOLD;
+	ಹಿಂತಿರುಗಿ thread->ತಳ.preempt <= PREEMPT_ಮಿತಿ;
 }
 
 
-static inline int thread_is_metairq(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ thread_is_metairq(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-#if CONFIG_NUM_METAIRQ_PRIORITIES > 0
-	return (thread->base.prio - K_HIGHEST_THREAD_PRIO)
-		< CONFIG_NUM_METAIRQ_PRIORITIES;
-#else
-	ARG_UNUSED(thread);
-	return 0;
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES */
+#ಆದರೆ CONFIG_ಅಂಕೆ_METAIRQ_PRIORITIES > 0
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.prio - K_HIGHEST_THREAD_PRIO)
+		< CONFIG_ಅಂಕೆ_METAIRQ_PRIORITIES;
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(thread);
+	ಹಿಂತಿರುಗಿ 0;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_NUM_METAIRQ_PRIORITIES */
 }
 
-static inline bool is_thread_dummy(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool is_thread_dummy(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_DUMMY) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_DUMMY) != 0U;
 }
 
-static inline bool z_is_thread_suspended(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_suspended(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_SUSPENDED) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_SUSPENDED) != 0U;
 }
 
-static inline bool z_is_thread_pending(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_pending(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_PENDING) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_PENDING) != 0U;
 }
 
-static inline bool z_is_thread_dead(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_dead(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_DEAD) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_DEAD) != 0U;
 }
 
 /* Return true if the thread is aborting, else false */
-static inline bool z_is_thread_aborting(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_aborting(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_ABORTING) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_ABORTING) != 0U;
 }
 
 /* Return true if the thread is aborting or suspending, else false */
-static inline bool z_is_thread_halting(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_halting(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state &
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state &
 		(_THREAD_ABORTING | _THREAD_SUSPENDING)) != 0U;
 }
 
 
-static inline bool z_is_thread_prevented_from_running(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_prevented_from_running(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	uint8_t state = thread->base.thread_state;
+	uint8_t state = thread->ತಳ.thread_state;
 
-	return (state & (_THREAD_PENDING | _THREAD_SLEEPING | _THREAD_DEAD |
+	ಹಿಂತಿರುಗಿ (state & (_THREAD_PENDING | _THREAD_SLEEPING | _THREAD_DEAD |
 			 _THREAD_DUMMY | _THREAD_SUSPENDED)) != 0U;
 }
 
-static inline bool z_is_thread_timeout_active(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_timeout_ಸಕ್ರಿಯ(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return !z_is_inactive_timeout(&thread->base.timeout);
+	ಹಿಂತಿರುಗಿ !z_is_inactive_timeout(&thread->ತಳ.timeout);
 }
 
-static inline bool z_is_thread_ready(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_ready(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return !z_is_thread_prevented_from_running(thread);
+	ಹಿಂತಿರುಗಿ !z_is_thread_prevented_from_running(thread);
 }
 
-static inline bool z_is_thread_state_set(const struct k_thread *thread, uint32_t state)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_state_ಗಣ(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread, uint32_t state)
 {
-	return (thread->base.thread_state & state) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & state) != 0U;
 }
 
-static inline bool z_is_thread_queued(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_queued(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return z_is_thread_state_set(thread, _THREAD_QUEUED);
+	ಹಿಂತಿರುಗಿ z_is_thread_state_ಗಣ(thread, _THREAD_QUEUED);
 }
 
-static inline void z_mark_thread_as_queued(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_queued(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state |= _THREAD_QUEUED;
+	thread->ತಳ.thread_state |= _THREAD_QUEUED;
 }
 
-static inline void z_mark_thread_as_not_queued(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_not_queued(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state &= ~_THREAD_QUEUED;
+	thread->ತಳ.thread_state &= ~_THREAD_QUEUED;
 }
 
-static inline void z_mark_thread_as_suspended(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_suspended(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state |= _THREAD_SUSPENDED;
+	thread->ತಳ.thread_state |= _THREAD_SUSPENDED;
 
-	SYS_PORT_TRACING_FUNC(k_thread, sched_suspend, thread);
+	SYS_ಪೋರ್ಟ್_TRACING_FUNC(k_thread, sched_suspend, thread);
 }
 
-static inline void z_mark_thread_as_not_suspended(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_not_suspended(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state &= ~_THREAD_SUSPENDED;
+	thread->ತಳ.thread_state &= ~_THREAD_SUSPENDED;
 
-	SYS_PORT_TRACING_FUNC(k_thread, sched_resume, thread);
+	SYS_ಪೋರ್ಟ್_TRACING_FUNC(k_thread, sched_resume, thread);
 }
 
-static inline void z_mark_thread_as_pending(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_pending(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state |= _THREAD_PENDING;
+	thread->ತಳ.thread_state |= _THREAD_PENDING;
 }
 
-static inline void z_mark_thread_as_not_pending(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_not_pending(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state &= ~_THREAD_PENDING;
+	thread->ತಳ.thread_state &= ~_THREAD_PENDING;
 }
 
-static inline bool z_is_thread_sleeping(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_sleeping(ರಚನೆ k_thread *thread)
 {
-	return (thread->base.thread_state & _THREAD_SLEEPING) != 0U;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.thread_state & _THREAD_SLEEPING) != 0U;
 }
 
-static inline void z_mark_thread_as_sleeping(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_sleeping(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state |= _THREAD_SLEEPING;
+	thread->ತಳ.thread_state |= _THREAD_SLEEPING;
 }
 
-static inline void z_mark_thread_as_not_sleeping(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_mark_thread_as_not_sleeping(ರಚನೆ k_thread *thread)
 {
-	thread->base.thread_state &= ~_THREAD_SLEEPING;
+	thread->ತಳ.thread_state &= ~_THREAD_SLEEPING;
 }
 
 /*
  * This function tags the current thread as essential to system operation.
  * Exceptions raised by this thread will be treated as a fatal system error.
  */
-static inline void z_thread_essential_set(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_thread_essential_ಗಣ(ರಚನೆ k_thread *thread)
 {
-	thread->base.user_options |= K_ESSENTIAL;
+	thread->ತಳ.user_options |= K_ESSENTIAL;
 }
 
 /*
@@ -206,9 +206,9 @@ static inline void z_thread_essential_set(struct k_thread *thread)
  * Exceptions raised by this thread may be recoverable.
  * (This is the default tag for a thread.)
  */
-static inline void z_thread_essential_clear(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_thread_essential_clear(ರಚನೆ k_thread *thread)
 {
-	thread->base.user_options &= ~K_ESSENTIAL;
+	thread->ತಳ.user_options &= ~K_ESSENTIAL;
 }
 
 /*
@@ -216,34 +216,34 @@ static inline void z_thread_essential_clear(struct k_thread *thread)
  *
  * Returns true if current thread is essential, false if it is not.
  */
-static inline bool z_is_thread_essential(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_thread_essential(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-	return (thread->base.user_options & K_ESSENTIAL) == K_ESSENTIAL;
+	ಹಿಂತಿರುಗಿ (thread->ತಳ.user_options & K_ESSENTIAL) == K_ESSENTIAL;
 }
 
 
-static ALWAYS_INLINE bool should_preempt(const struct k_thread *thread,
-					 int preempt_ok)
+ಸ್ಥಿರ ALWAYS_INLINE bool should_preempt(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread,
+					 ಪೂರ್ಣಾಂಕ preempt_ok)
 {
 	/* Preemption is OK if it's being explicitly allowed by
 	 * software state (e.g. the thread called k_yield())
 	 */
-	if (preempt_ok != 0) {
-		return true;
+	ಆದರೆ (preempt_ok != 0) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
-	__ASSERT(_current != NULL, "");
+	__ASSERT(_current != ಖಾಲಿ, "");
 
 	/* Or if we're pended/suspended/dummy (duh) */
-	if (z_is_thread_prevented_from_running(_current)) {
-		return true;
+	ಆದರೆ (z_is_thread_prevented_from_running(_current)) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
 	/* Otherwise we have to be running a preemptible thread or
 	 * switching to a metairq
 	 */
-	if (thread_is_preemptible(_current) || thread_is_metairq(thread)) {
-		return true;
+	ಆದರೆ (thread_is_preemptible(_current) || thread_is_metairq(thread)) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
 	/* Edge case on ARM where a thread can be pended out of an
@@ -251,32 +251,32 @@ static ALWAYS_INLINE bool should_preempt(const struct k_thread *thread,
 	 * context switching.  Platforms with atomic swap can never
 	 * hit this.
 	 */
-	if (IS_ENABLED(CONFIG_SWAP_NONATOMIC)
-	    && z_is_thread_timeout_active(thread)) {
-		return true;
+	ಆದರೆ (IS_ENABLED(CONFIG_ಅದಲುಬದಲು_NONATOMIC)
+	    && z_is_thread_timeout_ಸಕ್ರಿಯ(thread)) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
-	return false;
+	ಹಿಂತಿರುಗಿ false;
 }
 
 
-static inline bool z_is_idle_thread_entry(k_thread_entry_t entry_point)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_idle_thread_ನಮೂದು(k_thread_ನಮೂದು_t ನಮೂದು_ಬಿಂದು)
 {
-	return entry_point == idle;
+	ಹಿಂತಿರುಗಿ ನಮೂದು_ಬಿಂದು == idle;
 }
 
-static inline bool z_is_idle_thread_object(const struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_idle_thread_object(ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread)
 {
-#ifdef CONFIG_MULTITHREADING
-#ifdef CONFIG_SMP
-	return thread->base.is_idle;
-#else
-	return thread == &z_idle_threads[0];
-#endif /* CONFIG_SMP */
-#else
-	return false;
-#endif /* CONFIG_MULTITHREADING */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_MULTITHREADING
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SMP
+	ಹಿಂತಿರುಗಿ thread->ತಳ.is_idle;
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಹಿಂತಿರುಗಿ thread == &z_idle_ಎಳೆಗಳು[0];
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SMP */
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಹಿಂತಿರುಗಿ false;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_MULTITHREADING */
 }
 
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_THREAD_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_THREAD_H_ */

@@ -2,15 +2,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/smp.h>
-#include <zephyr/devicetree.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/llext/symbol.h>
-#include <kswap.h>
-#include <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel/smp.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/devicetree.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/llext/symbol.h>
+#ಅನ್ತರ್ಭಾವ <kswap.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
 
-static atomic_t global_lock;
+ಸ್ಥಿರ atomic_t global_ಬೀಗ;
 
 /**
  * Flag to tell recently powered up CPU to start
@@ -19,7 +19,7 @@ static atomic_t global_lock;
  * 0 to tell powered up CPU to wait.
  * 1 to tell powered up CPU to continue initialization.
  */
-static atomic_t cpu_start_flag;
+ಸ್ಥಿರ atomic_t cpu_ಆರಂಭ_flag;
 
 /**
  * Flag to tell caller that the target CPU is now
@@ -28,13 +28,13 @@ static atomic_t cpu_start_flag;
  * 0 if target CPU is not yet ready.
  * 1 if target CPU has powered up and ready to be initialized.
  */
-static atomic_t ready_flag;
+ಸ್ಥಿರ atomic_t ready_flag;
 
 /**
  * Struct holding the function to be called before handing off
  * to schedule and its argument.
  */
-static struct cpu_start_cb {
+ಸ್ಥಿರ ರಚನೆ cpu_ಆರಂಭ_cb {
 	/**
 	 * Function to be called before handing off to scheduler.
 	 * Can be NULL.
@@ -42,184 +42,184 @@ static struct cpu_start_cb {
 	smp_init_fn fn;
 
 	/** Argument to @ref cpu_start_cb.fn. */
-	void *arg;
+	ಶೂನ್ಯ *arg;
 
 	/** Invoke scheduler after CPU has started if true. */
 	bool invoke_sched;
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
 	/** True if smp_timer_init() needs to be called. */
 	bool reinit_timer;
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
-} cpu_start_fn;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
+} cpu_ಆರಂಭ_fn;
 
-static struct k_spinlock cpu_start_lock;
+ಸ್ಥಿರ ರಚನೆ k_spinlock cpu_ಆರಂಭ_ಬೀಗ;
 
-unsigned int z_smp_global_lock(void)
+ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ z_smp_global_ಬೀಗ(ಶೂನ್ಯ)
 {
-	unsigned int key = arch_irq_lock();
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಕೀಲಿ = arch_irq_ಬೀಗ();
 
-	if (!_current->base.global_lock_count) {
-		while (!atomic_cas(&global_lock, 0, 1)) {
+	ಆದರೆ (!_current->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ) {
+		ಆಗ (!atomic_cas(&global_ಬೀಗ, 0, 1)) {
 			arch_spin_relax();
 		}
 	}
 
-	_current->base.global_lock_count++;
+	_current->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ++;
 
-	return key;
+	ಹಿಂತಿರುಗಿ ಕೀಲಿ;
 }
-EXPORT_SYMBOL(z_smp_global_lock);
+EXPORT_ಚಿಹ್ನೆ(z_smp_global_ಬೀಗ);
 
-void z_smp_global_unlock(unsigned int key)
+ಶೂನ್ಯ z_smp_global_unlock(ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಕೀಲಿ)
 {
-	if (_current->base.global_lock_count != 0U) {
-		_current->base.global_lock_count--;
+	ಆದರೆ (_current->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ != 0U) {
+		_current->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ--;
 
-		if (!_current->base.global_lock_count) {
-			(void)atomic_clear(&global_lock);
+		ಆದರೆ (!_current->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ) {
+			(ಶೂನ್ಯ)atomic_clear(&global_ಬೀಗ);
 		}
 	}
 
-	arch_irq_unlock(key);
+	arch_irq_unlock(ಕೀಲಿ);
 }
-EXPORT_SYMBOL(z_smp_global_unlock);
+EXPORT_ಚಿಹ್ನೆ(z_smp_global_unlock);
 
 /* Called from within z_swap(), so assumes lock already held */
-void z_smp_release_global_lock(struct k_thread *thread)
+ಶೂನ್ಯ z_smp_release_global_ಬೀಗ(ರಚನೆ k_thread *thread)
 {
-	if (!thread->base.global_lock_count) {
-		(void)atomic_clear(&global_lock);
+	ಆದರೆ (!thread->ತಳ.global_ಬೀಗ_ಎಣಿಕೆ) {
+		(ಶೂನ್ಯ)atomic_clear(&global_ಬೀಗ);
 	}
 }
 
 /* Tiny delay that relaxes bus traffic to avoid spamming a shared
  * memory bus looking at an atomic variable
  */
-static inline void local_delay(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ local_delay(ಶೂನ್ಯ)
 {
-	for (volatile int i = 0; i < 1000; i++) {
+	ಗಾಗಿ (ಅಸ್ಥಿರ ಪೂರ್ಣಾಂಕ i = 0; i < 1000; i++) {
 	}
 }
 
-static void wait_for_start_signal(atomic_t *start_flag)
+ಸ್ಥಿರ ಶೂನ್ಯ wait_for_ಆರಂಭ_signal(atomic_t *ಆರಂಭ_flag)
 {
 	/* Wait for the signal to begin scheduling */
-	while (!atomic_get(start_flag)) {
+	ಆಗ (!atomic_get(ಆರಂಭ_flag)) {
 		local_delay();
 	}
 }
 
-static inline void smp_init_top(void *arg)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ smp_init_ತುದಿ(ಶೂನ್ಯ *arg)
 {
-	struct cpu_start_cb csc = arg ? *(struct cpu_start_cb *)arg : (struct cpu_start_cb){0};
+	ರಚನೆ cpu_ಆರಂಭ_cb csc = arg ? *(ರಚನೆ cpu_ಆರಂಭ_cb *)arg : (ರಚನೆ cpu_ಆರಂಭ_cb){0};
 
 	/* Let start_cpu() know that this CPU has powered up. */
-	(void)atomic_set(&ready_flag, 1);
+	(ಶೂನ್ಯ)atomic_ಗಣ(&ready_flag, 1);
 
 	/* Wait for the CPU start caller to signal that
 	 * we can start initialization.
 	 */
-	wait_for_start_signal(&cpu_start_flag);
+	wait_for_ಆರಂಭ_signal(&cpu_ಆರಂಭ_flag);
 
-	if ((arg == NULL) || csc.invoke_sched) {
+	ಆದರೆ ((arg == ಖಾಲಿ) || csc.invoke_sched) {
 		/* Initialize the dummy thread struct so that
 		 * the scheduler can schedule actual threads to run.
 		 */
 		z_dummy_thread_init(&_thread_dummy);
 	}
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-	if ((arg == NULL) || csc.reinit_timer) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
+	ಆದರೆ ((arg == ಖಾಲಿ) || csc.reinit_timer) {
 		smp_timer_init();
 	}
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
 
 	/* Do additional initialization steps if needed. */
-	if (csc.fn != NULL) {
+	ಆದರೆ (csc.fn != ಖಾಲಿ) {
 		csc.fn(csc.arg);
 	}
 
-	if ((arg != NULL) && !csc.invoke_sched) {
+	ಆದರೆ ((arg != ಖಾಲಿ) && !csc.invoke_sched) {
 		/* Don't invoke scheduler. */
-		return;
+		ಹಿಂತಿರುಗಿ;
 	}
 
 	/* Let scheduler decide what thread to run next. */
-	z_swap_unlocked();
+	z_ಅದಲುಬದಲು_unlocked();
 
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	ಸಂಕೇತ_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static void start_cpu(int id, struct cpu_start_cb *csc)
+ಸ್ಥಿರ ಶೂನ್ಯ ಆರಂಭ_cpu(ಪೂರ್ಣಾಂಕ id, ರಚನೆ cpu_ಆರಂಭ_cb *csc)
 {
 	/* Clear the ready flag so the newly powered up CPU can
 	 * signal that it has powered up.
 	 */
-	(void)atomic_clear(&ready_flag);
+	(ಶೂನ್ಯ)atomic_clear(&ready_flag);
 
 	/* Power up the CPU */
-	arch_cpu_start(id, z_interrupt_stacks[id], CONFIG_ISR_STACK_SIZE,
-		       smp_init_top, csc);
+	arch_cpu_ಆರಂಭ(id, z_ಅಡಚಣೆ_stacks[id], CONFIG_ISR_ರಾಶಿ_ಗಾತ್ರ,
+		       smp_init_ತುದಿ, csc);
 
 	/* Wait until the newly powered up CPU to signal that
 	 * it has powered up.
 	 */
-	while (!atomic_get(&ready_flag)) {
+	ಆಗ (!atomic_get(&ready_flag)) {
 		local_delay();
 	}
 }
 
-void k_smp_cpu_start(int id, smp_init_fn fn, void *arg)
+ಶೂನ್ಯ k_smp_cpu_ಆರಂಭ(ಪೂರ್ಣಾಂಕ id, smp_init_fn fn, ಶೂನ್ಯ *arg)
 {
-	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&cpu_ಆರಂಭ_ಬೀಗ);
 
-	cpu_start_fn.fn = fn;
-	cpu_start_fn.arg = arg;
-	cpu_start_fn.invoke_sched = true;
+	cpu_ಆರಂಭ_fn.fn = fn;
+	cpu_ಆರಂಭ_fn.arg = arg;
+	cpu_ಆರಂಭ_fn.invoke_sched = true;
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-	cpu_start_fn.reinit_timer = true;
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
+	cpu_ಆರಂಭ_fn.reinit_timer = true;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
 
 	/* We are only starting one CPU so we do not need to synchronize
 	 * across all CPUs using the start_flag. So just set it to 1.
 	 */
-	(void)atomic_set(&cpu_start_flag, 1); /* async, don't care */
+	(ಶೂನ್ಯ)atomic_ಗಣ(&cpu_ಆರಂಭ_flag, 1); /* async, don't care */
 
 	/* Initialize various CPU structs related to this CPU. */
 	z_init_cpu(id);
 
 	/* Start the CPU! */
-	start_cpu(id, &cpu_start_fn);
+	ಆರಂಭ_cpu(id, &cpu_ಆರಂಭ_fn);
 
-	k_spin_unlock(&cpu_start_lock, key);
+	k_spin_unlock(&cpu_ಆರಂಭ_ಬೀಗ, ಕೀಲಿ);
 }
 
-void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
+ಶೂನ್ಯ k_smp_cpu_resume(ಪೂರ್ಣಾಂಕ id, smp_init_fn fn, ಶೂನ್ಯ *arg,
 		      bool reinit_timer, bool invoke_sched)
 {
-	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&cpu_ಆರಂಭ_ಬೀಗ);
 
-	cpu_start_fn.fn = fn;
-	cpu_start_fn.arg = arg;
-	cpu_start_fn.invoke_sched = invoke_sched;
+	cpu_ಆರಂಭ_fn.fn = fn;
+	cpu_ಆರಂಭ_fn.arg = arg;
+	cpu_ಆರಂಭ_fn.invoke_sched = invoke_sched;
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
-	cpu_start_fn.reinit_timer = reinit_timer;
-#else
-	ARG_UNUSED(reinit_timer);
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SYS_CLOCK_EXISTS
+	cpu_ಆರಂಭ_fn.reinit_timer = reinit_timer;
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(reinit_timer);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYS_CLOCK_EXISTS */
 
 	/* We are only starting one CPU so we do not need to synchronize
 	 * across all CPUs using the start_flag. So just set it to 1.
 	 */
-	(void)atomic_set(&cpu_start_flag, 1);
+	(ಶೂನ್ಯ)atomic_ಗಣ(&cpu_ಆರಂಭ_flag, 1);
 
 	/* Start the CPU! */
-	start_cpu(id, &cpu_start_fn);
+	ಆರಂಭ_cpu(id, &cpu_ಆರಂಭ_fn);
 
-	k_spin_unlock(&cpu_start_lock, key);
+	k_spin_unlock(&cpu_ಆರಂಭ_ಬೀಗ, ಕೀಲಿ);
 }
 
 /* Per-CPU boot deferral flags from the devicetree, indexed by logical CPU id
@@ -227,61 +227,61 @@ void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
  * zephyr,deferred-start is not started during kernel boot; it is brought up
  * at run time with k_smp_cpu_start() or k_smp_cpu_resume().
  */
-#if DT_NODE_EXISTS(DT_PATH(cpus))
+#ಆದರೆ DT_ಗಂಟು_EXISTS(DT_ಮಾರ್ಗ(cpus))
 /* DT_PROP_OR: a cpu node without a binding covering the property simply
  * cannot be deferred, rather than failing to compile.
  */
-#define CPU_DEFERRED_START_FLAG(node_id) DT_PROP_OR(node_id, zephyr_deferred_start, 0),
-static const bool cpu_deferred_start[] = {
-	DT_FOREACH_CPU(CPU_DEFERRED_START_FLAG)
+#ವ್ಯಾಖ್ಯಾನಿಸು CPU_DEFERRED_ಆರಂಭ_FLAG(ಗಂಟು_id) DT_PROP_OR(ಗಂಟು_id, zephyr_deferred_ಆರಂಭ, 0),
+ಸ್ಥಿರ ಸ್ಥಿರಾಂಕ bool cpu_deferred_ಆರಂಭ[] = {
+	DT_FOREACH_CPU(CPU_DEFERRED_ಆರಂಭ_FLAG)
 };
-#define CPU_START_DEFERRED(i)                                                  \
-	(((unsigned int)(i) < ARRAY_SIZE(cpu_deferred_start)) &&               \
-	 cpu_deferred_start[i])
-#else
-#define CPU_START_DEFERRED(i) false
-#endif
+#ವ್ಯಾಖ್ಯಾನಿಸು CPU_ಆರಂಭ_DEFERRED(i)                                                  \
+	(((ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)(i) < ARRAY_ಗಾತ್ರ(cpu_deferred_ಆರಂಭ)) &&               \
+	 cpu_deferred_ಆರಂಭ[i])
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು CPU_ಆರಂಭ_DEFERRED(i) false
+#ಆದರೆ_ಅಂತ್ಯ
 
-void z_smp_init(void)
+ಶೂನ್ಯ z_smp_init(ಶೂನ್ಯ)
 {
 	/* We are powering up all CPUs and we want to synchronize their
 	 * entry into scheduler. So set the start flag to 0 here.
 	 */
-	(void)atomic_clear(&cpu_start_flag);
+	(ಶೂನ್ಯ)atomic_clear(&cpu_ಆರಂಭ_flag);
 
 	/* Just start CPUs one by one, skipping those the devicetree defers
 	 * to a later, run-time start.
 	 */
-	unsigned int num_cpus = arch_num_cpus();
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಅಂಕೆ_cpus = arch_ಅಂಕೆ_cpus();
 
-	for (int i = 1; i < num_cpus; i++) {
-		if (CPU_START_DEFERRED(i)) {
-			continue;
+	ಗಾಗಿ (ಪೂರ್ಣಾಂಕ i = 1; i < ಅಂಕೆ_cpus; i++) {
+		ಆದರೆ (CPU_ಆರಂಭ_DEFERRED(i)) {
+			ಮುಂದುವರಿ;
 		}
 		z_init_cpu(i);
-		start_cpu(i, NULL);
+		ಆರಂಭ_cpu(i, ಖಾಲಿ);
 	}
 
 	/* Let loose those CPUs so they can start scheduling
 	 * threads to run.
 	 */
-	(void)atomic_set(&cpu_start_flag, 1);
+	(ಶೂನ್ಯ)atomic_ಗಣ(&cpu_ಆರಂಭ_flag, 1);
 }
 
-bool z_smp_cpu_mobile(void)
+bool z_smp_cpu_mobile(ಶೂನ್ಯ)
 {
-	return !arch_is_in_isr() && arch_cpu_irqs_are_enabled();
+	ಹಿಂತಿರುಗಿ !arch_is_ಒಳ_isr() && arch_cpu_irqs_are_enabled();
 }
 
-__attribute_const__ struct k_thread *z_smp_current_get(void)
+__attribute_const__ ರಚನೆ k_thread *z_smp_current_get(ಶೂನ್ಯ)
 {
 	/*
 	 * _raw_current can race with preemption before it is read.  We
 	 * must lock local interrupts when reading it.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *t = _raw_current;
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ ಕೀಲಿ = arch_irq_ಬೀಗ();
+	ರಚನೆ k_thread *t = _raw_current;
 
-	arch_irq_unlock(key);
-	return t;
+	arch_irq_unlock(ಕೀಲಿ);
+	ಹಿಂತಿರುಗಿ t;
 }

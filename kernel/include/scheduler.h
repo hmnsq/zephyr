@@ -3,10 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_
-#define ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_
 
-#include <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
 
 /**
  * @brief Initialize the scheduler subsystem
@@ -15,7 +15,7 @@
  * intended to be called by any other code. It is not a public API and should not
  * be called by any code outside of the kernel's own initialization routines.
  */
-void z_sched_init(void);
+ಶೂನ್ಯ z_sched_init(ಶೂನ್ಯ);
 
 /**
  * @brief Update the scheduler cache and reschedule, releasing the scheduler
@@ -24,7 +24,7 @@ void z_sched_init(void);
  *
  * @param key Spinlock key obtained from z_sched_spinlock_lock().
  */
-void z_sched_lock_reschedule(k_spinlock_key_t key);
+ಶೂನ್ಯ z_sched_ಬೀಗ_reschedule(k_spinlock_ಕೀಲಿ_t ಕೀಲಿ);
 
 /*
  * APIs for working with the Zephyr kernel scheduler. Intended for use in
@@ -44,7 +44,7 @@ void z_sched_lock_reschedule(k_spinlock_key_t key);
  * @param data   `data` parameter of z_sched_waitq_walk()
  * @return non-zero to end wait queue walk immediately, 0 to continue
  */
-typedef int (*_waitq_walk_cb_t)(struct k_thread *thread, void *data);
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ಪೂರ್ಣಾಂಕ (*_waitq_walk_cb_t)(ರಚನೆ k_thread *thread, ಶೂನ್ಯ *ದತ್ತಾಂಶ);
 
 /**
  * Callback function called after queue walk by @ref z_sched_waitq_walk
@@ -53,7 +53,7 @@ typedef int (*_waitq_walk_cb_t)(struct k_thread *thread, void *data);
  * (same value that will be returned to caller of z_sched_waitq_walk())
  * @param data   `data` parameter of z_sched_waitq_walk()
  */
-typedef void (*_waitq_post_walk_cb_t)(int status, void *data);
+ಪ್ರಕಾರವ್ಯಾಖ್ಯೆ ಶೂನ್ಯ (*_waitq_post_walk_cb_t)(ಪೂರ್ಣಾಂಕ ಸ್ಥಿತಿ_2, ಶೂನ್ಯ *ದತ್ತಾಂಶ);
 
 /**
  * @brief Walks the wait queue invoking a callback on each waiting thread
@@ -80,8 +80,8 @@ typedef void (*_waitq_post_walk_cb_t)(int status, void *data);
  *
  * @return non-zero if walk is terminated by the callback; otherwise 0
  */
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
-		       _waitq_post_walk_cb_t post_func, void *data);
+ಪೂರ್ಣಾಂಕ z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+		       _waitq_post_walk_cb_t post_func, ಶೂನ್ಯ *ದತ್ತಾಂಶ);
 
 /**
  * Wakes the specified thread.
@@ -94,7 +94,7 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * @param thread Given thread to wake up.
  *
  */
-void z_sched_wake_thread_locked(struct k_thread *thread);
+ಶೂನ್ಯ z_sched_wake_thread_locked(ರಚನೆ k_thread *thread);
 
 /**
  * Wake up all threads pending on the provided wait queue
@@ -108,17 +108,17 @@ void z_sched_wake_thread_locked(struct k_thread *thread);
  * @retval true If any threads were woken up
  * @retval false If the wait_q was empty
  */
-static inline bool z_sched_wake_all(_wait_q_t *wait_q, int swap_retval,
-				    void *swap_data)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_sched_wake_all(_wait_q_t *wait_q, ಪೂರ್ಣಾಂಕ ಅದಲುಬದಲು_retval,
+				    ಶೂನ್ಯ *ಅದಲುಬದಲು_ದತ್ತಾಂಶ)
 {
 	bool woken = false;
 
-	while (z_sched_wake(wait_q, swap_retval, swap_data)) {
+	ಆಗ (z_sched_wake(wait_q, ಅದಲುಬದಲು_retval, ಅದಲುಬದಲು_ದತ್ತಾಂಶ)) {
 		woken = true;
 	}
 
 	/* True if we woke at least one thread up */
-	return woken;
+	ಹಿಂತಿರುಗಿ woken;
 }
 
 /**
@@ -141,7 +141,7 @@ static inline bool z_sched_wake_all(_wait_q_t *wait_q, int swap_retval,
  * @retval Return value set by whatever woke us up, or -EAGAIN if the timeout
  *         expired without being woken up.
  */
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
-		 _wait_q_t *wait_q, k_timeout_t timeout, void **data);
+ಪೂರ್ಣಾಂಕ z_sched_wait(ರಚನೆ k_spinlock *ಬೀಗ, k_spinlock_ಕೀಲಿ_t ಕೀಲಿ,
+		 _wait_q_t *wait_q, k_timeout_t timeout, ಶೂನ್ಯ **ದತ್ತಾಂಶ);
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_SCHEDULER_H_ */

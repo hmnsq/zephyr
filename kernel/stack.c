@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/math_extras.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_STACK */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_ರಾಶಿ
+K_OBJ_TYPE_DEFINE(obj_type_ರಾಶಿ, k_ರಾಶಿ_2, K_OBJ_TYPE_ರಾಶಿ_ID, ಖಾಲಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+ಶೂನ್ಯ k_ರಾಶಿ_init_2(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, ರಾಶಿ_ದತ್ತಾಂಶ_t *ಬಫರ್,
+		  uint32_t ಅಂಕೆ_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&ರಾಶಿ->wait_q);
+	ರಾಶಿ->ಬೀಗ = (ರಚನೆ k_spinlock) {};
+	ರಾಶಿ->ಮುಂದಿನ = ಬಫರ್;
+	ರಾಶಿ->ತಳ = ಬಫರ್;
+	ರಾಶಿ->ತುದಿ = ರಾಶಿ->ತಳ + ಅಂಕೆ_entries;
+	ರಾಶಿ->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_INIT(k_ರಾಶಿ_2, ರಾಶಿ);
+	k_object_init(ರಾಶಿ);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
-#endif /* CONFIG_OBJ_CORE_STACK */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_ರಾಶಿ
+	k_obj_core_init_and_link(K_OBJ_CORE(ರಾಶಿ), &obj_type_ರಾಶಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_ರಾಶಿ_alloc_init(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, uint32_t ಅಂಕೆ_entries)
 {
-	void *buffer;
-	size_t total_size;
+	ಶೂನ್ಯ *ಬಫರ್;
+	size_t ಒಟ್ಟು_ಗಾತ್ರ;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ರಾಶಿ_2, alloc_init, ರಾಶಿ);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	ಆದರೆ (ಗಾತ್ರ_mul_ಅತಿಪ್ರವಾಹ(ಅಂಕೆ_entries, ಗಾತ್ರ(ರಾಶಿ_ದತ್ತಾಂಶ_t), &ಒಟ್ಟು_ಗಾತ್ರ)) {
 		ret = -ENOMEM;
-	} else {
-		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		ಬಫರ್ = z_thread_malloc(ಒಟ್ಟು_ಗಾತ್ರ);
+		ಆದರೆ (ಬಫರ್ != ಖಾಲಿ) {
+			k_ರಾಶಿ_init_2(ರಾಶಿ, ಬಫರ್, ಅಂಕೆ_entries);
+			ರಾಶಿ->flags = K_ರಾಶಿ_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} ಇಲ್ಲದಿದ್ದರೆ {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, alloc_init, ರಾಶಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ int32_t z_vrfy_k_ರಾಶಿ_alloc_init(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ,
+					      uint32_t ಅಂಕೆ_entries)
 {
-	size_t total_size;
+	size_t ಒಟ್ಟು_ಗಾತ್ರ;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
-					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(ರಾಶಿ, K_OBJ_ರಾಶಿ));
+	K_OOPS(K_SYSCALL_VERIFY(ಅಂಕೆ_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!ಗಾತ್ರ_mul_ಅತಿಪ್ರವಾಹ(ಅಂಕೆ_entries, ಗಾತ್ರ(ರಾಶಿ_ದತ್ತಾಂಶ_t),
+					&ಒಟ್ಟು_ಗಾತ್ರ)));
+	ಹಿಂತಿರುಗಿ z_impl_k_ರಾಶಿ_alloc_init(ರಾಶಿ, ಅಂಕೆ_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+ಪೂರ್ಣಾಂಕ z_ರಾಶಿ_cleanup(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ರಾಶಿ_2, cleanup, ರಾಶಿ);
 
-	int ret = 0;
+	ಪೂರ್ಣಾಂಕ ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ರಾಶಿ->ಬೀಗ);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	ಆದರೆ (locked && (z_waitq_ತಲೆ_locked(&ರಾಶಿ->wait_q) != ಖಾಲಿ)) {
 		ret = -EAGAIN;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	ಆದರೆ (!locked && (z_waitq_ತಲೆ(&ರಾಶಿ->wait_q) != ಖಾಲಿ)) {
 		ret = -EAGAIN;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	ಆದರೆ ((ರಾಶಿ->flags & K_ರಾಶಿ_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(ರಾಶಿ->ತಳ);
+		ರಾಶಿ->ತಳ = ಖಾಲಿ;
+		ರಾಶಿ->flags &= ~K_ರಾಶಿ_FLAG_ALLOC;
 		freed = true;
 	}
 
-out:
-	k_spin_unlock(&stack->lock, key);
+ಹೊರಹೋಗು:
+	k_spin_unlock(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_ರಾಶಿ
+	ಆದರೆ (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(ರಾಶಿ));
 	}
-#endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STACK */
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, cleanup, ರಾಶಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+ಪೂರ್ಣಾಂಕ k_ರಾಶಿ_cleanup(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ)
 {
-	return z_stack_cleanup(stack, false);
+	ಹಿಂತಿರುಗಿ z_ರಾಶಿ_cleanup(ರಾಶಿ, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+ಪೂರ್ಣಾಂಕ z_impl_k_ರಾಶಿ_ತಳ್ಳು(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, ರಾಶಿ_ದತ್ತಾಂಶ_t ದತ್ತಾಂಶ)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	ಪೂರ್ಣಾಂಕ ret = 0;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ರಾಶಿ->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ರಾಶಿ_2, ತಳ್ಳು, ರಾಶಿ);
 
-	if (stack->next == stack->top) {
+	ಆದರೆ (ರಾಶಿ->ಮುಂದಿನ == ರಾಶಿ->ತುದಿ) {
 		ret = -ENOMEM;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	ಆದರೆ (z_sched_wake(&ರಾಶಿ->wait_q, 0, (ಶೂನ್ಯ *)ದತ್ತಾಂಶ)) {
+		z_reschedule(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ);
+		ಹೋಗು ಕೊನೆ;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		*(ರಾಶಿ->ಮುಂದಿನ) = ದತ್ತಾಂಶ;
+		ರಾಶಿ->ಮುಂದಿನ++;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
-out:
-	k_spin_unlock(&stack->lock, key);
+ಹೊರಹೋಗು:
+	k_spin_unlock(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ);
 
-end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+ಕೊನೆ:
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, ತಳ್ಳು, ರಾಶಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_ರಾಶಿ_ತಳ್ಳು(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, ರಾಶಿ_ದತ್ತಾಂಶ_t ದತ್ತಾಂಶ)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(ರಾಶಿ, K_OBJ_ರಾಶಿ));
 
-	return z_impl_k_stack_push(stack, data);
+	ಹಿಂತಿರುಗಿ z_impl_k_ರಾಶಿ_ತಳ್ಳು(ರಾಶಿ, ದತ್ತಾಂಶ);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_stack_push_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+ಪೂರ್ಣಾಂಕ z_impl_k_ರಾಶಿ_ತೆಗೆ(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ, ರಾಶಿ_ದತ್ತಾಂಶ_t *ದತ್ತಾಂಶ,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಂಕ ಫಲಿತಾಂಶ;
 
-	key = k_spin_lock(&stack->lock);
+	ಕೀಲಿ = k_spin_ಬೀಗ(&ರಾಶಿ->ಬೀಗ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	ಆದರೆ (likely(ರಾಶಿ->ಮುಂದಿನ > ರಾಶಿ->ತಳ)) {
+		ರಾಶಿ->ಮುಂದಿನ--;
+		*ದತ್ತಾಂಶ = *(ರಾಶಿ->ಮುಂದಿನ);
+		k_spin_unlock(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout, 0);
 
-		return 0;
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout, -EBUSY);
 
-		return -EBUSY;
+		ಹಿಂತಿರುಗಿ -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	ಫಲಿತಾಂಶ = z_pend_curr(&ರಾಶಿ->ಬೀಗ, ಕೀಲಿ, &ರಾಶಿ->wait_q, timeout);
+	ಆದರೆ (ಫಲಿತಾಂಶ != 0) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout, ಫಲಿತಾಂಶ);
 
-		return result;
+		ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*ದತ್ತಾಂಶ = (ರಾಶಿ_ದತ್ತಾಂಶ_t)_current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ರಾಶಿ_2, ತೆಗೆ, ರಾಶಿ, timeout, 0);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_ರಾಶಿ_ತೆಗೆ(ರಚನೆ k_ರಾಶಿ_2 *ರಾಶಿ,
+				     ರಾಶಿ_ದತ್ತಾಂಶ_t *ದತ್ತಾಂಶ, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(ರಾಶಿ, K_OBJ_ರಾಶಿ));
+	K_OOPS(K_SYSCALL_ಸ್ಮರಣೆ_WRITE(ದತ್ತಾಂಶ, ಗಾತ್ರ(ರಾಶಿ_ದತ್ತಾಂಶ_t)));
+	ಹಿಂತಿರುಗಿ z_impl_k_ರಾಶಿ_ತೆಗೆ(ರಾಶಿ, ದತ್ತಾಂಶ, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_stack_pop_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */

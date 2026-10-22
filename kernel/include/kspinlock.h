@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
-#define ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
 
-#include <zephyr/spinlock.h>
-#include <stdbool.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <stdbool.h>
 
-extern struct k_spinlock _sched_spinlock;
+ಬಾಹ್ಯ ರಚನೆ k_spinlock _sched_spinlock;
 
 /**
  * The intent of LOCK_SCHED_SPINLOCK is to lock the scheduler's spinlock for
@@ -19,11 +19,11 @@ extern struct k_spinlock _sched_spinlock;
  * would degenerate into an IRQ lock). For that degenerate case, this macro
  * will expand to nothing.
  */
-#if (CONFIG_MP_MAX_NUM_CPUS == 1)
-#define LOCK_SCHED_SPINLOCK
-#else
-#define LOCK_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
-#endif
+#ಆದರೆ (CONFIG_MP_MAX_ಅಂಕೆ_CPUS == 1)
+#ವ್ಯಾಖ್ಯಾನಿಸು ಬೀಗ_SCHED_SPINLOCK
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು ಬೀಗ_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
+#ಆದರೆ_ಅಂತ್ಯ
 
 /**
  * @brief Always lock the scheduler's spinlock for the scope that follows
@@ -31,7 +31,7 @@ extern struct k_spinlock _sched_spinlock;
  * Unlike LOCK_SCHED_SPINLOCK, this macro will always lock the scheduler's
  * spinlock--even on single core systems.
  */
-#define Z_SCHED_SPINLOCK K_SPINLOCK(&_sched_spinlock)
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_SCHED_SPINLOCK K_SPINLOCK(&_sched_spinlock)
 
 
 /**
@@ -39,28 +39,28 @@ extern struct k_spinlock _sched_spinlock;
  *
  * @retval true if is, false otherwise
  */
-static ALWAYS_INLINE bool z_is_sched_spinlock(struct k_spinlock *lock)
+ಸ್ಥಿರ ALWAYS_INLINE bool z_is_sched_spinlock(ರಚನೆ k_spinlock *ಬೀಗ)
 {
-	return (lock == &_sched_spinlock);
+	ಹಿಂತಿರುಗಿ (ಬೀಗ == &_sched_spinlock);
 }
 
 /**
  * @brief Transfer ownership of the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_transfer_owner(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ z_sched_spinlock_transfer_owner(ರಚನೆ k_thread *thread)
 {
-#ifdef CONFIG_SPIN_VALIDATE
-	z_spin_lock_transfer_owner(&_sched_spinlock, thread);
-#else
-	ARG_UNUSED(thread);
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SPIN_VALIDATE
+	z_spin_ಬೀಗ_transfer_owner(&_sched_spinlock, thread);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(thread);
+#ಆದರೆ_ಅಂತ್ಯ
 }
 
 
 /**
  * @brief Release the scheduler's spinlock without restoring interrupts
  */
-static ALWAYS_INLINE void z_sched_spinlock_release(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ z_sched_spinlock_release(ಶೂನ್ಯ)
 {
 	k_spin_release(&_sched_spinlock);
 }
@@ -68,17 +68,17 @@ static ALWAYS_INLINE void z_sched_spinlock_release(void)
 /**
  * @brief Lock the scheduler's spinlock
  */
-static ALWAYS_INLINE k_spinlock_key_t z_sched_spinlock_lock(void)
+ಸ್ಥಿರ ALWAYS_INLINE k_spinlock_ಕೀಲಿ_t z_sched_spinlock_ಬೀಗ(ಶೂನ್ಯ)
 {
-	return k_spin_lock(&_sched_spinlock);
+	ಹಿಂತಿರುಗಿ k_spin_ಬೀಗ(&_sched_spinlock);
 }
 
 /**
  * @brief Unlock the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_unlock(k_spinlock_key_t key)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ z_sched_spinlock_unlock(k_spinlock_ಕೀಲಿ_t ಕೀಲಿ)
 {
-	k_spin_unlock(&_sched_spinlock, key);
+	k_spin_unlock(&_sched_spinlock, ಕೀಲಿ);
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */

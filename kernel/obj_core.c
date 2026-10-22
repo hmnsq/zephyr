@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <string.h>
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/obj_core.h>
-#include <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <string.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel/obj_core.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
 
-static struct k_spinlock  obj_core_lock;
+ಸ್ಥಿರ ರಚನೆ k_spinlock  obj_core_ಬೀಗ;
 
 sys_slist_t z_obj_type_list = SYS_SLIST_STATIC_INIT(&z_obj_type_list);
 
@@ -18,60 +18,60 @@ sys_slist_t z_obj_type_list = SYS_SLIST_STATIC_INIT(&z_obj_type_list);
  * without being unregistered leaves a stale entry but cannot corrupt the
  * registry or any other object.
  */
-struct obj_core_slot {
+ರಚನೆ obj_core_ಸ್ಥಾನ {
 	atomic_ptr_t core;          /* struct k_obj_core *, NULL when free */
-	struct k_obj_type *type;
+	ರಚನೆ k_obj_type *type;
 };
 
 /* Entries are allocated under obj_core_lock. They are released with an
  * atomic exchange, so unregistering and evicting never take the lock and
  * can run from any context, including a walk callback.
  */
-static struct obj_core_slot registry[CONFIG_OBJ_CORE_MAX_DYNAMIC_OBJECTS];
+ಸ್ಥಿರ ರಚನೆ obj_core_ಸ್ಥಾನ registry[CONFIG_OBJ_CORE_MAX_DYNAMIC_OBJECTS];
 
-static struct k_obj_core *slot_core(const struct obj_core_slot *slot)
+ಸ್ಥಿರ ರಚನೆ k_obj_core *ಸ್ಥಾನ_core(ಸ್ಥಿರಾಂಕ ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ)
 {
-	return atomic_ptr_get(&slot->core);
+	ಹಿಂತಿರುಗಿ atomic_ptr_get(&ಸ್ಥಾನ->core);
 }
 
-static bool range_contains(const struct k_obj_range *range, const void *ptr)
+ಸ್ಥಿರ bool range_ಒಳಗೊಂಡಿದೆ(ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_range *range, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ptr)
 {
-	if (range->indirect) {
-		for (const void *const *pp = range->start; pp < (const void *const *)range->end;
-		     pp = (const void *const *)((const uint8_t *)pp + range->stride)) {
-			if (*pp == ptr) {
-				return true;
+	ಆದರೆ (range->ಪರೋಕ್ಷ) {
+		ಗಾಗಿ (ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ಸ್ಥಿರಾಂಕ *pp = range->ಆರಂಭ; pp < (ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ಸ್ಥಿರಾಂಕ *)range->ಕೊನೆ;
+		     pp = (ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ಸ್ಥಿರಾಂಕ *)((ಸ್ಥಿರಾಂಕ uint8_t *)pp + range->stride)) {
+			ಆದರೆ (*pp == ptr) {
+				ಹಿಂತಿರುಗಿ true;
 			}
 		}
-		return false;
+		ಹಿಂತಿರುಗಿ false;
 	}
 
-	return (ptr >= range->start) && (ptr < range->end);
+	ಹಿಂತಿರುಗಿ (ptr >= range->ಆರಂಭ) && (ptr < range->ಕೊನೆ);
 }
 
-static bool type_ranges_contain(const struct k_obj_type *type, const void *ptr)
+ಸ್ಥಿರ bool type_ranges_contain(ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_type *type, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ptr)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(type->statics); i++) {
-		const struct k_obj_range *range = &type->statics[i];
+	ಗಾಗಿ (size_t i = 0; i < ARRAY_ಗಾತ್ರ(type->statics); i++) {
+		ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_range *range = &type->statics[i];
 
-		if (range->stride == 0U) {
-			break;
+		ಆದರೆ (range->stride == 0U) {
+			ನಿಲ್ಲಿಸು;
 		}
-		if (range_contains(range, ptr)) {
-			return true;
+		ಆದರೆ (range_ಒಳಗೊಂಡಿದೆ(range, ptr)) {
+			ಹಿಂತಿರುಗಿ true;
 		}
 	}
 
-	return false;
+	ಹಿಂತಿರುಗಿ false;
 }
 
 /* Object core of the range element */
-static struct k_obj_core *range_core(const struct k_obj_type *type,
-				     const struct k_obj_range *range, const void *elem)
+ಸ್ಥಿರ ರಚನೆ k_obj_core *range_core(ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_type *type,
+				     ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_range *range, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *elem)
 {
-	const uint8_t *obj = range->indirect ? *(const uint8_t *const *)elem : elem;
+	ಸ್ಥಿರಾಂಕ uint8_t *obj = range->ಪರೋಕ್ಷ ? *(ಸ್ಥಿರಾಂಕ uint8_t *ಸ್ಥಿರಾಂಕ *)elem : elem;
 
-	return (struct k_obj_core *)(obj + type->obj_core_offset);
+	ಹಿಂತಿರುಗಿ (ರಚನೆ k_obj_core *)(obj + type->obj_core_ಸ್ಥಾನಾಂತರ);
 }
 
 /* Objects in the running thread's stack or in the interrupt stack are
@@ -79,203 +79,203 @@ static struct k_obj_core *range_core(const struct k_obj_type *type,
  * the current CPU. There is no current thread before the kernel has set one
  * up, and never with CONFIG_MULTITHREADING=n.
  */
-static bool in_stack_storage(const void *ptr)
+ಸ್ಥಿರ bool ಒಳ_ರಾಶಿ_storage(ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ptr)
 {
 	uintptr_t addr = (uintptr_t)ptr;
-	const struct k_thread *thread = _current;
-	uintptr_t irq_stack = (uintptr_t)K_KERNEL_STACK_BUFFER(
-		z_interrupt_stacks[_current_cpu->id]);
-	uintptr_t irq_stack_end =
-		irq_stack + K_KERNEL_STACK_SIZEOF(z_interrupt_stacks[0]);
+	ಸ್ಥಿರಾಂಕ ರಚನೆ k_thread *thread = _current;
+	uintptr_t irq_ರಾಶಿ = (uintptr_t)K_KERNEL_ರಾಶಿ_ಬಫರ್(
+		z_ಅಡಚಣೆ_stacks[_current_cpu->id]);
+	uintptr_t irq_ರಾಶಿ_ಕೊನೆ =
+		irq_ರಾಶಿ + K_KERNEL_ರಾಶಿ_SIZEOF(z_ಅಡಚಣೆ_stacks[0]);
 
-	if ((thread != NULL) && (thread->stack_info.size != 0U) &&
-	    (addr >= thread->stack_info.start) &&
-	    (addr < thread->stack_info.start + thread->stack_info.size)) {
-		return true;
+	ಆದರೆ ((thread != ಖಾಲಿ) && (thread->ರಾಶಿ_info.ಗಾತ್ರ_2 != 0U) &&
+	    (addr >= thread->ರಾಶಿ_info.ಆರಂಭ) &&
+	    (addr < thread->ರಾಶಿ_info.ಆರಂಭ + thread->ರಾಶಿ_info.ಗಾತ್ರ_2)) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
-	return (addr >= irq_stack) && (addr < irq_stack_end);
+	ಹಿಂತಿರುಗಿ (addr >= irq_ರಾಶಿ) && (addr < irq_ರಾಶಿ_ಕೊನೆ);
 }
 
-static struct obj_core_slot *slot_find(const struct k_obj_core *core)
+ಸ್ಥಿರ ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ_ಕಂಡುಹಿಡಿ(ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_core *core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (slot_core(&registry[i]) == core) {
-			return &registry[i];
+	ಗಾಗಿ (size_t i = 0; i < ARRAY_ಗಾತ್ರ(registry); i++) {
+		ಆದರೆ (ಸ್ಥಾನ_core(&registry[i]) == core) {
+			ಹಿಂತಿರುಗಿ &registry[i];
 		}
 	}
 
-	return NULL;
+	ಹಿಂತಿರುಗಿ ಖಾಲಿ;
 }
 
 /* A registered object whose storage no longer carries its type is stale.
  * The caller passes the object it read from the slot: the slot may be
  * cleared concurrently by an unregistration.
  */
-static bool slot_stale(const struct obj_core_slot *slot, const struct k_obj_core *core)
+ಸ್ಥಿರ bool ಸ್ಥಾನ_stale(ಸ್ಥಿರಾಂಕ ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ, ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_core *core)
 {
-	return core->type != slot->type;
+	ಹಿಂತಿರುಗಿ core->type != ಸ್ಥಾನ->type;
 }
 
-static struct obj_core_slot *slot_alloc(void)
+ಸ್ಥಿರ ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ_alloc(ಶೂನ್ಯ)
 {
-	struct obj_core_slot *slot = slot_find(NULL);
+	ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ = ಸ್ಥಾನ_ಕಂಡುಹಿಡಿ(ಖಾಲಿ);
 
-	if (slot != NULL) {
-		return slot;
+	ಆದರೆ (ಸ್ಥಾನ != ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ ಸ್ಥಾನ;
 	}
 
 	/* Full: reap every stale entry and reuse one of them */
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	ಗಾಗಿ (size_t i = 0; i < ARRAY_ಗಾತ್ರ(registry); i++) {
+		ರಚನೆ k_obj_core *core = ಸ್ಥಾನ_core(&registry[i]);
 
-		if ((core != NULL) && slot_stale(&registry[i], core)) {
-			atomic_ptr_set(&registry[i].core, NULL);
-			slot = &registry[i];
+		ಆದರೆ ((core != ಖಾಲಿ) && ಸ್ಥಾನ_stale(&registry[i], core)) {
+			atomic_ptr_ಗಣ(&registry[i].core, ಖಾಲಿ);
+			ಸ್ಥಾನ = &registry[i];
 		}
 	}
 
-	return slot;
+	ಹಿಂತಿರುಗಿ ಸ್ಥಾನ;
 }
 
-struct k_obj_type *z_obj_type_init(struct k_obj_type *type,
+ರಚನೆ k_obj_type *z_obj_type_init(ರಚನೆ k_obj_type *type,
 				   uint32_t id, size_t off)
 {
-	sys_slist_append(&z_obj_type_list, &type->node);
+	sys_slist_append(&z_obj_type_list, &type->ಗಂಟು);
 	type->id = id;
-	type->obj_core_offset = off;
-	memset(type->statics, 0, sizeof(type->statics));
+	type->obj_core_ಸ್ಥಾನಾಂತರ = off;
+	memset(type->statics, 0, ಗಾತ್ರ(type->statics));
 	type->dropped = 0;
 	type->skipped = 0;
 
-	return type;
+	ಹಿಂತಿರುಗಿ type;
 }
 
-void k_obj_type_init_range(struct k_obj_type *type, const void *start,
-			   const void *end, size_t stride, bool indirect)
+ಶೂನ್ಯ k_obj_type_init_range(ರಚನೆ k_obj_type *type, ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ಆರಂಭ,
+			   ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *ಕೊನೆ, size_t stride, bool ಪರೋಕ್ಷ)
 {
-	type->statics[0].start = start;
-	type->statics[0].end = end;
+	type->statics[0].ಆರಂಭ = ಆರಂಭ;
+	type->statics[0].ಕೊನೆ = ಕೊನೆ;
 	type->statics[0].stride = stride;
-	type->statics[0].indirect = indirect;
+	type->statics[0].ಪರೋಕ್ಷ = ಪರೋಕ್ಷ;
 }
 
-void k_obj_core_init(struct k_obj_core *obj_core, struct k_obj_type *type)
+ಶೂನ್ಯ k_obj_core_init(ರಚನೆ k_obj_core *obj_core, ರಚನೆ k_obj_type *type)
 {
 	obj_core->type = type;
-#ifdef CONFIG_OBJ_CORE_STATS
-	obj_core->stats = NULL;
-#endif /* CONFIG_OBJ_CORE_STATS */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS
+	obj_core->stats = ಖಾಲಿ;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS */
 }
 
-void k_obj_core_link(struct k_obj_core *obj_core)
+ಶೂನ್ಯ k_obj_core_link(ರಚನೆ k_obj_core *obj_core)
 {
-	struct k_obj_type *type = obj_core->type;
-	struct obj_core_slot *slot;
+	ರಚನೆ k_obj_type *type = obj_core->type;
+	ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ;
 
-	if (type_ranges_contain(type, (const uint8_t *)obj_core - type->obj_core_offset)) {
-		return;
+	ಆದರೆ (type_ranges_contain(type, (ಸ್ಥಿರಾಂಕ uint8_t *)obj_core - type->obj_core_ಸ್ಥಾನಾಂತರ)) {
+		ಹಿಂತಿರುಗಿ;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
-	if (in_stack_storage(obj_core)) {
+	ಆದರೆ (ಒಳ_ರಾಶಿ_storage(obj_core)) {
 		type->skipped++;
-		k_spin_unlock(&obj_core_lock, key);
-		return;
+		k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
+		ಹಿಂತಿರುಗಿ;
 	}
 
-	slot = slot_find(obj_core);
-	if (slot == NULL) {
-		slot = slot_alloc();
+	ಸ್ಥಾನ = ಸ್ಥಾನ_ಕಂಡುಹಿಡಿ(obj_core);
+	ಆದರೆ (ಸ್ಥಾನ == ಖಾಲಿ) {
+		ಸ್ಥಾನ = ಸ್ಥಾನ_alloc();
 	}
 
-	if (slot == NULL) {
+	ಆದರೆ (ಸ್ಥಾನ == ಖಾಲಿ) {
 		type->dropped++;
-	} else {
-		slot->type = type;
-		atomic_ptr_set(&slot->core, obj_core);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		ಸ್ಥಾನ->type = type;
+		atomic_ptr_ಗಣ(&ಸ್ಥಾನ->core, obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 }
 
-void k_obj_core_init_and_link(struct k_obj_core *obj_core,
-			      struct k_obj_type *type)
+ಶೂನ್ಯ k_obj_core_init_and_link(ರಚನೆ k_obj_core *obj_core,
+			      ರಚನೆ k_obj_type *type)
 {
 	k_obj_core_init(obj_core, type);
 	k_obj_core_link(obj_core);
 }
 
-void k_obj_core_unlink(struct k_obj_core *obj_core)
+ಶೂನ್ಯ k_obj_core_unlink(ರಚನೆ k_obj_core *obj_core)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		if (atomic_ptr_cas(&registry[i].core, obj_core, NULL)) {
-			break;
+	ಗಾಗಿ (size_t i = 0; i < ARRAY_ಗಾತ್ರ(registry); i++) {
+		ಆದರೆ (atomic_ptr_cas(&registry[i].core, obj_core, ಖಾಲಿ)) {
+			ನಿಲ್ಲಿಸು;
 		}
 	}
 }
 
-void k_obj_core_evict_range(const void *addr, size_t len)
+ಶೂನ್ಯ k_obj_core_evict_range(ಸ್ಥಿರಾಂಕ ಶೂನ್ಯ *addr, size_t len)
 {
-	const uint8_t *start = addr;
-	const uint8_t *end = start + len;
+	ಸ್ಥಿರಾಂಕ uint8_t *ಆರಂಭ = addr;
+	ಸ್ಥಿರಾಂಕ uint8_t *ಕೊನೆ = ಆರಂಭ + len;
 
-	for (size_t i = 0; i < ARRAY_SIZE(registry); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	ಗಾಗಿ (size_t i = 0; i < ARRAY_ಗಾತ್ರ(registry); i++) {
+		ರಚನೆ k_obj_core *core = ಸ್ಥಾನ_core(&registry[i]);
 
-		if ((core != NULL) && ((const uint8_t *)core >= start) &&
-		    ((const uint8_t *)core < end)) {
-			(void)atomic_ptr_cas(&registry[i].core, core, NULL);
+		ಆದರೆ ((core != ಖಾಲಿ) && ((ಸ್ಥಿರಾಂಕ uint8_t *)core >= ಆರಂಭ) &&
+		    ((ಸ್ಥಿರಾಂಕ uint8_t *)core < ಕೊನೆ)) {
+			(ಶೂನ್ಯ)atomic_ptr_cas(&registry[i].core, core, ಖಾಲಿ);
 		}
 	}
 }
 
-#ifdef CONFIG_OBJ_CORE_EVICT_ON_FREE
-void sys_heap_release_hook(void *mem, size_t bytes)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_EVICT_ON_FREE
+ಶೂನ್ಯ sys_ರಾಶಿ_release_hook(ಶೂನ್ಯ *mem, size_t ಬೈಟುಗಳು)
 {
 	/* The registry is kernel data; user mode releases never hold
 	 * registered objects.
 	 */
-	if (k_is_user_context()) {
-		return;
+	ಆದರೆ (k_is_user_context()) {
+		ಹಿಂತಿರುಗಿ;
 	}
 
-	k_obj_core_evict_range(mem, bytes);
+	k_obj_core_evict_range(mem, ಬೈಟುಗಳು);
 }
-#endif /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_EVICT_ON_FREE */
 
 /* Add the object types defined at build time to the type list and initialize
  * the object cores of their permanent objects.
  */
-static void obj_core_init_all(void)
+ಸ್ಥಿರ ಶೂನ್ಯ obj_core_init_all(ಶೂನ್ಯ)
 {
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		sys_slist_append(&z_obj_type_list, &type->node);
+		sys_slist_append(&z_obj_type_list, &type->ಗಂಟು);
 
-		for (size_t r = 0; r < ARRAY_SIZE(type->statics); r++) {
-			const struct k_obj_range *range = &type->statics[r];
+		ಗಾಗಿ (size_t r = 0; r < ARRAY_ಗಾತ್ರ(type->statics); r++) {
+			ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_range *range = &type->statics[r];
 
-			if (range->stride == 0U) {
-				break;
+			ಆದರೆ (range->stride == 0U) {
+				ನಿಲ್ಲಿಸು;
 			}
 
-			for (const uint8_t *elem = range->start;
-			     elem < (const uint8_t *)range->end; elem += range->stride) {
-				struct k_obj_core *obj_core = range_core(type, range, elem);
+			ಗಾಗಿ (ಸ್ಥಿರಾಂಕ uint8_t *elem = range->ಆರಂಭ;
+			     elem < (ಸ್ಥಿರಾಂಕ uint8_t *)range->ಕೊನೆ; elem += range->stride) {
+				ರಚನೆ k_obj_core *obj_core = range_core(type, range, elem);
 
 				k_obj_core_init(obj_core, type);
-#ifdef CONFIG_OBJ_CORE_STATS
-				if ((type->stats_desc != NULL) && (type->stats_size != 0)) {
-					k_obj_core_stats_register(
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS
+				ಆದರೆ ((type->stats_desc != ಖಾಲಿ) && (type->stats_ಗಾತ್ರ != 0)) {
+					k_obj_core_stats_ರಿಜಿಸ್ಟರ್(
 						obj_core,
-						(void *)((uint8_t *)obj_core -
-							 type->obj_core_offset +
-							 type->stats_offset),
-						type->stats_size);
+						(ಶೂನ್ಯ *)((uint8_t *)obj_core -
+							 type->obj_core_ಸ್ಥಾನಾಂತರ +
+							 type->stats_ಸ್ಥಾನಾಂತರ),
+						type->stats_ಗಾತ್ರ);
 				}
-#endif /* CONFIG_OBJ_CORE_STATS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS */
 			}
 		}
 	}
@@ -283,327 +283,327 @@ static void obj_core_init_all(void)
 
 K_KERNEL_INIT_PRE(obj_core_init_all);
 
-struct k_obj_type *k_obj_type_find(uint32_t type_id)
+ರಚನೆ k_obj_type *k_obj_type_ಕಂಡುಹಿಡಿ(uint32_t type_id)
 {
-	struct k_obj_type *rv = NULL;
-	sys_snode_t *node;
+	ರಚನೆ k_obj_type *rv = ಖಾಲಿ;
+	sys_snode_t *ಗಂಟು;
 
 	/* Types defined at build time are valid before the type list is */
 
 	STRUCT_SECTION_FOREACH(k_obj_type, type) {
-		if (type->id == type_id) {
-			return type;
+		ಆದರೆ (type->id == type_id) {
+			ಹಿಂತಿರುಗಿ type;
 		}
 	}
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
-	SYS_SLIST_FOR_EACH_NODE(&z_obj_type_list, node) {
-		struct k_obj_type *type = CONTAINER_OF(node, struct k_obj_type, node);
+	SYS_SLIST_FOR_EACH_ಗಂಟು(&z_obj_type_list, ಗಂಟು) {
+		ರಚನೆ k_obj_type *type = CONTAINER_ದ(ಗಂಟು, ರಚನೆ k_obj_type, ಗಂಟು);
 
-		if (type->id == type_id) {
+		ಆದರೆ (type->id == type_id) {
 			rv = type;
-			break;
+			ನಿಲ್ಲಿಸು;
 		}
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
 /* Invoke func on every permanent object of the type that carries its type
  * tag. Objects of a zero-initialized array that were never initialized do
  * not.
  */
-static int walk_statics(struct k_obj_type *type,
-			int (*func)(struct k_obj_core *obj_core, void *data),
-			void *data)
+ಸ್ಥಿರ ಪೂರ್ಣಾಂಕ walk_statics(ರಚನೆ k_obj_type *type,
+			ಪೂರ್ಣಾಂಕ (*func)(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *ದತ್ತಾಂಶ),
+			ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	int status = 0;
+	ಪೂರ್ಣಾಂಕ ಸ್ಥಿತಿ_2 = 0;
 
-	for (size_t r = 0; (status == 0) && (r < ARRAY_SIZE(type->statics)); r++) {
-		const struct k_obj_range *range = &type->statics[r];
+	ಗಾಗಿ (size_t r = 0; (ಸ್ಥಿತಿ_2 == 0) && (r < ARRAY_ಗಾತ್ರ(type->statics)); r++) {
+		ಸ್ಥಿರಾಂಕ ರಚನೆ k_obj_range *range = &type->statics[r];
 
-		if (range->stride == 0U) {
-			break;
+		ಆದರೆ (range->stride == 0U) {
+			ನಿಲ್ಲಿಸು;
 		}
 
-		for (const uint8_t *elem = range->start; elem < (const uint8_t *)range->end;
+		ಗಾಗಿ (ಸ್ಥಿರಾಂಕ uint8_t *elem = range->ಆರಂಭ; elem < (ಸ್ಥಿರಾಂಕ uint8_t *)range->ಕೊನೆ;
 		     elem += range->stride) {
-			struct k_obj_core *obj_core = range_core(type, range, elem);
+			ರಚನೆ k_obj_core *obj_core = range_core(type, range, elem);
 
-			if (obj_core->type != type) {
-				continue;
+			ಆದರೆ (obj_core->type != type) {
+				ಮುಂದುವರಿ;
 			}
 
-			status = func(obj_core, data);
-			if (status != 0) {
-				break;
+			ಸ್ಥಿತಿ_2 = func(obj_core, ದತ್ತಾಂಶ);
+			ಆದರೆ (ಸ್ಥಿತಿ_2 != 0) {
+				ನಿಲ್ಲಿಸು;
 			}
 		}
 	}
 
-	return status;
+	ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
 }
 
-int k_obj_type_walk_locked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
-			   void *data)
+ಪೂರ್ಣಾಂಕ k_obj_type_walk_locked(ರಚನೆ k_obj_type *type,
+			   ಪೂರ್ಣಾಂಕ (*func)(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *ದತ್ತಾಂಶ),
+			   ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	int  status;
+	ಪೂರ್ಣಾಂಕ  ಸ್ಥಿತಿ_2;
 
-	status = walk_statics(type, func, data);
+	ಸ್ಥಿತಿ_2 = walk_statics(type, func, ದತ್ತಾಂಶ);
 
 	/* The lock covers reading and reaping each entry, not the callback,
 	 * so the callback is free to use any kernel or object core function.
 	 */
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
-		struct obj_core_slot *slot = &registry[i];
-		k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
-		struct k_obj_core *core = slot_core(slot);
+	ಗಾಗಿ (size_t i = 0; (ಸ್ಥಿತಿ_2 == 0) && (i < ARRAY_ಗಾತ್ರ(registry)); i++) {
+		ರಚನೆ obj_core_ಸ್ಥಾನ *ಸ್ಥಾನ = &registry[i];
+		k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
+		ರಚನೆ k_obj_core *core = ಸ್ಥಾನ_core(ಸ್ಥಾನ);
 
-		if ((core == NULL) || (slot->type != type)) {
-			k_spin_unlock(&obj_core_lock, key);
-			continue;
+		ಆದರೆ ((core == ಖಾಲಿ) || (ಸ್ಥಾನ->type != type)) {
+			k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
+			ಮುಂದುವರಿ;
 		}
 
-		if (slot_stale(slot, core)) {
-			atomic_ptr_set(&slot->core, NULL);
-			k_spin_unlock(&obj_core_lock, key);
-			continue;
+		ಆದರೆ (ಸ್ಥಾನ_stale(ಸ್ಥಾನ, core)) {
+			atomic_ptr_ಗಣ(&ಸ್ಥಾನ->core, ಖಾಲಿ);
+			k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
+			ಮುಂದುವರಿ;
 		}
 
-		k_spin_unlock(&obj_core_lock, key);
+		k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-		status = func(core, data);
+		ಸ್ಥಿತಿ_2 = func(core, ದತ್ತಾಂಶ);
 	}
 
-	return status;
+	ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
 }
 
-int k_obj_type_walk_unlocked(struct k_obj_type *type,
-			   int (*func)(struct k_obj_core *obj_core, void *data),
-			   void *data)
+ಪೂರ್ಣಾಂಕ k_obj_type_walk_unlocked(ರಚನೆ k_obj_type *type,
+			   ಪೂರ್ಣಾಂಕ (*func)(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *ದತ್ತಾಂಶ),
+			   ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	int  status;
+	ಪೂರ್ಣಾಂಕ  ಸ್ಥಿತಿ_2;
 
-	status = walk_statics(type, func, data);
+	ಸ್ಥಿತಿ_2 = walk_statics(type, func, ದತ್ತಾಂಶ);
 
-	for (size_t i = 0; (status == 0) && (i < ARRAY_SIZE(registry)); i++) {
-		struct k_obj_core *core = slot_core(&registry[i]);
+	ಗಾಗಿ (size_t i = 0; (ಸ್ಥಿತಿ_2 == 0) && (i < ARRAY_ಗಾತ್ರ(registry)); i++) {
+		ರಚನೆ k_obj_core *core = ಸ್ಥಾನ_core(&registry[i]);
 
-		if ((core == NULL) || (registry[i].type != type) ||
+		ಆದರೆ ((core == ಖಾಲಿ) || (registry[i].type != type) ||
 		    (core->type != type)) {
-			continue;
+			ಮುಂದುವರಿ;
 		}
 
-		status = func(core, data);
+		ಸ್ಥಿತಿ_2 = func(core, ದತ್ತಾಂಶ);
 	}
 
-	return status;
+	ಹಿಂತಿರುಗಿ ಸ್ಥಿತಿ_2;
 }
 
-#ifdef CONFIG_OBJ_CORE_STATS
-int k_obj_core_stats_register(struct k_obj_core *obj_core, void *stats,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_ರಿಜಿಸ್ಟರ್(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats,
 			      size_t stats_len)
 {
-	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	ಪೂರ್ಣಾಂಕ rv;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
-	if (obj_core->type->stats_desc == NULL) {
+	ಆದರೆ (obj_core->type->stats_desc == ಖಾಲಿ) {
 		/* Object type not configured for statistics. */
 		rv = -ENOTSUP;
-	} else if (obj_core->type->stats_desc->raw_size != stats_len) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (obj_core->type->stats_desc->raw_ಗಾತ್ರ != stats_len) {
 		/* Buffer size mismatch */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		obj_core->stats = stats;
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_deregister(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_deregister(ರಚನೆ k_obj_core *obj_core)
 {
-	int rv;
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	ಪೂರ್ಣಾಂಕ rv;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
-	if (obj_core->type->stats_desc == NULL) {
+	ಆದರೆ (obj_core->type->stats_desc == ಖಾಲಿ) {
 		/* Object type not configured  for statistics. */
 		rv = -ENOTSUP;
-	} else {
-		obj_core->stats = NULL;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		obj_core->stats = ಖಾಲಿ;
 		rv = 0;
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_raw(struct k_obj_core *obj_core, void *stats,
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_raw(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats,
 			 size_t stats_len)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	ಪೂರ್ಣಾಂಕ rv;
+	ರಚನೆ k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->raw == NULL)) {
+	ಆದರೆ ((desc == ಖಾಲಿ) || (desc->raw == ಖಾಲಿ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->raw_size != stats_len) || (obj_core->stats == NULL)) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ ((desc->raw_ಗಾತ್ರ != stats_len) || (obj_core->stats == ಖಾಲಿ)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		rv = desc->raw(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_query(struct k_obj_core *obj_core, void *stats,
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_query(ರಚನೆ k_obj_core *obj_core, ಶೂನ್ಯ *stats,
 			   size_t stats_len)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	ಪೂರ್ಣಾಂಕ rv;
+	ರಚನೆ k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->query == NULL)) {
+	ಆದರೆ ((desc == ಖಾಲಿ) || (desc->query == ಖಾಲಿ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if ((desc->query_size != stats_len) || (obj_core->stats == NULL)) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ ((desc->query_ಗಾತ್ರ != stats_len) || (obj_core->stats == ಖಾಲಿ)) {
 		/*
 		 * Either the size of the stats buffer is wrong or
 		 * the kernel object was not registered for statistics.
 		 */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		rv = desc->query(obj_core, stats);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_reset(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_reset(ರಚನೆ k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	ಪೂರ್ಣಾಂಕ rv;
+	ರಚನೆ k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t  key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t  ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->reset == NULL)) {
+	ಆದರೆ ((desc == ಖಾಲಿ) || (desc->reset == ಖಾಲಿ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (obj_core->stats == ಖಾಲಿ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		rv = desc->reset(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_disable(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_disable(ರಚನೆ k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	ಪೂರ್ಣಾಂಕ rv;
+	ರಚನೆ k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->disable == NULL)) {
+	ಆದರೆ ((desc == ಖಾಲಿ) || (desc->disable == ಖಾಲಿ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (obj_core->stats == ಖಾಲಿ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		rv = desc->disable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
 
-int k_obj_core_stats_enable(struct k_obj_core *obj_core)
+ಪೂರ್ಣಾಂಕ k_obj_core_stats_enable(ರಚನೆ k_obj_core *obj_core)
 {
-	int rv;
-	struct k_obj_core_stats_desc *desc;
+	ಪೂರ್ಣಾಂಕ rv;
+	ರಚನೆ k_obj_core_stats_desc *desc;
 
-	k_spinlock_key_t key = k_spin_lock(&obj_core_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&obj_core_ಬೀಗ);
 
 	desc = obj_core->type->stats_desc;
-	if ((desc == NULL) || (desc->enable == NULL)) {
+	ಆದರೆ ((desc == ಖಾಲಿ) || (desc->enable == ಖಾಲಿ)) {
 		/* The object type is not configured for this operation */
 		rv = -ENOTSUP;
-	} else if (obj_core->stats == NULL) {
+	} ಇಲ್ಲದಿದ್ದರೆ ಆದರೆ (obj_core->stats == ಖಾಲಿ) {
 		/* This kernel object is not configured for statistics */
 		rv = -EINVAL;
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		rv = desc->enable(obj_core);
 	}
 
-	k_spin_unlock(&obj_core_lock, key);
+	k_spin_unlock(&obj_core_ಬೀಗ, ಕೀಲಿ);
 
-	return rv;
+	ಹಿಂತಿರುಗಿ rv;
 }
-#endif /* CONFIG_OBJ_CORE_STATS */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS */
 
-#ifdef CONFIG_OBJ_CORE_SYSTEM
-static struct k_obj_type obj_type_kernel;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_SYSTEM
+ಸ್ಥಿರ ರಚನೆ k_obj_type obj_type_kernel;
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-static struct k_obj_core_stats_desc kernel_stats_desc = {
-	.raw_size = sizeof(struct k_cycle_stats) * CONFIG_MP_MAX_NUM_CPUS,
-	.query_size = sizeof(struct k_thread_runtime_stats),
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
+ಸ್ಥಿರ ರಚನೆ k_obj_core_stats_desc kernel_stats_desc = {
+	.raw_ಗಾತ್ರ = ಗಾತ್ರ(ರಚನೆ k_ಚಕ್ರ_stats) * CONFIG_MP_MAX_ಅಂಕೆ_CPUS,
+	.query_ಗಾತ್ರ = ಗಾತ್ರ(ರಚನೆ k_thread_runtime_stats),
 	.raw   = z_kernel_stats_raw,
 	.query = z_kernel_stats_query,
-	.reset = NULL,
-	.disable = NULL,
-	.enable  = NULL,
+	.reset = ಖಾಲಿ,
+	.disable = ಖಾಲಿ,
+	.enable  = ಖಾಲಿ,
 };
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 /* The kernel object is a singleton (_kernel), so it is registered and linked
  * here directly rather than through the object type table.
  */
-static void init_kernel_obj_core_list(void)
+ಸ್ಥಿರ ಶೂನ್ಯ init_kernel_obj_core_list(ಶೂನ್ಯ)
 {
 	/* Initialize kernel object type */
 
 	z_obj_type_init(&obj_type_kernel, K_OBJ_TYPE_KERNEL_ID,
-			offsetof(struct z_kernel, obj_core));
+			offsetof(ರಚನೆ z_kernel, obj_core));
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
 	k_obj_type_stats_init(&obj_type_kernel, &kernel_stats_desc);
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 	k_obj_core_init_and_link(K_OBJ_CORE(&_kernel), &obj_type_kernel);
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-	k_obj_core_stats_register(K_OBJ_CORE(&_kernel), _kernel.usage,
-				  sizeof(_kernel.usage));
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_STATS_SYSTEM
+	k_obj_core_stats_ರಿಜಿಸ್ಟರ್(K_OBJ_CORE(&_kernel), _kernel.usage,
+				  ಗಾತ್ರ(_kernel.usage));
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 }
 
 K_KERNEL_INIT_PRE(init_kernel_obj_core_list);
-#endif /* CONFIG_OBJ_CORE_SYSTEM */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_SYSTEM */

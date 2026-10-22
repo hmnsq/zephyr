@@ -3,8 +3,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_
-#define ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_
 
 /**
  * @file
@@ -23,28 +23,28 @@
  * There is no capacity limit (unlike the min-heap backend).
  */
 
-#define SKIPLIST_LEVELS CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL
+#ವ್ಯಾಖ್ಯಾನಿಸು SKIPLIST_ಮಟ್ಟಗಳು CONFIG_TIMEOUT_SKIPLIST_MAX_LEVEL
 
 /* Sentinel: never expires, participates in every level, never fired. */
-static struct _timeout sl_head = {
-	.height = SKIPLIST_LEVELS,
-	.forward = { NULL },
+ಸ್ಥಿರ ರಚನೆ _timeout sl_ತಲೆ = {
+	.ಎತ್ತರ = SKIPLIST_ಮಟ್ಟಗಳು,
+	.forward = { ಖಾಲಿ },
 };
 
 /* Highest height of any currently queued node; 0 when the list is empty. */
-static uint8_t sl_top;
+ಸ್ಥಿರ uint8_t sl_ತುದಿ;
 
 /*
  * Scratch predecessor vector shared by insert and remove. Both run with
  * timeout_lock held and neither keeps it across an unlock, so one array is
  * enough. Any future caller must hold that lock too.
  */
-static struct _timeout *sl_update[SKIPLIST_LEVELS];
+ಸ್ಥಿರ ರಚನೆ _timeout *sl_update[SKIPLIST_ಮಟ್ಟಗಳು];
 
 /* Marsaglia xorshift32 state; period 2^32-1, must stay non-zero. */
-static uint32_t sl_rng = 2463534242U;
+ಸ್ಥಿರ uint32_t sl_rng = 2463534242U;
 
-static uint8_t skiplist_random_height(void)
+ಸ್ಥಿರ uint8_t skiplist_random_ಎತ್ತರ(ಶೂನ್ಯ)
 {
 	uint32_t r = sl_rng;
 
@@ -54,53 +54,53 @@ static uint8_t skiplist_random_height(void)
 	sl_rng = r;
 
 	/* p = 1/2: height is 1 + the run of low 1-bits, capped at SKIPLIST_LEVELS. */
-	return 1 + MIN(u32_count_trailing_zeros(~r), SKIPLIST_LEVELS - 1);
+	ಹಿಂತಿರುಗಿ 1 + MIN(u32_ಎಣಿಕೆ_trailing_zeros(~r), SKIPLIST_ಮಟ್ಟಗಳು - 1);
 }
 
-static inline struct _timeout *skiplist_first(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ರಚನೆ _timeout *skiplist_ಮೊದಲ(ಶೂನ್ಯ)
 {
-	return sl_head.forward[0];
+	ಹಿಂತಿರುಗಿ sl_ತಲೆ.forward[0];
 }
 
-static void skiplist_drop_top(void)
+ಸ್ಥಿರ ಶೂನ್ಯ skiplist_drop_ತುದಿ(ಶೂನ್ಯ)
 {
-	while (sl_top > 0 && sl_head.forward[sl_top - 1] == NULL) {
-		sl_top--;
+	ಆಗ (sl_ತುದಿ > 0 && sl_ತಲೆ.forward[sl_ತುದಿ - 1] == ಖಾಲಿ) {
+		sl_ತುದಿ--;
 	}
 }
 
-static void skiplist_update_init(struct _timeout **update)
+ಸ್ಥಿರ ಶೂನ್ಯ skiplist_update_init(ರಚನೆ _timeout **update)
 {
 	uint8_t i;
 
-	for (i = 0; i < SKIPLIST_LEVELS; i++) {
-		update[i] = &sl_head;
+	ಗಾಗಿ (i = 0; i < SKIPLIST_ಮಟ್ಟಗಳು; i++) {
+		update[i] = &sl_ತಲೆ;
 	}
 }
 
 /* Splice @to out at every level it occupies. */
-static void skiplist_unlink(struct _timeout *to, struct _timeout **update)
+ಸ್ಥಿರ ಶೂನ್ಯ skiplist_unlink(ರಚನೆ _timeout *ಗಮ್ಯ, ರಚನೆ _timeout **update)
 {
 	uint8_t i;
-	uint8_t height = to->height;
+	uint8_t ಎತ್ತರ = ಗಮ್ಯ->ಎತ್ತರ;
 
-	for (i = 0; i < height; i++) {
-		__ASSERT_NO_MSG(update[i]->forward[i] == to);
-		update[i]->forward[i] = to->forward[i];
+	ಗಾಗಿ (i = 0; i < ಎತ್ತರ; i++) {
+		__ASSERT_NO_MSG(update[i]->forward[i] == ಗಮ್ಯ);
+		update[i]->forward[i] = ಗಮ್ಯ->forward[i];
 	}
 
-	to->height = 0;
-	skiplist_drop_top();
+	ಗಮ್ಯ->ಎತ್ತರ = 0;
+	skiplist_drop_ತುದಿ();
 }
 
 /* Equal keys are skipped so a later insert lands after them (same-tick FIFO). */
-static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **update)
+ಸ್ಥಿರ ಶೂನ್ಯ skiplist_predecessors_after(int64_t abs_ticks, ರಚನೆ _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	ರಚನೆ _timeout *x = &sl_ತಲೆ;
+	ಪೂರ್ಣಾಂಕ i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks <= abs_ticks) {
+	ಗಾಗಿ (i = (ಪೂರ್ಣಾಂಕ)sl_ತುದಿ - 1; i >= 0; i--) {
+		ಆಗ (x->forward[i] != ಖಾಲಿ && x->forward[i]->abs_ticks <= abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
@@ -108,125 +108,125 @@ static void skiplist_predecessors_after(int64_t abs_ticks, struct _timeout **upd
 }
 
 /* Walk equal-key nodes so identity, not just expiry, selects the splice points. */
-static void skiplist_predecessors_of(struct _timeout *to, struct _timeout **update)
+ಸ್ಥಿರ ಶೂನ್ಯ skiplist_predecessors_ದ(ರಚನೆ _timeout *ಗಮ್ಯ, ರಚನೆ _timeout **update)
 {
-	struct _timeout *x = &sl_head;
-	int i;
+	ರಚನೆ _timeout *x = &sl_ತಲೆ;
+	ಪೂರ್ಣಾಂಕ i;
 
-	for (i = (int)sl_top - 1; i >= 0; i--) {
-		while (x->forward[i] != NULL && x->forward[i]->abs_ticks < to->abs_ticks) {
+	ಗಾಗಿ (i = (ಪೂರ್ಣಾಂಕ)sl_ತುದಿ - 1; i >= 0; i--) {
+		ಆಗ (x->forward[i] != ಖಾಲಿ && x->forward[i]->abs_ticks < ಗಮ್ಯ->abs_ticks) {
 			x = x->forward[i];
 		}
 		update[i] = x;
 	}
 
-	for (i = 0; i < to->height; i++) {
-		while (update[i]->forward[i] != NULL &&
-		       update[i]->forward[i] != to &&
-		       update[i]->forward[i]->abs_ticks == to->abs_ticks) {
+	ಗಾಗಿ (i = 0; i < ಗಮ್ಯ->ಎತ್ತರ; i++) {
+		ಆಗ (update[i]->forward[i] != ಖಾಲಿ &&
+		       update[i]->forward[i] != ಗಮ್ಯ &&
+		       update[i]->forward[i]->abs_ticks == ಗಮ್ಯ->abs_ticks) {
 			update[i] = update[i]->forward[i];
 		}
 	}
 }
 
-static inline bool z_timeout_q_insert(struct _timeout *to, k_ticks_t dticks)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_timeout_q_ಸೇರಿಸು(ರಚನೆ _timeout *ಗಮ್ಯ, k_ticks_t dticks)
 {
 	uint8_t i;
-	uint8_t height;
+	uint8_t ಎತ್ತರ;
 
-	to->abs_ticks = (int64_t)curr_tick + dticks;
-	height = skiplist_random_height();
-	to->height = height;
-
-	skiplist_update_init(sl_update);
-	skiplist_predecessors_after(to->abs_ticks, sl_update);
-
-	if (height > sl_top) {
-		sl_top = height;
-	}
-
-	for (i = 0; i < height; i++) {
-		to->forward[i] = sl_update[i]->forward[i];
-		sl_update[i]->forward[i] = to;
-	}
-
-	return skiplist_first() == to;
-}
-
-static inline bool z_timeout_q_remove(struct _timeout *to)
-{
-	bool was_first = (skiplist_first() == to);
-
-	__ASSERT_NO_MSG(to->height > 0);
+	ಗಮ್ಯ->abs_ticks = (int64_t)curr_tick + dticks;
+	ಎತ್ತರ = skiplist_random_ಎತ್ತರ();
+	ಗಮ್ಯ->ಎತ್ತರ = ಎತ್ತರ;
 
 	skiplist_update_init(sl_update);
-	skiplist_predecessors_of(to, sl_update);
+	skiplist_predecessors_after(ಗಮ್ಯ->abs_ticks, sl_update);
 
-	skiplist_unlink(to, sl_update);
+	ಆದರೆ (ಎತ್ತರ > sl_ತುದಿ) {
+		sl_ತುದಿ = ಎತ್ತರ;
+	}
 
-	return was_first;
+	ಗಾಗಿ (i = 0; i < ಎತ್ತರ; i++) {
+		ಗಮ್ಯ->forward[i] = sl_update[i]->forward[i];
+		sl_update[i]->forward[i] = ಗಮ್ಯ;
+	}
+
+	ಹಿಂತಿರುಗಿ skiplist_ಮೊದಲ() == ಗಮ್ಯ;
 }
 
-static inline k_ticks_t z_timeout_q_remainder(const struct _timeout *to)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_timeout_q_remove(ರಚನೆ _timeout *ಗಮ್ಯ)
 {
-	return (k_ticks_t)(to->abs_ticks - (int64_t)curr_tick);
+	bool was_ಮೊದಲ = (skiplist_ಮೊದಲ() == ಗಮ್ಯ);
+
+	__ASSERT_NO_MSG(ಗಮ್ಯ->ಎತ್ತರ > 0);
+
+	skiplist_update_init(sl_update);
+	skiplist_predecessors_ದ(ಗಮ್ಯ, sl_update);
+
+	skiplist_unlink(ಗಮ್ಯ, sl_update);
+
+	ಹಿಂತಿರುಗಿ was_ಮೊದಲ;
 }
 
-static inline k_ticks_t z_timeout_q_next_expiry(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ k_ticks_t z_timeout_q_remainder(ಸ್ಥಿರಾಂಕ ರಚನೆ _timeout *ಗಮ್ಯ)
 {
-	struct _timeout *t = skiplist_first();
+	ಹಿಂತಿರುಗಿ (k_ticks_t)(ಗಮ್ಯ->abs_ticks - (int64_t)curr_tick);
+}
+
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ k_ticks_t z_timeout_q_ಮುಂದಿನ_expiry(ಶೂನ್ಯ)
+{
+	ರಚನೆ _timeout *t = skiplist_ಮೊದಲ();
 	int64_t gap;
 
-	if (t == NULL) {
-		return K_TICKS_FOREVER;
+	ಆದರೆ (t == ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ K_TICKS_FOREVER;
 	}
 
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	return (gap < 0) ? 0 : (k_ticks_t)gap;
+	ಹಿಂತಿರುಗಿ (gap < 0) ? 0 : (k_ticks_t)gap;
 }
 
-static inline int32_t z_timeout_q_next_gap(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ int32_t z_timeout_q_ಮುಂದಿನ_gap(ಶೂನ್ಯ)
 {
-	struct _timeout *t = skiplist_first();
+	ರಚನೆ _timeout *t = skiplist_ಮೊದಲ();
 	int64_t gap;
 
-	if (t == NULL) {
-		return INT32_MAX;
+	ಆದರೆ (t == ಖಾಲಿ) {
+		ಹಿಂತಿರುಗಿ INT32_MAX;
 	}
 
 	/* Overdue must be 0: announce casts dt to uint32_t. */
 	gap = t->abs_ticks - (int64_t)curr_tick;
-	if (gap <= 0) {
-		return 0;
+	ಆದರೆ (gap <= 0) {
+		ಹಿಂತಿರುಗಿ 0;
 	}
 
-	return (int32_t)MIN(gap, (int64_t)INT32_MAX);
+	ಹಿಂತಿರುಗಿ (int32_t)MIN(gap, (int64_t)INT32_MAX);
 }
 
-static inline void z_timeout_q_advance(int32_t dt)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_timeout_q_advance(int32_t dt)
 {
-	ARG_UNUSED(dt);
+	ARG_ಬಳಸದ(dt);
 }
 
 /* Earliest node, so it is the head's successor at every level it occupies. */
-static inline struct _timeout *z_timeout_q_pop_due(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ರಚನೆ _timeout *z_timeout_q_ತೆಗೆ_due(ಶೂನ್ಯ)
 {
-	struct _timeout *t = skiplist_first();
+	ರಚನೆ _timeout *t = skiplist_ಮೊದಲ();
 	uint8_t i;
 
-	if ((t == NULL) || (t->abs_ticks > (int64_t)curr_tick)) {
-		return NULL;
+	ಆದರೆ ((t == ಖಾಲಿ) || (t->abs_ticks > (int64_t)curr_tick)) {
+		ಹಿಂತಿರುಗಿ ಖಾಲಿ;
 	}
 
-	for (i = 0; i < t->height; i++) {
-		__ASSERT_NO_MSG(sl_head.forward[i] == t);
-		sl_head.forward[i] = t->forward[i];
+	ಗಾಗಿ (i = 0; i < t->ಎತ್ತರ; i++) {
+		__ASSERT_NO_MSG(sl_ತಲೆ.forward[i] == t);
+		sl_ತಲೆ.forward[i] = t->forward[i];
 	}
 
-	t->height = 0;
-	skiplist_drop_top();
+	t->ಎತ್ತರ = 0;
+	skiplist_drop_ತುದಿ();
 
-	return t;
+	ಹಿಂತಿರುಗಿ t;
 }
 
-#endif /* ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_TIMEOUT_SKIPLIST_H_ */

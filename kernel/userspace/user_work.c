@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+ಸ್ಥಿರ ಶೂನ್ಯ z_work_user_q_main(ಶೂನ್ಯ *work_q_ptr, ಶೂನ್ಯ *p2, ಶೂನ್ಯ *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	ರಚನೆ k_work_user_q *work_q = work_q_ptr;
 
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_ಬಳಸದ(p2);
+	ARG_ಬಳಸದ(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	ಆಗ (true) {
+		ರಚನೆ k_work_user *work;
 		k_work_user_handler_t handler;
 
-		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		work = k_ಸರತಿ_get(&work_q->ಸರತಿ, K_FOREVER);
+		ಆದರೆ (work == ಖಾಲಿ) {
+			ಮುಂದುವರಿ;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != ಖಾಲಿ, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		ಆದರೆ (atomic_test_and_clear_ಬಿಟ್(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,21 +39,21 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+ಶೂನ್ಯ k_work_user_ಸರತಿ_ಆರಂಭ(ರಚನೆ k_work_user_q *work_q, k_thread_ರಾಶಿ_t *ರಾಶಿ,
+			     size_t ರಾಶಿ_ಗಾತ್ರ, ಪೂರ್ಣಾಂಕ prio, ಸ್ಥಿರಾಂಕ ಅಕ್ಷರ *name)
 {
-	k_queue_init(&work_q->queue);
+	k_ಸರತಿ_init(&work_q->ಸರತಿ);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, ರಾಶಿ, ರಾಶಿ_ಗಾತ್ರ, z_work_user_q_main,
+			work_q, ಖಾಲಿ, ಖಾಲಿ, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
-	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
-		k_thread_name_set(&work_q->thread, name);
+	k_object_access_grant(&work_q->ಸರತಿ, &work_q->thread);
+	ಆದರೆ (name != ಖಾಲಿ) {
+		k_thread_name_ಗಣ(&work_q->thread, name);
 	}
 
-	k_thread_start(&work_q->thread);
+	k_thread_ಆರಂಭ(&work_q->thread);
 }

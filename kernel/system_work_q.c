@@ -11,27 +11,27 @@
  * System workqueue.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
 
-static K_KERNEL_STACK_DEFINE(sys_work_q_stack,
-			     CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE);
+ಸ್ಥಿರ K_KERNEL_ರಾಶಿ_DEFINE(sys_work_q_ರಾಶಿ,
+			     CONFIG_SYSTEM_WORKQUEUE_ರಾಶಿ_ಗಾತ್ರ);
 
-struct k_work_q k_sys_work_q;
+ರಚನೆ k_work_q k_sys_work_q;
 
-static void sys_work_q_init(void)
+ಸ್ಥಿರ ಶೂನ್ಯ sys_work_q_init(ಶೂನ್ಯ)
 {
-	static const struct k_work_queue_config cfg = {
+	ಸ್ಥಿರ ಸ್ಥಿರಾಂಕ ರಚನೆ k_work_ಸರತಿ_config cfg = {
 		.name = "sysworkq",
 		.no_yield = IS_ENABLED(CONFIG_SYSTEM_WORKQUEUE_NO_YIELD),
 		.essential = true,
 		.work_timeout_ms = CONFIG_SYSTEM_WORKQUEUE_WORK_TIMEOUT_MS,
 	};
 
-	k_work_queue_start(&k_sys_work_q,
-			    sys_work_q_stack,
-			    K_KERNEL_STACK_SIZEOF(sys_work_q_stack),
-			    CONFIG_SYSTEM_WORKQUEUE_PRIORITY, &cfg);
+	k_work_ಸರತಿ_ಆರಂಭ(&k_sys_work_q,
+			    sys_work_q_ರಾಶಿ,
+			    K_KERNEL_ರಾಶಿ_SIZEOF(sys_work_q_ರಾಶಿ),
+			    CONFIG_SYSTEM_WORKQUEUE_ಆದ್ಯತೆ, &cfg);
 }
 
 /* Registered into the kernel post-init section. The entry lives in this TU,

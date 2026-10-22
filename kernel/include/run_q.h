@@ -2,107 +2,107 @@
  * Copyright (c) Intel Corporation
  * SPDX-License-Identifier: Apache-2.0
  */
-#ifndef ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
-#define ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_ಸತತ_Q_H
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_ಸತತ_Q_H
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <wait_q.h>
-#include <kthread.h>
-#include <priority_q.h>
-#include <ipi.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <kthread.h>
+#ಅನ್ತರ್ಭಾವ <priority_q.h>
+#ಅನ್ತರ್ಭಾವ <ipi.h>
 
 
-static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ *thread_runq(ರಚನೆ k_thread *thread)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	uint32_t cpu_mask = thread->base.cpu_mask;
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_CPU_ಮುಖವಾಡ_PIN_ONLY
+	uint32_t cpu_ಮುಖವಾಡ = thread->ತಳ.cpu_ಮುಖವಾಡ;
 
-	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
+	__ASSERT(cpu_ಮುಖವಾಡ != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ cpu = (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)u32_ಎಣಿಕೆ_trailing_zeros(cpu_ಮುಖವಾಡ);
 
-	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
+	__ASSERT(cpu < ARRAY_ಗಾತ್ರ(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",
-		 cpu, ARRAY_SIZE(_kernel.cpus));
+		 cpu, ARRAY_ಗಾತ್ರ(_kernel.cpus));
 
 	/* Clamp so static-analysis tools that cannot see the assert
 	 * above do not flag the array access as out-of-bounds.
 	 */
-	cpu = MIN(cpu, (unsigned int)(ARRAY_SIZE(_kernel.cpus) - 1U));
+	cpu = MIN(cpu, (ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ)(ARRAY_ಗಾತ್ರ(_kernel.cpus) - 1U));
 
-	return &_kernel.cpus[cpu].ready_q.runq;
-#else
-	ARG_UNUSED(thread);
-	return &_kernel.ready_q.runq;
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+	ಹಿಂತಿರುಗಿ &_kernel.cpus[cpu].ready_q.runq;
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(thread);
+	ಹಿಂತಿರುಗಿ &_kernel.ready_q.runq;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void *curr_cpu_runq(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ *curr_cpu_runq(ಶೂನ್ಯ)
 {
-#ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	return &arch_curr_cpu()->ready_q.runq;
-#else
-	return &_kernel.ready_q.runq;
-#endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SCHED_CPU_ಮುಖವಾಡ_PIN_ONLY
+	ಹಿಂತಿರುಗಿ &arch_curr_cpu()->ready_q.runq;
+#ಇಲ್ಲದಿದ್ದರೆ
+	ಹಿಂತಿರುಗಿ &_kernel.ready_q.runq;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void runq_add(struct k_thread *thread)
-{
-	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
-	__ASSERT_NO_MSG(!is_thread_dummy(thread));
-
-	_priq_run_add(thread_runq(thread), thread);
-}
-
-static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_ಕೂಡಿಸು(ರಚನೆ k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
 
-	_priq_run_remove(thread_runq(thread), thread);
+	priq_ಸತತ_ಕೂಡಿಸು(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_yield(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_remove(ರಚನೆ k_thread *thread)
 {
-	_priq_run_yield(curr_cpu_runq());
+	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
+	__ASSERT_NO_MSG(!is_thread_dummy(thread));
+
+	priq_ಸತತ_remove(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE struct k_thread *runq_best(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_yield(ಶೂನ್ಯ)
 {
-	return _priq_run_best(curr_cpu_runq());
+	priq_ಸತತ_yield(curr_cpu_runq());
+}
+
+ಸ್ಥಿರ ALWAYS_INLINE ರಚನೆ k_thread *runq_ಉತ್ತಮ(ಶೂನ್ಯ)
+{
+	ಹಿಂತಿರುಗಿ priq_ಸತತ_ಉತ್ತಮ(curr_cpu_runq());
 }
 
 /*
  * _current is never in the run queue until context switch on
  * SMP configurations.
  */
-static inline bool should_queue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool should_ಸರತಿ_thread(ರಚನೆ k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	ಹಿಂತಿರುಗಿ !IS_ENABLED(CONFIG_SMP) || (thread != _current);
 }
 
-static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ ಸರತಿ_thread(ರಚನೆ k_thread *thread)
 {
 	z_mark_thread_as_queued(thread);
-	if (should_queue_thread(thread)) {
-		runq_add(thread);
+	ಆದರೆ (should_ಸರತಿ_thread(thread)) {
+		runq_ಕೂಡಿಸು(thread);
 	}
-#ifdef CONFIG_SMP
-	if (thread == _current) {
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_SMP
+	ಆದರೆ (thread == _current) {
 		/* add current to end of queue means "yield" */
-		_current_cpu->swap_ok = true;
+		_current_cpu->ಅದಲುಬದಲು_ok = true;
 	}
-#endif /* CONFIG_SMP */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SMP */
 }
 
-static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ ಸರತಿಯಿಂದ_ತೆಗೆ_thread(ರಚನೆ k_thread *thread)
 {
 	z_mark_thread_as_not_queued(thread);
-	if (should_queue_thread(thread)) {
+	ಆದರೆ (should_ಸರತಿ_thread(thread)) {
 		runq_remove(thread);
 	}
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_ */

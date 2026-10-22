@@ -11,313 +11,313 @@
  */
 
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/check.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/check.h>
 
-BUILD_ASSERT(SYS_SFLIST_FLAG_BITS >= 1, "k_queue needs one sflist flag bit");
+BUILD_ASSERT(SYS_SFLIST_FLAG_ಬಿಟ್ಟುಗಳು >= 1, "k_queue needs one sflist flag bit");
 
-struct alloc_node {
-	sys_sfnode_t node;
-	void *data;
+ರಚನೆ alloc_ಗಂಟು {
+	sys_sfnode_t ಗಂಟು;
+	ಶೂನ್ಯ *ದತ್ತಾಂಶ;
 };
 
 /* The queue must have its spinlock held before calling this function. */
-static void *z_queue_node_peek(sys_sfnode_t *node, bool needs_free)
+ಸ್ಥಿರ ಶೂನ್ಯ *z_ಸರತಿ_ಗಂಟು_peek(sys_sfnode_t *ಗಂಟು, bool needs_free)
 {
-	void *ret;
+	ಶೂನ್ಯ *ret;
 
-	if ((node != NULL) && (sys_sfnode_flags_get(node) != (uint8_t)0)) {
+	ಆದರೆ ((ಗಂಟು != ಖಾಲಿ) && (sys_sfnode_flags_get(ಗಂಟು) != (uint8_t)0)) {
 		/* If the flag is set, then the enqueue operation for this item
 		 * did a behind-the scenes memory allocation of an alloc_node
 		 * struct, which is what got put in the queue. Free it and pass
 		 * back the data pointer.
 		 */
-		struct alloc_node *anode;
+		ರಚನೆ alloc_ಗಂಟು *anode;
 
-		anode = CONTAINER_OF(node, struct alloc_node, node);
-		ret = anode->data;
-		if (needs_free) {
+		anode = CONTAINER_ದ(ಗಂಟು, ರಚನೆ alloc_ಗಂಟು, ಗಂಟು);
+		ret = anode->ದತ್ತಾಂಶ;
+		ಆದರೆ (needs_free) {
 			k_free(anode);
 		}
-	} else {
+	} ಇಲ್ಲದಿದ್ದರೆ {
 		/* Data was directly placed in the queue, the first word
 		 * reserved for the linked list. User mode isn't allowed to
 		 * do this, although it can get data sent this way.
 		 */
-		ret = (void *)node;
+		ret = (ಶೂನ್ಯ *)ಗಂಟು;
 	}
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_ಸರತಿ
 /* The queues embedded in statically defined FIFOs and LIFOs are permanent
  * objects of the queue type too.
  */
-BUILD_ASSERT(offsetof(struct k_fifo, _queue) == 0);
-BUILD_ASSERT(offsetof(struct k_lifo, _queue) == 0);
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
-STRUCT_SECTION_START_EXTERN(k_queue);
-STRUCT_SECTION_END_EXTERN(k_queue);
-K_OBJ_TYPE_DEFINE_RANGES(obj_type_queue, k_queue, K_OBJ_TYPE_QUEUE_ID, NULL,
-			 K_OBJ_RANGE_SECTION(k_queue), K_OBJ_RANGE_SECTION(k_fifo),
+BUILD_ASSERT(offsetof(ರಚನೆ k_fifo, ಸರತಿ_2) == 0);
+BUILD_ASSERT(offsetof(ರಚನೆ k_lifo, ಸರತಿ_2) == 0);
+STRUCT_SECTION_ಆರಂಭ_EXTERN(k_fifo);
+STRUCT_SECTION_ಕೊನೆ_EXTERN(k_fifo);
+STRUCT_SECTION_ಆರಂಭ_EXTERN(k_lifo);
+STRUCT_SECTION_ಕೊನೆ_EXTERN(k_lifo);
+STRUCT_SECTION_ಆರಂಭ_EXTERN(k_ಸರತಿ);
+STRUCT_SECTION_ಕೊನೆ_EXTERN(k_ಸರತಿ);
+K_OBJ_TYPE_DEFINE_RANGES(obj_type_ಸರತಿ, k_ಸರತಿ, K_OBJ_TYPE_ಸರತಿ_ID, ಖಾಲಿ,
+			 K_OBJ_RANGE_SECTION(k_ಸರತಿ), K_OBJ_RANGE_SECTION(k_fifo),
 			 K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_QUEUE */
 
-void z_impl_k_queue_init(struct k_queue *queue)
+ಶೂನ್ಯ z_impl_k_ಸರತಿ_init(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	sys_sflist_init(&queue->data_q);
-	queue->lock = (struct k_spinlock) {};
-	z_waitq_init(&queue->wait_q);
-#if defined(CONFIG_POLL)
-	sys_dlist_init(&queue->poll_events);
-#endif
+	sys_sflist_init(&ಸರತಿ->ದತ್ತಾಂಶ_q);
+	ಸರತಿ->ಬೀಗ = (ರಚನೆ k_spinlock) {};
+	z_waitq_init(&ಸರತಿ->wait_q);
+#ಆದರೆ defined(CONFIG_POLL)
+	sys_dlist_init(&ಸರತಿ->poll_events);
+#ಆದರೆ_ಅಂತ್ಯ
 
-	SYS_PORT_TRACING_OBJ_INIT(k_queue, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_INIT(k_ಸರತಿ, ಸರತಿ);
 
-	k_object_init(queue);
+	k_object_init(ಸರತಿ);
 
-#ifdef CONFIG_OBJ_CORE_QUEUE
-	k_obj_core_init_and_link(K_OBJ_CORE(queue), &obj_type_queue);
-#endif /* CONFIG_OBJ_CORE_QUEUE */
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_ಸರತಿ
+	k_obj_core_init_and_link(K_OBJ_CORE(ಸರತಿ), &obj_type_ಸರತಿ);
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_QUEUE */
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_init(struct k_queue *queue)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_vrfy_k_ಸರತಿ_init(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_init(queue);
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(ಸರತಿ, K_OBJ_ಸರತಿ));
+	z_impl_k_ಸರತಿ_init(ಸರತಿ);
 }
-#include <zephyr/syscalls/k_queue_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_init_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-static inline bool queue_handle_poll_events(struct k_queue *queue, uint32_t state)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool ಸರತಿ_handle_poll_events(ರಚನೆ k_ಸರತಿ *ಸರತಿ, uint32_t state)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&queue->poll_events, state);
-#else
-	ARG_UNUSED(queue);
-	ARG_UNUSED(state);
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_POLL
+	ಹಿಂತಿರುಗಿ z_handle_obj_poll_events(&ಸರತಿ->poll_events, state);
+#ಇಲ್ಲದಿದ್ದರೆ
+	ARG_ಬಳಸದ(ಸರತಿ);
+	ARG_ಬಳಸದ(state);
 
-	return false;
-#endif /* CONFIG_POLL */
+	ಹಿಂತಿರುಗಿ false;
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_POLL */
 }
 
-void z_impl_k_queue_cancel_wait(struct k_queue *queue)
+ಶೂನ್ಯ z_impl_k_ಸರತಿ_cancel_wait(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, cancel_wait, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_ಸರತಿ, cancel_wait, ಸರತಿ);
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
 	bool resched = false;
 
-	if (z_sched_wake(&queue->wait_q, 0, NULL)) {
+	ಆದರೆ (z_sched_wake(&ಸರತಿ->wait_q, 0, ಖಾಲಿ)) {
 		resched = true;
 	}
 
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_CANCELLED) || resched;
+	resched = ಸರತಿ_handle_poll_events(ಸರತಿ, K_POLL_STATE_CANCELLED) || resched;
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	ಆದರೆ (resched) {
+		z_reschedule(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_queue_cancel_wait(struct k_queue *queue)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_vrfy_k_ಸರತಿ_cancel_wait(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	z_impl_k_queue_cancel_wait(queue);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	z_impl_k_ಸರತಿ_cancel_wait(ಸರತಿ);
 }
-#include <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_cancel_wait_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
 /*
  * Common code for inserting a node into the queue.
  * The queue's spinlock must be held prior to entry.
  * However, that same spinlock will be unlocked before it returns.
  */
-static int32_t queue_insert(struct k_queue *queue, void *prev, void *data,
-			    bool alloc, bool is_append, k_spinlock_key_t key)
+ಸ್ಥಿರ int32_t ಸರತಿ_ಸೇರಿಸು(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *prev, ಶೂನ್ಯ *ದತ್ತಾಂಶ,
+			    bool alloc, bool is_append, k_spinlock_ಕೀಲಿ_t ಕೀಲಿ)
 {
-	int32_t result = 0;
+	int32_t ಫಲಿತಾಂಶ = 0;
 	bool resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, queue_insert, queue, alloc);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, ಸರತಿ_ಸೇರಿಸು, ಸರತಿ, alloc);
 
-	if (is_append) {
-		prev = sys_sflist_peek_tail(&queue->data_q);
+	ಆದರೆ (is_append) {
+		prev = sys_sflist_peek_ಬಾಲ(&ಸರತಿ->ದತ್ತಾಂಶ_q);
 	}
 
-	if (z_sched_wake(&queue->wait_q, 0, data)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, queue_insert, queue, alloc, K_FOREVER);
+	ಆದರೆ (z_sched_wake(&ಸರತಿ->wait_q, 0, ದತ್ತಾಂಶ)) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_ಸರತಿ, ಸರತಿ_ಸೇರಿಸು, ಸರತಿ, alloc, K_FOREVER);
 		resched = true;
-		goto out;
+		ಹೋಗು ಹೊರಹೋಗು;
 	}
 
 	/* Only need to actually allocate if no threads are pending */
-	if (alloc) {
-		struct alloc_node *anode;
+	ಆದರೆ (alloc) {
+		ರಚನೆ alloc_ಗಂಟು *anode;
 
-		anode = z_thread_malloc(sizeof(*anode));
-		if (anode == NULL) {
-			result = -ENOMEM;
-			goto out;
+		anode = z_thread_malloc(ಗಾತ್ರ(*anode));
+		ಆದರೆ (anode == ಖಾಲಿ) {
+			ಫಲಿತಾಂಶ = -ENOMEM;
+			ಹೋಗು ಹೊರಹೋಗು;
 		}
-		anode->data = data;
-		sys_sfnode_init(&anode->node, 0x1);
-		data = anode;
-	} else {
-		sys_sfnode_init(data, 0x0);
+		anode->ದತ್ತಾಂಶ = ದತ್ತಾಂಶ;
+		sys_sfnode_init(&anode->ಗಂಟು, 0x1);
+		ದತ್ತಾಂಶ = anode;
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		sys_sfnode_init(ದತ್ತಾಂಶ, 0x0);
 	}
 
-	sys_sflist_insert(&queue->data_q, prev, data);
-	resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE);
+	sys_sflist_ಸೇರಿಸು(&ಸರತಿ->ದತ್ತಾಂಶ_q, prev, ದತ್ತಾಂಶ);
+	resched = ಸರತಿ_handle_poll_events(ಸರತಿ, K_POLL_STATE_ದತ್ತಾಂಶ_ಲಭ್ಯ);
 
-out:
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+ಹೊರಹೋಗು:
+	ಆದರೆ (resched) {
+		z_reschedule(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, queue_insert, queue, alloc, result);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, ಸರತಿ_ಸೇರಿಸು, ಸರತಿ, alloc, ಫಲಿತಾಂಶ);
 
-	return result;
+	ಹಿಂತಿರುಗಿ ಫಲಿತಾಂಶ;
 }
 
-void k_queue_insert(struct k_queue *queue, void *prev, void *data)
+ಶೂನ್ಯ k_ಸರತಿ_ಸೇರಿಸು(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *prev, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, insert, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, ಸೇರಿಸು, ಸರತಿ);
 
-	(void)queue_insert(queue, prev, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(ಶೂನ್ಯ)ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, prev, ದತ್ತಾಂಶ, false, false,
+			   k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, insert, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, ಸೇರಿಸು, ಸರತಿ);
 }
 
-void k_queue_append(struct k_queue *queue, void *data)
+ಶೂನ್ಯ k_ಸರತಿ_append(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, append, ಸರತಿ);
 
-	(void)queue_insert(queue, NULL, data, false, true,
-			   k_spin_lock(&queue->lock));
+	(ಶೂನ್ಯ)ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, ಖಾಲಿ, ದತ್ತಾಂಶ, false, true,
+			   k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, append, ಸರತಿ);
 }
 
-void k_queue_prepend(struct k_queue *queue, void *data)
+ಶೂನ್ಯ k_ಸರತಿ_prepend(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, prepend, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, prepend, ಸರತಿ);
 
-	(void)queue_insert(queue, NULL, data, false, false,
-			   k_spin_lock(&queue->lock));
+	(ಶೂನ್ಯ)ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, ಖಾಲಿ, ದತ್ತಾಂಶ, false, false,
+			   k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, prepend, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, prepend, ಸರತಿ);
 }
 
-int32_t z_impl_k_queue_alloc_append(struct k_queue *queue, void *data)
+int32_t z_impl_k_ಸರತಿ_alloc_append(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_append, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, alloc_append, ಸರತಿ);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, true,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, ಖಾಲಿ, ದತ್ತಾಂಶ, true, true,
+				   k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_append, queue, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, alloc_append, ಸರತಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_append(struct k_queue *queue,
-						  void *data)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ int32_t z_vrfy_k_ಸರತಿ_alloc_append(ರಚನೆ k_ಸರತಿ *ಸರತಿ,
+						  ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_append(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_alloc_append(ಸರತಿ, ದತ್ತಾಂಶ);
 }
-#include <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_alloc_append_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int32_t z_impl_k_queue_alloc_prepend(struct k_queue *queue, void *data)
+int32_t z_impl_k_ಸರತಿ_alloc_prepend(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, alloc_prepend, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, alloc_prepend, ಸರತಿ);
 
-	int32_t ret = queue_insert(queue, NULL, data, true, false,
-				   k_spin_lock(&queue->lock));
+	int32_t ret = ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, ಖಾಲಿ, ದತ್ತಾಂಶ, true, false,
+				   k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ));
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, alloc_prepend, queue, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, alloc_prepend, ಸರತಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_queue_alloc_prepend(struct k_queue *queue,
-						   void *data)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ int32_t z_vrfy_k_ಸರತಿ_alloc_prepend(ರಚನೆ k_ಸರತಿ *ಸರತಿ,
+						   ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_alloc_prepend(queue, data);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_alloc_prepend(ಸರತಿ, ದತ್ತಾಂಶ);
 }
-#include <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_alloc_prepend_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-int k_queue_append_list(struct k_queue *queue, void *head, void *tail)
+ಪೂರ್ಣಾಂಕ k_ಸರತಿ_append_list(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ತಲೆ, ಶೂನ್ಯ *ಬಾಲ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, append_list, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, append_list, ಸರತಿ);
 	bool resched = false;
 
 	/* invalid head or tail of list */
-	CHECKIF((head == NULL) || (tail == NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, -EINVAL);
+	CHECKIF((ತಲೆ == ಖಾಲಿ) || (ಬಾಲ == ಖಾಲಿ)) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, append_list, ಸರತಿ, -EINVAL);
 
-		return -EINVAL;
+		ಹಿಂತಿರುಗಿ -EINVAL;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
 
-	while ((head != NULL) && z_sched_wake(&queue->wait_q, 0, head)) {
+	ಆಗ ((ತಲೆ != ಖಾಲಿ) && z_sched_wake(&ಸರತಿ->wait_q, 0, ತಲೆ)) {
 		resched = true;
-		head = *(void **)head;
+		ತಲೆ = *(ಶೂನ್ಯ **)ತಲೆ;
 	}
 
-	if (head != NULL) {
-		sys_sflist_append_list(&queue->data_q, head, tail);
+	ಆದರೆ (ತಲೆ != ಖಾಲಿ) {
+		sys_sflist_append_list(&ಸರತಿ->ದತ್ತಾಂಶ_q, ತಲೆ, ಬಾಲ);
 
-		resched = queue_handle_poll_events(queue, K_POLL_STATE_DATA_AVAILABLE) || resched;
+		resched = ಸರತಿ_handle_poll_events(ಸರತಿ, K_POLL_STATE_ದತ್ತಾಂಶ_ಲಭ್ಯ) || resched;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, append_list, queue, 0);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, append_list, ಸರತಿ, 0);
 
-	if (resched) {
-		z_reschedule(&queue->lock, key);
-	} else {
-		k_spin_unlock(&queue->lock, key);
+	ಆದರೆ (resched) {
+		z_reschedule(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
+	} ಇಲ್ಲದಿದ್ದರೆ {
+		k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 	}
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
+ಪೂರ್ಣಾಂಕ k_ಸರತಿ_ವಿಲೀನ_slist(ರಚನೆ k_ಸರತಿ *ಸರತಿ, sys_slist_t *list)
 {
-	int ret;
+	ಪೂರ್ಣಾಂಕ ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, merge_slist, queue);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, ವಿಲೀನ_slist, ಸರತಿ);
 
 	/* list must not be empty */
-	CHECKIF(sys_slist_is_empty(list)) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, -EINVAL);
+	CHECKIF(sys_slist_is_ಖಾಲಿಗಳು(list)) {
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, ವಿಲೀನ_slist, ಸರತಿ, -EINVAL);
 
-		return -EINVAL;
+		ಹಿಂತಿರುಗಿ -EINVAL;
 	}
 
 	/*
@@ -329,178 +329,178 @@ int k_queue_merge_slist(struct k_queue *queue, sys_slist_t *list)
 	 *   flag bytes in the lower order bits of the data pointer
 	 * - source list is really an slist and not an sflist with flags set
 	 */
-	ret = k_queue_append_list(queue, list->head, list->tail);
+	ret = k_ಸರತಿ_append_list(ಸರತಿ, list->ತಲೆ, list->ಬಾಲ);
 	CHECKIF(ret != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, ret);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, ವಿಲೀನ_slist, ಸರತಿ, ret);
 
-		return ret;
+		ಹಿಂತಿರುಗಿ ret;
 	}
 	sys_slist_init(list);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, merge_slist, queue, 0);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, ವಿಲೀನ_slist, ಸರತಿ, 0);
 
-	return 0;
+	ಹಿಂತಿರುಗಿ 0;
 }
 
-void *z_impl_k_queue_get(struct k_queue *queue, k_timeout_t timeout)
+ಶೂನ್ಯ *z_impl_k_ಸರತಿ_get(ರಚನೆ k_ಸರತಿ *ಸರತಿ, k_timeout_t timeout)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *data;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
+	ಶೂನ್ಯ *ದತ್ತಾಂಶ;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, get, queue, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, get, ಸರತಿ, timeout);
 
-	if (likely(!sys_sflist_is_empty(&queue->data_q))) {
-		sys_sfnode_t *node;
+	ಆದರೆ (likely(!sys_sflist_is_ಖಾಲಿಗಳು(&ಸರತಿ->ದತ್ತಾಂಶ_q))) {
+		sys_sfnode_t *ಗಂಟು;
 
-		node = sys_sflist_get_not_empty(&queue->data_q);
-		data = z_queue_node_peek(node, true);
-		k_spin_unlock(&queue->lock, key);
+		ಗಂಟು = sys_sflist_get_not_ಖಾಲಿಗಳು(&ಸರತಿ->ದತ್ತಾಂಶ_q);
+		ದತ್ತಾಂಶ = z_ಸರತಿ_ಗಂಟು_peek(ಗಂಟು, true);
+		k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, data);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, get, ಸರತಿ, timeout, ದತ್ತಾಂಶ);
 
-		return data;
+		ಹಿಂತಿರುಗಿ ದತ್ತಾಂಶ;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&queue->lock, key);
+	ಆದರೆ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout, NULL);
+		SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, get, ಸರತಿ, timeout, ಖಾಲಿ);
 
-		return NULL;
+		ಹಿಂತಿರುಗಿ ಖಾಲಿ;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_queue, get, queue, timeout);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_BLOCKING(k_ಸರತಿ, get, ಸರತಿ, timeout);
 
-	int ret = z_pend_curr(&queue->lock, key, &queue->wait_q, timeout);
+	ಪೂರ್ಣಾಂಕ ret = z_pend_curr(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ, &ಸರತಿ->wait_q, timeout);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, get, queue, timeout,
-		(ret != 0) ? NULL : _current->base.swap_data);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, get, ಸರತಿ, timeout,
+		(ret != 0) ? ಖಾಲಿ : _current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ);
 
-	return (ret != 0) ? NULL : _current->base.swap_data;
+	ಹಿಂತಿರುಗಿ (ret != 0) ? ಖಾಲಿ : _current->ತಳ.ಅದಲುಬದಲು_ದತ್ತಾಂಶ;
 }
 
 /* Remove a queue item by its data pointer and free any wrapper node. */
-bool k_queue_remove(struct k_queue *queue, void *data)
+bool k_ಸರತಿ_remove(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, remove, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	sys_sfnode_t *prev = NULL;
-	sys_sfnode_t *node = sys_sflist_peek_head(&queue->data_q);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, remove, ಸರತಿ);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
+	sys_sfnode_t *prev = ಖಾಲಿ;
+	sys_sfnode_t *ಗಂಟು = sys_sflist_peek_ತಲೆ(&ಸರತಿ->ದತ್ತಾಂಶ_q);
 	bool ret = false;
 
-	while (node != NULL) {
-		void *peeked = z_queue_node_peek(node, false);
+	ಆಗ (ಗಂಟು != ಖಾಲಿ) {
+		ಶೂನ್ಯ *peeked = z_ಸರತಿ_ಗಂಟು_peek(ಗಂಟು, false);
 
-		if (peeked == data) {
-			sys_sflist_remove(&queue->data_q, prev, node);
-			(void)z_queue_node_peek(node, true);
+		ಆದರೆ (peeked == ದತ್ತಾಂಶ) {
+			sys_sflist_remove(&ಸರತಿ->ದತ್ತಾಂಶ_q, prev, ಗಂಟು);
+			(ಶೂನ್ಯ)z_ಸರತಿ_ಗಂಟು_peek(ಗಂಟು, true);
 			ret = true;
-			break;
+			ನಿಲ್ಲಿಸು;
 		}
-		prev = node;
-		node = sys_sflist_peek_next(node);
+		prev = ಗಂಟು;
+		ಗಂಟು = sys_sflist_peek_ಮುಂದಿನ(ಗಂಟು);
 	}
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, remove, queue, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, remove, ಸರತಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-bool k_queue_unique_append(struct k_queue *queue, void *data)
+bool k_ಸರತಿ_unique_append(ರಚನೆ k_ಸರತಿ *ಸರತಿ, ಶೂನ್ಯ *ದತ್ತಾಂಶ)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_queue, unique_append, queue);
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_ENTER(k_ಸರತಿ, unique_append, ಸರತಿ);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
 
 	sys_sfnode_t *test;
 
-	SYS_SFLIST_FOR_EACH_NODE(&queue->data_q, test) {
-		if (test == (sys_sfnode_t *) data) {
-			k_spin_unlock(&queue->lock, key);
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, false);
+	SYS_SFLIST_FOR_EACH_ಗಂಟು(&ಸರತಿ->ದತ್ತಾಂಶ_q, test) {
+		ಆದರೆ (test == (sys_sfnode_t *) ದತ್ತಾಂಶ) {
+			k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
+			SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, unique_append, ಸರತಿ, false);
 
-			return false;
+			ಹಿಂತಿರುಗಿ false;
 		}
 	}
 
-	(void)queue_insert(queue, NULL, data, false, true, key);
+	(ಶೂನ್ಯ)ಸರತಿ_ಸೇರಿಸು(ಸರತಿ, ಖಾಲಿ, ದತ್ತಾಂಶ, false, true, ಕೀಲಿ);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_queue, unique_append, queue, true);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC_EXIT(k_ಸರತಿ, unique_append, ಸರತಿ, true);
 
-	return true;
+	ಹಿಂತಿರುಗಿ true;
 }
 
-void *z_impl_k_queue_peek_head(struct k_queue *queue)
+ಶೂನ್ಯ *z_impl_k_ಸರತಿ_peek_ತಲೆ(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_head(&queue->data_q), false);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
+	ಶೂನ್ಯ *ret = z_ಸರತಿ_ಗಂಟು_peek(sys_sflist_peek_ತಲೆ(&ಸರತಿ->ದತ್ತಾಂಶ_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_head, queue, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_ಸರತಿ, peek_ತಲೆ, ಸರತಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-void *z_impl_k_queue_peek_tail(struct k_queue *queue)
+ಶೂನ್ಯ *z_impl_k_ಸರತಿ_peek_ಬಾಲ(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	k_spinlock_key_t key = k_spin_lock(&queue->lock);
-	void *ret = z_queue_node_peek(sys_sflist_peek_tail(&queue->data_q), false);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_ಬೀಗ(&ಸರತಿ->ಬೀಗ);
+	ಶೂನ್ಯ *ret = z_ಸರತಿ_ಗಂಟು_peek(sys_sflist_peek_ಬಾಲ(&ಸರತಿ->ದತ್ತಾಂಶ_q), false);
 
-	k_spin_unlock(&queue->lock, key);
+	k_spin_unlock(&ಸರತಿ->ಬೀಗ, ಕೀಲಿ);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_queue, peek_tail, queue, ret);
+	SYS_ಪೋರ್ಟ್_TRACING_OBJ_FUNC(k_ಸರತಿ, peek_ಬಾಲ, ಸರತಿ, ret);
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void *z_vrfy_k_queue_get(struct k_queue *queue,
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ *z_vrfy_k_ಸರತಿ_get(ರಚನೆ k_ಸರತಿ *ಸರತಿ,
 				       k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_get(queue, timeout);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_get(ಸರತಿ, timeout);
 }
-#include <zephyr/syscalls/k_queue_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_get_mrsh.c>
 
-static inline int z_vrfy_k_queue_is_empty(struct k_queue *queue)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_vrfy_k_ಸರತಿ_is_ಖಾಲಿಗಳು(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_is_empty(queue);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_is_ಖಾಲಿಗಳು(ಸರತಿ);
 }
-#include <zephyr/syscalls/k_queue_is_empty_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_is_empty_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_head(struct k_queue *queue)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ *z_vrfy_k_ಸರತಿ_peek_ತಲೆ(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_head(queue);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_peek_ತಲೆ(ಸರತಿ);
 }
-#include <zephyr/syscalls/k_queue_peek_head_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_peek_head_mrsh.c>
 
-static inline void *z_vrfy_k_queue_peek_tail(struct k_queue *queue)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ *z_vrfy_k_ಸರತಿ_peek_ಬಾಲ(ರಚನೆ k_ಸರತಿ *ಸರತಿ)
 {
-	K_OOPS(K_SYSCALL_OBJ(queue, K_OBJ_QUEUE));
-	return z_impl_k_queue_peek_tail(queue);
+	K_OOPS(K_SYSCALL_OBJ(ಸರತಿ, K_OBJ_ಸರತಿ));
+	ಹಿಂತಿರುಗಿ z_impl_k_ಸರತಿ_peek_ಬಾಲ(ಸರತಿ);
 }
-#include <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_queue_peek_tail_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_OBJ_CORE_FIFO
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_FIFO
 /* Referenced by k_fifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_fifo);
-STRUCT_SECTION_END_EXTERN(k_fifo);
+STRUCT_SECTION_ಆರಂಭ_EXTERN(k_fifo);
+STRUCT_SECTION_ಕೊನೆ_EXTERN(k_fifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_fifo) =
-	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_fifo, K_OBJ_TYPE_FIFO_ID, ಖಾಲಿ, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_fifo));
-#endif /* CONFIG_OBJ_CORE_FIFO */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_FIFO */
 
-#ifdef CONFIG_OBJ_CORE_LIFO
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_OBJ_CORE_LIFO
 /* Referenced by k_lifo_init() in kernel.h, so not file-local */
-STRUCT_SECTION_START_EXTERN(k_lifo);
-STRUCT_SECTION_END_EXTERN(k_lifo);
+STRUCT_SECTION_ಆರಂಭ_EXTERN(k_lifo);
+STRUCT_SECTION_ಕೊನೆ_EXTERN(k_lifo);
 STRUCT_SECTION_ITERABLE(k_obj_type, _obj_type_lifo) =
-	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, NULL, 0, 0,
+	K_OBJ_TYPE_INITIALIZER(k_lifo, K_OBJ_TYPE_LIFO_ID, ಖಾಲಿ, 0, 0,
 			       K_OBJ_RANGE_SECTION(k_lifo));
-#endif /* CONFIG_OBJ_CORE_LIFO */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_OBJ_CORE_LIFO */

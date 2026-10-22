@@ -4,68 +4,68 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
-#define ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
+#ವ್ಯಾಖ್ಯಾನಿಸು ZEPHYR_KERNEL_INCLUDE_KSCHED_H_
 
-#include <zephyr/kernel_structs.h>
-#include <kspinlock.h>
-#include <kernel_internal.h>
-#include <timeout_q.h>
-#include <kthread.h>
-#include <zephyr/tracing/tracing.h>
-#include <stdbool.h>
-#include <priority_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel_structs.h>
+#ಅನ್ತರ್ಭಾವ <kspinlock.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <timeout_q.h>
+#ಅನ್ತರ್ಭಾವ <kthread.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/tracing/tracing.h>
+#ಅನ್ತರ್ಭಾವ <stdbool.h>
+#ಅನ್ತರ್ಭಾವ <priority_q.h>
 
-BUILD_ASSERT(K_LOWEST_APPLICATION_THREAD_PRIO
+BUILD_ASSERT(K_ಅತಿಕಡಿಮೆ_APPLICATION_THREAD_PRIO
 	     >= K_HIGHEST_APPLICATION_THREAD_PRIO);
 
-#ifdef CONFIG_MULTITHREADING
-#define Z_VALID_PRIO(prio, entry_point)				     \
-	(((prio) == K_IDLE_PRIO && z_is_idle_thread_entry(entry_point)) || \
-	 ((K_LOWEST_APPLICATION_THREAD_PRIO			     \
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_MULTITHREADING
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_VALID_PRIO(prio, ನಮೂದು_ಬಿಂದು)				     \
+	(((prio) == K_IDLE_PRIO && z_is_idle_thread_ನಮೂದು(ನಮೂದು_ಬಿಂದು)) || \
+	 ((K_ಅತಿಕಡಿಮೆ_APPLICATION_THREAD_PRIO			     \
 	   >= K_HIGHEST_APPLICATION_THREAD_PRIO)		     \
 	  && (prio) >= K_HIGHEST_APPLICATION_THREAD_PRIO	     \
-	  && (prio) <= K_LOWEST_APPLICATION_THREAD_PRIO))
+	  && (prio) <= K_ಅತಿಕಡಿಮೆ_APPLICATION_THREAD_PRIO))
 
-#define Z_ASSERT_VALID_PRIO(prio, entry_point) do { \
-	__ASSERT(Z_VALID_PRIO((prio), (entry_point)), \
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_ASSERT_VALID_PRIO(prio, ನಮೂದು_ಬಿಂದು) ಮಾಡು { \
+	__ASSERT(Z_VALID_PRIO((prio), (ನಮೂದು_ಬಿಂದು)), \
 		 "invalid priority (%d); allowed range: %d to %d", \
 		 (prio), \
-		 K_LOWEST_APPLICATION_THREAD_PRIO, \
+		 K_ಅತಿಕಡಿಮೆ_APPLICATION_THREAD_PRIO, \
 		 K_HIGHEST_APPLICATION_THREAD_PRIO); \
-	} while (false)
-#else
-#define Z_VALID_PRIO(prio, entry_point) ((prio) == -1)
-#define Z_ASSERT_VALID_PRIO(prio, entry_point) __ASSERT((prio) == -1, "")
-#endif /* CONFIG_MULTITHREADING */
+	} ಆಗ (false)
+#ಇಲ್ಲದಿದ್ದರೆ
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_VALID_PRIO(prio, ನಮೂದು_ಬಿಂದು) ((prio) == -1)
+#ವ್ಯಾಖ್ಯಾನಿಸು Z_ASSERT_VALID_PRIO(prio, ನಮೂದು_ಬಿಂದು) __ASSERT((prio) == -1, "")
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_MULTITHREADING */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
+ಬಾಹ್ಯ "C" {
+#ಆದರೆ_ಅಂತ್ಯ
 
-extern struct k_thread _thread_dummy;
+ಬಾಹ್ಯ ರಚನೆ k_thread _thread_dummy;
 
 /**
  * @brief Unpend thread, do not abort its timeout (if it exists).
  */
-void z_unpend_thread_no_timeout(struct k_thread *thread);
+ಶೂನ್ಯ z_unpend_thread_no_timeout(ರಚನೆ k_thread *thread);
 
 /**
  * @brief Unpend thread and abort its timeout (if it exists).
  */
-void z_unpend_thread(struct k_thread *thread);
-struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+ಶೂನ್ಯ z_unpend_thread(ರಚನೆ k_thread *thread);
+ರಚನೆ k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q);
+ಪೂರ್ಣಾಂಕ z_pend_curr(ರಚನೆ k_spinlock *ಬೀಗ, k_spinlock_ಕೀಲಿ_t ಕೀಲಿ,
 	       _wait_q_t *wait_q, k_timeout_t timeout);
-void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
+ಶೂನ್ಯ z_pend_thread(ರಚನೆ k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout);
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key);
-void z_reschedule_locked(k_spinlock_key_t key);
-void z_reschedule_irqlock(uint32_t key);
-int z_unpend_all(_wait_q_t *wait_q);
-bool z_thread_prio_set(struct k_thread *thread, int prio);
-void *z_get_next_switch_handle(void *interrupted);
-void z_thread_suspend_current(struct k_thread *thread);
+ಶೂನ್ಯ z_reschedule(ರಚನೆ k_spinlock *ಬೀಗ, k_spinlock_ಕೀಲಿ_t ಕೀಲಿ);
+ಶೂನ್ಯ z_reschedule_locked(k_spinlock_ಕೀಲಿ_t ಕೀಲಿ);
+ಶೂನ್ಯ z_reschedule_irqlock(uint32_t ಕೀಲಿ);
+ಪೂರ್ಣಾಂಕ z_unpend_all(_wait_q_t *wait_q);
+bool z_thread_prio_ಗಣ(ರಚನೆ k_thread *thread, ಪೂರ್ಣಾಂಕ prio);
+ಶೂನ್ಯ *z_get_ಮುಂದಿನ_switch_handle(ಶೂನ್ಯ *interrupted);
+ಶೂನ್ಯ z_thread_suspend_current(ರಚನೆ k_thread *thread);
 
 /* Wrapper around z_get_next_switch_handle() for the benefit of
  * non-SMP platforms that always pass a NULL interrupted handle.
@@ -77,20 +77,20 @@ void z_thread_suspend_current(struct k_thread *thread);
  * Mystic arts for cycle nerds, basically.  Replace with
  * z_get_next_switch_handle() if this becomes a maintenance hassle.
  */
-static ALWAYS_INLINE void *z_sched_next_handle(struct k_thread *curr)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ *z_sched_ಮುಂದಿನ_handle(ರಚನೆ k_thread *curr)
 {
-#ifndef CONFIG_SMP
-	if (curr == _kernel.ready_q.cache) {
-		return NULL;
+#ವ್ಯಾಖ್ಯಾನಿತವಾಗದಿದ್ದರೆ CONFIG_SMP
+	ಆದರೆ (curr == _kernel.ready_q.cache) {
+		ಹಿಂತಿರುಗಿ ಖಾಲಿ;
 	}
-#endif
-	return z_get_next_switch_handle(NULL);
+#ಆದರೆ_ಅಂತ್ಯ
+	ಹಿಂತಿರುಗಿ z_get_ಮುಂದಿನ_switch_handle(ಖಾಲಿ);
 }
 
-void z_sched_start(struct k_thread *thread);
-void z_ready_thread(struct k_thread *thread);
-struct k_thread *z_swap_next_thread(void);
-void move_current_to_end_of_prio_q(void);
+ಶೂನ್ಯ z_sched_ಆರಂಭ(ರಚನೆ k_thread *thread);
+ಶೂನ್ಯ z_ready_thread(ರಚನೆ k_thread *thread);
+ರಚನೆ k_thread *z_ಅದಲುಬದಲು_ಮುಂದಿನ_thread(ಶೂನ್ಯ);
+ಶೂನ್ಯ move_current_ಗಮ್ಯ_ಕೊನೆ_ದ_prio_q(ಶೂನ್ಯ);
 
 /*
  * Internal scheduler functions exposed for use by thread lifecycle code
@@ -109,7 +109,7 @@ void move_current_to_end_of_prio_q(void);
  * @param key     Scheduler spinlock key held by the caller.
  * @param terminate true to abort (kill) the thread, false to suspend it.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate);
+ಶೂನ್ಯ z_thread_halt(ರಚನೆ k_thread *thread, k_spinlock_ಕೀಲಿ_t ಕೀಲಿ, bool terminate);
 
 /**
  * @brief Ready a thread while the scheduler spinlock is already held.
@@ -119,7 +119,7 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key, bool terminate
  *
  * @param thread Thread to make ready.
  */
-void z_sched_ready_locked(struct k_thread *thread);
+ಶೂನ್ಯ z_sched_ready_locked(ರಚನೆ k_thread *thread);
 
 /**
  * @brief Add a thread to a wait queue while the scheduler spinlock is held.
@@ -130,7 +130,7 @@ void z_sched_ready_locked(struct k_thread *thread);
  * @param thread  Thread to pend.
  * @param wait_q  Wait queue to add the thread to (may be NULL).
  */
-void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
+ಶೂನ್ಯ z_sched_ಕೂಡಿಸು_ಗಮ್ಯ_waitq_locked(ರಚನೆ k_thread *thread, _wait_q_t *wait_q);
 
 /**
  * @brief Remove a thread from the run queue (scheduler spinlock must be held).
@@ -140,7 +140,7 @@ void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
  *
  * @param thread Thread to remove from the run queue.
  */
-void z_sched_unready_locked(struct k_thread *thread);
+ಶೂನ್ಯ z_sched_unready_locked(ರಚನೆ k_thread *thread);
 
 /**
  * @brief Yield the current thread's remaining time slice.
@@ -150,85 +150,85 @@ void z_sched_unready_locked(struct k_thread *thread);
  * of k_yield(); exposed so that thread.c can implement k_yield() without
  * depending on sched.c internals.
  */
-void z_sched_yield(void);
+ಶೂನ್ಯ z_sched_yield(ಶೂನ್ಯ);
 
-static inline void z_reschedule_unlocked(void)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_reschedule_unlocked(ಶೂನ್ಯ)
 {
-	(void) z_reschedule_irqlock(arch_irq_lock());
+	(ಶೂನ್ಯ) z_reschedule_irqlock(arch_irq_ಬೀಗ());
 }
 
-static inline bool z_is_under_prio_ceiling(int prio)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_under_prio_ceiling(ಪೂರ್ಣಾಂಕ prio)
 {
-	return prio >= CONFIG_PRIORITY_CEILING;
+	ಹಿಂತಿರುಗಿ prio >= CONFIG_ಆದ್ಯತೆ_CEILING;
 }
 
-static inline int z_get_new_prio_with_ceiling(int prio)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಪೂರ್ಣಾಂಕ z_get_new_prio_with_ceiling(ಪೂರ್ಣಾಂಕ prio)
 {
-	return z_is_under_prio_ceiling(prio) ? prio : CONFIG_PRIORITY_CEILING;
+	ಹಿಂತಿರುಗಿ z_is_under_prio_ceiling(prio) ? prio : CONFIG_ಆದ್ಯತೆ_CEILING;
 }
 
-static inline bool z_is_prio1_higher_than_or_equal_to_prio2(int prio1, int prio2)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio1_higher_than_or_equal_ಗಮ್ಯ_prio2(ಪೂರ್ಣಾಂಕ prio1, ಪೂರ್ಣಾಂಕ prio2)
 {
-	return prio1 <= prio2;
+	ಹಿಂತಿರುಗಿ prio1 <= prio2;
 }
 
-static inline bool z_is_prio_higher_or_equal(int prio1, int prio2)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio_higher_or_equal(ಪೂರ್ಣಾಂಕ prio1, ಪೂರ್ಣಾಂಕ prio2)
 {
-	return z_is_prio1_higher_than_or_equal_to_prio2(prio1, prio2);
+	ಹಿಂತಿರುಗಿ z_is_prio1_higher_than_or_equal_ಗಮ್ಯ_prio2(prio1, prio2);
 }
 
-static inline bool z_is_prio1_lower_than_or_equal_to_prio2(int prio1, int prio2)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio1_ಅಧೋ_than_or_equal_ಗಮ್ಯ_prio2(ಪೂರ್ಣಾಂಕ prio1, ಪೂರ್ಣಾಂಕ prio2)
 {
-	return prio1 >= prio2;
+	ಹಿಂತಿರುಗಿ prio1 >= prio2;
 }
 
-static inline bool z_is_prio1_higher_than_prio2(int prio1, int prio2)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio1_higher_than_prio2(ಪೂರ್ಣಾಂಕ prio1, ಪೂರ್ಣಾಂಕ prio2)
 {
-	return prio1 < prio2;
+	ಹಿಂತಿರುಗಿ prio1 < prio2;
 }
 
-static inline bool z_is_prio_higher(int prio, int test_prio)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio_higher(ಪೂರ್ಣಾಂಕ prio, ಪೂರ್ಣಾಂಕ test_prio)
 {
-	return z_is_prio1_higher_than_prio2(prio, test_prio);
+	ಹಿಂತಿರುಗಿ z_is_prio1_higher_than_prio2(prio, test_prio);
 }
 
-static inline bool z_is_prio_lower_or_equal(int prio1, int prio2)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool z_is_prio_ಅಧೋ_or_equal(ಪೂರ್ಣಾಂಕ prio1, ಪೂರ್ಣಾಂಕ prio2)
 {
-	return z_is_prio1_lower_than_or_equal_to_prio2(prio1, prio2);
+	ಹಿಂತಿರುಗಿ z_is_prio1_ಅಧೋ_than_or_equal_ಗಮ್ಯ_prio2(prio1, prio2);
 }
 
-static inline bool _is_valid_prio(int prio, k_thread_entry_t entry_point)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ bool _is_valid_prio(ಪೂರ್ಣಾಂಕ prio, k_thread_ನಮೂದು_t ನಮೂದು_ಬಿಂದು)
 {
-	if ((prio == K_IDLE_PRIO) && z_is_idle_thread_entry(entry_point)) {
-		return true;
+	ಆದರೆ ((prio == K_IDLE_PRIO) && z_is_idle_thread_ನಮೂದು(ನಮೂದು_ಬಿಂದು)) {
+		ಹಿಂತಿರುಗಿ true;
 	}
 
-	if (!z_is_prio_higher_or_equal(prio,
-				       K_LOWEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+	ಆದರೆ (!z_is_prio_higher_or_equal(prio,
+				       K_ಅತಿಕಡಿಮೆ_APPLICATION_THREAD_PRIO)) {
+		ಹಿಂತಿರುಗಿ false;
 	}
 
-	if (!z_is_prio_lower_or_equal(prio,
+	ಆದರೆ (!z_is_prio_ಅಧೋ_or_equal(prio,
 				      K_HIGHEST_APPLICATION_THREAD_PRIO)) {
-		return false;
+		ಹಿಂತಿರುಗಿ false;
 	}
 
-	return true;
+	ಹಿಂತಿರುಗಿ true;
 }
 
-static ALWAYS_INLINE _wait_q_t *pended_on_thread(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE _wait_q_t *pended_on_thread(ರಚನೆ k_thread *thread)
 {
-	__ASSERT_NO_MSG(thread->base.pended_on);
+	__ASSERT_NO_MSG(thread->ತಳ.pended_on);
 
-	return thread->base.pended_on;
+	ಹಿಂತಿರುಗಿ thread->ತಳ.pended_on;
 }
 
 
-static inline void unpend_thread_no_timeout(struct k_thread *thread)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ unpend_thread_no_timeout(ರಚನೆ k_thread *thread)
 {
 	_priq_wait_remove(&pended_on_thread(thread)->waitq, thread);
 	z_mark_thread_as_not_pending(thread);
-	thread->base.pended_on = NULL;
+	thread->ತಳ.pended_on = ಖಾಲಿ;
 }
 
 /*
@@ -247,11 +247,11 @@ static inline void unpend_thread_no_timeout(struct k_thread *thread)
  * z_sched_wake() is the convenient wrapper for the common case of
  * "wake one waiter with this retval and this swap_data".
  */
-static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wait_q)
+ಸ್ಥಿರ ALWAYS_INLINE ರಚನೆ k_thread *z_unpend_ಮೊದಲ_thread_locked(_wait_q_t *wait_q)
 {
-	struct k_thread *thread = _priq_wait_best(&wait_q->waitq);
+	ರಚನೆ k_thread *thread = priq_wait_ಉತ್ತಮ(&wait_q->waitq);
 
-	if (unlikely(thread != NULL)) {
+	ಆದರೆ (unlikely(thread != ಖಾಲಿ)) {
 		unpend_thread_no_timeout(thread);
 		/* Abort the thread's timeout. If its handler is in flight on
 		 * another CPU it is blocked on the sched lock; the abort flags
@@ -259,9 +259,9 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
 		 * it finally runs -- so it won't wake the thread from whatever
 		 * it has since re-pended on. We don't wait for it here.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
+		(ಶೂನ್ಯ)z_try_abort_thread_timeout(thread);
 	}
-	return thread;
+	ಹಿಂತಿರುಗಿ thread;
 }
 
 /**
@@ -290,27 +290,27 @@ static ALWAYS_INLINE struct k_thread *z_unpend_first_thread_locked(_wait_q_t *wa
  * @retval true If a thread was woken up
  * @retval false If the wait_q was empty
  */
-static ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, int swap_retval, void *swap_data)
+ಸ್ಥಿರ ALWAYS_INLINE bool z_sched_wake(_wait_q_t *wait_q, ಪೂರ್ಣಾಂಕ ಅದಲುಬದಲು_retval, ಶೂನ್ಯ *ಅದಲುಬದಲು_ದತ್ತಾಂಶ)
 {
-	struct k_thread *thread;
+	ರಚನೆ k_thread *thread;
 	bool ret = false;
 
-	LOCK_SCHED_SPINLOCK {
-		thread = z_unpend_first_thread_locked(wait_q);
-		if (thread != NULL) {
-			z_thread_return_value_set_with_data(thread,
-							    swap_retval,
-							    swap_data);
+	ಬೀಗ_SCHED_SPINLOCK {
+		thread = z_unpend_ಮೊದಲ_thread_locked(wait_q);
+		ಆದರೆ (thread != ಖಾಲಿ) {
+			z_thread_return_ಮೌಲ್ಯ_ಗಣ_with_ದತ್ತಾಂಶ(thread,
+							    ಅದಲುಬದಲು_retval,
+							    ಅದಲುಬದಲು_ದತ್ತಾಂಶ);
 			z_sched_ready_locked(thread);
 			ret = true;
 		}
 	}
 
-	return ret;
+	ಹಿಂತಿರುಗಿ ret;
 }
 
-#ifdef __cplusplus
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ __cplusplus
 }
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KSCHED_H_ */
+#ಆದರೆ_ಅಂತ್ಯ /* ZEPHYR_KERNEL_INCLUDE_KSCHED_H_ */

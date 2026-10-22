@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <zephyr/sys/clock.h>
-#include <kernel_arch_interface.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/drivers/timer/system_timer.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/clock.h>
+#ಅನ್ತರ್ಭಾವ <kernel_arch_interface.h>
 
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#ಆದರೆ defined(CONFIG_SYSTEM_CLOCK_HW_ಚಕ್ರಗಳು_ಪ್ರತಿ_SEC_RUNTIME_UPDATE)
 /* Convert microseconds to cycles using a caller-supplied frequency sample.
  *
  * When the system timer frequency can change at runtime, conversions must use
  * the same stable frequency sample that was paired with the cycle counter read.
  */
-static inline uint32_t busy_wait_us_to_cyc_ceil32(uint32_t usec, uint32_t hz)
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ uint32_t busy_wait_us_ಗಮ್ಯ_cyc_ceil32(uint32_t usec, uint32_t hz)
 {
 	/* microseconds per second */
-	const uint64_t denom = 1000000ULL;
-	uint64_t num = (uint64_t)usec * (uint64_t)hz;
+	ಸ್ಥಿರಾಂಕ uint64_t denom = 1000000ULL;
+	uint64_t ಅಂಕೆ = (uint64_t)usec * (uint64_t)hz;
 
 	/* Round up to avoid returning early. */
-	return (uint32_t)((num + denom - 1U) / denom);
+	ಹಿಂತಿರುಗಿ (uint32_t)((ಅಂಕೆ + denom - 1U) / denom);
 }
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
 
-void z_impl_k_busy_wait(uint32_t usec_to_wait)
+ಶೂನ್ಯ z_impl_k_busy_wait(uint32_t usec_ಗಮ್ಯ_wait)
 {
-	SYS_PORT_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_to_wait);
-	if (usec_to_wait == 0U) {
-		SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
-		return;
+	SYS_ಪೋರ್ಟ್_TRACING_FUNC_ENTER(k_thread, busy_wait, usec_ಗಮ್ಯ_wait);
+	ಆದರೆ (usec_ಗಮ್ಯ_wait == 0U) {
+		SYS_ಪೋರ್ಟ್_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_ಗಮ್ಯ_wait);
+		ಹಿಂತಿರುಗಿ;
 	}
 
-#if defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
-	arch_busy_wait(usec_to_wait);
-#elif defined(CONFIG_SYS_CLOCK_EXISTS)
-#if defined(CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE)
+#ಆದರೆ defined(CONFIG_ARCH_HAS_CUSTOM_BUSY_WAIT)
+	arch_busy_wait(usec_ಗಮ್ಯ_wait);
+#ಅಥವಾಆದರೆ defined(CONFIG_SYS_CLOCK_EXISTS)
+#ಆದರೆ defined(CONFIG_SYSTEM_CLOCK_HW_ಚಕ್ರಗಳು_ಪ್ರತಿ_SEC_RUNTIME_UPDATE)
 	/*
 	 * When the system timer frequency can change at runtime, the frequency
 	 * used for k_cycle_get_32() conversions may change during the busy wait.
@@ -45,84 +45,84 @@ void z_impl_k_busy_wait(uint32_t usec_to_wait)
 	 * frequency changes.
 	 */
 	uint32_t hz;
-	uint32_t start_cycles;
+	uint32_t ಆರಂಭ_ಚಕ್ರಗಳು;
 
 	/* Get a consistent sample of the current frequency and cycle count. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	ಗಾಗಿ (;;) {
+		uint32_t hz1 = sys_clock_hw_ಚಕ್ರಗಳು_ಪ್ರತಿ_sec();
+		uint32_t current_ಚಕ್ರಗಳು = k_ಚಕ್ರ_get_32();
+		uint32_t hz2 = sys_clock_hw_ಚಕ್ರಗಳು_ಪ್ರತಿ_sec();
 
-		if (hz1 != hz2) {
+		ಆದರೆ (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			ಮುಂದುವರಿ;
 		}
 
 		hz = hz1;
-		start_cycles = current_cycles;
+		ಆರಂಭ_ಚಕ್ರಗಳು = current_ಚಕ್ರಗಳು;
 
-		break;
+		ನಿಲ್ಲಿಸು;
 	}
 
-	uint32_t cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+	uint32_t ಚಕ್ರಗಳು_ಗಮ್ಯ_wait = busy_wait_us_ಗಮ್ಯ_cyc_ceil32(usec_ಗಮ್ಯ_wait, hz);
 
 	/* Now busy wait, adjusting if the frequency changes. */
-	for (;;) {
-		uint32_t hz1 = sys_clock_hw_cycles_per_sec();
-		uint32_t current_cycles = k_cycle_get_32();
-		uint32_t hz2 = sys_clock_hw_cycles_per_sec();
+	ಗಾಗಿ (;;) {
+		uint32_t hz1 = sys_clock_hw_ಚಕ್ರಗಳು_ಪ್ರತಿ_sec();
+		uint32_t current_ಚಕ್ರಗಳು = k_ಚಕ್ರ_get_32();
+		uint32_t hz2 = sys_clock_hw_ಚಕ್ರಗಳು_ಪ್ರತಿ_sec();
 
-		if (hz1 != hz2) {
+		ಆದರೆ (hz1 != hz2) {
 			/* Frequency changed while sampling; retry. */
-			continue;
+			ಮುಂದುವರಿ;
 		}
 
-		if (hz1 != hz) {
+		ಆದರೆ (hz1 != hz) {
 			/* Keep our reference point in the same scale as the cycle counter. */
-			start_cycles = (uint32_t)(((uint64_t)start_cycles * (uint64_t)hz1) /
+			ಆರಂಭ_ಚಕ್ರಗಳು = (uint32_t)(((uint64_t)ಆರಂಭ_ಚಕ್ರಗಳು * (uint64_t)hz1) /
 						  (uint64_t)hz);
 			hz = hz1;
-			cycles_to_wait = busy_wait_us_to_cyc_ceil32(usec_to_wait, hz);
+			ಚಕ್ರಗಳು_ಗಮ್ಯ_wait = busy_wait_us_ಗಮ್ಯ_cyc_ceil32(usec_ಗಮ್ಯ_wait, hz);
 		}
 
 		/* This handles the rollover on an unsigned 32-bit value. */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		ಆದರೆ ((current_ಚಕ್ರಗಳು - ಆರಂಭ_ಚಕ್ರಗಳು) >= ಚಕ್ರಗಳು_ಗಮ್ಯ_wait) {
+			ನಿಲ್ಲಿಸು;
 		}
 	}
-#else
-	uint32_t start_cycles = k_cycle_get_32();
-	uint32_t cycles_to_wait = k_us_to_cyc_ceil32(usec_to_wait);
+#ಇಲ್ಲದಿದ್ದರೆ
+	uint32_t ಆರಂಭ_ಚಕ್ರಗಳು = k_ಚಕ್ರ_get_32();
+	uint32_t ಚಕ್ರಗಳು_ಗಮ್ಯ_wait = k_us_ಗಮ್ಯ_cyc_ceil32(usec_ಗಮ್ಯ_wait);
 
-	for (;;) {
-		uint32_t current_cycles = k_cycle_get_32();
+	ಗಾಗಿ (;;) {
+		uint32_t current_ಚಕ್ರಗಳು = k_ಚಕ್ರ_get_32();
 
 		/* This handles the rollover on an unsigned 32-bit value */
-		if ((current_cycles - start_cycles) >= cycles_to_wait) {
-			break;
+		ಆದರೆ ((current_ಚಕ್ರಗಳು - ಆರಂಭ_ಚಕ್ರಗಳು) >= ಚಕ್ರಗಳು_ಗಮ್ಯ_wait) {
+			ನಿಲ್ಲಿಸು;
 		}
 	}
-#endif /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
-#else
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_SYSTEM_CLOCK_HW_CYCLES_PER_SEC_RUNTIME_UPDATE */
+#ಇಲ್ಲದಿದ್ದರೆ
 	/*
 	 * Crude busy loop for the purpose of being able to configure out
 	 * system timer support.
 	 */
-	unsigned int loops_per_usec = CONFIG_BUSYWAIT_CPU_LOOPS_PER_USEC;
-	unsigned int loops = loops_per_usec * usec_to_wait;
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ loops_ಪ್ರತಿ_usec = CONFIG_BUSYWAIT_CPU_LOOPS_ಪ್ರತಿ_USEC;
+	ಚಿಹ್ನೆರಹಿತ ಪೂರ್ಣಾಂಕ loops = loops_ಪ್ರತಿ_usec * usec_ಗಮ್ಯ_wait;
 
-	while (loops-- > 0) {
+	ಆಗ (loops-- > 0) {
 		arch_nop();
 	}
-#endif
+#ಆದರೆ_ಅಂತ್ಯ
 
-	SYS_PORT_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_to_wait);
+	SYS_ಪೋರ್ಟ್_TRACING_FUNC_EXIT(k_thread, busy_wait, usec_ಗಮ್ಯ_wait);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_busy_wait(uint32_t usec_to_wait)
+#ವ್ಯಾಖ್ಯಾನಿತವಾದರೆ CONFIG_USERSPACE
+ಸ್ಥಿರ ಸಾಲೊಳಗೆ ಶೂನ್ಯ z_vrfy_k_busy_wait(uint32_t usec_ಗಮ್ಯ_wait)
 {
-	z_impl_k_busy_wait(usec_to_wait);
+	z_impl_k_busy_wait(usec_ಗಮ್ಯ_wait);
 }
-#include <zephyr/syscalls/k_busy_wait_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_busy_wait_mrsh.c>
+#ಆದರೆ_ಅಂತ್ಯ /* CONFIG_USERSPACE */
