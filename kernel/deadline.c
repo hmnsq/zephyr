@@ -16,14 +16,14 @@
  * of the run-queue data structures.
  */
 
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <run_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/logging/log.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <kspinlock.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <run_q.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <zephyr/sys/math_extras.h>
+#अन्तर्भाव <zephyr/sys/minmax.h>
+#अन्तर्भाव <zephyr/logging/log.h>
 
 /**
  * @brief Atomically update a thread's prio_deadline in the run queue.
@@ -36,22 +36,22 @@
  * @param thread   Thread whose deadline is being updated.
  * @param deadline New absolute deadline value (raw cycle counter).
  */
-void z_sched_prio_deadline_set(struct k_thread *thread, int deadline)
+शून्य z_sched_prio_deadline_समुच्चयः(संरचना k_thread *thread, पूर्णाङ्क deadline)
 {
 	Z_SCHED_SPINLOCK {
-		if (z_is_thread_queued(thread)) {
-			dequeue_thread(thread);
-			thread->base.prio_deadline = deadline;
+		यदि (z_is_thread_queued(thread)) {
+			पङ्क्तेः_निष्कासय_thread(thread);
+			thread->आधारः.prio_deadline = deadline;
 			queue_thread(thread);
-		} else {
-			thread->base.prio_deadline = deadline;
+		} अन्यथा {
+			thread->आधारः.prio_deadline = deadline;
 		}
 	}
 }
 
-void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+शून्य z_impl_k_thread_absolute_deadline_समुच्चयः(k_tid_t tid, पूर्णाङ्क deadline)
 {
-	struct k_thread *thread = tid;
+	संरचना k_thread *thread = tid;
 
 	/* The prio_deadline field changes the sorting order, so it must
 	 * not be altered while the thread is in the run queue.  Because
@@ -60,10 +60,10 @@ void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
 	 * z_sched_prio_deadline_set() which performs it under the
 	 * scheduler spinlock.
 	 */
-	z_sched_prio_deadline_set(thread, deadline);
+	z_sched_prio_deadline_समुच्चयः(thread, deadline);
 }
 
-void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
+शून्य z_impl_k_thread_deadline_समुच्चयः(k_tid_t tid, पूर्णाङ्क deadline)
 {
 	/*
 	 * Clamp the relative deadline to INT32_MAX / 2 (2^30 cycles) to
@@ -74,32 +74,32 @@ void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
 	deadline = clamp(deadline, 0, INT32_MAX / 2);
 
 	/* Use uint32_t arithmetic to avoid implementation-defined signed conversion. */
-	uint32_t newdl = k_cycle_get_32() + (uint32_t)deadline;
+	uint32_t newdl = k_आवृत्तिः_get_32() + (uint32_t)deadline;
 
-	z_impl_k_thread_absolute_deadline_set(tid, (int)newdl);
+	z_impl_k_thread_absolute_deadline_समुच्चयः(tid, (पूर्णाङ्क)newdl);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+#यदि_परिभाषितम् CONFIG_USERSPACE
+स्थिर अन्तःस्थ शून्य z_vrfy_k_thread_absolute_deadline_समुच्चयः(k_tid_t tid, पूर्णाङ्क deadline)
 {
-	struct k_thread *thread = tid;
+	संरचना k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
-	z_impl_k_thread_absolute_deadline_set((k_tid_t)thread, deadline);
+	z_impl_k_thread_absolute_deadline_समुच्चयः((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
 
-static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int deadline)
+स्थिर अन्तःस्थ शून्य z_vrfy_k_thread_deadline_समुच्चयः(k_tid_t tid, पूर्णाङ्क deadline)
 {
-	struct k_thread *thread = tid;
+	संरचना k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_VERIFY_MSG(deadline > 0,
+	K_OOPS(K_SYSCALL_VERIFY_सन्देशः(deadline > 0,
 				    "invalid thread deadline %d",
-				    (int)deadline));
+				    (पूर्णाङ्क)deadline));
 
-	z_impl_k_thread_deadline_set((k_tid_t)thread, deadline);
+	z_impl_k_thread_deadline_समुच्चयः((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#अन्तर्भाव <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
+#यदि_अन्तः /* CONFIG_USERSPACE */

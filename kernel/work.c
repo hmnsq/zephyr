@@ -10,74 +10,74 @@
  * Second generation work queue implementation
  */
 
-#include <zephyr/kernel.h>
-#include <wait_q.h>
-#include <zephyr/spinlock.h>
-#include <errno.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/sys/printk.h>
-#include <zephyr/logging/log.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <wait_q.h>
+#अन्तर्भाव <zephyr/spinlock.h>
+#अन्तर्भाव <errno.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <scheduler.h>
+#अन्तर्भाव <zephyr/sys/printk.h>
+#अन्तर्भाव <zephyr/logging/log.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-static inline void flag_clear(uint32_t *flagp,
+स्थिर अन्तःस्थ शून्य flag_clear(uint32_t *flagp,
 			      uint32_t bit)
 {
 	*flagp &= ~BIT(bit);
 }
 
-static inline void flag_set(uint32_t *flagp,
+स्थिर अन्तःस्थ शून्य flag_समुच्चयः(uint32_t *flagp,
 			    uint32_t bit)
 {
 	*flagp |= BIT(bit);
 }
 
-static inline bool flag_test(const uint32_t *flagp,
+स्थिर अन्तःस्थ bool flag_test(ध्रुव uint32_t *flagp,
 			     uint32_t bit)
 {
-	return (*flagp & BIT(bit)) != 0U;
+	प्रत्यागम (*flagp & BIT(bit)) != 0U;
 }
 
-static inline bool flag_test_and_clear(uint32_t *flagp,
-				       int bit)
+स्थिर अन्तःस्थ bool flag_test_and_clear(uint32_t *flagp,
+				       पूर्णाङ्क bit)
 {
 	bool ret = flag_test(flagp, bit);
 
 	flag_clear(flagp, bit);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-static inline void flags_set(uint32_t *flagp,
+स्थिर अन्तःस्थ शून्य flags_समुच्चयः(uint32_t *flagp,
 			     uint32_t flags)
 {
 	*flagp = flags;
 }
 
-static inline uint32_t flags_get(const uint32_t *flagp)
+स्थिर अन्तःस्थ uint32_t flags_get(ध्रुव uint32_t *flagp)
 {
-	return *flagp;
+	प्रत्यागम *flagp;
 }
 
 /* Lock to protect the internal state of all work items, work queues,
  * and pending_cancels.
  */
-static struct k_spinlock work_lock;
+स्थिर संरचना k_spinlock work_तालकम्;
 
 /* Invoked by work thread */
-static void handle_flush(struct k_work *work) { }
+स्थिर शून्य handle_flush(संरचना k_work *work) { }
 
-static inline void init_flusher(struct z_work_flusher *flusher)
+स्थिर अन्तःस्थ शून्य init_flusher(संरचना z_work_flusher *flusher)
 {
-	struct k_work *work = &flusher->work;
+	संरचना k_work *work = &flusher->work;
 	k_sem_init(&flusher->sem, 0, 1);
 	k_work_init(&flusher->work, handle_flush);
-	flag_set(&work->flags, K_WORK_FLUSHING_BIT);
+	flag_समुच्चयः(&work->flags, K_WORK_FLUSHING_BIT);
 }
 
 /* List of pending cancellations. */
-static sys_slist_t pending_cancels;
+स्थिर sys_slist_t pending_cancels;
 
 /* Initialize a canceler record and add it to the list of pending
  * cancels.
@@ -87,12 +87,12 @@ static sys_slist_t pending_cancels;
  * @param canceler the structure used to notify a waiting process.
  * @param work the work structure that is to be canceled
  */
-static inline void init_work_cancel(struct z_work_canceller *canceler,
-				    struct k_work *work)
+स्थिर अन्तःस्थ शून्य init_work_cancel(संरचना z_work_canceller *canceler,
+				    संरचना k_work *work)
 {
 	k_sem_init(&canceler->sem, 0, 1);
 	canceler->work = work;
-	sys_slist_append(&pending_cancels, &canceler->node);
+	sys_slist_append(&pending_cancels, &canceler->ग्रन्थिः);
 }
 
 /* Complete flushing of a work item.
@@ -105,10 +105,10 @@ static inline void init_work_cancel(struct z_work_canceller *canceler,
  *
  * @param work the work structure that has completed flushing.
  */
-static void finalize_flush_locked(struct k_work *work)
+स्थिर शून्य finalize_flush_locked(संरचना k_work *work)
 {
-	struct z_work_flusher *flusher
-		= CONTAINER_OF(work, struct z_work_flusher, work);
+	संरचना z_work_flusher *flusher
+		= CONTAINER_सम्बन्धि(work, संरचना z_work_flusher, work);
 
 	flag_clear(&work->flags, K_WORK_FLUSHING_BIT);
 
@@ -125,10 +125,10 @@ static void finalize_flush_locked(struct k_work *work)
  *
  * @param work the work structure that has completed cancellation
  */
-static void finalize_cancel_locked(struct k_work *work)
+स्थिर शून्य finalize_cancel_locked(संरचना k_work *work)
 {
-	struct z_work_canceller *wc, *tmp;
-	sys_snode_t *prev = NULL;
+	संरचना z_work_canceller *wc, *tmp;
+	sys_snode_t *पूर्व = रिक्त;
 
 	/* Clear this first, so released high-priority threads don't
 	 * see it when doing things.
@@ -140,40 +140,40 @@ static void finalize_cancel_locked(struct k_work *work)
 	 * appear multiple times in the list if multiple threads
 	 * attempt to cancel it; each waiter must be woken.
 	 */
-	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, node) {
-		if (wc->work == work) {
-			sys_slist_remove(&pending_cancels, prev, &wc->node);
+	SYS_SLIST_FOR_EACH_CONTAINER_SAFE(&pending_cancels, wc, tmp, ग्रन्थिः) {
+		यदि (wc->work == work) {
+			sys_slist_remove(&pending_cancels, पूर्व, &wc->ग्रन्थिः);
 			k_sem_give(&wc->sem);
-		} else {
-			prev = &wc->node;
+		} अन्यथा {
+			पूर्व = &wc->ग्रन्थिः;
 		}
 	}
 }
 
-void k_work_init(struct k_work *work,
+शून्य k_work_init(संरचना k_work *work,
 		  k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(work != रिक्त);
+	__ASSERT_NO_MSG(handler != रिक्त);
 
-	*work = (struct k_work)Z_WORK_INITIALIZER(handler);
+	*work = (संरचना k_work)Z_WORK_INITIALIZER(handler);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work, work);
+	SYS_पत्तनम्_TRACING_OBJ_INIT(k_work, work);
 }
 
-static inline int work_busy_get_locked(const struct k_work *work)
+स्थिर अन्तःस्थ पूर्णाङ्क work_busy_get_locked(ध्रुव संरचना k_work *work)
 {
-	return flags_get(&work->flags) & K_WORK_MASK;
+	प्रत्यागम flags_get(&work->flags) & K_WORK_आवरणम्;
 }
 
-int k_work_busy_get(const struct k_work *work)
+पूर्णाङ्क k_work_busy_get(ध्रुव संरचना k_work *work)
 {
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_busy_get_locked(work);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
+	पूर्णाङ्क ret = work_busy_get_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Add a flusher work item to the queue.
@@ -187,17 +187,17 @@ int k_work_busy_get(const struct k_work *work)
  * queue
  * @param flusher an uninitialized/unused flusher object
  */
-static void queue_flusher_locked(struct k_work_q *queue,
-				 struct k_work *work,
-				 struct z_work_flusher *flusher)
+स्थिर शून्य queue_flusher_locked(संरचना k_work_q *queue,
+				 संरचना k_work *work,
+				 संरचना z_work_flusher *flusher)
 {
 	init_flusher(flusher);
 
-	if ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
-		sys_slist_insert(&queue->pending, &work->node,
-				 &flusher->work.node);
-	} else {
-		sys_slist_prepend(&queue->pending, &flusher->work.node);
+	यदि ((flags_get(&work->flags) & K_WORK_QUEUED) != 0U) {
+		sys_slist_निवेशय(&queue->pending, &work->ग्रन्थिः,
+				 &flusher->work.ग्रन्थिः);
+	} अन्यथा {
+		sys_slist_prepend(&queue->pending, &flusher->work.ग्रन्थिः);
 	}
 }
 
@@ -208,11 +208,11 @@ static void queue_flusher_locked(struct k_work_q *queue,
  * @param queue the queue from which the work should be removed
  * @param work work that may be on the queue
  */
-static inline void queue_remove_locked(struct k_work_q *queue,
-				       struct k_work *work)
+स्थिर अन्तःस्थ शून्य queue_remove_locked(संरचना k_work_q *queue,
+				       संरचना k_work *work)
 {
-	if (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
-		(void)sys_slist_find_and_remove(&queue->pending, &work->node);
+	यदि (flag_test_and_clear(&work->flags, K_WORK_QUEUED_BIT)) {
+		(शून्य)sys_slist_find_and_remove(&queue->pending, &work->ग्रन्थिः);
 	}
 }
 
@@ -227,15 +227,15 @@ static inline void queue_remove_locked(struct k_work_q *queue,
  * @return true if and only if the queue was notified and woken, i.e. a
  * reschedule is pending.
  */
-static inline bool notify_queue_locked(struct k_work_q *queue)
+स्थिर अन्तःस्थ bool notify_queue_locked(संरचना k_work_q *queue)
 {
 	bool rv = false;
 
-	if (queue != NULL) {
-		rv = z_sched_wake(&queue->notifyq, 0, NULL);
+	यदि (queue != रिक्त) {
+		rv = z_sched_wake(&queue->notifyq, 0, रिक्त);
 	}
 
-	return rv;
+	प्रत्यागम rv;
 }
 
 /* Submit an work item to a queue if queue state allows new work.
@@ -257,15 +257,15 @@ static inline bool notify_queue_locked(struct k_work_q *queue)
  * @retval -ENODEV if the queue is not started
  * @retval -EBUSY if the submission was rejected (draining, plugged)
  */
-static inline int queue_submit_locked(struct k_work_q *queue,
-				      struct k_work *work)
+स्थिर अन्तःस्थ पूर्णाङ्क queue_submit_locked(संरचना k_work_q *queue,
+				      संरचना k_work *work)
 {
-	if (queue == NULL) {
-		return -EINVAL;
+	यदि (queue == रिक्त) {
+		प्रत्यागम -EINVAL;
 	}
 
-	int ret;
-	bool chained = (_current == queue->thread_id) && !k_is_in_isr();
+	पूर्णाङ्क ret;
+	bool chained = (_current == queue->thread_id) && !k_is_अन्तर्_isr();
 	bool draining = flag_test(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
 	bool plugged = flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
 
@@ -276,19 +276,19 @@ static inline int queue_submit_locked(struct k_work_q *queue,
 	 * * -EBUSY if plugged and not draining
 	 * * otherwise OK
 	 */
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+	यदि (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
 		ret = -ENODEV;
-	} else if (draining && !chained) {
+	} अन्यथा यदि (draining && !chained) {
 		ret = -EBUSY;
-	} else if (plugged && !draining) {
+	} अन्यथा यदि (plugged && !draining) {
 		ret = -EBUSY;
-	} else {
-		sys_slist_append(&queue->pending, &work->node);
+	} अन्यथा {
+		sys_slist_append(&queue->pending, &work->ग्रन्थिः);
 		ret = 1;
-		(void)notify_queue_locked(queue);
+		(शून्य)notify_queue_locked(queue);
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Attempt to submit work to a queue.
@@ -317,21 +317,21 @@ static inline int queue_submit_locked(struct k_work_q *queue,
  * @retval -EINVAL if no queue is provided
  * @retval -ENODEV if the queue is not started
  */
-static int submit_to_queue_locked(struct k_work *work,
-				  struct k_work_q **queuep)
+स्थिर पूर्णाङ्क submit_गन्तव्यम्_queue_locked(संरचना k_work *work,
+				  संरचना k_work_q **queuep)
 {
-	int ret = 0;
+	पूर्णाङ्क ret = 0;
 
-	if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	यदि (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Disallowed */
 		ret = -EBUSY;
-	} else if (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
+	} अन्यथा यदि (!flag_test(&work->flags, K_WORK_QUEUED_BIT)) {
 		/* Not currently queued */
 		ret = 1;
 
 		/* If no queue specified resubmit to last queue.
 		 */
-		if (*queuep == NULL) {
+		यदि (*queuep == रिक्त) {
 			*queuep = work->queue;
 		}
 
@@ -339,29 +339,29 @@ static int submit_to_queue_locked(struct k_work *work,
 		 * queue it's running on to prevent handler
 		 * re-entrancy.
 		 */
-		if (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
-			__ASSERT_NO_MSG(work->queue != NULL);
+		यदि (flag_test(&work->flags, K_WORK_RUNNING_BIT)) {
+			__ASSERT_NO_MSG(work->queue != रिक्त);
 			*queuep = work->queue;
 			ret = 2;
 		}
 
-		int rc = queue_submit_locked(*queuep, work);
+		पूर्णाङ्क rc = queue_submit_locked(*queuep, work);
 
-		if (rc < 0) {
+		यदि (rc < 0) {
 			ret = rc;
-		} else {
-			flag_set(&work->flags, K_WORK_QUEUED_BIT);
+		} अन्यथा {
+			flag_समुच्चयः(&work->flags, K_WORK_QUEUED_BIT);
 			work->queue = *queuep;
 		}
-	} else {
+	} अन्यथा {
 		/* Already queued, do nothing. */
 	}
 
-	if (ret <= 0) {
-		*queuep = NULL;
+	यदि (ret <= 0) {
+		*queuep = रिक्त;
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Submit work to a queue
@@ -375,47 +375,47 @@ static int submit_to_queue_locked(struct k_work *work,
  *
  * @retval see submit_to_queue_locked()
  */
-int z_work_submit_to_queue(struct k_work_q *queue,
-		  struct k_work *work)
+पूर्णाङ्क z_work_submit_गन्तव्यम्_queue(संरचना k_work_q *queue,
+		  संरचना k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(work->handler != NULL);
+	__ASSERT_NO_MSG(work != रिक्त);
+	__ASSERT_NO_MSG(work->handler != रिक्त);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
-	int ret = submit_to_queue_locked(work, &queue);
+	पूर्णाङ्क ret = submit_गन्तव्यम्_queue_locked(work, &queue);
 
 	/* No need to reschedule if the submission failed. */
-	if (ret > 0) {
-		z_reschedule(&work_lock, key);
-	} else {
-		k_spin_unlock(&work_lock, key);
+	यदि (ret > 0) {
+		z_reschedule(&work_तालकम्, कुञ्चिका);
+	} अन्यथा {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_submit_to_queue(struct k_work_q *queue,
-			    struct k_work *work)
+पूर्णाङ्क k_work_submit_गन्तव्यम्_queue(संरचना k_work_q *queue,
+			    संरचना k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit_to_queue, queue, work);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, submit_गन्तव्यम्_queue, queue, work);
 
-	int ret = z_work_submit_to_queue(queue, work);
+	पूर्णाङ्क ret = z_work_submit_गन्तव्यम्_queue(queue, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit_to_queue, queue, work, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, submit_गन्तव्यम्_queue, queue, work, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_submit(struct k_work *work)
+पूर्णाङ्क k_work_submit(संरचना k_work *work)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, submit, work);
 
-	int ret = z_work_submit_to_queue(&k_sys_work_q, work);
+	पूर्णाङ्क ret = z_work_submit_गन्तव्यम्_queue(&k_sys_work_q, work);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, submit, work, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Flush the work item if necessary.
@@ -433,54 +433,54 @@ int k_work_submit(struct k_work *work)
  *
  * @retval false otherwise.  No wait required.
  */
-static bool work_flush_locked(struct k_work *work,
-			      struct z_work_flusher *flusher)
+स्थिर bool work_flush_locked(संरचना k_work *work,
+			      संरचना z_work_flusher *flusher)
 {
 	bool need_flush = (flags_get(&work->flags)
 			   & (K_WORK_QUEUED | K_WORK_RUNNING)) != 0U;
 
-	if (need_flush) {
-		struct k_work_q *queue = work->queue;
+	यदि (need_flush) {
+		संरचना k_work_q *queue = work->queue;
 
-		__ASSERT_NO_MSG(queue != NULL);
+		__ASSERT_NO_MSG(queue != रिक्त);
 
 		queue_flusher_locked(queue, work, flusher);
 		notify_queue_locked(queue);
 	}
 
-	return need_flush;
+	प्रत्यागम need_flush;
 }
 
-bool k_work_flush(struct k_work *work,
-		  struct k_work_sync *sync)
+bool k_work_flush(संरचना k_work *work,
+		  संरचना k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
+	__ASSERT_NO_MSG(work != रिक्त);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-	__ASSERT_NO_MSG(sync != NULL);
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(!k_is_अन्तर्_isr());
+	__ASSERT_NO_MSG(sync != रिक्त);
+#यदि_परिभाषितम् CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#यदि_अन्तः /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, flush, work);
 
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
+	यदि (need_flush) {
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_BLOCKING(k_work, flush, work, K_FOREVER);
 
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, flush, work, need_flush);
 
-	return need_flush;
+	प्रत्यागम need_flush;
 }
 
 /* Execute the non-waiting steps necessary to cancel a work item.
@@ -494,10 +494,10 @@ bool k_work_flush(struct k_work *work,
  *
  * @return k_busy_wait() captured under lock
  */
-static int cancel_async_locked(struct k_work *work)
+स्थिर पूर्णाङ्क cancel_async_locked(संरचना k_work *work)
 {
 	/* If we haven't already started canceling, do it now. */
-	if (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+	यदि (!flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 		/* Remove it from the queue, if it's queued. */
 		queue_remove_locked(work->queue, work);
 	}
@@ -505,14 +505,14 @@ static int cancel_async_locked(struct k_work *work)
 	/* If it's still busy after it's been dequeued, then flag it
 	 * as canceling.
 	 */
-	int ret = work_busy_get_locked(work);
+	पूर्णाङ्क ret = work_busy_get_locked(work);
 
-	if (ret != 0) {
-		flag_set(&work->flags, K_WORK_CANCELING_BIT);
+	यदि (ret != 0) {
+		flag_समुच्चयः(&work->flags, K_WORK_CANCELING_BIT);
 		ret = work_busy_get_locked(work);
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Complete cancellation necessary, release work lock, and wait if
@@ -530,8 +530,8 @@ static int cancel_async_locked(struct k_work *work)
  *
  * @retval false if work was idle on entry.  The caller need not wait.
  */
-static bool cancel_sync_locked(struct k_work *work,
-			       struct z_work_canceller *canceller)
+स्थिर bool cancel_sync_locked(संरचना k_work *work,
+			       संरचना z_work_canceller *canceller)
 {
 	bool ret = flag_test(&work->flags, K_WORK_CANCELING_BIT);
 
@@ -539,74 +539,74 @@ static bool cancel_sync_locked(struct k_work *work,
 	 * completion, which is indicated when finish_cancel() gets
 	 * invoked.
 	 */
-	if (ret) {
+	यदि (ret) {
 		init_work_cancel(canceller, work);
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_cancel(struct k_work *work)
+पूर्णाङ्क k_work_cancel(संरचना k_work *work)
 {
-	__ASSERT_NO_MSG(work != NULL);
+	__ASSERT_NO_MSG(work != रिक्त);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, cancel, work);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_async_locked(work);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
+	पूर्णाङ्क ret = cancel_async_locked(work);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, cancel, work, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-bool k_work_cancel_sync(struct k_work *work,
-			struct k_work_sync *sync)
+bool k_work_cancel_sync(संरचना k_work *work,
+			संरचना k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(work != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
+	__ASSERT_NO_MSG(work != रिक्त);
+	__ASSERT_NO_MSG(sync != रिक्त);
 	__ASSERT_NO_MSG(!flag_test(&work->flags, K_WORK_DELAYABLE_BIT));
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(!k_is_अन्तर्_isr());
+#यदि_परिभाषितम् CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#यदि_अन्तः /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, cancel_sync, work, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 	bool pending = (work_busy_get_locked(work) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_async_locked(work);
+	यदि (pending) {
+		(शून्य)cancel_async_locked(work);
 		need_wait = cancel_sync_locked(work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	if (need_wait) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
+	यदि (need_wait) {
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_BLOCKING(k_work, cancel_sync, work, sync);
 
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
-	return pending;
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, cancel_sync, work, sync, pending);
+	प्रत्यागम pending;
 }
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-static void work_timeout_handler(struct _timeout *record)
+#यदि defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+स्थिर शून्य work_timeout_handler(संरचना _timeout *लेखः)
 {
-	struct k_work_q *queue = CONTAINER_OF(record, struct k_work_q, work_timeout_record);
-	struct k_work *work = NULL;
-	k_work_handler_t handler = NULL;
-	const char *name;
-	const char *space = " ";
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना k_work_q *queue = CONTAINER_सम्बन्धि(लेखः, संरचना k_work_q, work_timeout_लेखः);
+	संरचना k_work *work = रिक्त;
+	k_work_handler_t handler = रिक्त;
+	ध्रुव वर्ण *name;
+	ध्रुव वर्ण *space = " ";
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
 	work = queue->work;
 	handler = work->handler;
@@ -622,16 +622,16 @@ static void work_timeout_handler(struct _timeout *record)
 	 * wrong worker. work_timeout_stop_locked() aborts the timeout, which
 	 * flags it superseded; bail on that too.
 	 */
-	if (queue->finished || z_timeout_inflight_superseded(record)) {
-		k_spin_unlock(&work_lock, key);
-		return;
+	यदि (queue->परिसमाप्तम् || z_timeout_inflight_superseded(लेखः)) {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
+		प्रत्यागम;
 	}
-	queue->finished = true;
+	queue->परिसमाप्तम् = true;
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
 	name = k_thread_name_get(queue->thread_id);
-	if (name == NULL) {
+	यदि (name == रिक्त) {
 		name = "";
 		space = "";
 	}
@@ -642,55 +642,55 @@ static void work_timeout_handler(struct _timeout *record)
 	k_thread_abort(queue->thread_id);
 }
 
-static void work_timeout_start_locked(struct k_work_q *queue, struct k_work *work)
+स्थिर शून्य work_timeout_start_locked(संरचना k_work_q *queue, संरचना k_work *work)
 {
-	queue->finished = false;
+	queue->परिसमाप्तम् = false;
 
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	यदि (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		प्रत्यागम;
 	}
 
 	queue->work = work;
-	z_add_timeout(&queue->work_timeout_record, work_timeout_handler, queue->work_timeout);
+	z_सङ्कलय_timeout(&queue->work_timeout_लेखः, work_timeout_handler, queue->work_timeout);
 }
 
-static void work_timeout_stop_locked(struct k_work_q *queue)
+स्थिर शून्य work_timeout_stop_locked(संरचना k_work_q *queue)
 {
-	if (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
-		return;
+	यदि (K_TIMEOUT_EQ(queue->work_timeout, K_FOREVER)) {
+		प्रत्यागम;
 	}
 
-	(void)z_try_abort_timeout(&queue->work_timeout_record);
+	(शून्य)z_try_abort_timeout(&queue->work_timeout_लेखः);
 }
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#यदि_अन्तः /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 /* Loop executed by a work queue thread.
  *
  * @param workq_ptr pointer to the work queue structure
  */
-static void work_queue_main(void *workq_ptr, void *p2, void *p3)
+स्थिर शून्य work_queue_main(शून्य *workq_ptr, शून्य *p2, शून्य *p3)
 {
-	ARG_UNUSED(p2);
-	ARG_UNUSED(p3);
+	ARG_अप्रयुक्तम्(p2);
+	ARG_अप्रयुक्तम्(p3);
 
-	struct k_work_q *queue = (struct k_work_q *)workq_ptr;
+	संरचना k_work_q *queue = (संरचना k_work_q *)workq_ptr;
 
-	while (true) {
-		sys_snode_t *node;
-		struct k_work *work = NULL;
-		k_work_handler_t handler = NULL;
-		k_spinlock_key_t key = k_spin_lock(&work_lock);
+	यावत् (true) {
+		sys_snode_t *ग्रन्थिः;
+		संरचना k_work *work = रिक्त;
+		k_work_handler_t handler = रिक्त;
+		k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 		bool yield;
 
 		/* Check for and prepare any new work. */
-		node = sys_slist_get(&queue->pending);
-		if (node != NULL) {
+		ग्रन्थिः = sys_slist_get(&queue->pending);
+		यदि (ग्रन्थिः != रिक्त) {
 			/* Mark that there's some work active that's
 			 * not on the pending list.
 			 */
-			flag_set(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
-			work = CONTAINER_OF(node, struct k_work, node);
-			flag_set(&work->flags, K_WORK_RUNNING_BIT);
+			flag_समुच्चयः(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
+			work = CONTAINER_सम्बन्धि(ग्रन्थिः, संरचना k_work, ग्रन्थिः);
+			flag_समुच्चयः(&work->flags, K_WORK_RUNNING_BIT);
 			flag_clear(&work->flags, K_WORK_QUEUED_BIT);
 
 			/* Static code analysis tool can raise a false-positive violation
@@ -706,7 +706,7 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * This means that if node is not NULL, then work will not be NULL.
 			 */
 			handler = work->handler;
-		} else if (flag_test_and_clear(&queue->flags,
+		} अन्यथा यदि (flag_test_and_clear(&queue->flags,
 					       K_WORK_QUEUE_DRAIN_BIT)) {
 			/* Not busy and draining: move threads waiting for
 			 * drain to ready state.  The held spinlock inhibits
@@ -717,39 +717,39 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 			 * here doesn't mean that the queue will allow new
 			 * submissions.
 			 */
-			(void)z_sched_wake_all(&queue->drainq, 1, NULL);
-		} else if (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
+			(शून्य)z_sched_wake_all(&queue->drainq, 1, रिक्त);
+		} अन्यथा यदि (flag_test(&queue->flags, K_WORK_QUEUE_STOP_BIT)) {
 			/* User has requested that the queue stop. Clear the status flags and exit.
 			 */
-			flags_set(&queue->flags, 0);
-			k_spin_unlock(&work_lock, key);
-			return;
-		} else {
+			flags_समुच्चयः(&queue->flags, 0);
+			k_spin_unlock(&work_तालकम्, कुञ्चिका);
+			प्रत्यागम;
+		} अन्यथा {
 			/* No work is available and no queue state requires
 			 * special handling.
 			 */
 			;
 		}
 
-		if (work == NULL) {
+		यदि (work == रिक्त) {
 			/* Nothing's had a chance to add work since we took
 			 * the lock, and we didn't find work nor got asked to
 			 * stop.  Just go to sleep: when something happens the
 			 * work thread will be woken and we can check again.
 			 */
 
-			(void)z_sched_wait(&work_lock, key, &queue->notifyq,
-					   K_FOREVER, NULL);
-			continue;
+			(शून्य)z_sched_wait(&work_तालकम्, कुञ्चिका, &queue->notifyq,
+					   K_FOREVER, रिक्त);
+			अनुवर्त;
 		}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+#यदि defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
 		work_timeout_start_locked(queue, work);
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#यदि_अन्तः /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
-		k_spin_unlock(&work_lock, key);
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-		__ASSERT_NO_MSG(handler != NULL);
+		__ASSERT_NO_MSG(handler != रिक्त);
 		handler(work);
 
 		/* Mark the work item as no longer running and deal
@@ -757,96 +757,96 @@ static void work_queue_main(void *workq_ptr, void *p2, void *p3)
 		 * was running.  Clear the BUSY flag and optionally
 		 * yield to prevent starving other threads.
 		 */
-		key = k_spin_lock(&work_lock);
+		कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-		if (queue->finished) {
+#यदि defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+		यदि (queue->परिसमाप्तम्) {
 			/*
 			 * The work item timeout handler has flagged this work
 			 * thread for taking too long and is going to abort it.
 			 * Do not proceed to the next work item.
 			 */
-			k_spin_unlock(&work_lock, key);
-			while (1) {
+			k_spin_unlock(&work_तालकम्, कुञ्चिका);
+			यावत् (1) {
 				k_sleep(K_FOREVER);
 			}
-			CODE_UNREACHABLE;
+			संहिता_UNREACHABLE;
 		}
 		work_timeout_stop_locked(queue);
-		queue->finished = true;
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+		queue->परिसमाप्तम् = true;
+#यदि_अन्तः /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 		flag_clear(&work->flags, K_WORK_RUNNING_BIT);
-		if (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
+		यदि (flag_test(&work->flags, K_WORK_FLUSHING_BIT)) {
 			finalize_flush_locked(work);
 		}
-		if (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
+		यदि (flag_test(&work->flags, K_WORK_CANCELING_BIT)) {
 			finalize_cancel_locked(work);
 		}
 
 		flag_clear(&queue->flags, K_WORK_QUEUE_BUSY_BIT);
 		yield = (!flag_test(&queue->flags, K_WORK_QUEUE_NO_YIELD_BIT) &&
-			 !sys_slist_is_empty(&queue->pending));
-		k_spin_unlock(&work_lock, key);
+			 !sys_slist_is_रिक्तानि(&queue->pending));
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
 		/* Optionally yield to prevent the work queue from
 		 * starving other threads.
 		 */
-		if (yield) {
+		यदि (yield) {
 			k_yield();
 		}
 	}
 }
 
-void k_work_queue_init(struct k_work_q *queue)
+शून्य k_work_queue_init(संरचना k_work_q *queue)
 {
-	__ASSERT_NO_MSG(queue != NULL);
+	__ASSERT_NO_MSG(queue != रिक्त);
 
-	*queue = (struct k_work_q) {
+	*queue = (संरचना k_work_q) {
 		.flags = 0,
 	};
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_queue, queue);
+	SYS_पत्तनम्_TRACING_OBJ_INIT(k_work_queue, queue);
 }
 
-void k_work_queue_run(struct k_work_q *queue, const struct k_work_queue_config *cfg)
+शून्य k_work_queue_सततम्(संरचना k_work_q *queue, ध्रुव संरचना k_work_queue_config *cfg)
 {
 	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
 
 	uint32_t flags = K_WORK_QUEUE_STARTED;
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	यदि ((cfg != रिक्त) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(_current, cfg->name);
+	यदि ((cfg != रिक्त) && (cfg->name != रिक्त)) {
+		k_thread_name_समुच्चयः(_current, cfg->name);
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#यदि defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	यदि ((cfg != रिक्त) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} अन्यथा {
 		queue->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#यदि_अन्तः /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 	sys_slist_init(&queue->pending);
 	z_waitq_init(&queue->notifyq);
 	z_waitq_init(&queue->drainq);
 	queue->thread_id = _current;
-	flags_set(&queue->flags, flags);
-	work_queue_main(queue, NULL, NULL);
+	flags_समुच्चयः(&queue->flags, flags);
+	work_queue_main(queue, रिक्त, रिक्त);
 }
 
-void k_work_queue_start(struct k_work_q *queue,
-			k_thread_stack_t *stack,
-			size_t stack_size,
-			int prio,
-			const struct k_work_queue_config *cfg)
+शून्य k_work_queue_start(संरचना k_work_q *queue,
+			k_thread_राशिः_t *राशिः,
+			size_t राशिः_आकार,
+			पूर्णाङ्क prio,
+			ध्रुव संरचना k_work_queue_config *cfg)
 {
 	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(stack);
+	__ASSERT_NO_MSG(राशिः);
 	__ASSERT_NO_MSG(!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT));
 
 	/* In future, this whole function will be deprecated, but for now, we
@@ -856,13 +856,13 @@ void k_work_queue_start(struct k_work_q *queue,
 
 	uint32_t flags = K_WORK_QUEUE_STARTED;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, start, queue);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work_queue, start, queue);
 
 	sys_slist_init(&queue->pending);
 	z_waitq_init(&queue->notifyq);
 	z_waitq_init(&queue->drainq);
 
-	if ((cfg != NULL) && cfg->no_yield) {
+	यदि ((cfg != रिक्त) && cfg->no_yield) {
 		flags |= K_WORK_QUEUE_NO_YIELD;
 	}
 
@@ -870,131 +870,131 @@ void k_work_queue_start(struct k_work_q *queue,
 	 * so we can submit things and once the thread gets control it's ready
 	 * to roll.
 	 */
-	flags_set(&queue->flags, flags);
+	flags_समुच्चयः(&queue->flags, flags);
 
-	(void)k_thread_create(&queue->thread, stack, stack_size,
-			      work_queue_main, queue, NULL, NULL,
+	(शून्य)k_thread_create(&queue->thread, राशिः, राशिः_आकार,
+			      work_queue_main, queue, रिक्त, रिक्त,
 			      prio, 0, K_FOREVER);
 
-	if ((cfg != NULL) && (cfg->name != NULL)) {
-		k_thread_name_set(&queue->thread, cfg->name);
+	यदि ((cfg != रिक्त) && (cfg->name != रिक्त)) {
+		k_thread_name_समुच्चयः(&queue->thread, cfg->name);
 	}
 
-	if ((cfg != NULL) && (cfg->essential)) {
-		queue->thread.base.user_options |= K_ESSENTIAL;
+	यदि ((cfg != रिक्त) && (cfg->essential)) {
+		queue->thread.आधारः.user_options |= K_ESSENTIAL;
 	}
 
-#if defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
-	if ((cfg != NULL) && (cfg->work_timeout_ms)) {
+#यदि defined(CONFIG_WORKQUEUE_WORK_TIMEOUT)
+	यदि ((cfg != रिक्त) && (cfg->work_timeout_ms)) {
 		queue->work_timeout = K_MSEC(cfg->work_timeout_ms);
-	} else {
+	} अन्यथा {
 		queue->work_timeout = K_FOREVER;
 	}
-#endif /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
+#यदि_अन्तः /* defined(CONFIG_WORKQUEUE_WORK_TIMEOUT) */
 
 	k_thread_start(&queue->thread);
 	queue->thread_id = &queue->thread;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, start, queue);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, start, queue);
 
 	TOOLCHAIN_ENABLE_WARNING(TOOLCHAIN_WARNING_DEPRECATED_DECLARATIONS);
 }
 
-int k_work_queue_drain(struct k_work_q *queue,
+पूर्णाङ्क k_work_queue_drain(संरचना k_work_q *queue,
 		       bool plug)
 {
 	__ASSERT_NO_MSG(queue);
-	__ASSERT_NO_MSG(!k_is_in_isr());
+	__ASSERT_NO_MSG(!k_is_अन्तर्_isr());
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work_queue, drain, queue);
 
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	पूर्णाङ्क ret = 0;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
-	if (((flags_get(&queue->flags)
+	यदि (((flags_get(&queue->flags)
 	      & (K_WORK_QUEUE_BUSY | K_WORK_QUEUE_DRAIN)) != 0U)
 	    || plug
-	    || !sys_slist_is_empty(&queue->pending)) {
-		flag_set(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
-		if (plug) {
-			flag_set(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
+	    || !sys_slist_is_रिक्तानि(&queue->pending)) {
+		flag_समुच्चयः(&queue->flags, K_WORK_QUEUE_DRAIN_BIT);
+		यदि (plug) {
+			flag_समुच्चयः(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT);
 		}
 
 		notify_queue_locked(queue);
-		ret = z_sched_wait(&work_lock, key, &queue->drainq,
-				   K_FOREVER, NULL);
-	} else {
-		k_spin_unlock(&work_lock, key);
+		ret = z_sched_wait(&work_तालकम्, कुञ्चिका, &queue->drainq,
+				   K_FOREVER, रिक्त);
+	} अन्यथा {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, drain, queue, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_queue_unplug(struct k_work_q *queue)
+पूर्णाङ्क k_work_queue_unplug(संरचना k_work_q *queue)
 {
 	__ASSERT_NO_MSG(queue);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work_queue, unplug, queue);
 
-	int ret = -EALREADY;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	पूर्णाङ्क ret = -EALREADY;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
-	if (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+	यदि (flag_test_and_clear(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
 		ret = 0;
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, unplug, queue, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
+पूर्णाङ्क k_work_queue_stop(संरचना k_work_q *queue, k_timeout_t timeout)
 {
 	__ASSERT_NO_MSG(queue);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work_queue, stop, queue, timeout);
 
-	if (queue->thread_id) {
-		if (z_is_thread_essential(queue->thread_id)) {
-			return -ENOTSUP;
+	यदि (queue->thread_id) {
+		यदि (z_is_thread_essential(queue->thread_id)) {
+			प्रत्यागम -ENOTSUP;
 		}
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
-		return -EALREADY;
+	यदि (!flag_test(&queue->flags, K_WORK_QUEUE_STARTED_BIT)) {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EALREADY);
+		प्रत्यागम -EALREADY;
 	}
 
-	if (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
-		return -EBUSY;
+	यदि (!flag_test(&queue->flags, K_WORK_QUEUE_PLUGGED_BIT)) {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -EBUSY);
+		प्रत्यागम -EBUSY;
 	}
 
-	flag_set(&queue->flags, K_WORK_QUEUE_STOP_BIT);
+	flag_समुच्चयः(&queue->flags, K_WORK_QUEUE_STOP_BIT);
 	notify_queue_locked(queue);
-	k_spin_unlock(&work_lock, key);
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
-	if (k_thread_join(queue->thread_id, timeout)) {
-		key = k_spin_lock(&work_lock);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_BLOCKING(k_work_queue, stop, queue, timeout);
+	यदि (k_thread_join(queue->thread_id, timeout)) {
+		कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 		flag_clear(&queue->flags, K_WORK_QUEUE_STOP_BIT);
-		k_spin_unlock(&work_lock, key);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
-		return -ETIMEDOUT;
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, -ETIMEDOUT);
+		प्रत्यागम -ETIMEDOUT;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
-	return 0;
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work_queue, stop, queue, timeout, 0);
+	प्रत्यागम 0;
 }
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#यदि_परिभाषितम् CONFIG_SYS_CLOCK_EXISTS
 
 /* Timeout handler for delayable work.
  *
@@ -1002,54 +1002,54 @@ int k_work_queue_stop(struct k_work_q *queue, k_timeout_t timeout)
  * Takes and releases work lock.
  * Conditionally reschedules.
  */
-static void work_timeout(struct _timeout *to)
+स्थिर शून्य work_timeout(संरचना _timeout *गन्तव्यम्)
 {
-	struct k_work_delayable *dw
-		= CONTAINER_OF(to, struct k_work_delayable, timeout);
-	struct k_work *wp = &dw->work;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	struct k_work_q *queue = NULL;
+	संरचना k_work_delayable *dw
+		= CONTAINER_सम्बन्धि(गन्तव्यम्, संरचना k_work_delayable, timeout);
+	संरचना k_work *wp = &dw->work;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
+	संरचना k_work_q *queue = रिक्त;
 
 	/* K_WORK_DELAYED_BIT is the wake-ownership flag: whichever side
 	 * (this handler or unschedule_locked()) clears it via
 	 * flag_test_and_clear() first owns the outcome. If unschedule_locked
 	 * got here first, the bit is clear and we bail.
 	 */
-	if (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
+	यदि (flag_test_and_clear(&wp->flags, K_WORK_DELAYED_BIT)) {
 		queue = dw->queue;
-		(void)submit_to_queue_locked(wp, &queue);
+		(शून्य)submit_गन्तव्यम्_queue_locked(wp, &queue);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 }
 
-void k_work_init_delayable(struct k_work_delayable *dwork,
+शून्य k_work_init_delayable(संरचना k_work_delayable *dwork,
 			    k_work_handler_t handler)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(handler != NULL);
+	__ASSERT_NO_MSG(dwork != रिक्त);
+	__ASSERT_NO_MSG(handler != रिक्त);
 
-	*dwork = (struct k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
+	*dwork = (संरचना k_work_delayable)Z_WORK_DELAYABLE_INITIALIZER(handler);
 
 	z_init_timeout(&dwork->timeout);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_work_delayable, dwork);
+	SYS_पत्तनम्_TRACING_OBJ_INIT(k_work_delayable, dwork);
 }
 
-static inline int work_delayable_busy_get_locked(const struct k_work_delayable *dwork)
+स्थिर अन्तःस्थ पूर्णाङ्क work_delayable_busy_get_locked(ध्रुव संरचना k_work_delayable *dwork)
 {
-	return flags_get(&dwork->work.flags) & K_WORK_MASK;
+	प्रत्यागम flags_get(&dwork->work.flags) & K_WORK_आवरणम्;
 }
 
-int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
+पूर्णाङ्क k_work_delayable_busy_get(ध्रुव संरचना k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != रिक्त);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = work_delayable_busy_get_locked(dwork);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
+	पूर्णाङ्क ret = work_delayable_busy_get_locked(dwork);
 
-	k_spin_unlock(&work_lock, key);
-	return ret;
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
+	प्रत्यागम ret;
 }
 
 /* Attempt to schedule a work item for future (maybe immediate)
@@ -1075,24 +1075,24 @@ int k_work_delayable_busy_get(const struct k_work_delayable *dwork)
  * @retval from submit_to_queue_locked() if delay is K_NO_WAIT; otherwise
  * @retval 1 to indicate successfully scheduled.
  */
-static int schedule_for_queue_locked(struct k_work_q **queuep,
-				     struct k_work_delayable *dwork,
+स्थिर पूर्णाङ्क कालसारणी_for_queue_locked(संरचना k_work_q **queuep,
+				     संरचना k_work_delayable *dwork,
 				     k_timeout_t delay)
 {
-	int ret = 1;
-	struct k_work *work = &dwork->work;
+	पूर्णाङ्क ret = 1;
+	संरचना k_work *work = &dwork->work;
 
-	if (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
-		return submit_to_queue_locked(work, queuep);
+	यदि (K_TIMEOUT_EQ(delay, K_NO_WAIT)) {
+		प्रत्यागम submit_गन्तव्यम्_queue_locked(work, queuep);
 	}
 
-	flag_set(&work->flags, K_WORK_DELAYED_BIT);
+	flag_समुच्चयः(&work->flags, K_WORK_DELAYED_BIT);
 	dwork->queue = *queuep;
 
 	/* Add timeout */
-	z_add_timeout(&dwork->timeout, work_timeout, delay);
+	z_सङ्कलय_timeout(&dwork->timeout, work_timeout, delay);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Unschedule delayable work.
@@ -1107,11 +1107,11 @@ static int schedule_for_queue_locked(struct k_work_q **queuep,
  * @return true if and only if work had been delayed so the timeout
  * was cancelled.
  */
-static inline bool unschedule_locked(struct k_work_delayable *dwork,
-				     k_spinlock_key_t *key)
+स्थिर अन्तःस्थ bool unschedule_locked(संरचना k_work_delayable *dwork,
+				     k_spinlock_कुञ्चिका_t *कुञ्चिका)
 {
 	bool ret = false;
-	struct k_work *work = &dwork->work;
+	संरचना k_work *work = &dwork->work;
 
 	/* If scheduled, try to cancel.  If it fails, that means the
 	 * callback has been dequeued and will inevitably run (or has
@@ -1125,15 +1125,15 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
 	 * true, and either is unsafe while the handler is still about
 	 * to dereference dwork->work.flags.
 	 */
-	if (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
-		while (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
-			k_spin_unlock(&work_lock, *key);
-			*key = k_spin_lock(&work_lock);
+	यदि (flag_test_and_clear(&work->flags, K_WORK_DELAYED_BIT)) {
+		यावत् (z_try_abort_timeout(&dwork->timeout) == -EAGAIN) {
+			k_spin_unlock(&work_तालकम्, *कुञ्चिका);
+			*कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 		}
 		ret = true;
 	}
 
-	return ret;
+	प्रत्यागम ret;
 }
 
 /* Full cancellation of a delayable work item.
@@ -1147,179 +1147,179 @@ static inline bool unschedule_locked(struct k_work_delayable *dwork,
  *
  * @return k_work_busy_get() flags
  */
-static int cancel_delayable_async_locked(struct k_work_delayable *dwork,
-					 k_spinlock_key_t *key)
+स्थिर पूर्णाङ्क cancel_delayable_async_locked(संरचना k_work_delayable *dwork,
+					 k_spinlock_कुञ्चिका_t *कुञ्चिका)
 {
-	(void)unschedule_locked(dwork, key);
+	(शून्य)unschedule_locked(dwork, कुञ्चिका);
 
-	return cancel_async_locked(&dwork->work);
+	प्रत्यागम cancel_async_locked(&dwork->work);
 }
 
-int k_work_schedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+पूर्णाङ्क k_work_कालसारणी_for_queue(संरचना k_work_q *queue, संरचना k_work_delayable *dwork,
 			      k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(queue != रिक्त);
+	__ASSERT_NO_MSG(dwork != रिक्त);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule_for_queue, queue, dwork, delay);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, कालसारणी_for_queue, queue, dwork, delay);
 
-	struct k_work *work = &dwork->work;
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना k_work *work = &dwork->work;
+	पूर्णाङ्क ret = 0;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
 	/* Schedule the work item if it's idle or running. */
-	if ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
-		ret = schedule_for_queue_locked(&queue, dwork, delay);
+	यदि ((work_busy_get_locked(work) & ~K_WORK_RUNNING) == 0U) {
+		ret = कालसारणी_for_queue_locked(&queue, dwork, delay);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule_for_queue, queue, dwork, delay, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, कालसारणी_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_schedule(struct k_work_delayable *dwork, k_timeout_t delay)
+पूर्णाङ्क k_work_कालसारणी(संरचना k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, schedule, dwork, delay);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, कालसारणी, dwork, delay);
 
-	int ret = k_work_schedule_for_queue(&k_sys_work_q, dwork, delay);
+	पूर्णाङ्क ret = k_work_कालसारणी_for_queue(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, schedule, dwork, delay, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, कालसारणी, dwork, delay, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_reschedule_for_queue(struct k_work_q *queue, struct k_work_delayable *dwork,
+पूर्णाङ्क k_work_reschedule_for_queue(संरचना k_work_q *queue, संरचना k_work_delayable *dwork,
 				k_timeout_t delay)
 {
-	__ASSERT_NO_MSG(queue != NULL);
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(queue != रिक्त);
+	__ASSERT_NO_MSG(dwork != रिक्त);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, reschedule_for_queue, queue, dwork, delay);
 
-	int ret;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	पूर्णाङ्क ret;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
 	/* Remove any active scheduling. */
-	(void)unschedule_locked(dwork, &key);
+	(शून्य)unschedule_locked(dwork, &कुञ्चिका);
 
 	/* Schedule the work item with the new parameters. */
-	ret = schedule_for_queue_locked(&queue, dwork, delay);
+	ret = कालसारणी_for_queue_locked(&queue, dwork, delay);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, reschedule_for_queue, queue, dwork, delay, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_reschedule(struct k_work_delayable *dwork, k_timeout_t delay)
+पूर्णाङ्क k_work_reschedule(संरचना k_work_delayable *dwork, k_timeout_t delay)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, reschedule, dwork, delay);
 
-	int ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
+	पूर्णाङ्क ret = k_work_reschedule_for_queue(&k_sys_work_q, dwork, delay);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, reschedule, dwork, delay, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-int k_work_cancel_delayable(struct k_work_delayable *dwork)
+पूर्णाङ्क k_work_cancel_delayable(संरचना k_work_delayable *dwork)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
+	__ASSERT_NO_MSG(dwork != रिक्त);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable, dwork);
 
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
-	int ret = cancel_delayable_async_locked(dwork, &key);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
+	पूर्णाङ्क ret = cancel_delayable_async_locked(dwork, &कुञ्चिका);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable, dwork, ret);
 
-	return ret;
+	प्रत्यागम ret;
 }
 
-bool k_work_cancel_delayable_sync(struct k_work_delayable *dwork,
-				  struct k_work_sync *sync)
+bool k_work_cancel_delayable_sync(संरचना k_work_delayable *dwork,
+				  संरचना k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != रिक्त);
+	__ASSERT_NO_MSG(sync != रिक्त);
+	__ASSERT_NO_MSG(!k_is_अन्तर्_isr());
+#यदि_परिभाषितम् CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#यदि_अन्तः /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, cancel_delayable_sync, dwork, sync);
 
-	struct z_work_canceller *canceller = &sync->canceller;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना z_work_canceller *canceller = &sync->canceller;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 	bool pending = (work_delayable_busy_get_locked(dwork) != 0U);
 	bool need_wait = false;
 
-	if (pending) {
-		(void)cancel_delayable_async_locked(dwork, &key);
+	यदि (pending) {
+		(शून्य)cancel_delayable_async_locked(dwork, &कुञ्चिका);
 		need_wait = cancel_sync_locked(&dwork->work, canceller);
 	}
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-	if (need_wait) {
+	यदि (need_wait) {
 		k_sem_take(&canceller->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
-	return pending;
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, cancel_delayable_sync, dwork, sync, pending);
+	प्रत्यागम pending;
 }
 
-bool k_work_flush_delayable(struct k_work_delayable *dwork,
-			    struct k_work_sync *sync)
+bool k_work_flush_delayable(संरचना k_work_delayable *dwork,
+			    संरचना k_work_sync *sync)
 {
-	__ASSERT_NO_MSG(dwork != NULL);
-	__ASSERT_NO_MSG(sync != NULL);
-	__ASSERT_NO_MSG(!k_is_in_isr());
-#ifdef CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(dwork != रिक्त);
+	__ASSERT_NO_MSG(sync != रिक्त);
+	__ASSERT_NO_MSG(!k_is_अन्तर्_isr());
+#यदि_परिभाषितम् CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(sync));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#यदि_अन्तः /* CONFIG_KERNEL_COHERENCE */
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_work, flush_delayable, dwork, sync);
 
-	struct k_work *work = &dwork->work;
-	struct z_work_flusher *flusher = &sync->flusher;
-	k_spinlock_key_t key = k_spin_lock(&work_lock);
+	संरचना k_work *work = &dwork->work;
+	संरचना z_work_flusher *flusher = &sync->flusher;
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&work_तालकम्);
 
 	/* If it's idle release the lock and return immediately. */
-	if (work_busy_get_locked(work) == 0U) {
-		k_spin_unlock(&work_lock, key);
+	यदि (work_busy_get_locked(work) == 0U) {
+		k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, false);
 
-		return false;
+		प्रत्यागम false;
 	}
 
 	/* If unscheduling did something then submit it.  Ignore a
 	 * failed submission (e.g. when cancelling).
 	 */
-	if (unschedule_locked(dwork, &key)) {
-		struct k_work_q *queue = dwork->queue;
+	यदि (unschedule_locked(dwork, &कुञ्चिका)) {
+		संरचना k_work_q *queue = dwork->queue;
 
-		(void)submit_to_queue_locked(work, &queue);
+		(शून्य)submit_गन्तव्यम्_queue_locked(work, &queue);
 	}
 
 	/* Wait for it to finish */
 	bool need_flush = work_flush_locked(work, flusher);
 
-	k_spin_unlock(&work_lock, key);
+	k_spin_unlock(&work_तालकम्, कुञ्चिका);
 
 	/* If necessary wait until the flusher item completes */
-	if (need_flush) {
+	यदि (need_flush) {
 		k_sem_take(&flusher->sem, K_FOREVER);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_work, flush_delayable, dwork, sync, need_flush);
 
-	return need_flush;
+	प्रत्यागम need_flush;
 }
 
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#यदि_अन्तः /* CONFIG_SYS_CLOCK_EXISTS */

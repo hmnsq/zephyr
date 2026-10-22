@@ -14,13 +14,13 @@
  * stays focused on run-queue management.
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
-#define ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
+#यदि_अपरिभाषितम् ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
+#परिभाषय ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
 
-#include <zephyr/kernel.h>
-#include <kthread.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <kthread.h>
 
-BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
+BUILD_ASSERT(CONFIG_अङ्कः_COOP_PRIORITIES >= CONFIG_अङ्कः_METAIRQ_PRIORITIES,
 	     "You need to provide at least as many CONFIG_NUM_COOP_PRIORITIES as "
 	     "CONFIG_NUM_METAIRQ_PRIORITIES as Meta IRQs are just a special class of cooperative "
 	     "threads.");
@@ -34,20 +34,20 @@ BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
  *
  * @param thread The thread about to become _current.
  */
-static inline void update_metairq_preempt(struct k_thread *thread)
+स्थिर अन्तःस्थ शून्य update_metairq_preempt(संरचना k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	if (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
+#यदि (CONFIG_अङ्कः_METAIRQ_PRIORITIES > 0)
+	यदि (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
 	    !thread_is_preemptible(_current)) {
 		/* Record new preemption */
 		_current_cpu->metairq_preempted = _current;
-	} else if (!thread_is_metairq(thread)) {
+	} अन्यथा यदि (!thread_is_metairq(thread)) {
 		/* Returning from existing preemption */
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = रिक्त;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#अन्यथा
+	ARG_अप्रयुक्तम्(thread);
+#यदि_अन्तः /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
 /**
@@ -61,26 +61,26 @@ static inline void update_metairq_preempt(struct k_thread *thread)
  * @param thread Best candidate chosen from the run queue.
  * @return Thread to run next.
  */
-static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
+स्थिर अन्तःस्थ संरचना k_thread *metairq_preempt_recover(संरचना k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+#यदि (CONFIG_अङ्कः_METAIRQ_PRIORITIES > 0)
 	/* MetaIRQs must always attempt to return back to a cooperative thread
 	 * they preempted and not whatever happens to be highest priority now.
 	 * The cooperative thread was promised it wouldn't be preempted (by
 	 * non-metairq threads)!
 	 */
-	struct k_thread *mirqp = _current_cpu->metairq_preempted;
+	संरचना k_thread *mirqp = _current_cpu->metairq_preempted;
 
-	if (mirqp != NULL && (thread == NULL || !thread_is_metairq(thread))) {
-		if (z_is_thread_ready(mirqp)) {
-			return mirqp;
+	यदि (mirqp != रिक्त && (thread == रिक्त || !thread_is_metairq(thread))) {
+		यदि (z_is_thread_ready(mirqp)) {
+			प्रत्यागम mirqp;
 		}
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = रिक्त;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
-	return thread;
+#अन्यथा
+	ARG_अप्रयुक्तम्(thread);
+#यदि_अन्तः /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+	प्रत्यागम thread;
 }
 
 /**
@@ -92,13 +92,13 @@ static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
  *
  * @return true if it is safe to re-queue _current, false otherwise.
  */
-static inline bool metairq_current_requeue_allowed(void)
+स्थिर अन्तःस्थ bool metairq_current_requeue_allowed(शून्य)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	return _current != _current_cpu->metairq_preempted;
-#else
-	return true;
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#यदि (CONFIG_अङ्कः_METAIRQ_PRIORITIES > 0)
+	प्रत्यागम _current != _current_cpu->metairq_preempted;
+#अन्यथा
+	प्रत्यागम true;
+#यदि_अन्तः /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
 /**
@@ -110,20 +110,20 @@ static inline bool metairq_current_requeue_allowed(void)
  *
  * @param thread Thread that is being halted.
  */
-static inline void z_metairq_preempted_clear(struct k_thread *thread)
+स्थिर अन्तःस्थ शून्य z_metairq_preempted_clear(संरचना k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	unsigned int cpu_id = 0;
+#यदि (CONFIG_अङ्कः_METAIRQ_PRIORITIES > 0)
+	अचिह्नित पूर्णाङ्क cpu_id = 0;
 
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
-	cpu_id = thread->base.cpu;
-#endif
-	if (_kernel.cpus[cpu_id].metairq_preempted == thread) {
-		_kernel.cpus[cpu_id].metairq_preempted = NULL;
+#यदि defined(CONFIG_SMP) && (CONFIG_MP_MAX_अङ्कः_CPUS > 1)
+	cpu_id = thread->आधारः.cpu;
+#यदि_अन्तः
+	यदि (_kernel.cpus[cpu_id].metairq_preempted == thread) {
+		_kernel.cpus[cpu_id].metairq_preempted = रिक्त;
 	}
-#else
-	ARG_UNUSED(thread);
-#endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
+#अन्यथा
+	ARG_अप्रयुक्तम्(thread);
+#यदि_अन्तः /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_ */
+#यदि_अन्तः /* ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_ */

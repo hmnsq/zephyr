@@ -3,104 +3,104 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/sys/minmax.h>
-#include <zephyr/init.h>
-#include <zephyr/kernel.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <ksched.h>
-#include <kthread.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#अन्तर्भाव <zephyr/sys/minmax.h>
+#अन्तर्भाव <zephyr/init.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <kthread.h>
+#अन्तर्भाव <wait_q.h>
+#अन्तर्भाव <scheduler.h>
 
-#ifdef CONFIG_OBJ_CORE_PIPE
-K_OBJ_TYPE_DEFINE(obj_type_pipe, k_pipe, K_OBJ_TYPE_PIPE_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_PIPE */
+#यदि_परिभाषितम् CONFIG_OBJ_CORE_PIPE
+K_OBJ_TYPE_DEFINE(obj_type_pipe, k_pipe, K_OBJ_TYPE_PIPE_ID, रिक्त);
+#यदि_अन्तः /* CONFIG_OBJ_CORE_PIPE */
 
-static inline bool pipe_closed(struct k_pipe *pipe)
+स्थिर अन्तःस्थ bool pipe_closed(संरचना k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_OPEN) == 0;
+	प्रत्यागम (pipe->flags & PIPE_FLAG_OPEN) == 0;
 }
 
-static inline bool pipe_resetting(struct k_pipe *pipe)
+स्थिर अन्तःस्थ bool pipe_resetting(संरचना k_pipe *pipe)
 {
-	return (pipe->flags & PIPE_FLAG_RESET) != 0;
+	प्रत्यागम (pipe->flags & PIPE_FLAG_RESET) != 0;
 }
 
-static inline bool pipe_full(struct k_pipe *pipe)
+स्थिर अन्तःस्थ bool pipe_पूर्णम्(संरचना k_pipe *pipe)
 {
-	return ring_buf_space_get(&pipe->buf) == 0;
+	प्रत्यागम ring_buf_space_get(&pipe->buf) == 0;
 }
 
-static inline bool pipe_empty(struct k_pipe *pipe)
+स्थिर अन्तःस्थ bool pipe_रिक्तानि(संरचना k_pipe *pipe)
 {
-	return ring_buf_is_empty(&pipe->buf);
+	प्रत्यागम ring_buf_is_रिक्तानि(&pipe->buf);
 }
 
-struct pipe_buf_spec {
-	uint8_t * const data;
-	const size_t len;
-	size_t used;
+संरचना pipe_buf_spec {
+	uint8_t * ध्रुव दत्त;
+	ध्रुव size_t len;
+	size_t प्रयुक्तम्;
 };
 
-static int wait_for(_wait_q_t *waitq, struct k_pipe *pipe, k_spinlock_key_t *key,
-		    k_timepoint_t time_limit, bool *need_resched,
-		    struct pipe_buf_spec *buf_spec)
+स्थिर पूर्णाङ्क wait_for(_wait_q_t *waitq, संरचना k_pipe *pipe, k_spinlock_कुञ्चिका_t *कुञ्चिका,
+		    k_timepoint_t time_सीमा, bool *need_resched,
+		    संरचना pipe_buf_spec *buf_spec)
 {
-	k_timeout_t timeout = sys_timepoint_timeout(time_limit);
-	int rc;
+	k_timeout_t timeout = sys_timepoint_timeout(time_सीमा);
+	पूर्णाङ्क rc;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		return -EAGAIN;
+	यदि (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		प्रत्यागम -EAGAIN;
 	}
 
-	_current->base.swap_data = buf_spec;
+	_current->आधारः.swap_दत्त = buf_spec;
 
-	pipe->waiting++;
+	pipe->प्रतीक्षा++;
 	*need_resched = false;
-	if (waitq == &pipe->space) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, write, pipe, timeout);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_pipe, read, pipe, timeout);
+	यदि (waitq == &pipe->space) {
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_BLOCKING(k_pipe, लिख, pipe, timeout);
+	} अन्यथा {
+		SYS_पत्तनम्_TRACING_OBJ_FUNC_BLOCKING(k_pipe, पठ, pipe, timeout);
 	}
-	rc = z_pend_curr(&pipe->lock, *key, waitq, timeout);
-	*key = k_spin_lock(&pipe->lock);
-	pipe->waiting--;
-	if (unlikely(pipe_resetting(pipe))) {
-		if (pipe->waiting == 0) {
+	rc = z_pend_curr(&pipe->तालकम्, *कुञ्चिका, waitq, timeout);
+	*कुञ्चिका = k_spin_तालकम्(&pipe->तालकम्);
+	pipe->प्रतीक्षा--;
+	यदि (unlikely(pipe_resetting(pipe))) {
+		यदि (pipe->प्रतीक्षा == 0) {
 			pipe->flags &= ~PIPE_FLAG_RESET;
 		}
 		rc = -ECANCELED;
 	}
 
-	return rc;
+	प्रत्यागम rc;
 }
 
-void z_impl_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+शून्य z_impl_k_pipe_init(संरचना k_pipe *pipe, uint8_t *बफर, size_t बफर_आकार)
 {
-	ring_buf_init(&pipe->buf, buffer_size, buffer);
+	ring_buf_init(&pipe->buf, बफर_आकार, बफर);
 	pipe->flags = PIPE_FLAG_OPEN;
-	pipe->waiting = 0;
+	pipe->प्रतीक्षा = 0;
 
-	pipe->lock = (struct k_spinlock){};
-	z_waitq_init(&pipe->data);
+	pipe->तालकम् = (संरचना k_spinlock){};
+	z_waitq_init(&pipe->दत्त);
 	z_waitq_init(&pipe->space);
 	k_object_init(pipe);
 
-#ifdef CONFIG_POLL
+#यदि_परिभाषितम् CONFIG_POLL
 	sys_dlist_init(&pipe->poll_events);
-#endif /* CONFIG_POLL */
-#ifdef CONFIG_OBJ_CORE_PIPE
+#यदि_अन्तः /* CONFIG_POLL */
+#यदि_परिभाषितम् CONFIG_OBJ_CORE_PIPE
 	k_obj_core_init_and_link(K_OBJ_CORE(pipe), &obj_type_pipe);
-#endif /* CONFIG_OBJ_CORE_PIPE */
-	SYS_PORT_TRACING_OBJ_INIT(k_pipe, pipe, buffer, buffer_size);
+#यदि_अन्तः /* CONFIG_OBJ_CORE_PIPE */
+	SYS_पत्तनम्_TRACING_OBJ_INIT(k_pipe, pipe, बफर, बफर_आकार);
 }
 
-static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
-				      const uint8_t *data, size_t len)
+स्थिर size_t copy_गन्तव्यम्_pending_readers(संरचना k_pipe *pipe, bool *need_resched,
+				      ध्रुव uint8_t *दत्त, size_t len)
 {
-	struct k_thread *reader = NULL;
-	struct pipe_buf_spec *reader_buf;
-	size_t copy_size, written = 0;
+	संरचना k_thread *reader = रिक्त;
+	संरचना pipe_buf_spec *reader_buf;
+	size_t copy_आकार, written = 0;
 
 	/*
 	 * Attempt a direct data copy to waiting readers if any.
@@ -110,25 +110,25 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 	 * received all the data it wanted, without racing with a potential
 	 * thread timeout/cancellation event.
 	 */
-	do {
-		LOCK_SCHED_SPINLOCK {
-			reader = _priq_wait_best(&pipe->data.waitq);
-			if (reader == NULL) {
+	कुरु {
+		तालकम्_SCHED_SPINLOCK {
+			reader = _priq_wait_best(&pipe->दत्त.waitq);
+			यदि (reader == रिक्त) {
 				K_SPINLOCK_BREAK;
 			}
 
-			reader_buf = reader->base.swap_data;
-			copy_size = min(len - written,
-					reader_buf->len - reader_buf->used);
-			memcpy(&reader_buf->data[reader_buf->used],
-			       &data[written], copy_size);
-			written += copy_size;
-			reader_buf->used += copy_size;
+			reader_buf = reader->आधारः.swap_दत्त;
+			copy_आकार = min(len - written,
+					reader_buf->len - reader_buf->प्रयुक्तम्);
+			स्मृतिं_प्रतिलिख(&reader_buf->दत्त[reader_buf->प्रयुक्तम्],
+			       &दत्त[written], copy_आकार);
+			written += copy_आकार;
+			reader_buf->प्रयुक्तम् += copy_आकार;
 
-			if (reader_buf->used < reader_buf->len) {
+			यदि (reader_buf->प्रयुक्तम् < reader_buf->len) {
 				/* This reader wants more: don't unpend. */
-				reader = NULL;
-			} else {
+				reader = रिक्त;
+			} अन्यथा {
 				/*
 				 * This reader has received all the data
 				 * it was waiting for. Set its return
@@ -137,47 +137,47 @@ static size_t copy_to_pending_readers(struct k_pipe *pipe, bool *need_resched,
 				 * so a racing timeout handler cannot
 				 * observe a half-initialized wake-up.
 				 */
-				z_thread_return_value_set_with_data(reader, 0, NULL);
+				z_thread_return_मानम्_समुच्चयः_with_दत्त(reader, 0, रिक्त);
 				unpend_thread_no_timeout(reader);
-				(void)z_try_abort_thread_timeout(reader);
+				(शून्य)z_try_abort_thread_timeout(reader);
 				z_sched_ready_locked(reader);
 				*need_resched = true;
 			}
 		}
-	} while (reader != NULL && written < len);
+	} यावत् (reader != रिक्त && written < len);
 
-	return written;
+	प्रत्यागम written;
 }
 
-int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+पूर्णाङ्क z_impl_k_pipe_write(संरचना k_pipe *pipe, ध्रुव uint8_t *दत्त, size_t len, k_timeout_t timeout)
 {
-	int rc;
+	पूर्णाङ्क rc;
 	size_t written = 0;
 	size_t added;
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	k_timepoint_t अन्तः = sys_timepoint_calc(timeout);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&pipe->तालकम्);
 	bool need_resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, write, pipe, data, len, timeout);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_pipe, लिख, pipe, दत्त, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	यदि (unlikely(len > अधिकतम_पूर्णाङ्कः)) {
 		rc = -EOVERFLOW;
-		goto out;
+		गच्छ बहिर्गमनम्;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	यदि (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
-		goto out;
+		गच्छ बहिर्गमनम्;
 	}
 
-	for (;;) {
-		if (unlikely(pipe_closed(pipe))) {
+	प्रति (;;) {
+		यदि (unlikely(pipe_closed(pipe))) {
 			rc = -EPIPE;
-			break;
+			भङ्ग;
 		}
 
-		if (pipe_empty(pipe)) {
-			if (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
+		यदि (pipe_रिक्तानि(pipe)) {
+			यदि (IS_ENABLED(CONFIG_KERNEL_COHERENCE)) {
 				/*
 				 * Systems that enabled this option don't have
 				 * their stacks in coherent memory. Given our
@@ -187,192 +187,192 @@ int z_impl_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_
 				 * supporting direct-to-readers copy with them.
 				 * Simply wake up all pending readers instead.
 				 */
-				need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
-			} else if (pipe->waiting != 0) {
-				written += copy_to_pending_readers(pipe, &need_resched,
-								   &data[written],
+				need_resched = z_sched_wake_all(&pipe->दत्त, 0, रिक्त);
+			} अन्यथा यदि (pipe->प्रतीक्षा != 0) {
+				written += copy_गन्तव्यम्_pending_readers(pipe, &need_resched,
+								   &दत्त[written],
 								   len - written);
-				if (written >= len) {
+				यदि (written >= len) {
 					rc = written;
-					break;
+					भङ्ग;
 				}
 			}
 		}
 
-		added = ring_buf_put(&pipe->buf, &data[written], len - written);
+		added = ring_buf_put(&pipe->buf, &दत्त[written], len - written);
 
-#ifdef CONFIG_POLL
-		if (added != 0) {
+#यदि_परिभाषितम् CONFIG_POLL
+		यदि (added != 0) {
 			need_resched |= z_handle_obj_poll_events(&pipe->poll_events,
-								 K_POLL_STATE_PIPE_DATA_AVAILABLE);
+								 K_POLL_STATE_PIPE_दत्त_उपलब्धम्);
 		}
-#endif /* CONFIG_POLL */
+#यदि_अन्तः /* CONFIG_POLL */
 
 		written += added;
-		if (likely(written == len)) {
+		यदि (likely(written == len)) {
 			rc = written;
-			break;
+			भङ्ग;
 		}
 
-		rc = wait_for(&pipe->space, pipe, &key, end, &need_resched, NULL);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
+		rc = wait_for(&pipe->space, pipe, &कुञ्चिका, अन्तः, &need_resched, रिक्त);
+		यदि (rc != 0) {
+			यदि (rc == -EAGAIN) {
 				rc = written ? written : -EAGAIN;
 			}
-			break;
+			भङ्ग;
 		}
 	}
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, write, pipe, rc);
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+बहिर्गमनम्:
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_pipe, लिख, pipe, rc);
+	यदि (need_resched) {
+		z_reschedule(&pipe->तालकम्, कुञ्चिका);
+	} अन्यथा {
+		k_spin_unlock(&pipe->तालकम्, कुञ्चिका);
 	}
-	return rc;
+	प्रत्यागम rc;
 }
 
-int z_impl_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+पूर्णाङ्क z_impl_k_pipe_read(संरचना k_pipe *pipe, uint8_t *दत्त, size_t len, k_timeout_t timeout)
 {
-	struct pipe_buf_spec buf = { data, len, 0 };
-	int rc;
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	k_spinlock_key_t key = k_spin_lock(&pipe->lock);
+	संरचना pipe_buf_spec buf = { दत्त, len, 0 };
+	पूर्णाङ्क rc;
+	k_timepoint_t अन्तः = sys_timepoint_calc(timeout);
+	k_spinlock_कुञ्चिका_t कुञ्चिका = k_spin_तालकम्(&pipe->तालकम्);
 	bool need_resched = false;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, read, pipe, data, len, timeout);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_pipe, पठ, pipe, दत्त, len, timeout);
 
-	if (unlikely(len > INT_MAX)) {
+	यदि (unlikely(len > अधिकतम_पूर्णाङ्कः)) {
 		rc = -EOVERFLOW;
-		goto out;
+		गच्छ बहिर्गमनम्;
 	}
 
-	if (unlikely(pipe_resetting(pipe))) {
+	यदि (unlikely(pipe_resetting(pipe))) {
 		rc = -ECANCELED;
-		goto out;
+		गच्छ बहिर्गमनम्;
 	}
 
-	for (;;) {
-		if (pipe_full(pipe)) {
+	प्रति (;;) {
+		यदि (pipe_पूर्णम्(pipe)) {
 			/* One or more pending writers may exist. */
-			need_resched = z_sched_wake_all(&pipe->space, 0, NULL);
+			need_resched = z_sched_wake_all(&pipe->space, 0, रिक्त);
 		}
 
-		buf.used += ring_buf_get(&pipe->buf, &data[buf.used], len - buf.used);
-		if (likely(buf.used == len)) {
-			rc = buf.used;
-			break;
+		buf.प्रयुक्तम् += ring_buf_get(&pipe->buf, &दत्त[buf.प्रयुक्तम्], len - buf.प्रयुक्तम्);
+		यदि (likely(buf.प्रयुक्तम् == len)) {
+			rc = buf.प्रयुक्तम्;
+			भङ्ग;
 		}
 
-		if (unlikely(pipe_closed(pipe))) {
-			rc = buf.used ? buf.used : -EPIPE;
-			break;
+		यदि (unlikely(pipe_closed(pipe))) {
+			rc = buf.प्रयुक्तम् ? buf.प्रयुक्तम् : -EPIPE;
+			भङ्ग;
 		}
 
-		rc = wait_for(&pipe->data, pipe, &key, end, &need_resched, &buf);
-		if (rc != 0) {
-			if (rc == -EAGAIN) {
-				rc = buf.used ? buf.used : -EAGAIN;
+		rc = wait_for(&pipe->दत्त, pipe, &कुञ्चिका, अन्तः, &need_resched, &buf);
+		यदि (rc != 0) {
+			यदि (rc == -EAGAIN) {
+				rc = buf.प्रयुक्तम् ? buf.प्रयुक्तम् : -EAGAIN;
 			}
-			break;
+			भङ्ग;
 		}
 	}
-out:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, read, pipe, rc);
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+बहिर्गमनम्:
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_pipe, पठ, pipe, rc);
+	यदि (need_resched) {
+		z_reschedule(&pipe->तालकम्, कुञ्चिका);
+	} अन्यथा {
+		k_spin_unlock(&pipe->तालकम्, कुञ्चिका);
 	}
-	return rc;
+	प्रत्यागम rc;
 }
 
-void z_impl_k_pipe_reset(struct k_pipe *pipe)
+शून्य z_impl_k_pipe_reset(संरचना k_pipe *pipe)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, reset, pipe);
-	K_SPINLOCK(&pipe->lock) {
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_pipe, reset, pipe);
+	K_SPINLOCK(&pipe->तालकम्) {
 		ring_buf_reset(&pipe->buf);
-		if (likely(pipe->waiting != 0)) {
+		यदि (likely(pipe->प्रतीक्षा != 0)) {
 			pipe->flags |= PIPE_FLAG_RESET;
-			z_sched_wake_all(&pipe->data, 0, NULL);
-			z_sched_wake_all(&pipe->space, 0, NULL);
+			z_sched_wake_all(&pipe->दत्त, 0, रिक्त);
+			z_sched_wake_all(&pipe->space, 0, रिक्त);
 		}
 	}
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, reset, pipe);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_pipe, reset, pipe);
 }
 
-void z_impl_k_pipe_close(struct k_pipe *pipe)
+शून्य z_impl_k_pipe_close(संरचना k_pipe *pipe)
 {
-	k_spinlock_key_t key;
+	k_spinlock_कुञ्चिका_t कुञ्चिका;
 	bool need_resched;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_pipe, close, pipe);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_ENTER(k_pipe, close, pipe);
 
-	key = k_spin_lock(&pipe->lock);
+	कुञ्चिका = k_spin_तालकम्(&pipe->तालकम्);
 
 	pipe->flags = 0;
-	need_resched = z_sched_wake_all(&pipe->data, 0, NULL);
-	need_resched |= z_sched_wake_all(&pipe->space, 0, NULL);
+	need_resched = z_sched_wake_all(&pipe->दत्त, 0, रिक्त);
+	need_resched |= z_sched_wake_all(&pipe->space, 0, रिक्त);
 
-#ifdef CONFIG_POLL
+#यदि_परिभाषितम् CONFIG_POLL
 	/*
 	 * Closing is a broadcast: wake every registered poller. Later
 	 * k_poll() calls see the hangup through is_condition_met().
 	 */
-	while (z_handle_obj_poll_events(&pipe->poll_events,
-					K_POLL_STATE_PIPE_DATA_AVAILABLE)) {
+	यावत् (z_handle_obj_poll_events(&pipe->poll_events,
+					K_POLL_STATE_PIPE_दत्त_उपलब्धम्)) {
 		need_resched = true;
 	}
-#endif /* CONFIG_POLL */
+#यदि_अन्तः /* CONFIG_POLL */
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
+	SYS_पत्तनम्_TRACING_OBJ_FUNC_EXIT(k_pipe, close, pipe);
 
-	if (need_resched) {
-		z_reschedule(&pipe->lock, key);
-	} else {
-		k_spin_unlock(&pipe->lock, key);
+	यदि (need_resched) {
+		z_reschedule(&pipe->तालकम्, कुञ्चिका);
+	} अन्यथा {
+		k_spin_unlock(&pipe->तालकम्, कुञ्चिका);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-void z_vrfy_k_pipe_init(struct k_pipe *pipe, uint8_t *buffer, size_t buffer_size)
+#यदि_परिभाषितम् CONFIG_USERSPACE
+शून्य z_vrfy_k_pipe_init(संरचना k_pipe *pipe, uint8_t *बफर, size_t बफर_आकार)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(pipe, K_OBJ_PIPE));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(buffer, buffer_size));
+	K_OOPS(K_SYSCALL_स्मृतिः_WRITE(बफर, बफर_आकार));
 
-	z_impl_k_pipe_init(pipe, buffer, buffer_size);
+	z_impl_k_pipe_init(pipe, बफर, बफर_आकार);
 }
-#include <zephyr/syscalls/k_pipe_init_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_pipe_init_mrsh.c>
 
-int z_vrfy_k_pipe_read(struct k_pipe *pipe, uint8_t *data, size_t len, k_timeout_t timeout)
+पूर्णाङ्क z_vrfy_k_pipe_read(संरचना k_pipe *pipe, uint8_t *दत्त, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, len));
+	K_OOPS(K_SYSCALL_स्मृतिः_WRITE(दत्त, len));
 
-	return z_impl_k_pipe_read(pipe, data, len, timeout);
+	प्रत्यागम z_impl_k_pipe_read(pipe, दत्त, len, timeout);
 }
-#include <zephyr/syscalls/k_pipe_read_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_pipe_read_mrsh.c>
 
-int z_vrfy_k_pipe_write(struct k_pipe *pipe, const uint8_t *data, size_t len, k_timeout_t timeout)
+पूर्णाङ्क z_vrfy_k_pipe_write(संरचना k_pipe *pipe, ध्रुव uint8_t *दत्त, size_t len, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, len));
+	K_OOPS(K_SYSCALL_स्मृतिः_READ(दत्त, len));
 
-	return z_impl_k_pipe_write(pipe, data, len, timeout);
+	प्रत्यागम z_impl_k_pipe_write(pipe, दत्त, len, timeout);
 }
-#include <zephyr/syscalls/k_pipe_write_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_pipe_write_mrsh.c>
 
-void z_vrfy_k_pipe_reset(struct k_pipe *pipe)
+शून्य z_vrfy_k_pipe_reset(संरचना k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_reset(pipe);
 }
-#include <zephyr/syscalls/k_pipe_reset_mrsh.c>
+#अन्तर्भाव <zephyr/syscalls/k_pipe_reset_mrsh.c>
 
-void z_vrfy_k_pipe_close(struct k_pipe *pipe)
+शून्य z_vrfy_k_pipe_close(संरचना k_pipe *pipe)
 {
 	K_OOPS(K_SYSCALL_OBJ(pipe, K_OBJ_PIPE));
 	z_impl_k_pipe_close(pipe);
 }
-#include <zephyr/syscalls/k_pipe_close_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#अन्तर्भाव <zephyr/syscalls/k_pipe_close_mrsh.c>
+#यदि_अन्तः /* CONFIG_USERSPACE */

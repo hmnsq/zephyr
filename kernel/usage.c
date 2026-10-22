@@ -4,139 +4,139 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/kernel.h>
 
-#include <zephyr/timing/timing.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
+#अन्तर्भाव <zephyr/timing/timing.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <zephyr/spinlock.h>
+#अन्तर्भाव <zephyr/sys/check.h>
 
 /* Need one of these for this to work */
-#if !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
-#error "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
-#endif /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
+#यदि !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
+#दोषः "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
+#यदि_अन्तः /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
-static struct k_spinlock usage_lock;
+स्थिर संरचना k_spinlock usage_तालकम्;
 
-static uint32_t usage_now(void)
+स्थिर uint32_t usage_now(शून्य)
 {
 	uint32_t now;
 
-#ifdef CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
-	now = (uint32_t)timing_counter_get();
-#else
-	now = k_cycle_get_32();
-#endif /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
+#यदि_परिभाषितम् CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
+	now = (uint32_t)timing_गणक_get();
+#अन्यथा
+	now = k_आवृत्तिः_get_32();
+#यदि_अन्तः /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
 
 	/* Edge case: we use a zero as a null ("stop() already called") */
-	return (now == 0) ? 1 : now;
+	प्रत्यागम (now == 0) ? 1 : now;
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-static void sched_cpu_update_usage(struct _cpu *cpu, uint32_t cycles)
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ALL
+स्थिर शून्य sched_cpu_update_usage(संरचना _cpu *cpu, uint32_t आवृत्तयः)
 {
-	if (!cpu->usage->track_usage) {
-		return;
+	यदि (!cpu->usage->track_usage) {
+		प्रत्यागम;
 	}
 
-	if (cpu->current != cpu->idle_thread) {
-		cpu->usage->total += cycles;
+	यदि (cpu->current != cpu->idle_thread) {
+		cpu->usage->योग += आवृत्तयः;
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		cpu->usage->current += cycles;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+		cpu->usage->current += आवृत्तयः;
 
-		if (cpu->usage->longest < cpu->usage->current) {
+		यदि (cpu->usage->longest < cpu->usage->current) {
 			cpu->usage->longest = cpu->usage->current;
 		}
-	} else {
+	} अन्यथा {
 		cpu->usage->current = 0;
-		cpu->usage->num_windows++;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+		cpu->usage->अङ्कः_windows++;
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 }
-#else
-#define sched_cpu_update_usage(cpu, cycles)   do { } while (0)
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#अन्यथा
+#परिभाषय sched_cpu_update_usage(cpu, आवृत्तयः)   कुरु { } यावत् (0)
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-static void sched_thread_update_usage(struct k_thread *thread, uint32_t cycles)
+स्थिर शून्य sched_thread_update_usage(संरचना k_thread *thread, uint32_t आवृत्तयः)
 {
-	thread->base.usage.total += cycles;
+	thread->आधारः.usage.योग += आवृत्तयः;
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	thread->base.usage.current += cycles;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	thread->आधारः.usage.current += आवृत्तयः;
 
-	if (thread->base.usage.longest < thread->base.usage.current) {
-		thread->base.usage.longest = thread->base.usage.current;
+	यदि (thread->आधारः.usage.longest < thread->आधारः.usage.current) {
+		thread->आधारः.usage.longest = thread->आधारः.usage.current;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_start(struct k_thread *thread)
+शून्य z_sched_usage_start(संरचना k_thread *thread)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	k_spinlock_key_t  key;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 
 	_current_cpu->usage0 = usage_now();   /* Always update */
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.num_windows++;
-		thread->base.usage.current = 0;
+	यदि (thread->आधारः.usage.track_usage) {
+		thread->आधारः.usage.अङ्कः_windows++;
+		thread->आधारः.usage.current = 0;
 	}
 
-	k_spin_unlock(&usage_lock, key);
-#else
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
+#अन्यथा
 	/* One write through a volatile pointer doesn't require
 	 * synchronization as long as _usage() treats it as volatile
 	 * (we can't race with _stop() by design).
 	 */
 
 	_current_cpu->usage0 = usage_now();
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_stop(void)
+शून्य z_sched_usage_stop(शून्य)
 {
-	struct _cpu *cpu = _current_cpu;
+	संरचना _cpu *cpu = _current_cpu;
 
 	/* Only this CPU writes usage0, and callers keep local IRQs masked. */
-	if (cpu->usage0 == 0U) {
-		return;
+	यदि (cpu->usage0 == 0U) {
+		प्रत्यागम;
 	}
 
-	k_spinlock_key_t k = k_spin_lock(&usage_lock);
+	k_spinlock_कुञ्चिका_t k = k_spin_तालकम्(&usage_तालकम्);
 
 	uint32_t u0 = cpu->usage0;
 
-	if (u0 != 0) {
-		uint32_t cycles = usage_now() - u0;
+	यदि (u0 != 0) {
+		uint32_t आवृत्तयः = usage_now() - u0;
 
-		if (cpu->current->base.usage.track_usage) {
-			sched_thread_update_usage(cpu->current, cycles);
+		यदि (cpu->current->आधारः.usage.track_usage) {
+			sched_thread_update_usage(cpu->current, आवृत्तयः);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, आवृत्तयः);
 	}
 
 	cpu->usage0 = 0;
-	k_spin_unlock(&usage_lock, k);
+	k_spin_unlock(&usage_तालकम्, k);
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ALL
+शून्य z_sched_cpu_usage(uint8_t cpu_id, संरचना k_thread_runtime_stats *stats)
 {
-	k_spinlock_key_t  key;
-	struct _cpu *cpu;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
+	संरचना _cpu *cpu;
 	uint32_t pending = 0U;
 	bool pending_is_idle = false;
 
-	key = k_spin_lock(&usage_lock);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 	cpu = &_kernel.cpus[cpu_id];
 
-	if (cpu == _current_cpu) {
+	यदि (cpu == _current_cpu) {
 		uint32_t  now = usage_now();
-		uint32_t cycles = now - cpu->usage0;
+		uint32_t आवृत्तयः = now - cpu->usage0;
 
 		/*
 		 * Getting stats for the current CPU. Update both its
@@ -145,14 +145,14 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		 * that information up-to-date.
 		 */
 
-		if (cpu->current->base.usage.track_usage) {
-			sched_thread_update_usage(cpu->current, cycles);
+		यदि (cpu->current->आधारः.usage.track_usage) {
+			sched_thread_update_usage(cpu->current, आवृत्तयः);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, आवृत्तयः);
 
 		cpu->usage0 = now;
-	} else if (cpu->usage->track_usage) {
+	} अन्यथा यदि (cpu->usage->track_usage) {
 		/*
 		 * Getting stats for another CPU. Its counters only advance when
 		 * it context switches or reports on itself, so the time it has
@@ -168,43 +168,43 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		pending_is_idle = (cpu->current == cpu->idle_thread);
 	}
 
-	stats->total_cycles     = cpu->usage->total +
+	stats->योग_आवृत्तयः     = cpu->usage->योग +
 				  (pending_is_idle ? 0U : pending);
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	stats->current_cycles   = cpu->usage->current;
-	stats->peak_cycles      = cpu->usage->longest;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->current_आवृत्तयः   = cpu->usage->current;
+	stats->peak_आवृत्तयः      = cpu->usage->longest;
 
-	if (cpu->usage->num_windows == 0) {
-		stats->average_cycles = 0;
-	} else {
-		stats->average_cycles = stats->total_cycles /
-					cpu->usage->num_windows;
+	यदि (cpu->usage->अङ्कः_windows == 0) {
+		stats->मध्यमानम्_आवृत्तयः = 0;
+	} अन्यथा {
+		stats->मध्यमानम्_आवृत्तयः = stats->योग_आवृत्तयः /
+					cpu->usage->अङ्कः_windows;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	stats->idle_cycles =
-		_kernel.cpus[cpu_id].idle_thread->base.usage.total +
+	stats->idle_आवृत्तयः =
+		_kernel.cpus[cpu_id].idle_thread->आधारः.usage.योग +
 		(pending_is_idle ? pending : 0U);
 
-	stats->execution_cycles = stats->total_cycles + stats->idle_cycles;
+	stats->execution_आवृत्तयः = stats->योग_आवृत्तयः + stats->idle_आवृत्तयः;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats)
+शून्य z_sched_thread_usage(संरचना k_thread *thread,
+			  संरचना k_thread_runtime_stats *stats)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t  key;
+	संरचना _cpu *cpu;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 	cpu = _current_cpu;
 
 
-	if (thread == cpu->current) {
+	यदि (thread == cpu->current) {
 		uint32_t now = usage_now();
-		uint32_t cycles = now - cpu->usage0;
+		uint32_t आवृत्तयः = now - cpu->usage0;
 
 		/*
 		 * Getting stats for the current thread. Update both the
@@ -213,57 +213,57 @@ void z_sched_thread_usage(struct k_thread *thread,
 		 * that information up-to-date.
 		 */
 
-		if (thread->base.usage.track_usage) {
-			sched_thread_update_usage(thread, cycles);
+		यदि (thread->आधारः.usage.track_usage) {
+			sched_thread_update_usage(thread, आवृत्तयः);
 		}
 
-		sched_cpu_update_usage(cpu, cycles);
+		sched_cpu_update_usage(cpu, आवृत्तयः);
 
 		cpu->usage0 = now;
 	}
 
-	stats->execution_cycles = thread->base.usage.total;
-	stats->total_cycles     = thread->base.usage.total;
+	stats->execution_आवृत्तयः = thread->आधारः.usage.योग;
+	stats->योग_आवृत्तयः     = thread->आधारः.usage.योग;
 
 	/* Copy-out the thread's usage stats */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	stats->current_cycles = thread->base.usage.current;
-	stats->peak_cycles    = thread->base.usage.longest;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->current_आवृत्तयः = thread->आधारः.usage.current;
+	stats->peak_आवृत्तयः    = thread->आधारः.usage.longest;
 
-	if (thread->base.usage.num_windows == 0) {
-		stats->average_cycles = 0;
-	} else {
-		stats->average_cycles = stats->total_cycles /
-					thread->base.usage.num_windows;
+	यदि (thread->आधारः.usage.अङ्कः_windows == 0) {
+		stats->मध्यमानम्_आवृत्तयः = 0;
+	} अन्यथा {
+		stats->मध्यमानम्_आवृत्तयः = stats->योग_आवृत्तयः /
+					thread->आधारः.usage.अङ्कः_windows;
 	}
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-	stats->idle_cycles = 0;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ALL
+	stats->idle_आवृत्तयः = 0;
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 }
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-int k_thread_runtime_stats_enable(k_tid_t  thread)
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+पूर्णाङ्क k_thread_runtime_stats_enable(k_tid_t  thread)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == रिक्त) {
+		प्रत्यागम -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
+	संरचना _cpu *cpu = _current_cpu;
 
-	if (!thread->base.usage.track_usage) {
-		thread->base.usage.track_usage = true;
-		thread->base.usage.num_windows++;
-		thread->base.usage.current = 0;
+	यदि (!thread->आधारः.usage.track_usage) {
+		thread->आधारः.usage.track_usage = true;
+		thread->आधारः.usage.अङ्कः_windows++;
+		thread->आधारः.usage.current = 0;
 
-		if (thread == cpu->current) {
+		यदि (thread == cpu->current) {
 			uint32_t now = usage_now();
 
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
@@ -272,55 +272,55 @@ int k_thread_runtime_stats_enable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int k_thread_runtime_stats_disable(k_tid_t  thread)
+पूर्णाङ्क k_thread_runtime_stats_disable(k_tid_t  thread)
 {
-	k_spinlock_key_t key;
+	k_spinlock_कुञ्चिका_t कुञ्चिका;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == रिक्त) {
+		प्रत्यागम -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
+	संरचना _cpu *cpu = _current_cpu;
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.track_usage = false;
+	यदि (thread->आधारः.usage.track_usage) {
+		thread->आधारः.usage.track_usage = false;
 
-		if (thread == cpu->current) {
+		यदि (thread == cpu->current) {
 			uint32_t now = usage_now();
-			uint32_t cycles = now - cpu->usage0;
+			uint32_t आवृत्तयः = now - cpu->usage0;
 
-			sched_thread_update_usage(thread, cycles);
-			sched_cpu_update_usage(cpu, cycles);
+			sched_thread_update_usage(thread, आवृत्तयः);
+			sched_cpu_update_usage(cpu, आवृत्तयः);
 
 			cpu->usage0 = now;
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
 bool k_thread_runtime_stats_is_enabled(k_tid_t thread)
 {
-	return thread->base.usage.track_usage;
+	प्रत्यागम thread->आधारः.usage.track_usage;
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-#ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void k_sys_runtime_stats_enable(void)
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ALL
+शून्य k_sys_runtime_stats_enable(शून्य)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 
-	if (_current_cpu->usage->track_usage) {
+	यदि (_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already enabled on the current CPU
@@ -328,33 +328,33 @@ void k_sys_runtime_stats_enable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_तालकम्, कुञ्चिका);
+		प्रत्यागम;
 	}
 
 	/* Enable gathering of runtime stats on each CPU */
 
-	unsigned int num_cpus = arch_num_cpus();
+	अचिह्नित पूर्णाङ्क अङ्कः_cpus = arch_अङ्कः_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	प्रति (अचिह्नित पूर्णाङ्क i = 0; i < अङ्कः_cpus; i++) {
 		_kernel.cpus[i].usage->track_usage = true;
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		_kernel.cpus[i].usage->num_windows++;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+		_kernel.cpus[i].usage->अङ्कः_windows++;
 		_kernel.cpus[i].usage->current = 0;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 }
 
-void k_sys_runtime_stats_disable(void)
+शून्य k_sys_runtime_stats_disable(शून्य)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t key;
+	संरचना _cpu *cpu;
+	k_spinlock_कुञ्चिका_t कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 
-	if (!_current_cpu->usage->track_usage) {
+	यदि (!_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already disabled on the current CPU
@@ -362,67 +362,67 @@ void k_sys_runtime_stats_disable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_तालकम्, कुञ्चिका);
+		प्रत्यागम;
 	}
 
 	uint32_t now = usage_now();
 
-	unsigned int num_cpus = arch_num_cpus();
+	अचिह्नित पूर्णाङ्क अङ्कः_cpus = arch_अङ्कः_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	प्रति (अचिह्नित पूर्णाङ्क i = 0; i < अङ्कः_cpus; i++) {
 		cpu = &_kernel.cpus[i];
-		if (cpu->usage0 != 0) {
+		यदि (cpu->usage0 != 0) {
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
 		}
 		cpu->usage->track_usage = false;
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 }
-#endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-#ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats)
+#यदि_परिभाषितम् CONFIG_OBJ_CORE_STATS_THREAD
+पूर्णाङ्क z_thread_stats_raw(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
+	स्मृतिं_प्रतिलिख(stats, obj_core->stats, परिमाण(संरचना k_आवृत्तिः_stats));
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats)
+पूर्णाङ्क z_thread_stats_query(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	struct k_thread *thread;
+	संरचना k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_सम्बन्धि(obj_core, संरचना k_thread, obj_core);
 
 	z_sched_thread_usage(thread, stats);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int z_thread_stats_reset(struct k_obj_core *obj_core)
+पूर्णाङ्क z_thread_stats_reset(संरचना k_obj_core *obj_core)
 {
-	k_spinlock_key_t  key;
-	struct k_cycle_stats  *stats;
-	struct k_thread *thread;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
+	संरचना k_आवृत्तिः_stats  *stats;
+	संरचना k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
-	key = k_spin_lock(&usage_lock);
+	thread = CONTAINER_सम्बन्धि(obj_core, संरचना k_thread, obj_core);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
 	stats = obj_core->stats;
 
-	stats->total = 0ULL;
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	stats->योग = 0ULL;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	stats->current = 0ULL;
 	stats->longest = 0ULL;
-	stats->num_windows = (thread->base.usage.track_usage) ?  1U : 0U;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	stats->अङ्कः_windows = (thread->आधारः.usage.track_usage) ?  1U : 0U;
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	if (thread != _current_cpu->current) {
+	यदि (thread != _current_cpu->current) {
 
 		/*
 		 * If the thread is not running, there is nothing else to do.
@@ -432,9 +432,9 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 		 * window.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
+		k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-		return 0;
+		प्रत्यागम 0;
 	}
 
 	/* Update the current CPU stats. */
@@ -445,79 +445,79 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 
 	_current_cpu->usage0 = now;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int z_thread_stats_disable(struct k_obj_core *obj_core)
+पूर्णाङ्क z_thread_stats_disable(संरचना k_obj_core *obj_core)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	संरचना k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_सम्बन्धि(obj_core, संरचना k_thread, obj_core);
 
-	return k_thread_runtime_stats_disable(thread);
-#else
-	return -ENOTSUP;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	प्रत्यागम k_thread_runtime_stats_disable(thread);
+#अन्यथा
+	प्रत्यागम -ENOTSUP;
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-int z_thread_stats_enable(struct k_obj_core *obj_core)
+पूर्णाङ्क z_thread_stats_enable(संरचना k_obj_core *obj_core)
 {
-#ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+#यदि_परिभाषितम् CONFIG_SCHED_THREAD_USAGE_ANALYSIS
+	संरचना k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_सम्बन्धि(obj_core, संरचना k_thread, obj_core);
 
-	return k_thread_runtime_stats_enable(thread);
-#else
-	return -ENOTSUP;
-#endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
+	प्रत्यागम k_thread_runtime_stats_enable(thread);
+#अन्यथा
+	प्रत्यागम -ENOTSUP;
+#यदि_अन्तः /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
-#endif /* CONFIG_OBJ_CORE_STATS_THREAD */
+#यदि_अन्तः /* CONFIG_OBJ_CORE_STATS_THREAD */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats)
+#यदि_परिभाषितम् CONFIG_OBJ_CORE_STATS_SYSTEM
+पूर्णाङ्क z_cpu_stats_raw(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
+	स्मृतिं_प्रतिलिख(stats, obj_core->stats, परिमाण(संरचना k_आवृत्तिः_stats));
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats)
+पूर्णाङ्क z_cpu_stats_query(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	struct _cpu  *cpu;
+	संरचना _cpu  *cpu;
 
-	cpu = CONTAINER_OF(obj_core, struct _cpu, obj_core);
+	cpu = CONTAINER_सम्बन्धि(obj_core, संरचना _cpu, obj_core);
 
 	z_sched_cpu_usage(cpu->id, stats);
 
-	return 0;
+	प्रत्यागम 0;
 }
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#यदि_अन्तः /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats)
+#यदि_परिभाषितम् CONFIG_OBJ_CORE_STATS_SYSTEM
+पूर्णाङ्क z_kernel_stats_raw(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_कुञ्चिका_t  कुञ्चिका;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats,
-	       CONFIG_MP_MAX_NUM_CPUS * sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	कुञ्चिका = k_spin_तालकम्(&usage_तालकम्);
+	स्मृतिं_प्रतिलिख(stats, obj_core->stats,
+	       CONFIG_MP_MAX_अङ्कः_CPUS * परिमाण(संरचना k_आवृत्तिः_stats));
+	k_spin_unlock(&usage_तालकम्, कुञ्चिका);
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats)
+पूर्णाङ्क z_kernel_stats_query(संरचना k_obj_core *obj_core, शून्य *stats)
 {
-	ARG_UNUSED(obj_core);
+	ARG_अप्रयुक्तम्(obj_core);
 
-	return k_thread_runtime_stats_all_get(stats);
+	प्रत्यागम k_thread_runtime_stats_all_get(stats);
 }
-#endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
+#यदि_अन्तः /* CONFIG_OBJ_CORE_STATS_SYSTEM */

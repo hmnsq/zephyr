@@ -4,167 +4,167 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include "kernel_internal.h"
+#अन्तर्भाव "kernel_internal.h"
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/sys/bitarray.h>
-#include <zephyr/sys/kobject.h>
-#include <zephyr/internal/syscall_handler.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <ksched.h>
+#अन्तर्भाव <zephyr/kernel/thread_stack.h>
+#अन्तर्भाव <zephyr/logging/log.h>
+#अन्तर्भाव <zephyr/sys/bitarray.h>
+#अन्तर्भाव <zephyr/sys/kobject.h>
+#अन्तर्भाव <zephyr/internal/syscall_handler.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
-#if CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0
-#define BA_SIZE CONFIG_DYNAMIC_THREAD_POOL_SIZE
-#else
-#define BA_SIZE 1
-#endif /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
+#यदि CONFIG_DYNAMIC_THREAD_POOL_आकार > 0
+#परिभाषय BA_आकार CONFIG_DYNAMIC_THREAD_POOL_आकार
+#अन्यथा
+#परिभाषय BA_आकार 1
+#यदि_अन्तः /* CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0 */
 
-struct dyn_cb_data {
+संरचना dyn_cb_दत्त {
 	k_tid_t tid;
-	k_thread_stack_t *stack;
+	k_thread_राशिः_t *राशिः;
 };
 
-static K_THREAD_STACK_ARRAY_DEFINE(dynamic_stack, CONFIG_DYNAMIC_THREAD_POOL_SIZE,
-				   K_THREAD_STACK_LEN(CONFIG_DYNAMIC_THREAD_STACK_SIZE));
-SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_SIZE);
+स्थिर K_THREAD_राशिः_ARRAY_DEFINE(dynamic_राशिः, CONFIG_DYNAMIC_THREAD_POOL_आकार,
+				   K_THREAD_राशिः_LEN(CONFIG_DYNAMIC_THREAD_राशिः_आकार));
+SYS_BITARRAY_DEFINE_STATIC(dynamic_ba, BA_आकार);
 
-static k_thread_stack_t *z_thread_stack_alloc_pool(size_t size, int flags)
+स्थिर k_thread_राशिः_t *z_thread_राशिः_alloc_pool(size_t आकार, पूर्णाङ्क flags)
 {
-	int rv;
-	size_t offset;
-	k_thread_stack_t *stack;
+	पूर्णाङ्क rv;
+	size_t विस्थापनम्;
+	k_thread_राशिः_t *राशिः;
 
-	if (size > CONFIG_DYNAMIC_THREAD_STACK_SIZE) {
-		LOG_DBG("stack size %zu is > pool stack size %zu", size,
-			(size_t)CONFIG_DYNAMIC_THREAD_STACK_SIZE);
-		return NULL;
+	यदि (आकार > CONFIG_DYNAMIC_THREAD_राशिः_आकार) {
+		LOG_DBG("stack size %zu is > pool stack size %zu", आकार,
+			(size_t)CONFIG_DYNAMIC_THREAD_राशिः_आकार);
+		प्रत्यागम रिक्त;
 	}
 
-	rv = sys_bitarray_alloc(&dynamic_ba, 1, &offset);
-	if (rv < 0) {
+	rv = sys_bitarray_alloc(&dynamic_ba, 1, &विस्थापनम्);
+	यदि (rv < 0) {
 		LOG_DBG("unable to allocate stack from pool");
-		return NULL;
+		प्रत्यागम रिक्त;
 	}
 
-	__ASSERT_NO_MSG(offset < CONFIG_DYNAMIC_THREAD_POOL_SIZE);
+	__ASSERT_NO_MSG(विस्थापनम् < CONFIG_DYNAMIC_THREAD_POOL_आकार);
 
-	stack = (k_thread_stack_t *)&dynamic_stack[offset];
+	राशिः = (k_thread_राशिः_t *)&dynamic_राशिः[विस्थापनम्];
 
-	return stack;
+	प्रत्यागम राशिः;
 }
 
-static k_thread_stack_t *z_thread_stack_alloc_dyn(size_t size, int flags)
+स्थिर k_thread_राशिः_t *z_thread_राशिः_alloc_dyn(size_t आकार, पूर्णाङ्क flags)
 {
-	size_t stack_len;
+	size_t राशिः_len;
 
-	if ((flags & K_USER) == K_USER) {
-#ifdef CONFIG_DYNAMIC_OBJECTS
-		return k_object_alloc_size(K_OBJ_THREAD_STACK_ELEMENT, size);
-#else
+	यदि ((flags & K_USER) == K_USER) {
+#यदि_परिभाषितम् CONFIG_DYNAMIC_OBJECTS
+		प्रत्यागम k_object_alloc_आकार(K_OBJ_THREAD_राशिः_ELEMENT, आकार);
+#अन्यथा
 		/* Dynamic user stack needs a kobject, so if this option is not
 		 * enabled we can't proceed.
 		 */
-		return NULL;
-#endif /* CONFIG_DYNAMIC_OBJECTS */
+		प्रत्यागम रिक्त;
+#यदि_अन्तः /* CONFIG_DYNAMIC_OBJECTS */
 	}
 
-	stack_len = K_KERNEL_STACK_LEN(size);
-	if (stack_len < size) {
-		return NULL;
+	राशिः_len = K_KERNEL_राशिः_LEN(आकार);
+	यदि (राशिः_len < आकार) {
+		प्रत्यागम रिक्त;
 	}
 
-	return z_thread_aligned_alloc(Z_KERNEL_STACK_OBJ_ALIGN, stack_len);
+	प्रत्यागम z_thread_aligned_alloc(Z_KERNEL_राशिः_OBJ_ALIGN, राशिः_len);
 }
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_राशिः_t *z_impl_k_thread_राशिः_alloc(size_t आकार, पूर्णाङ्क flags)
 {
-	k_thread_stack_t *stack = NULL;
+	k_thread_राशिः_t *राशिः = रिक्त;
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
-		stack = z_thread_stack_alloc_dyn(size, flags);
-		if (stack == NULL && CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	यदि (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_ALLOC)) {
+		राशिः = z_thread_राशिः_alloc_dyn(आकार, flags);
+		यदि (राशिः == रिक्त && CONFIG_DYNAMIC_THREAD_POOL_आकार > 0) {
+			राशिः = z_thread_राशिः_alloc_pool(आकार, flags);
 		}
-	} else if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
-		if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-			stack = z_thread_stack_alloc_pool(size, flags);
+	} अन्यथा यदि (IS_ENABLED(CONFIG_DYNAMIC_THREAD_PREFER_POOL)) {
+		यदि (CONFIG_DYNAMIC_THREAD_POOL_आकार > 0) {
+			राशिः = z_thread_राशिः_alloc_pool(आकार, flags);
 		}
 
-		if ((stack == NULL) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-			stack = z_thread_stack_alloc_dyn(size, flags);
+		यदि ((राशिः == रिक्त) && IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+			राशिः = z_thread_राशिः_alloc_dyn(आकार, flags);
 		}
 	}
 
-	return stack;
+	प्रत्यागम राशिः;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+#यदि_परिभाषितम् CONFIG_USERSPACE
+स्थिर अन्तःस्थ k_thread_राशिः_t *z_vrfy_k_thread_राशिः_alloc(size_t आकार, पूर्णाङ्क flags)
 {
-	return z_impl_k_thread_stack_alloc(size, flags);
+	प्रत्यागम z_impl_k_thread_राशिः_alloc(आकार, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#अन्तर्भाव <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#यदि_अन्तः /* CONFIG_USERSPACE */
 
-static void dyn_cb(const struct k_thread *thread, void *user_data)
+स्थिर शून्य dyn_cb(ध्रुव संरचना k_thread *thread, शून्य *user_दत्त)
 {
-	struct dyn_cb_data *const data = (struct dyn_cb_data *)user_data;
+	संरचना dyn_cb_दत्त *ध्रुव दत्त = (संरचना dyn_cb_दत्त *)user_दत्त;
 
-	if (data->stack == (k_thread_stack_t *)thread->stack_info.start) {
-		__ASSERT(data->tid == NULL, "stack %p is associated with more than one thread!",
-			 (void *)thread->stack_info.start);
-		data->tid = (k_tid_t)thread;
+	यदि (दत्त->राशिः == (k_thread_राशिः_t *)thread->राशिः_info.start) {
+		__ASSERT(दत्त->tid == रिक्त, "stack %p is associated with more than one thread!",
+			 (शून्य *)thread->राशिः_info.start);
+		दत्त->tid = (k_tid_t)thread;
 	}
 }
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+पूर्णाङ्क z_impl_k_thread_राशिः_free(k_thread_राशिः_t *राशिः)
 {
-	struct dyn_cb_data data = {.stack = stack};
+	संरचना dyn_cb_दत्त दत्त = {.राशिः = राशिः};
 
 	/* Get a possible tid associated with stack */
-	k_thread_foreach(dyn_cb, &data);
+	k_thread_foreach(dyn_cb, &दत्त);
 
-	if (data.tid != NULL) {
-		if (!z_is_thread_state_set(data.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
-			LOG_ERR("tid %p is in use!", data.tid);
-			return -EBUSY;
+	यदि (दत्त.tid != रिक्त) {
+		यदि (!z_is_thread_state_समुच्चयः(दत्त.tid, _THREAD_DUMMY | _THREAD_DEAD)) {
+			LOG_ERR("tid %p is in use!", दत्त.tid);
+			प्रत्यागम -EBUSY;
 		}
 	}
 
-	if (CONFIG_DYNAMIC_THREAD_POOL_SIZE > 0) {
-		if (IS_ARRAY_ELEMENT(dynamic_stack, stack)) {
-			if (sys_bitarray_free(&dynamic_ba, 1, ARRAY_INDEX(dynamic_stack, stack))) {
-				LOG_ERR("stack %p is not allocated!", stack);
-				return -EINVAL;
+	यदि (CONFIG_DYNAMIC_THREAD_POOL_आकार > 0) {
+		यदि (IS_ARRAY_ELEMENT(dynamic_राशिः, राशिः)) {
+			यदि (sys_bitarray_free(&dynamic_ba, 1, ARRAY_सूचकांक(dynamic_राशिः, राशिः))) {
+				LOG_ERR("stack %p is not allocated!", राशिः);
+				प्रत्यागम -EINVAL;
 			}
 
-			return 0;
+			प्रत्यागम 0;
 		}
 	}
 
-	if (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
-#ifdef CONFIG_USERSPACE
-		if (k_object_find(stack)) {
-			k_object_free(stack);
-		} else {
-			k_free(stack);
+	यदि (IS_ENABLED(CONFIG_DYNAMIC_THREAD_ALLOC)) {
+#यदि_परिभाषितम् CONFIG_USERSPACE
+		यदि (k_object_find(राशिः)) {
+			k_object_free(राशिः);
+		} अन्यथा {
+			k_free(राशिः);
 		}
-#else
-		k_free(stack);
-#endif /* CONFIG_USERSPACE */
-	} else {
-		LOG_DBG("Invalid stack %p", stack);
-		return -EINVAL;
+#अन्यथा
+		k_free(राशिः);
+#यदि_अन्तः /* CONFIG_USERSPACE */
+	} अन्यथा {
+		LOG_DBG("Invalid stack %p", राशिः);
+		प्रत्यागम -EINVAL;
 	}
 
-	return 0;
+	प्रत्यागम 0;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+#यदि_परिभाषितम् CONFIG_USERSPACE
+स्थिर अन्तःस्थ पूर्णाङ्क z_vrfy_k_thread_राशिः_free(k_thread_राशिः_t *राशिः)
 {
 	/* The thread stack object must not be in initialized state.
 	 *
@@ -173,9 +173,9 @@ static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
 	 * free a stack that is in use, we have to check that the caller
 	 * has access to the object but that it is not in use anymore.
 	 */
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_THREAD_STACK_ELEMENT));
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(राशिः, K_OBJ_THREAD_राशिः_ELEMENT));
 
-	return z_impl_k_thread_stack_free(stack);
+	प्रत्यागम z_impl_k_thread_राशिः_free(राशिः);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#अन्तर्भाव <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#यदि_अन्तः /* CONFIG_USERSPACE */
