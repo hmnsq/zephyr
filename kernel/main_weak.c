@@ -19,12 +19,12 @@
  * correctly treated by multiple linkers.
  */
 
-#include <kernel_internal.h>
+#অন্তর্ভাব <kernel_internal.h>
 
-int __weak main(void)
+পূর্ণাঙ্ক __weak main(শূন্য)
 {
 	/* NOP default main() if the application does not provide one. */
 	arch_nop();
 
-	return 0;
+	প্রত্যাগম 0;
 }

@@ -14,26 +14,26 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
 #define ZEPHYR_KERNEL_INCLUDE_KERNEL_INTERNAL_H_
 
-#include <zephyr/kernel.h>
-#include <kernel_arch_interface.h>
-#include <kthread.h>
-#include <string.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <kernel_arch_interface.h>
+#অন্তর্ভাব <kthread.h>
+#অন্তর্ভাব <string.h>
 
 #ifndef _ASMLANGUAGE
 
 #ifdef __cplusplus
-extern "C" {
+বাহ্য "C" {
 #endif
 
 /* Initialize per-CPU kernel data */
-void z_init_cpu(int id);
+শূন্য z_init_cpu(পূর্ণাঙ্ক id);
 
 /* Initialize a thread */
-void z_init_thread_base(struct _thread_base *thread_base, int priority,
-			uint32_t initial_state, unsigned int options);
+শূন্য z_init_thread_base(সংরচনা _thread_base *thread_base, পূর্ণাঙ্ক priority,
+			uint32_t initial_state, unsigned পূর্ণাঙ্ক options);
 
 
-FUNC_NORETURN void z_cstart(void);
+FUNC_NORETURN শূন্য z_cstart(শূন্য);
 
 /*
  * Lean kernel-internal init model.
@@ -46,19 +46,19 @@ FUNC_NORETURN void z_cstart(void);
  * provides. The entry holds a single function pointer (no device back-pointer
  * and no priority), so it is half the size of a SYS_INIT init_entry.
  */
-struct k_kernel_init_pre_entry {
-	void (*init_fn)(void);
+সংরচনা k_kernel_init_pre_entry {
+	শূন্য (*init_fn)(শূন্য);
 };
 
-struct k_kernel_init_post_entry {
-	void (*init_fn)(void);
+সংরচনা k_kernel_init_post_entry {
+	শূন্য (*init_fn)(শূন্য);
 };
 
 /* Register a kernel init function to run before multithreading starts (the
  * PRE_KERNEL phase), ahead of PRE_KERNEL device init.
  */
 #define K_KERNEL_INIT_PRE(_fn)                                                 \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_pre_entry,          \
+	স্থির ধ্রুব STRUCT_SECTION_ITERABLE(k_kernel_init_pre_entry,          \
 					     _kernel_init_pre_##_fn) = {       \
 		.init_fn = (_fn),                                              \
 	}
@@ -67,19 +67,19 @@ struct k_kernel_init_post_entry {
  * POST_KERNEL phase), before POST_KERNEL device init.
  */
 #define K_KERNEL_INIT_POST(_fn)                                                \
-	static const STRUCT_SECTION_ITERABLE(k_kernel_init_post_entry,         \
+	স্থির ধ্রুব STRUCT_SECTION_ITERABLE(k_kernel_init_post_entry,         \
 					     _kernel_init_post_##_fn) = {      \
 		.init_fn = (_fn),                                              \
 	}
 
-extern FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-			  void *p1, void *p2, void *p3);
+বাহ্য FUNC_NORETURN শূন্য z_thread_entry(k_thread_entry_t entry,
+			  শূন্য *p1, শূন্য *p2, শূন্য *p3);
 
-extern char *z_setup_new_thread(struct k_thread *new_thread,
-				k_thread_stack_t *stack, size_t stack_size,
+বাহ্য বর্ণ *z_setup_new_thread(সংরচনা k_thread *new_thread,
+				k_thread_স্তূপ_t *স্তূপ, size_t স্তূপ_size,
 				k_thread_entry_t entry,
-				void *p1, void *p2, void *p3,
-				int prio, uint32_t options, const char *name);
+				শূন্য *p1, শূন্য *p2, শূন্য *p3,
+				পূর্ণাঙ্ক prio, uint32_t options, ধ্রুব বর্ণ *name);
 
 /**
  * @brief Allocate aligned memory from the current thread's resource pool
@@ -95,7 +95,7 @@ extern char *z_setup_new_thread(struct k_thread *new_thread,
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_aligned_alloc(size_t align, size_t size);
+শূন্য *z_thread_aligned_alloc(size_t align, size_t size);
 
 /**
  * @brief Allocate some memory from the current thread's resource pool
@@ -110,66 +110,66 @@ void *z_thread_aligned_alloc(size_t align, size_t size);
  * @return A pointer to the allocated memory, or NULL if there is insufficient
  * RAM in the pool or there is no pool to draw memory from
  */
-void *z_thread_malloc(size_t size);
+শূন্য *z_thread_malloc(size_t size);
 
 
 #ifdef CONFIG_USE_SWITCH
 /* This is a arch function traditionally, but when the switch-based
  * z_swap() is in use it's a simple inline provided by the kernel.
  */
-static ALWAYS_INLINE void
-arch_thread_return_value_set(struct k_thread *thread, unsigned int value)
+স্থির ALWAYS_INLINE শূন্য
+arch_thread_return_মান_set(সংরচনা k_thread *thread, unsigned পূর্ণাঙ্ক মান)
 {
-	thread->swap_retval = value;
+	thread->swap_retval = মান;
 }
 #endif
 
-static ALWAYS_INLINE void
-z_thread_return_value_set_with_data(struct k_thread *thread,
-				   unsigned int value,
-				   void *data)
+স্থির ALWAYS_INLINE শূন্য
+z_thread_return_মান_set_with_data(সংরচনা k_thread *thread,
+				   unsigned পূর্ণাঙ্ক মান,
+				   শূন্য *data)
 {
-	arch_thread_return_value_set(thread, value);
+	arch_thread_return_মান_set(thread, মান);
 	thread->base.swap_data = data;
 }
 
 #ifdef CONFIG_SMP
-extern void z_smp_init(void);
+বাহ্য শূন্য z_smp_init(শূন্য);
 #ifdef CONFIG_SYS_CLOCK_EXISTS
-extern void smp_timer_init(void);
+বাহ্য শূন্য smp_timer_init(শূন্য);
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 #endif /* CONFIG_SMP */
 
-extern void z_early_rand_get(uint8_t *buf, size_t length);
+বাহ্য শূন্য z_early_rand_get(uint8_t *buf, size_t length);
 
-#if defined(CONFIG_STACK_POINTER_RANDOM) && (CONFIG_STACK_POINTER_RANDOM != 0)
-extern int z_stack_adjust_initialized;
+#যদি defined(CONFIG_স্তূপ_POINTER_RANDOM) && (CONFIG_স্তূপ_POINTER_RANDOM != 0)
+বাহ্য পূর্ণাঙ্ক z_স্তূপ_adjust_initialized;
 #endif /* CONFIG_STACK_POINTER_RANDOM */
 
 #ifdef CONFIG_MULTITHREADING
-extern struct k_thread z_main_thread;
+বাহ্য সংরচনা k_thread z_main_thread;
 #endif /* CONFIG_MULTITHREADING */
 
 
-K_KERNEL_STACK_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_NUM_CPUS,
-				    CONFIG_ISR_STACK_SIZE);
-K_THREAD_STACK_DECLARE(z_main_stack, CONFIG_MAIN_STACK_SIZE);
+K_KERNEL_স্তূপ_ARRAY_DECLARE(z_interrupt_stacks, CONFIG_MP_MAX_অঙ্ক_CPUS,
+				    CONFIG_ISR_স্তূপ_SIZE);
+K_THREAD_স্তূপ_DECLARE(z_main_স্তূপ, CONFIG_MAIN_স্তূপ_SIZE);
 
 #ifdef CONFIG_GEN_PRIV_STACKS
-extern uint8_t *z_priv_stack_find(k_thread_stack_t *stack);
+বাহ্য uint8_t *z_priv_স্তূপ_find(k_thread_স্তূপ_t *স্তূপ);
 #endif /* CONFIG_GEN_PRIV_STACKS */
 
 /* Calculate stack usage. */
-int z_stack_space_get(const uint8_t *stack_start, size_t size, size_t *unused_ptr);
+পূর্ণাঙ্ক z_স্তূপ_space_get(ধ্রুব uint8_t *স্তূপ_start, size_t size, size_t *unused_ptr);
 
 #ifdef CONFIG_USERSPACE
-bool z_stack_is_user_capable(k_thread_stack_t *stack);
+bool z_স্তূপ_is_user_capable(k_thread_স্তূপ_t *স্তূপ);
 
 /* Memory domain setup hook, called from z_setup_new_thread() */
-void z_mem_domain_init_thread(struct k_thread *thread);
+শূন্য z_mem_domain_init_thread(সংরচনা k_thread *thread);
 
 /* Memory domain teardown hook, called from z_thread_abort() */
-void z_mem_domain_exit_thread(struct k_thread *thread);
+শূন্য z_mem_domain_exit_thread(সংরচনা k_thread *thread);
 
 /* This spinlock:
  *
@@ -181,22 +181,22 @@ void z_mem_domain_exit_thread(struct k_thread *thread);
  * Uniprocessor systems can get away with just locking interrupts but this is
  * not recommended.
  */
-extern struct k_spinlock z_mem_domain_lock;
+বাহ্য সংরচনা k_spinlock z_mem_domain_lock;
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_GDBSTUB
-struct gdb_ctx;
+সংরচনা gdb_ctx;
 
 /* Should be called by the arch layer. This is the gdbstub main loop
  * and synchronously communicate with gdb on host.
  */
-extern int z_gdb_main_loop(struct gdb_ctx *ctx);
+বাহ্য পূর্ণাঙ্ক z_gdb_main_loop(সংরচনা gdb_ctx *ctx);
 #endif /* CONFIG_GDBSTUB */
 
 #ifdef CONFIG_INSTRUMENT_THREAD_SWITCHING
-void z_thread_mark_switched_in(void);
-void z_thread_mark_switched_out(void);
-#else
+শূন্য z_thread_mark_switched_in(শূন্য);
+শূন্য z_thread_mark_switched_out(শূন্য);
+#অন্যথা
 
 /**
  * @brief Called after a thread has been selected to run
@@ -214,12 +214,12 @@ void z_thread_mark_switched_out(void);
 /* Init hook for page frame management, invoked immediately upon entry of
  * main thread, before POST_KERNEL tasks
  */
-void z_mem_manage_init(void);
+শূন্য z_mem_manage_init(শূন্য);
 
 /**
  * @brief Finalize page frame management at the end of boot process.
  */
-void z_mem_manage_boot_finish(void);
+শূন্য z_mem_manage_boot_finish(শূন্য);
 
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state);
@@ -254,7 +254,7 @@ bool pm_system_suspend(int32_t ticks);
 /**
  * Initialize the timing histograms for demand paging.
  */
-void z_paging_histogram_init(void);
+শূন্য z_paging_histogram_init(শূন্য);
 
 /**
  * Increment the counter in the timing histogram.
@@ -262,27 +262,27 @@ void z_paging_histogram_init(void);
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
+শূন্য z_paging_histogram_inc(সংরচনা k_mem_paging_histogram_t *hist,
 			    uint32_t cycles);
 #endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats);
-int z_thread_stats_reset(struct k_obj_core *obj_core);
-int z_thread_stats_disable(struct k_obj_core *obj_core);
-int z_thread_stats_enable(struct k_obj_core *obj_core);
+পূর্ণাঙ্ক z_thread_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats);
+পূর্ণাঙ্ক z_thread_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats);
+পূর্ণাঙ্ক z_thread_stats_reset(সংরচনা k_obj_core *obj_core);
+পূর্ণাঙ্ক z_thread_stats_disable(সংরচনা k_obj_core *obj_core);
+পূর্ণাঙ্ক z_thread_stats_enable(সংরচনা k_obj_core *obj_core);
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats);
+পূর্ণাঙ্ক z_cpu_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats);
+পূর্ণাঙ্ক z_cpu_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats);
 
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats);
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
+পূর্ণাঙ্ক z_kernel_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats);
+পূর্ণাঙ্ক z_kernel_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats);
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
-#if defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
+#যদি defined(CONFIG_THREAD_ABORT_NEED_CLEANUP)
 /**
  * Perform cleanup at the end of k_thread_abort().
  *
@@ -296,7 +296,7 @@ int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats);
  *
  * @param thread Pointer to thread to be cleaned up.
  */
-void k_thread_abort_cleanup(struct k_thread *thread);
+শূন্য k_thread_abort_cleanup(সংরচনা k_thread *thread);
 
 /**
  * Check if thread is the same as the one waiting for cleanup.
@@ -308,7 +308,7 @@ void k_thread_abort_cleanup(struct k_thread *thread);
  *
  * @param thread Pointer to thread to be checked.
  */
-void k_thread_abort_cleanup_check_reuse(struct k_thread *thread);
+শূন্য k_thread_abort_cleanup_check_reuse(সংরচনা k_thread *thread);
 #endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 
 #ifdef __cplusplus

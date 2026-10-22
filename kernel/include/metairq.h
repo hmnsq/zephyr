@@ -17,10 +17,10 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
 #define ZEPHYR_KERNEL_INCLUDE_METAIRQ_H_
 
-#include <zephyr/kernel.h>
-#include <kthread.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <kthread.h>
 
-BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
+BUILD_ASSERT(CONFIG_অঙ্ক_COOP_PRIORITIES >= CONFIG_অঙ্ক_METAIRQ_PRIORITIES,
 	     "You need to provide at least as many CONFIG_NUM_COOP_PRIORITIES as "
 	     "CONFIG_NUM_METAIRQ_PRIORITIES as Meta IRQs are just a special class of cooperative "
 	     "threads.");
@@ -34,18 +34,18 @@ BUILD_ASSERT(CONFIG_NUM_COOP_PRIORITIES >= CONFIG_NUM_METAIRQ_PRIORITIES,
  *
  * @param thread The thread about to become _current.
  */
-static inline void update_metairq_preempt(struct k_thread *thread)
+স্থির অন্তঃস্থ শূন্য update_metairq_preempt(সংরচনা k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	if (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
+#যদি (CONFIG_অঙ্ক_METAIRQ_PRIORITIES > 0)
+	যদি (thread_is_metairq(thread) && !thread_is_metairq(_current) &&
 	    !thread_is_preemptible(_current)) {
 		/* Record new preemption */
 		_current_cpu->metairq_preempted = _current;
-	} else if (!thread_is_metairq(thread)) {
+	} অন্যথা যদি (!thread_is_metairq(thread)) {
 		/* Returning from existing preemption */
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = রিক্ত;
 	}
-#else
+#অন্যথা
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
@@ -61,26 +61,26 @@ static inline void update_metairq_preempt(struct k_thread *thread)
  * @param thread Best candidate chosen from the run queue.
  * @return Thread to run next.
  */
-static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
+স্থির অন্তঃস্থ সংরচনা k_thread *metairq_preempt_recover(সংরচনা k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
+#যদি (CONFIG_অঙ্ক_METAIRQ_PRIORITIES > 0)
 	/* MetaIRQs must always attempt to return back to a cooperative thread
 	 * they preempted and not whatever happens to be highest priority now.
 	 * The cooperative thread was promised it wouldn't be preempted (by
 	 * non-metairq threads)!
 	 */
-	struct k_thread *mirqp = _current_cpu->metairq_preempted;
+	সংরচনা k_thread *mirqp = _current_cpu->metairq_preempted;
 
-	if (mirqp != NULL && (thread == NULL || !thread_is_metairq(thread))) {
-		if (z_is_thread_ready(mirqp)) {
-			return mirqp;
+	যদি (mirqp != রিক্ত && (thread == রিক্ত || !thread_is_metairq(thread))) {
+		যদি (z_is_thread_ready(mirqp)) {
+			প্রত্যাগম mirqp;
 		}
-		_current_cpu->metairq_preempted = NULL;
+		_current_cpu->metairq_preempted = রিক্ত;
 	}
-#else
+#অন্যথা
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
-	return thread;
+	প্রত্যাগম thread;
 }
 
 /**
@@ -92,12 +92,12 @@ static inline struct k_thread *metairq_preempt_recover(struct k_thread *thread)
  *
  * @return true if it is safe to re-queue _current, false otherwise.
  */
-static inline bool metairq_current_requeue_allowed(void)
+স্থির অন্তঃস্থ bool metairq_current_requeue_allowed(শূন্য)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	return _current != _current_cpu->metairq_preempted;
-#else
-	return true;
+#যদি (CONFIG_অঙ্ক_METAIRQ_PRIORITIES > 0)
+	প্রত্যাগম _current != _current_cpu->metairq_preempted;
+#অন্যথা
+	প্রত্যাগম true;
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }
 
@@ -110,18 +110,18 @@ static inline bool metairq_current_requeue_allowed(void)
  *
  * @param thread Thread that is being halted.
  */
-static inline void z_metairq_preempted_clear(struct k_thread *thread)
+স্থির অন্তঃস্থ শূন্য z_metairq_preempted_clear(সংরচনা k_thread *thread)
 {
-#if (CONFIG_NUM_METAIRQ_PRIORITIES > 0)
-	unsigned int cpu_id = 0;
+#যদি (CONFIG_অঙ্ক_METAIRQ_PRIORITIES > 0)
+	unsigned পূর্ণাঙ্ক cpu_id = 0;
 
-#if defined(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)
+#যদি defined(CONFIG_SMP) && (CONFIG_MP_MAX_অঙ্ক_CPUS > 1)
 	cpu_id = thread->base.cpu;
 #endif
-	if (_kernel.cpus[cpu_id].metairq_preempted == thread) {
-		_kernel.cpus[cpu_id].metairq_preempted = NULL;
+	যদি (_kernel.cpus[cpu_id].metairq_preempted == thread) {
+		_kernel.cpus[cpu_id].metairq_preempted = রিক্ত;
 	}
-#else
+#অন্যথা
 	ARG_UNUSED(thread);
 #endif /* CONFIG_NUM_METAIRQ_PRIORITIES > 0 */
 }

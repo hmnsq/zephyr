@@ -4,89 +4,89 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#অন্তর্ভাব <zephyr/kernel.h>
 
-#include <zephyr/timing/timing.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/sys/check.h>
+#অন্তর্ভাব <zephyr/timing/timing.h>
+#অন্তর্ভাব <ksched.h>
+#অন্তর্ভাব <zephyr/spinlock.h>
+#অন্তর্ভাব <zephyr/sys/check.h>
 
 /* Need one of these for this to work */
-#if !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
+#যদি !defined(CONFIG_USE_SWITCH) && !defined(CONFIG_INSTRUMENT_THREAD_SWITCHING)
 #error "No data backend configured for CONFIG_SCHED_THREAD_USAGE"
 #endif /* !CONFIG_USE_SWITCH && !CONFIG_INSTRUMENT_THREAD_SWITCHING */
 
-static struct k_spinlock usage_lock;
+স্থির সংরচনা k_spinlock usage_lock;
 
-static uint32_t usage_now(void)
+স্থির uint32_t usage_now(শূন্য)
 {
 	uint32_t now;
 
 #ifdef CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS
 	now = (uint32_t)timing_counter_get();
-#else
+#অন্যথা
 	now = k_cycle_get_32();
 #endif /* CONFIG_THREAD_RUNTIME_STATS_USE_TIMING_FUNCTIONS */
 
 	/* Edge case: we use a zero as a null ("stop() already called") */
-	return (now == 0) ? 1 : now;
+	প্রত্যাগম (now == 0) ? 1 : now;
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-static void sched_cpu_update_usage(struct _cpu *cpu, uint32_t cycles)
+স্থির শূন্য sched_cpu_update_usage(সংরচনা _cpu *cpu, uint32_t cycles)
 {
-	if (!cpu->usage->track_usage) {
-		return;
+	যদি (!cpu->usage->track_usage) {
+		প্রত্যাগম;
 	}
 
-	if (cpu->current != cpu->idle_thread) {
+	যদি (cpu->current != cpu->idle_thread) {
 		cpu->usage->total += cycles;
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 		cpu->usage->current += cycles;
 
-		if (cpu->usage->longest < cpu->usage->current) {
+		যদি (cpu->usage->longest < cpu->usage->current) {
 			cpu->usage->longest = cpu->usage->current;
 		}
-	} else {
+	} অন্যথা {
 		cpu->usage->current = 0;
-		cpu->usage->num_windows++;
+		cpu->usage->অঙ্ক_windows++;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 }
-#else
-#define sched_cpu_update_usage(cpu, cycles)   do { } while (0)
+#অন্যথা
+#define sched_cpu_update_usage(cpu, cycles)   কুরু { } যাবত্ (0)
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-static void sched_thread_update_usage(struct k_thread *thread, uint32_t cycles)
+স্থির শূন্য sched_thread_update_usage(সংরচনা k_thread *thread, uint32_t cycles)
 {
 	thread->base.usage.total += cycles;
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	thread->base.usage.current += cycles;
 
-	if (thread->base.usage.longest < thread->base.usage.current) {
+	যদি (thread->base.usage.longest < thread->base.usage.current) {
 		thread->base.usage.longest = thread->base.usage.current;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_start(struct k_thread *thread)
+শূন্য z_sched_usage_start(সংরচনা k_thread *thread)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 
 	_current_cpu->usage0 = usage_now();   /* Always update */
 
-	if (thread->base.usage.track_usage) {
-		thread->base.usage.num_windows++;
+	যদি (thread->base.usage.track_usage) {
+		thread->base.usage.অঙ্ক_windows++;
 		thread->base.usage.current = 0;
 	}
 
-	k_spin_unlock(&usage_lock, key);
-#else
+	k_spin_unlock(&usage_lock, চাবি);
+#অন্যথা
 	/* One write through a volatile pointer doesn't require
 	 * synchronization as long as _usage() treats it as volatile
 	 * (we can't race with _stop() by design).
@@ -96,23 +96,23 @@ void z_sched_usage_start(struct k_thread *thread)
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-void z_sched_usage_stop(void)
+শূন্য z_sched_usage_stop(শূন্য)
 {
-	struct _cpu *cpu = _current_cpu;
+	সংরচনা _cpu *cpu = _current_cpu;
 
 	/* Only this CPU writes usage0, and callers keep local IRQs masked. */
-	if (cpu->usage0 == 0U) {
-		return;
+	যদি (cpu->usage0 == 0U) {
+		প্রত্যাগম;
 	}
 
-	k_spinlock_key_t k = k_spin_lock(&usage_lock);
+	k_spinlock_চাবি_t k = k_spin_lock(&usage_lock);
 
 	uint32_t u0 = cpu->usage0;
 
-	if (u0 != 0) {
+	যদি (u0 != 0) {
 		uint32_t cycles = usage_now() - u0;
 
-		if (cpu->current->base.usage.track_usage) {
+		যদি (cpu->current->base.usage.track_usage) {
 			sched_thread_update_usage(cpu->current, cycles);
 		}
 
@@ -124,17 +124,17 @@ void z_sched_usage_stop(void)
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
+শূন্য z_sched_cpu_usage(uint8_t cpu_id, সংরচনা k_thread_runtime_stats *stats)
 {
-	k_spinlock_key_t  key;
-	struct _cpu *cpu;
+	k_spinlock_চাবি_t  চাবি;
+	সংরচনা _cpu *cpu;
 	uint32_t pending = 0U;
 	bool pending_is_idle = false;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 	cpu = &_kernel.cpus[cpu_id];
 
-	if (cpu == _current_cpu) {
+	যদি (cpu == _current_cpu) {
 		uint32_t  now = usage_now();
 		uint32_t cycles = now - cpu->usage0;
 
@@ -145,14 +145,14 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 		 * that information up-to-date.
 		 */
 
-		if (cpu->current->base.usage.track_usage) {
+		যদি (cpu->current->base.usage.track_usage) {
 			sched_thread_update_usage(cpu->current, cycles);
 		}
 
 		sched_cpu_update_usage(cpu, cycles);
 
 		cpu->usage0 = now;
-	} else if (cpu->usage->track_usage) {
+	} অন্যথা যদি (cpu->usage->track_usage) {
 		/*
 		 * Getting stats for another CPU. Its counters only advance when
 		 * it context switches or reports on itself, so the time it has
@@ -174,11 +174,11 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 	stats->current_cycles   = cpu->usage->current;
 	stats->peak_cycles      = cpu->usage->longest;
 
-	if (cpu->usage->num_windows == 0) {
+	যদি (cpu->usage->অঙ্ক_windows == 0) {
 		stats->average_cycles = 0;
-	} else {
+	} অন্যথা {
 		stats->average_cycles = stats->total_cycles /
-					cpu->usage->num_windows;
+					cpu->usage->অঙ্ক_windows;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
@@ -188,21 +188,21 @@ void z_sched_cpu_usage(uint8_t cpu_id, struct k_thread_runtime_stats *stats)
 
 	stats->execution_cycles = stats->total_cycles + stats->idle_cycles;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats)
+শূন্য z_sched_thread_usage(সংরচনা k_thread *thread,
+			  সংরচনা k_thread_runtime_stats *stats)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t  key;
+	সংরচনা _cpu *cpu;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 	cpu = _current_cpu;
 
 
-	if (thread == cpu->current) {
+	যদি (thread == cpu->current) {
 		uint32_t now = usage_now();
 		uint32_t cycles = now - cpu->usage0;
 
@@ -213,7 +213,7 @@ void z_sched_thread_usage(struct k_thread *thread,
 		 * that information up-to-date.
 		 */
 
-		if (thread->base.usage.track_usage) {
+		যদি (thread->base.usage.track_usage) {
 			sched_thread_update_usage(thread, cycles);
 		}
 
@@ -231,11 +231,11 @@ void z_sched_thread_usage(struct k_thread *thread,
 	stats->current_cycles = thread->base.usage.current;
 	stats->peak_cycles    = thread->base.usage.longest;
 
-	if (thread->base.usage.num_windows == 0) {
+	যদি (thread->base.usage.অঙ্ক_windows == 0) {
 		stats->average_cycles = 0;
-	} else {
+	} অন্যথা {
 		stats->average_cycles = stats->total_cycles /
-					thread->base.usage.num_windows;
+					thread->base.usage.অঙ্ক_windows;
 	}
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
@@ -243,27 +243,27 @@ void z_sched_thread_usage(struct k_thread *thread,
 	stats->idle_cycles = 0;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 }
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-int k_thread_runtime_stats_enable(k_tid_t  thread)
+পূর্ণাঙ্ক k_thread_runtime_stats_enable(k_tid_t  thread)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == রিক্ত) {
+		প্রত্যাগম -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	চাবি = k_spin_lock(&usage_lock);
+	সংরচনা _cpu *cpu = _current_cpu;
 
-	if (!thread->base.usage.track_usage) {
+	যদি (!thread->base.usage.track_usage) {
 		thread->base.usage.track_usage = true;
-		thread->base.usage.num_windows++;
+		thread->base.usage.অঙ্ক_windows++;
 		thread->base.usage.current = 0;
 
-		if (thread == cpu->current) {
+		যদি (thread == cpu->current) {
 			uint32_t now = usage_now();
 
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
@@ -272,26 +272,26 @@ int k_thread_runtime_stats_enable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int k_thread_runtime_stats_disable(k_tid_t  thread)
+পূর্ণাঙ্ক k_thread_runtime_stats_disable(k_tid_t  thread)
 {
-	k_spinlock_key_t key;
+	k_spinlock_চাবি_t চাবি;
 
-	CHECKIF(thread == NULL) {
-		return -EINVAL;
+	CHECKIF(thread == রিক্ত) {
+		প্রত্যাগম -EINVAL;
 	}
 
-	key = k_spin_lock(&usage_lock);
-	struct _cpu *cpu = _current_cpu;
+	চাবি = k_spin_lock(&usage_lock);
+	সংরচনা _cpu *cpu = _current_cpu;
 
-	if (thread->base.usage.track_usage) {
+	যদি (thread->base.usage.track_usage) {
 		thread->base.usage.track_usage = false;
 
-		if (thread == cpu->current) {
+		যদি (thread == cpu->current) {
 			uint32_t now = usage_now();
 			uint32_t cycles = now - cpu->usage0;
 
@@ -302,25 +302,25 @@ int k_thread_runtime_stats_disable(k_tid_t  thread)
 		}
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
 bool k_thread_runtime_stats_is_enabled(k_tid_t thread)
 {
-	return thread->base.usage.track_usage;
+	প্রত্যাগম thread->base.usage.track_usage;
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
 #ifdef CONFIG_SCHED_THREAD_USAGE_ALL
-void k_sys_runtime_stats_enable(void)
+শূন্য k_sys_runtime_stats_enable(শূন্য)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 
-	if (_current_cpu->usage->track_usage) {
+	যদি (_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already enabled on the current CPU
@@ -328,33 +328,33 @@ void k_sys_runtime_stats_enable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_lock, চাবি);
+		প্রত্যাগম;
 	}
 
 	/* Enable gathering of runtime stats on each CPU */
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned পূর্ণাঙ্ক অঙ্ক_cpus = arch_অঙ্ক_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	প্রতি (unsigned পূর্ণাঙ্ক i = 0; i < অঙ্ক_cpus; i++) {
 		_kernel.cpus[i].usage->track_usage = true;
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-		_kernel.cpus[i].usage->num_windows++;
+		_kernel.cpus[i].usage->অঙ্ক_windows++;
 		_kernel.cpus[i].usage->current = 0;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 }
 
-void k_sys_runtime_stats_disable(void)
+শূন্য k_sys_runtime_stats_disable(শূন্য)
 {
-	struct _cpu *cpu;
-	k_spinlock_key_t key;
+	সংরচনা _cpu *cpu;
+	k_spinlock_চাবি_t চাবি;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 
-	if (!_current_cpu->usage->track_usage) {
+	যদি (!_current_cpu->usage->track_usage) {
 
 		/*
 		 * Usage tracking is already disabled on the current CPU
@@ -362,67 +362,67 @@ void k_sys_runtime_stats_disable(void)
 		 * nothing left to do.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
-		return;
+		k_spin_unlock(&usage_lock, চাবি);
+		প্রত্যাগম;
 	}
 
 	uint32_t now = usage_now();
 
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned পূর্ণাঙ্ক অঙ্ক_cpus = arch_অঙ্ক_cpus();
 
-	for (unsigned int i = 0; i < num_cpus; i++) {
+	প্রতি (unsigned পূর্ণাঙ্ক i = 0; i < অঙ্ক_cpus; i++) {
 		cpu = &_kernel.cpus[i];
-		if (cpu->usage0 != 0) {
+		যদি (cpu->usage0 != 0) {
 			sched_cpu_update_usage(cpu, now - cpu->usage0);
 		}
 		cpu->usage->track_usage = false;
 	}
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 }
 #endif /* CONFIG_SCHED_THREAD_USAGE_ALL */
 
 #ifdef CONFIG_OBJ_CORE_STATS_THREAD
-int z_thread_stats_raw(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_thread_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	চাবি = k_spin_lock(&usage_lock);
+	memcpy(stats, obj_core->stats, পরিমাণ(সংরচনা k_cycle_stats));
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_thread_stats_query(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_thread_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
-	struct k_thread *thread;
+	সংরচনা k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, সংরচনা k_thread, obj_core);
 
 	z_sched_thread_usage(thread, stats);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_thread_stats_reset(struct k_obj_core *obj_core)
+পূর্ণাঙ্ক z_thread_stats_reset(সংরচনা k_obj_core *obj_core)
 {
-	k_spinlock_key_t  key;
-	struct k_cycle_stats  *stats;
-	struct k_thread *thread;
+	k_spinlock_চাবি_t  চাবি;
+	সংরচনা k_cycle_stats  *stats;
+	সংরচনা k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
-	key = k_spin_lock(&usage_lock);
+	thread = CONTAINER_OF(obj_core, সংরচনা k_thread, obj_core);
+	চাবি = k_spin_lock(&usage_lock);
 	stats = obj_core->stats;
 
 	stats->total = 0ULL;
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
 	stats->current = 0ULL;
 	stats->longest = 0ULL;
-	stats->num_windows = (thread->base.usage.track_usage) ?  1U : 0U;
+	stats->অঙ্ক_windows = (thread->base.usage.track_usage) ?  1U : 0U;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 
-	if (thread != _current_cpu->current) {
+	যদি (thread != _current_cpu->current) {
 
 		/*
 		 * If the thread is not running, there is nothing else to do.
@@ -432,9 +432,9 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 		 * window.
 		 */
 
-		k_spin_unlock(&usage_lock, key);
+		k_spin_unlock(&usage_lock, চাবি);
 
-		return 0;
+		প্রত্যাগম 0;
 	}
 
 	/* Update the current CPU stats. */
@@ -445,79 +445,79 @@ int z_thread_stats_reset(struct k_obj_core *obj_core)
 
 	_current_cpu->usage0 = now;
 
-	k_spin_unlock(&usage_lock, key);
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_thread_stats_disable(struct k_obj_core *obj_core)
+পূর্ণাঙ্ক z_thread_stats_disable(সংরচনা k_obj_core *obj_core)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+	সংরচনা k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, সংরচনা k_thread, obj_core);
 
-	return k_thread_runtime_stats_disable(thread);
-#else
-	return -ENOTSUP;
+	প্রত্যাগম k_thread_runtime_stats_disable(thread);
+#অন্যথা
+	প্রত্যাগম -ENOTSUP;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 
-int z_thread_stats_enable(struct k_obj_core *obj_core)
+পূর্ণাঙ্ক z_thread_stats_enable(সংরচনা k_obj_core *obj_core)
 {
 #ifdef CONFIG_SCHED_THREAD_USAGE_ANALYSIS
-	struct k_thread *thread;
+	সংরচনা k_thread *thread;
 
-	thread = CONTAINER_OF(obj_core, struct k_thread, obj_core);
+	thread = CONTAINER_OF(obj_core, সংরচনা k_thread, obj_core);
 
-	return k_thread_runtime_stats_enable(thread);
-#else
-	return -ENOTSUP;
+	প্রত্যাগম k_thread_runtime_stats_enable(thread);
+#অন্যথা
+	প্রত্যাগম -ENOTSUP;
 #endif /* CONFIG_SCHED_THREAD_USAGE_ANALYSIS */
 }
 #endif /* CONFIG_OBJ_CORE_STATS_THREAD */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_cpu_stats_raw(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_cpu_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
-	memcpy(stats, obj_core->stats, sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	চাবি = k_spin_lock(&usage_lock);
+	memcpy(stats, obj_core->stats, পরিমাণ(সংরচনা k_cycle_stats));
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_cpu_stats_query(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_cpu_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
-	struct _cpu  *cpu;
+	সংরচনা _cpu  *cpu;
 
-	cpu = CONTAINER_OF(obj_core, struct _cpu, obj_core);
+	cpu = CONTAINER_OF(obj_core, সংরচনা _cpu, obj_core);
 
 	z_sched_cpu_usage(cpu->id, stats);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */
 
 #ifdef CONFIG_OBJ_CORE_STATS_SYSTEM
-int z_kernel_stats_raw(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_kernel_stats_raw(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
-	k_spinlock_key_t  key;
+	k_spinlock_চাবি_t  চাবি;
 
-	key = k_spin_lock(&usage_lock);
+	চাবি = k_spin_lock(&usage_lock);
 	memcpy(stats, obj_core->stats,
-	       CONFIG_MP_MAX_NUM_CPUS * sizeof(struct k_cycle_stats));
-	k_spin_unlock(&usage_lock, key);
+	       CONFIG_MP_MAX_অঙ্ক_CPUS * পরিমাণ(সংরচনা k_cycle_stats));
+	k_spin_unlock(&usage_lock, চাবি);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_kernel_stats_query(struct k_obj_core *obj_core, void *stats)
+পূর্ণাঙ্ক z_kernel_stats_query(সংরচনা k_obj_core *obj_core, শূন্য *stats)
 {
 	ARG_UNUSED(obj_core);
 
-	return k_thread_runtime_stats_all_get(stats);
+	প্রত্যাগম k_thread_runtime_stats_all_get(stats);
 }
 #endif /* CONFIG_OBJ_CORE_STATS_SYSTEM */

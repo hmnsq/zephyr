@@ -49,20 +49,20 @@
  *   unbounded ISR latency.
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <kthread.h>
-#include <wait_q.h>
-#include <errno.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/llext/symbol.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <zephyr/toolchain.h>
+#অন্তর্ভাব <kspinlock.h>
+#অন্তর্ভাব <ksched.h>
+#অন্তর্ভাব <scheduler.h>
+#অন্তর্ভাব <kthread.h>
+#অন্তর্ভাব <wait_q.h>
+#অন্তর্ভাব <errno.h>
+#অন্তর্ভাব <zephyr/init.h>
+#অন্তর্ভাব <zephyr/internal/syscall_handler.h>
+#অন্তর্ভাব <zephyr/tracing/tracing.h>
+#অন্তর্ভাব <zephyr/sys/check.h>
+#অন্তর্ভাব <zephyr/logging/log.h>
+#অন্তর্ভাব <zephyr/llext/symbol.h>
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /*
@@ -72,10 +72,10 @@ LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
  * fields (owner, mutex_pended_on, held_mutexes) belonging to mutexes
  * other than the one passed to the API entry point.
  */
-static struct k_spinlock mutex_lock;
+স্থির সংরচনা k_spinlock mutex_lock;
 
 #ifdef CONFIG_OBJ_CORE_MUTEX
-K_OBJ_TYPE_DEFINE(obj_type_mutex, k_mutex, K_OBJ_TYPE_MUTEX_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_mutex, k_mutex, K_OBJ_TYPE_MUTEX_ID, রিক্ত);
 #endif /* CONFIG_OBJ_CORE_MUTEX */
 
 /*
@@ -85,25 +85,25 @@ K_OBJ_TYPE_DEFINE(obj_type_mutex, k_mutex, K_OBJ_TYPE_MUTEX_ID, NULL);
  * linked in the owner's held_mutexes list and reset the wait queue under
  * pending waiters (threads only pend while the mutex has an owner).
  */
-static int mutex_init(struct k_mutex *mutex, bool refuse_if_owned)
+স্থির পূর্ণাঙ্ক mutex_init(সংরচনা k_mutex *mutex, bool refuse_if_owned)
 {
-	k_spinlock_key_t key = k_spin_lock(&mutex_lock);
+	k_spinlock_চাবি_t চাবি = k_spin_lock(&mutex_lock);
 
-	if (refuse_if_owned && (mutex->owner != NULL)) {
-		k_spin_unlock(&mutex_lock, key);
-		return -EBUSY;
+	যদি (refuse_if_owned && (mutex->owner != রিক্ত)) {
+		k_spin_unlock(&mutex_lock, চাবি);
+		প্রত্যাগম -EBUSY;
 	}
 
-	mutex->owner = NULL;
-	mutex->lock_count = 0U;
+	mutex->owner = রিক্ত;
+	mutex->lock_গুনতি = 0U;
 
 	z_waitq_init(&mutex->wait_q);
 
-#if Z_MUTEX_PI_ENABLED
-	mutex->held_node.next = NULL;
+#যদি Z_MUTEX_PI_ENABLED
+	mutex->held_গ্রন্থি.next = রিক্ত;
 #endif
 
-	k_spin_unlock(&mutex_lock, key);
+	k_spin_unlock(&mutex_lock, চাবি);
 
 	k_object_init(mutex);
 
@@ -113,16 +113,16 @@ static int mutex_init(struct k_mutex *mutex, bool refuse_if_owned)
 
 	SYS_PORT_TRACING_OBJ_INIT(k_mutex, mutex, 0);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_impl_k_mutex_init(struct k_mutex *mutex)
+পূর্ণাঙ্ক z_impl_k_mutex_init(সংরচনা k_mutex *mutex)
 {
-	return mutex_init(mutex, false);
+	প্রত্যাগম mutex_init(mutex, false);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_mutex_init(struct k_mutex *mutex)
+স্থির অন্তঃস্থ পূর্ণাঙ্ক z_vrfy_k_mutex_init(সংরচনা k_mutex *mutex)
 {
 	bool initialized;
 
@@ -131,15 +131,15 @@ static inline int z_vrfy_k_mutex_init(struct k_mutex *mutex)
 	/* The owner field is only meaningful once the mutex was initialized */
 	initialized = (k_object_find(mutex)->flags & K_OBJ_FLAG_INITIALIZED) != 0U;
 
-	K_OOPS(K_SYSCALL_VERIFY_MSG(mutex_init(mutex, initialized) == 0,
+	K_OOPS(K_SYSCALL_VERIFY_বার্তা(mutex_init(mutex, initialized) == 0,
 				    "mutex %p is locked", mutex));
 
-	return 0;
+	প্রত্যাগম 0;
 }
-#include <zephyr/syscalls/k_mutex_init_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_mutex_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-#if Z_MUTEX_PI_ENABLED
+#যদি Z_MUTEX_PI_ENABLED
 /*
  * Upper bound on ownership-chain walk hops. This is a bound on walk cost
  * under mutex_lock, not a real limit on chain length -- equal-priority
@@ -147,62 +147,62 @@ static inline int z_vrfy_k_mutex_init(struct k_mutex *mutex)
  */
 #define MUTEX_CHAIN_WALK_MAX_HOPS 16
 
-static int32_t new_prio_for_inheritance(int32_t target, int32_t limit)
+স্থির int32_t new_prio_for_inheritance(int32_t target, int32_t limit)
 {
-	int new_prio = z_is_prio_higher(target, limit) ? target : limit;
+	পূর্ণাঙ্ক new_prio = z_is_prio_higher(target, limit) ? target : limit;
 
 	new_prio = z_get_new_prio_with_ceiling(new_prio);
 
-	return new_prio;
+	প্রত্যাগম new_prio;
 }
 
-static bool adjust_owner_prio(struct k_mutex *mutex, int32_t new_prio)
+স্থির bool adjust_owner_prio(সংরচনা k_mutex *mutex, int32_t new_prio)
 {
-	if (mutex->owner->base.prio != new_prio) {
+	যদি (mutex->owner->base.prio != new_prio) {
 
 		LOG_DBG("%p (ready (y/n): %c) prio changed to %d (was %d)",
 			mutex->owner, z_is_thread_ready(mutex->owner) ?
 			'y' : 'n',
 			new_prio, mutex->owner->base.prio);
 
-		return z_thread_prio_set(mutex->owner, new_prio);
+		প্রত্যাগম z_thread_prio_set(mutex->owner, new_prio);
 	}
-	return false;
+	প্রত্যাগম false;
 }
 
 /*
  * Scan all mutexes held by a thread and return the highest priority
  * among all their waiters, floored at floor_prio.
  */
-static int32_t held_mutexes_highest_waiter_prio(struct k_thread *thread,
+স্থির int32_t held_mutexes_highest_waiter_prio(সংরচনা k_thread *thread,
 						 int32_t floor_prio)
 {
-	sys_snode_t *node;
+	sys_snode_t *গ্রন্থি;
 	int32_t prio = floor_prio;
 
 	LOCK_SCHED_SPINLOCK {
-		SYS_SLIST_FOR_EACH_NODE(&thread->held_mutexes, node) {
-			struct k_mutex *m =
-				CONTAINER_OF(node, struct k_mutex, held_node);
-			struct k_thread *waiter = z_waitq_head_locked(&m->wait_q);
+		SYS_SLIST_FOR_EACH_গ্রন্থি(&thread->held_mutexes, গ্রন্থি) {
+			সংরচনা k_mutex *m =
+				CONTAINER_OF(গ্রন্থি, সংরচনা k_mutex, held_গ্রন্থি);
+			সংরচনা k_thread *waiter = z_waitq_head_locked(&m->wait_q);
 
-			if (waiter != NULL) {
+			যদি (waiter != রিক্ত) {
 				int32_t wprio = z_get_new_prio_with_ceiling(waiter->base.prio);
 
-				if (z_is_prio_higher(wprio, prio)) {
+				যদি (z_is_prio_higher(wprio, prio)) {
 					prio = wprio;
 				}
 			}
 		}
 	}
-	return prio;
+	প্রত্যাগম prio;
 }
 #endif
 
-int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
+পূর্ণাঙ্ক z_impl_k_mutex_lock(সংরচনা k_mutex *mutex, k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-#if Z_MUTEX_PI_ENABLED
+	k_spinlock_চাবি_t চাবি;
+#যদি Z_MUTEX_PI_ENABLED
 	bool resched = false;
 #endif
 
@@ -210,51 +210,51 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mutex, lock, mutex, timeout);
 
-	key = k_spin_lock(&mutex_lock);
+	চাবি = k_spin_lock(&mutex_lock);
 
-	if (likely((mutex->lock_count == 0U) || (mutex->owner == _current))) {
+	যদি (likely((mutex->lock_গুনতি == 0U) || (mutex->owner == _current))) {
 
-		mutex->lock_count++;
+		mutex->lock_গুনতি++;
 		mutex->owner = _current;
 
-#if Z_MUTEX_PI_ENABLED
+#যদি Z_MUTEX_PI_ENABLED
 		LOG_DBG("%p took mutex %p, count: %d, orig prio: %d",
-			_current, mutex, mutex->lock_count,
+			_current, mutex, mutex->lock_গুনতি,
 			_current->orig_prio);
 
 		/* Add to held list on first acquisition; recursive locks skip this. */
-		if (mutex->lock_count == 1U) {
+		যদি (mutex->lock_গুনতি == 1U) {
 			/* Capture the thread's true pre-inheritance priority
 			 * the first time it acquires any mutex.
 			 */
-			if (sys_slist_is_empty(&_current->held_mutexes)) {
+			যদি (sys_slist_is_empty(&_current->held_mutexes)) {
 				_current->orig_prio = _current->base.prio;
 			}
-			sys_slist_append(&_current->held_mutexes, &mutex->held_node);
+			sys_slist_append(&_current->held_mutexes, &mutex->held_গ্রন্থি);
 		}
-#else
+#অন্যথা
 		LOG_DBG("%p took mutex %p, count: %d",
-			_current, mutex, mutex->lock_count);
+			_current, mutex, mutex->lock_গুনতি);
 #endif
 
-		k_spin_unlock(&mutex_lock, key);
+		k_spin_unlock(&mutex_lock, চাবি);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, 0);
 
-		return 0;
+		প্রত্যাগম 0;
 	}
 
-	if (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
-		k_spin_unlock(&mutex_lock, key);
+	যদি (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
+		k_spin_unlock(&mutex_lock, চাবি);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, -EBUSY);
 
-		return -EBUSY;
+		প্রত্যাগম -EBUSY;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_mutex, lock, mutex, timeout);
 
-#if Z_MUTEX_PI_ENABLED
+#যদি Z_MUTEX_PI_ENABLED
 	/* Record the mutex this thread is blocking on for priority inheritance. */
 	_current->mutex_pended_on = mutex;
 
@@ -266,17 +266,17 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 		int32_t boost_prio = new_prio_for_inheritance(
 					_current->base.prio,
 					mutex->owner->base.prio);
-		struct k_mutex  *chain_mutex = mutex;
-		struct k_thread *chain_owner = mutex->owner;
-		int hops = 0;
-#if defined(CONFIG_MUTEX_DEADLOCK_DETECT)
+		সংরচনা k_mutex  *chain_mutex = mutex;
+		সংরচনা k_thread *chain_owner = mutex->owner;
+		পূর্ণাঙ্ক hops = 0;
+#যদি defined(CONFIG_MUTEX_DEADLOCK_DETECT)
 		bool all_forever = K_TIMEOUT_EQ(timeout, K_FOREVER);
 #endif
 
 		LOG_DBG("chain boosting prio on mutex %p", mutex);
 
-		while (chain_owner != NULL) {
-#if defined(CONFIG_MUTEX_DEADLOCK_DETECT)
+		যাবত্ (chain_owner != রিক্ত) {
+#যদি defined(CONFIG_MUTEX_DEADLOCK_DETECT)
 			/*
 			 * Deadlock detection: only when _current and every
 			 * chain member visited so far wait forever. all_forever
@@ -290,19 +290,19 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 			all_forever = all_forever &&
 				      z_is_inactive_timeout(&chain_owner->base.timeout);
 
-			if (all_forever &&
-			    chain_owner->mutex_pended_on != NULL &&
+			যদি (all_forever &&
+			    chain_owner->mutex_pended_on != রিক্ত &&
 			    z_is_thread_pending(chain_owner) &&
 			    chain_owner->mutex_pended_on->owner == _current) {
 				__ASSERT(false,
 					"mutex deadlock: thread %p waiting on "
 					"mutex %p (owner %p)",
 					_current, mutex, mutex->owner);
-				break;
+				ভঙ্গ;
 			}
 #endif /* CONFIG_MUTEX_DEADLOCK_DETECT */
 
-			if (z_is_prio_higher(boost_prio, chain_owner->base.prio)) {
+			যদি (z_is_prio_higher(boost_prio, chain_owner->base.prio)) {
 				resched = adjust_owner_prio(chain_mutex, boost_prio)
 					  || resched;
 			}
@@ -314,9 +314,9 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 			 * Always boost the current owner first, then decide
 			 * whether to continue.
 			 */
-			if (chain_owner->mutex_pended_on == NULL ||
+			যদি (chain_owner->mutex_pended_on == রিক্ত ||
 			    !z_is_thread_pending(chain_owner)) {
-				break;
+				ভঙ্গ;
 			}
 
 			chain_mutex = chain_owner->mutex_pended_on;
@@ -328,47 +328,47 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 			 * The chain_mutex == mutex check is a fast path for
 			 * the common 2-hop cycle through the starting mutex.
 			 */
-			if (chain_mutex == mutex ||
+			যদি (chain_mutex == mutex ||
 			    ++hops >= MUTEX_CHAIN_WALK_MAX_HOPS) {
-				break;
+				ভঙ্গ;
 			}
 			chain_owner = chain_mutex->owner;
 		}
 	}
 #endif
 
-	int got_mutex = z_pend_curr(&mutex_lock, key, &mutex->wait_q, timeout);
+	পূর্ণাঙ্ক got_mutex = z_pend_curr(&mutex_lock, চাবি, &mutex->wait_q, timeout);
 
 	LOG_DBG("on mutex %p got_mutex value: %d", mutex, got_mutex);
 
 	LOG_DBG("%p got mutex %p (y/n): %c", _current, mutex,
 		got_mutex ? 'y' : 'n');
 
-#if Z_MUTEX_PI_ENABLED
-	if (got_mutex == 0) {
+#যদি Z_MUTEX_PI_ENABLED
+	যদি (got_mutex == 0) {
 		/* Lock granted; clear the pending mutex pointer. */
-		_current->mutex_pended_on = NULL;
+		_current->mutex_pended_on = রিক্ত;
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, 0);
-		return 0;
+		প্রত্যাগম 0;
 	}
 
 	/* timed out */
 
 	LOG_DBG("%p timeout on mutex %p", _current, mutex);
 
-	key = k_spin_lock(&mutex_lock);
+	চাবি = k_spin_lock(&mutex_lock);
 
 	/*
 	 * Clear mutex_pended_on under mutex_lock so no concurrent chain walk
 	 * can observe the stale pointer and detect a false deadlock cycle.
 	 */
-	_current->mutex_pended_on = NULL;
+	_current->mutex_pended_on = রিক্ত;
 
 	/*
 	 * Check if mutex was unlocked after this thread was unpended.
 	 * If so, skip adjusting owner's priority down.
 	 */
-	if (likely(mutex->owner != NULL)) {
+	যদি (likely(mutex->owner != রিক্ত)) {
 		/*
 		 * Recalculate the owner's priority across all mutexes it still
 		 * holds; another held mutex may still justify a partial boost.
@@ -382,44 +382,44 @@ int z_impl_k_mutex_lock(struct k_mutex *mutex, k_timeout_t timeout)
 		resched = adjust_owner_prio(mutex, new_prio) || resched;
 	}
 
-	if (resched) {
-		z_reschedule(&mutex_lock, key);
-	} else {
-		k_spin_unlock(&mutex_lock, key);
+	যদি (resched) {
+		z_reschedule(&mutex_lock, চাবি);
+	} অন্যথা {
+		k_spin_unlock(&mutex_lock, চাবি);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, -EAGAIN);
 
-	return -EAGAIN;
-#else
+	প্রত্যাগম -EAGAIN;
+#অন্যথা
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, lock, mutex, timeout, got_mutex);
 
-	return got_mutex;
+	প্রত্যাগম got_mutex;
 #endif
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_mutex_lock(struct k_mutex *mutex,
+স্থির অন্তঃস্থ পূর্ণাঙ্ক z_vrfy_k_mutex_lock(সংরচনা k_mutex *mutex,
 				      k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(mutex, K_OBJ_MUTEX));
-	return z_impl_k_mutex_lock(mutex, timeout);
+	প্রত্যাগম z_impl_k_mutex_lock(mutex, timeout);
 }
-#include <zephyr/syscalls/k_mutex_lock_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_mutex_lock_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_mutex_unlock(struct k_mutex *mutex)
+পূর্ণাঙ্ক z_impl_k_mutex_unlock(সংরচনা k_mutex *mutex)
 {
-	struct k_thread *new_owner = NULL;
+	সংরচনা k_thread *new_owner = রিক্ত;
 
 	__ASSERT(!arch_is_in_isr(), "mutexes cannot be used inside ISRs");
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_mutex, unlock, mutex);
 
-	CHECKIF(mutex->owner == NULL) {
+	CHECKIF(mutex->owner == রিক্ত) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, unlock, mutex, -EINVAL);
 
-		return -EINVAL;
+		প্রত্যাগম -EINVAL;
 	}
 	/*
 	 * The current thread does not own the mutex.
@@ -427,7 +427,7 @@ int z_impl_k_mutex_unlock(struct k_mutex *mutex)
 	CHECKIF(mutex->owner != _current) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, unlock, mutex, -EPERM);
 
-		return -EPERM;
+		প্রত্যাগম -EPERM;
 	}
 
 	/*
@@ -436,31 +436,31 @@ int z_impl_k_mutex_unlock(struct k_mutex *mutex)
 	 * therefore no underflow check is required. Use assert to catch
 	 * undefined behavior.
 	 */
-	__ASSERT_NO_MSG(mutex->lock_count > 0U);
+	__ASSERT_NO_MSG(mutex->lock_গুনতি > 0U);
 
-	LOG_DBG("mutex %p lock_count: %d", mutex, mutex->lock_count);
+	LOG_DBG("mutex %p lock_count: %d", mutex, mutex->lock_গুনতি);
 
 	/*
 	 * If we are the owner and count is greater than 1, then decrement
 	 * the count and return and keep current thread as the owner.
 	 */
-	if (mutex->lock_count > 1U) {
-		mutex->lock_count--;
-		goto k_mutex_unlock_return;
+	যদি (mutex->lock_গুনতি > 1U) {
+		mutex->lock_গুনতি--;
+		গচ্ছ k_mutex_unlock_return;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&mutex_lock);
+	k_spinlock_চাবি_t চাবি = k_spin_lock(&mutex_lock);
 
-#if Z_MUTEX_PI_ENABLED
+#যদি Z_MUTEX_PI_ENABLED
 	/* Remove this mutex from the owner's list of held mutexes */
-	sys_slist_find_and_remove(&_current->held_mutexes, &mutex->held_node);
+	sys_slist_find_and_remove(&_current->held_mutexes, &mutex->held_গ্রন্থি);
 
 	/*
 	 * If the thread's priority was boosted, recalculate it by scanning
 	 * the remaining held mutexes. The released mutex has already been
 	 * removed from held_mutexes, so it is not included in the scan.
 	 */
-	if (_current->base.prio != _current->orig_prio) {
+	যদি (_current->base.prio != _current->orig_prio) {
 		int32_t new_prio = held_mutexes_highest_waiter_prio(
 					_current, _current->orig_prio);
 
@@ -479,44 +479,44 @@ int z_impl_k_mutex_unlock(struct k_mutex *mutex)
 		LOG_DBG("new owner of mutex %p: %p (prio: %d)",
 			mutex, new_owner, new_owner ? new_owner->base.prio : -1000);
 
-		if (unlikely(new_owner != NULL)) {
+		যদি (unlikely(new_owner != রিক্ত)) {
 			/*
 			 * new owner is already of higher or equal prio than first
 			 * waiter since the wait queue is priority-based: no need to
 			 * adjust its priority
 			 */
-#if Z_MUTEX_PI_ENABLED
-			if (sys_slist_is_empty(&new_owner->held_mutexes)) {
+#যদি Z_MUTEX_PI_ENABLED
+			যদি (sys_slist_is_empty(&new_owner->held_mutexes)) {
 				new_owner->orig_prio = new_owner->base.prio;
 			}
-			sys_slist_append(&new_owner->held_mutexes, &mutex->held_node);
-			new_owner->mutex_pended_on = NULL;
+			sys_slist_append(&new_owner->held_mutexes, &mutex->held_গ্রন্থি);
+			new_owner->mutex_pended_on = রিক্ত;
 #endif
-			arch_thread_return_value_set(new_owner, 0);
+			arch_thread_return_মান_set(new_owner, 0);
 			z_sched_ready_locked(new_owner);
-		} else {
-			mutex->lock_count = 0U;
+		} অন্যথা {
+			mutex->lock_গুনতি = 0U;
 		}
 	}
 
-	if (unlikely(new_owner != NULL)) {
-		z_reschedule(&mutex_lock, key);
-	} else {
-		k_spin_unlock(&mutex_lock, key);
+	যদি (unlikely(new_owner != রিক্ত)) {
+		z_reschedule(&mutex_lock, চাবি);
+	} অন্যথা {
+		k_spin_unlock(&mutex_lock, চাবি);
 	}
 
 
 k_mutex_unlock_return:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_mutex, unlock, mutex, 0);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_mutex_unlock(struct k_mutex *mutex)
+স্থির অন্তঃস্থ পূর্ণাঙ্ক z_vrfy_k_mutex_unlock(সংরচনা k_mutex *mutex)
 {
 	K_OOPS(K_SYSCALL_OBJ(mutex, K_OBJ_MUTEX));
-	return z_impl_k_mutex_unlock(mutex);
+	প্রত্যাগম z_impl_k_mutex_unlock(mutex);
 }
-#include <zephyr/syscalls/k_mutex_unlock_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_mutex_unlock_mrsh.c>
 #endif /* CONFIG_USERSPACE */

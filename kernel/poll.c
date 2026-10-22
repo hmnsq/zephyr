@@ -15,15 +15,15 @@
  * constructs.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <wait_q.h>
-#include <ksched.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/util.h>
-#include <zephyr/sys/__assert.h>
-#include <stdbool.h>
+#অন্তর্ভাব <zephyr/kernel.h>
+#অন্তর্ভাব <kernel_internal.h>
+#অন্তর্ভাব <wait_q.h>
+#অন্তর্ভাব <ksched.h>
+#অন্তর্ভাব <zephyr/internal/syscall_handler.h>
+#অন্তর্ভাব <zephyr/sys/dlist.h>
+#অন্তর্ভাব <zephyr/sys/util.h>
+#অন্তর্ভাব <zephyr/sys/__assert.h>
+#অন্তর্ভাব <stdbool.h>
 
 /* Single subsystem lock.  Locking per-event would be better on highly
  * contended SMP systems, but the original locking scheme here is
@@ -32,22 +32,22 @@
  * "inside" a given critical section).  Do the synchronization port
  * later as an optimization.
  */
-static struct k_spinlock poll_lock;
+স্থির সংরচনা k_spinlock poll_lock;
 
-enum POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
+গণনা POLL_MODE { MODE_NONE, MODE_POLL, MODE_TRIGGERED };
 
-static int signal_poller(struct k_poll_event *event, uint32_t state);
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status);
+স্থির পূর্ণাঙ্ক signal_poller(সংরচনা k_poll_event *event, uint32_t state);
+স্থির পূর্ণাঙ্ক signal_triggered_work(সংরচনা k_poll_event *event, uint32_t status);
 
-void k_poll_event_init(struct k_poll_event *event, uint32_t type,
-		       int mode, void *obj)
+শূন্য k_poll_event_init(সংরচনা k_poll_event *event, uint32_t type,
+		       পূর্ণাঙ্ক mode, শূন্য *obj)
 {
 	__ASSERT(mode == K_POLL_MODE_NOTIFY_ONLY,
 		 "only NOTIFY_ONLY mode is supported\n");
-	__ASSERT(type < (BIT(_POLL_NUM_TYPES)), "invalid type\n");
-	__ASSERT(obj != NULL, "must provide an object\n");
+	__ASSERT(type < (BIT(POLL_অঙ্ক_TYPES)), "invalid type\n");
+	__ASSERT(obj != রিক্ত, "must provide an object\n");
 
-	event->poller = NULL;
+	event->poller = রিক্ত;
 	/* event->tag is left uninitialized: the user will set it if needed */
 	event->type = type;
 	event->state = K_POLL_STATE_NOT_READY;
@@ -59,280 +59,280 @@ void k_poll_event_init(struct k_poll_event *event, uint32_t type,
 }
 
 /* must be called with interrupts locked */
-static inline bool is_condition_met(struct k_poll_event *event, uint32_t *state)
+স্থির অন্তঃস্থ bool is_condition_met(সংরচনা k_poll_event *event, uint32_t *state)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		if (k_sem_count_get(event->sem) > 0U) {
+	বিকল্প (event->type) {
+	পক্ষ K_POLL_TYPE_SEM_AVAILABLE:
+		যদি (k_sem_গুনতি_get(event->sem) > 0U) {
 			*state = K_POLL_STATE_SEM_AVAILABLE;
-			return true;
+			প্রত্যাগম true;
 		}
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		if (!k_queue_is_empty(event->queue)) {
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_DATA_AVAILABLE:
+		যদি (!k_queue_is_empty(event->queue)) {
 			*state = K_POLL_STATE_FIFO_DATA_AVAILABLE;
-			return true;
+			প্রত্যাগম true;
 		}
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		if (event->signal->signaled != 0U) {
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_SIGNAL:
+		যদি (event->সঙ্কেত->signaled != 0U) {
 			*state = K_POLL_STATE_SIGNALED;
-			return true;
+			প্রত্যাগম true;
 		}
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		if (event->msgq->used_msgs > 0) {
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		যদি (event->msgq->used_msgs > 0) {
 			*state = K_POLL_STATE_MSGQ_DATA_AVAILABLE;
-			return true;
+			প্রত্যাগম true;
 		}
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_PIPE_DATA_AVAILABLE:
 		/*
 		 * A closed pipe is readable: k_pipe_read() returns any
 		 * remaining bytes, then -EPIPE. Without the closed check,
 		 * k_poll() waits forever on a closed empty pipe.
 		 */
-		if (!ring_buf_is_empty(&event->pipe->buf) ||
+		যদি (!ring_buf_is_empty(&event->pipe->buf) ||
 		    (event->pipe->flags & PIPE_FLAG_OPEN) == 0U) {
 			*state = K_POLL_STATE_PIPE_DATA_AVAILABLE;
-			return true;
+			প্রত্যাগম true;
 		}
-		break;
-	case K_POLL_TYPE_IGNORE:
-		break;
-	default:
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_IGNORE:
+		ভঙ্গ;
+	স্বভাব:
 		__ASSERT(false, "invalid event type (0x%x)\n", event->type);
-		break;
+		ভঙ্গ;
 	}
 
-	return false;
+	প্রত্যাগম false;
 }
 
-static struct k_thread *poller_thread(struct z_poller *p)
+স্থির সংরচনা k_thread *poller_thread(সংরচনা z_poller *p)
 {
-	return p ? CONTAINER_OF(p, struct k_thread, poller) : NULL;
+	প্রত্যাগম p ? CONTAINER_OF(p, সংরচনা k_thread, poller) : রিক্ত;
 }
 
-static inline void add_event(sys_dlist_t *events, struct k_poll_event *event,
-			     struct z_poller *poller)
+স্থির অন্তঃস্থ শূন্য add_event(sys_dlist_t *events, সংরচনা k_poll_event *event,
+			     সংরচনা z_poller *poller)
 {
-	struct k_poll_event *pending;
+	সংরচনা k_poll_event *pending;
 
-	pending = (struct k_poll_event *)sys_dlist_peek_tail(events);
-	if ((pending == NULL) ||
+	pending = (সংরচনা k_poll_event *)sys_dlist_peek_tail(events);
+	যদি ((pending == রিক্ত) ||
 		(z_sched_prio_cmp(poller_thread(pending->poller),
 							   poller_thread(poller)) > 0)) {
-		sys_dlist_append(events, &event->_node);
-		return;
+		sys_dlist_append(events, &event->গ্রন্থি_2);
+		প্রত্যাগম;
 	}
 
-	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, _node) {
-		if (z_sched_prio_cmp(poller_thread(poller),
+	SYS_DLIST_FOR_EACH_CONTAINER(events, pending, গ্রন্থি_2) {
+		যদি (z_sched_prio_cmp(poller_thread(poller),
 					poller_thread(pending->poller)) > 0) {
-			sys_dlist_insert(&pending->_node, &event->_node);
-			return;
+			sys_dlist_ঢোকাও(&pending->গ্রন্থি_2, &event->গ্রন্থি_2);
+			প্রত্যাগম;
 		}
 	}
 
-	sys_dlist_append(events, &event->_node);
+	sys_dlist_append(events, &event->গ্রন্থি_2);
 }
 
 /* must be called with interrupts locked */
-static inline void register_event(struct k_poll_event *event,
-				 struct z_poller *poller)
+স্থির অন্তঃস্থ শূন্য register_event(সংরচনা k_poll_event *event,
+				 সংরচনা z_poller *poller)
 {
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
+	বিকল্প (event->type) {
+	পক্ষ K_POLL_TYPE_SEM_AVAILABLE:
+		__ASSERT(event->sem != রিক্ত, "invalid semaphore\n");
 		add_event(&event->sem->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_DATA_AVAILABLE:
+		__ASSERT(event->queue != রিক্ত, "invalid queue\n");
 		add_event(&event->queue->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
-		add_event(&event->signal->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->সঙ্কেত != রিক্ত, "invalid poll signal\n");
+		add_event(&event->সঙ্কেত->poll_events, event, poller);
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		__ASSERT(event->msgq != রিক্ত, "invalid message queue\n");
 		add_event(&event->msgq->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		__ASSERT(event->pipe != রিক্ত, "invalid pipe\n");
 		add_event(&event->pipe->poll_events, event, poller);
-		break;
-	case K_POLL_TYPE_IGNORE:
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		ভঙ্গ;
+	স্বভাব:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		ভঙ্গ;
 	}
 
 	event->poller = poller;
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registration(struct k_poll_event *event)
+স্থির অন্তঃস্থ শূন্য clear_event_registration(সংরচনা k_poll_event *event)
 {
 	bool remove_event = false;
 
-	event->poller = NULL;
+	event->poller = রিক্ত;
 
-	switch (event->type) {
-	case K_POLL_TYPE_SEM_AVAILABLE:
-		__ASSERT(event->sem != NULL, "invalid semaphore\n");
+	বিকল্প (event->type) {
+	পক্ষ K_POLL_TYPE_SEM_AVAILABLE:
+		__ASSERT(event->sem != রিক্ত, "invalid semaphore\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_DATA_AVAILABLE:
-		__ASSERT(event->queue != NULL, "invalid queue\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_DATA_AVAILABLE:
+		__ASSERT(event->queue != রিক্ত, "invalid queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_SIGNAL:
-		__ASSERT(event->signal != NULL, "invalid poll signal\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_SIGNAL:
+		__ASSERT(event->সঙ্কেত != রিক্ত, "invalid poll signal\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-		__ASSERT(event->msgq != NULL, "invalid message queue\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+		__ASSERT(event->msgq != রিক্ত, "invalid message queue\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-		__ASSERT(event->pipe != NULL, "invalid pipe\n");
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+		__ASSERT(event->pipe != রিক্ত, "invalid pipe\n");
 		remove_event = true;
-		break;
-	case K_POLL_TYPE_IGNORE:
+		ভঙ্গ;
+	পক্ষ K_POLL_TYPE_IGNORE:
 		/* nothing to do */
-		break;
-	default:
+		ভঙ্গ;
+	স্বভাব:
 		__ASSERT(false, "invalid event type\n");
-		break;
+		ভঙ্গ;
 	}
-	if (remove_event && sys_dnode_is_linked(&event->_node)) {
-		sys_dlist_remove(&event->_node);
+	যদি (remove_event && sys_dnode_is_linked(&event->গ্রন্থি_2)) {
+		sys_dlist_remove(&event->গ্রন্থি_2);
 	}
 }
 
 /* must be called with interrupts locked */
-static inline void clear_event_registrations(struct k_poll_event *events,
-					      int num_events,
-					      k_spinlock_key_t key)
+স্থির অন্তঃস্থ শূন্য clear_event_registrations(সংরচনা k_poll_event *events,
+					      পূর্ণাঙ্ক অঙ্ক_events,
+					      k_spinlock_চাবি_t চাবি)
 {
-	while (num_events--) {
-		clear_event_registration(&events[num_events]);
-		k_spin_unlock(&poll_lock, key);
-		key = k_spin_lock(&poll_lock);
+	যাবত্ (অঙ্ক_events--) {
+		clear_event_registration(&events[অঙ্ক_events]);
+		k_spin_unlock(&poll_lock, চাবি);
+		চাবি = k_spin_lock(&poll_lock);
 	}
 }
 
-static inline void set_event_ready(struct k_poll_event *event, uint32_t state)
+স্থির অন্তঃস্থ শূন্য set_event_ready(সংরচনা k_poll_event *event, uint32_t state)
 {
-	event->poller = NULL;
+	event->poller = রিক্ত;
 	event->state |= state;
 }
 
-static inline int register_events(struct k_poll_event *events,
-				  int num_events,
-				  struct z_poller *poller,
+স্থির অন্তঃস্থ পূর্ণাঙ্ক register_events(সংরচনা k_poll_event *events,
+				  পূর্ণাঙ্ক অঙ্ক_events,
+				  সংরচনা z_poller *poller,
 				  bool just_check)
 {
-	int events_registered = 0;
+	পূর্ণাঙ্ক events_registered = 0;
 
-	for (int ii = 0; ii < num_events; ii++) {
-		k_spinlock_key_t key;
+	প্রতি (পূর্ণাঙ্ক ii = 0; ii < অঙ্ক_events; ii++) {
+		k_spinlock_চাবি_t চাবি;
 		uint32_t state;
 
-		key = k_spin_lock(&poll_lock);
-		if (is_condition_met(&events[ii], &state)) {
+		চাবি = k_spin_lock(&poll_lock);
+		যদি (is_condition_met(&events[ii], &state)) {
 			set_event_ready(&events[ii], state);
 			poller->is_polling = false;
-		} else if (!just_check && poller->is_polling) {
+		} অন্যথা যদি (!just_check && poller->is_polling) {
 			register_event(&events[ii], poller);
 			events_registered += 1;
-		} else {
+		} অন্যথা {
 			/* Event is not one of those identified in is_condition_met()
 			 * catching non-polling events, or is marked for just check,
 			 * or not marked for polling. No action needed.
 			 */
 			;
 		}
-		k_spin_unlock(&poll_lock, key);
+		k_spin_unlock(&poll_lock, চাবি);
 	}
 
-	return events_registered;
+	প্রত্যাগম events_registered;
 }
 
-static int signal_poller(struct k_poll_event *event, uint32_t state)
+স্থির পূর্ণাঙ্ক signal_poller(সংরচনা k_poll_event *event, uint32_t state)
 {
-	struct k_thread *thread = poller_thread(event->poller);
+	সংরচনা k_thread *thread = poller_thread(event->poller);
 
-	__ASSERT(thread != NULL, "poller should have a thread\n");
+	__ASSERT(thread != রিক্ত, "poller should have a thread\n");
 
-	if (!z_is_thread_pending(thread)) {
-		return 0;
+	যদি (!z_is_thread_pending(thread)) {
+		প্রত্যাগম 0;
 	}
 
 	z_unpend_thread(thread);
-	arch_thread_return_value_set(thread,
+	arch_thread_return_মান_set(thread,
 		state == K_POLL_STATE_CANCELLED ? -EINTR : 0);
 
-	if (!z_is_thread_ready(thread)) {
-		return 0;
+	যদি (!z_is_thread_ready(thread)) {
+		প্রত্যাগম 0;
 	}
 
 	z_ready_thread(thread);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int z_impl_k_poll(struct k_poll_event *events, int num_events,
+পূর্ণাঙ্ক z_impl_k_poll(সংরচনা k_poll_event *events, পূর্ণাঙ্ক অঙ্ক_events,
 		  k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
-	struct z_poller *poller = &_current->poller;
+	পূর্ণাঙ্ক events_registered;
+	k_spinlock_চাবি_t চাবি;
+	সংরচনা z_poller *poller = &_current->poller;
 
 	poller->is_polling = true;
 	poller->mode = MODE_POLL;
 
 	__ASSERT(!arch_is_in_isr(), "");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(events != রিক্ত, "NULL events\n");
+	__ASSERT(অঙ্ক_events >= 0, "<0 events\n");
 
 	SYS_PORT_TRACING_FUNC_ENTER(k_poll_api, poll, events);
 
-	events_registered = register_events(events, num_events, poller,
+	events_registered = register_events(events, অঙ্ক_events, poller,
 					    K_TIMEOUT_EQ(timeout, K_NO_WAIT));
 
-	key = k_spin_lock(&poll_lock);
+	চাবি = k_spin_lock(&poll_lock);
 
 	/*
 	 * If we're not polling anymore, it means that at least one event
 	 * condition is met, either when looping through the events here or
 	 * because one of the events registered has had its state changed.
 	 */
-	if (!poller->is_polling) {
-		clear_event_registrations(events, events_registered, key);
-		k_spin_unlock(&poll_lock, key);
+	যদি (!poller->is_polling) {
+		clear_event_registrations(events, events_registered, চাবি);
+		k_spin_unlock(&poll_lock, চাবি);
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, 0);
 
-		return 0;
+		প্রত্যাগম 0;
 	}
 
 	poller->is_polling = false;
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&poll_lock, key);
+	যদি (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&poll_lock, চাবি);
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, -EAGAIN);
 
-		return -EAGAIN;
+		প্রত্যাগম -EAGAIN;
 	}
 
-	static _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
+	স্থির _wait_q_t wait_q = Z_WAIT_Q_INIT(&wait_q);
 
-	int swap_rc = z_pend_curr(&poll_lock, key, &wait_q, timeout);
+	পূর্ণাঙ্ক swap_rc = z_pend_curr(&poll_lock, চাবি, &wait_q, timeout);
 
 	/*
 	 * Clear all event registrations. If events happen while we're in this
@@ -343,151 +343,151 @@ int z_impl_k_poll(struct k_poll_event *events, int num_events,
 	 * added to the list of events that occurred, the user has to check the
 	 * return code first, which invalidates the whole list of event states.
 	 */
-	key = k_spin_lock(&poll_lock);
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	চাবি = k_spin_lock(&poll_lock);
+	clear_event_registrations(events, events_registered, চাবি);
+	k_spin_unlock(&poll_lock, চাবি);
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_poll_api, poll, events, swap_rc);
 
-	return swap_rc;
+	প্রত্যাগম swap_rc;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll(struct k_poll_event *events,
-				int num_events, k_timeout_t timeout)
+স্থির অন্তঃস্থ পূর্ণাঙ্ক z_vrfy_k_poll(সংরচনা k_poll_event *events,
+				পূর্ণাঙ্ক অঙ্ক_events, k_timeout_t timeout)
 {
-	int ret;
-	k_spinlock_key_t key;
-	struct k_poll_event *events_copy = NULL;
+	পূর্ণাঙ্ক ret;
+	k_spinlock_চাবি_t চাবি;
+	সংরচনা k_poll_event *events_copy = রিক্ত;
 	uint32_t bounds;
 
 	/* Validate the events buffer and make a copy of it in an
 	 * allocated kernel-side buffer.
 	 */
-	if (K_SYSCALL_VERIFY(num_events >= 0)) {
+	যদি (K_SYSCALL_VERIFY(অঙ্ক_events >= 0)) {
 		ret = -EINVAL;
-		goto out;
+		গচ্ছ out;
 	}
-	if (K_SYSCALL_VERIFY_MSG(!u32_mul_overflow(num_events,
-						   sizeof(struct k_poll_event),
+	যদি (K_SYSCALL_VERIFY_বার্তা(!u32_mul_overflow(অঙ্ক_events,
+						   পরিমাণ(সংরচনা k_poll_event),
 						   &bounds),
 				 "num_events too large")) {
 		ret = -EINVAL;
-		goto out;
+		গচ্ছ out;
 	}
 	events_copy = z_thread_malloc(bounds);
-	if (!events_copy) {
+	যদি (!events_copy) {
 		ret = -ENOMEM;
-		goto out;
+		গচ্ছ out;
 	}
 
-	if (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
-		goto oops_free;
+	যদি (K_SYSCALL_MEMORY_WRITE(events, bounds)) {
+		গচ্ছ oops_free;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	(void)memcpy(events_copy, events, bounds);
-	k_spin_unlock(&poll_lock, key);
+	চাবি = k_spin_lock(&poll_lock);
+	(শূন্য)memcpy(events_copy, events, bounds);
+	k_spin_unlock(&poll_lock, চাবি);
 
 	/* Validate what's inside events_copy */
-	for (int i = 0; i < num_events; i++) {
-		struct k_poll_event *e = &events_copy[i];
+	প্রতি (পূর্ণাঙ্ক i = 0; i < অঙ্ক_events; i++) {
+		সংরচনা k_poll_event *e = &events_copy[i];
 
-		if (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
+		যদি (K_SYSCALL_VERIFY(e->mode == K_POLL_MODE_NOTIFY_ONLY)) {
 			ret = -EINVAL;
-			goto out_free;
+			গচ্ছ out_free;
 		}
 
-		switch (e->type) {
-		case K_POLL_TYPE_IGNORE:
-			break;
-		case K_POLL_TYPE_SIGNAL:
-			if (K_SYSCALL_OBJ(e->signal, K_OBJ_POLL_SIGNAL)) {
-				goto oops_free;
+		বিকল্প (e->type) {
+		পক্ষ K_POLL_TYPE_IGNORE:
+			ভঙ্গ;
+		পক্ষ K_POLL_TYPE_SIGNAL:
+			যদি (K_SYSCALL_OBJ(e->সঙ্কেত, K_OBJ_POLL_SIGNAL)) {
+				গচ্ছ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_SEM_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
-				goto oops_free;
+			ভঙ্গ;
+		পক্ষ K_POLL_TYPE_SEM_AVAILABLE:
+			যদি (K_SYSCALL_OBJ(e->sem, K_OBJ_SEM)) {
+				গচ্ছ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
-				goto oops_free;
+			ভঙ্গ;
+		পক্ষ K_POLL_TYPE_DATA_AVAILABLE:
+			যদি (K_SYSCALL_OBJ(e->queue, K_OBJ_QUEUE)) {
+				গচ্ছ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
-				goto oops_free;
+			ভঙ্গ;
+		পক্ষ K_POLL_TYPE_MSGQ_DATA_AVAILABLE:
+			যদি (K_SYSCALL_OBJ(e->msgq, K_OBJ_MSGQ)) {
+				গচ্ছ oops_free;
 			}
-			break;
-		case K_POLL_TYPE_PIPE_DATA_AVAILABLE:
-			if (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
-				goto oops_free;
+			ভঙ্গ;
+		পক্ষ K_POLL_TYPE_PIPE_DATA_AVAILABLE:
+			যদি (K_SYSCALL_OBJ(e->pipe, K_OBJ_PIPE)) {
+				গচ্ছ oops_free;
 			}
-			break;
-		default:
+			ভঙ্গ;
+		স্বভাব:
 			ret = -EINVAL;
-			goto out_free;
+			গচ্ছ out_free;
 		}
 	}
 
-	ret = k_poll(events_copy, num_events, timeout);
-	(void)memcpy((void *)events, events_copy, bounds);
+	ret = k_poll(events_copy, অঙ্ক_events, timeout);
+	(শূন্য)memcpy((শূন্য *)events, events_copy, bounds);
 out_free:
 	k_free(events_copy);
 out:
-	return ret;
+	প্রত্যাগম ret;
 oops_free:
 	k_free(events_copy);
 	K_OOPS(1);
 }
-#include <zephyr/syscalls/k_poll_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_poll_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 /* must be called with interrupts locked */
-static int signal_poll_event(struct k_poll_event *event, uint32_t state)
+স্থির পূর্ণাঙ্ক signal_poll_event(সংরচনা k_poll_event *event, uint32_t state)
 {
-	struct z_poller *poller = event->poller;
-	int retcode = 0;
+	সংরচনা z_poller *poller = event->poller;
+	পূর্ণাঙ্ক retcode = 0;
 
-	if (poller != NULL) {
-		if (poller->mode == MODE_POLL) {
+	যদি (poller != রিক্ত) {
+		যদি (poller->mode == MODE_POLL) {
 			retcode = signal_poller(event, state);
-		} else if (poller->mode == MODE_TRIGGERED) {
+		} অন্যথা যদি (poller->mode == MODE_TRIGGERED) {
 			retcode = signal_triggered_work(event, state);
-		} else {
+		} অন্যথা {
 			/* Poller is not poll or triggered mode. No action needed.*/
 			;
 		}
 
 		poller->is_polling = false;
 
-		if (retcode < 0) {
-			return retcode;
+		যদি (retcode < 0) {
+			প্রত্যাগম retcode;
 		}
 	}
 
 	set_event_ready(event, state);
-	return retcode;
+	প্রত্যাগম retcode;
 }
 
 bool z_handle_obj_poll_events(sys_dlist_t *events, uint32_t state)
 {
-	struct k_poll_event *poll_event;
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	সংরচনা k_poll_event *poll_event;
+	k_spinlock_চাবি_t চাবি = k_spin_lock(&poll_lock);
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(events);
-	if (poll_event != NULL) {
-		(void) signal_poll_event(poll_event, state);
+	poll_event = (সংরচনা k_poll_event *)sys_dlist_get(events);
+	যদি (poll_event != রিক্ত) {
+		(শূন্য) signal_poll_event(poll_event, state);
 	}
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_lock, চাবি);
 
-	return (poll_event != NULL);
+	প্রত্যাগম (poll_event != রিক্ত);
 }
 
-void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
+শূন্য z_impl_k_poll_signal_init(সংরচনা k_poll_signal *sig)
 {
 	sys_dlist_init(&sig->poll_events);
 	sig->signaled = 0U;
@@ -498,23 +498,23 @@ void z_impl_k_poll_signal_init(struct k_poll_signal *sig)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_poll_signal_init(struct k_poll_signal *sig)
+স্থির অন্তঃস্থ শূন্য z_vrfy_k_poll_signal_init(সংরচনা k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_init(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_init_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_poll_signal_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_poll_signal_reset(struct k_poll_signal *sig)
+শূন্য z_impl_k_poll_signal_reset(সংরচনা k_poll_signal *sig)
 {
 	sig->signaled = 0U;
 
 	SYS_PORT_TRACING_FUNC(k_poll_api, signal_reset, sig);
 }
 
-void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+শূন্য z_impl_k_poll_signal_check(সংরচনা k_poll_signal *sig,
+			       unsigned পূর্ণাঙ্ক *signaled, পূর্ণাঙ্ক *result)
 {
 	*signaled = sig->signaled;
 	*result = sig->result;
@@ -523,134 +523,134 @@ void z_impl_k_poll_signal_check(struct k_poll_signal *sig,
 }
 
 #ifdef CONFIG_USERSPACE
-void z_vrfy_k_poll_signal_check(struct k_poll_signal *sig,
-			       unsigned int *signaled, int *result)
+শূন্য z_vrfy_k_poll_signal_check(সংরচনা k_poll_signal *sig,
+			       unsigned পূর্ণাঙ্ক *signaled, পূর্ণাঙ্ক *result)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, sizeof(unsigned int)));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, sizeof(int)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(signaled, পরিমাণ(unsigned পূর্ণাঙ্ক)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(result, পরিমাণ(পূর্ণাঙ্ক)));
 	z_impl_k_poll_signal_check(sig, signaled, result);
 }
-#include <zephyr/syscalls/k_poll_signal_check_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_poll_signal_check_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_poll_signal_raise(struct k_poll_signal *sig, int result)
+পূর্ণাঙ্ক z_impl_k_poll_signal_raise(সংরচনা k_poll_signal *sig, পূর্ণাঙ্ক result)
 {
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
-	struct k_poll_event *poll_event;
+	k_spinlock_চাবি_t চাবি = k_spin_lock(&poll_lock);
+	সংরচনা k_poll_event *poll_event;
 
 	sig->result = result;
 	sig->signaled = 1U;
 
-	poll_event = (struct k_poll_event *)sys_dlist_get(&sig->poll_events);
-	if (poll_event == NULL) {
-		k_spin_unlock(&poll_lock, key);
+	poll_event = (সংরচনা k_poll_event *)sys_dlist_get(&sig->poll_events);
+	যদি (poll_event == রিক্ত) {
+		k_spin_unlock(&poll_lock, চাবি);
 
 		SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, 0);
 
-		return 0;
+		প্রত্যাগম 0;
 	}
 
-	int rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
+	পূর্ণাঙ্ক rc = signal_poll_event(poll_event, K_POLL_STATE_SIGNALED);
 
 	SYS_PORT_TRACING_FUNC(k_poll_api, signal_raise, sig, rc);
 
-	z_reschedule(&poll_lock, key);
-	return rc;
+	z_reschedule(&poll_lock, চাবি);
+	প্রত্যাগম rc;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_poll_signal_raise(struct k_poll_signal *sig,
-					     int result)
+স্থির অন্তঃস্থ পূর্ণাঙ্ক z_vrfy_k_poll_signal_raise(সংরচনা k_poll_signal *sig,
+					     পূর্ণাঙ্ক result)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
-	return z_impl_k_poll_signal_raise(sig, result);
+	প্রত্যাগম z_impl_k_poll_signal_raise(sig, result);
 }
-#include <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_poll_signal_raise_mrsh.c>
 
-static inline void z_vrfy_k_poll_signal_reset(struct k_poll_signal *sig)
+স্থির অন্তঃস্থ শূন্য z_vrfy_k_poll_signal_reset(সংরচনা k_poll_signal *sig)
 {
 	K_OOPS(K_SYSCALL_OBJ(sig, K_OBJ_POLL_SIGNAL));
 	z_impl_k_poll_signal_reset(sig);
 }
-#include <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
+#অন্তর্ভাব <zephyr/syscalls/k_poll_signal_reset_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */
 
-static void triggered_work_handler(struct k_work *work)
+স্থির শূন্য triggered_work_handler(সংরচনা k_work *work)
 {
-	struct k_work_poll *twork =
-			CONTAINER_OF(work, struct k_work_poll, work);
+	সংরচনা k_work_poll *twork =
+			CONTAINER_OF(work, সংরচনা k_work_poll, work);
 
 	/*
 	 * If callback is not set, the k_work_poll_submit_to_queue()
 	 * already cleared event registrations.
 	 */
-	if (twork->poller.mode != MODE_NONE) {
-		k_spinlock_key_t key;
+	যদি (twork->poller.mode != MODE_NONE) {
+		k_spinlock_চাবি_t চাবি;
 
-		key = k_spin_lock(&poll_lock);
+		চাবি = k_spin_lock(&poll_lock);
 		clear_event_registrations(twork->events,
-					  twork->num_events, key);
-		k_spin_unlock(&poll_lock, key);
+					  twork->অঙ্ক_events, চাবি);
+		k_spin_unlock(&poll_lock, চাবি);
 	}
 
 	/* Drop work ownership and execute real handler. */
-	twork->workq = NULL;
+	twork->workq = রিক্ত;
 	twork->real_handler(work);
 }
 
-extern int z_work_submit_to_queue(struct k_work_q *queue,
-			 struct k_work *work);
+বাহ্য পূর্ণাঙ্ক z_work_submit_to_queue(সংরচনা k_work_q *queue,
+			 সংরচনা k_work *work);
 
-static void triggered_work_expiration_handler(struct _timeout *timeout)
+স্থির শূন্য triggered_work_expiration_handler(সংরচনা _timeout *timeout)
 {
-	struct k_work_poll *twork =
-		CONTAINER_OF(timeout, struct k_work_poll, timeout);
-	k_spinlock_key_t key = k_spin_lock(&poll_lock);
+	সংরচনা k_work_poll *twork =
+		CONTAINER_OF(timeout, সংরচনা k_work_poll, timeout);
+	k_spinlock_চাবি_t চাবি = k_spin_lock(&poll_lock);
 
-	if (!twork->poller.is_polling) {
+	যদি (!twork->poller.is_polling) {
 		/* signal_triggered_work() or triggered_work_cancel() has
 		 * already claimed this wake under the same lock; nothing
 		 * for us to do.
 		 */
-		k_spin_unlock(&poll_lock, key);
-		return;
+		k_spin_unlock(&poll_lock, চাবি);
+		প্রত্যাগম;
 	}
 
 	twork->poller.is_polling = false;
 	twork->poll_result = -EAGAIN;
 	z_work_submit_to_queue(twork->workq, &twork->work);
 
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_lock, চাবি);
 }
 
-static int signal_triggered_work(struct k_poll_event *event, uint32_t status)
+স্থির পূর্ণাঙ্ক signal_triggered_work(সংরচনা k_poll_event *event, uint32_t status)
 {
-	struct z_poller *poller = event->poller;
-	struct k_work_poll *twork =
-		CONTAINER_OF(poller, struct k_work_poll, poller);
+	সংরচনা z_poller *poller = event->poller;
+	সংরচনা k_work_poll *twork =
+		CONTAINER_OF(poller, সংরচনা k_work_poll, poller);
 
-	if (poller->is_polling && twork->workq != NULL) {
-		struct k_work_q *work_q = twork->workq;
+	যদি (poller->is_polling && twork->workq != রিক্ত) {
+		সংরচনা k_work_q *work_q = twork->workq;
 
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
 		poller->is_polling = false;
-		(void)z_try_abort_timeout(&twork->timeout);
+		(শূন্য)z_try_abort_timeout(&twork->timeout);
 		twork->poll_result = 0;
 		z_work_submit_to_queue(work_q, &twork->work);
 	}
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-static int triggered_work_cancel(struct k_work_poll *work,
-				 k_spinlock_key_t key)
+স্থির পূর্ণাঙ্ক triggered_work_cancel(সংরচনা k_work_poll *work,
+				 k_spinlock_চাবি_t চাবি)
 {
 	/* Check if the work waits for event. */
-	if (work->poller.is_polling && work->poller.mode != MODE_NONE) {
+	যদি (work->poller.is_polling && work->poller.mode != MODE_NONE) {
 		/* Claim the wake before aborting so a racing in-flight
 		 * handler observes is_polling=false and bails.
 		 */
@@ -663,9 +663,9 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		 * `work` for a new poll without the old handler eventually
 		 * acting on the new setup.
 		 */
-		while (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
-			k_spin_unlock(&poll_lock, key);
-			key = k_spin_lock(&poll_lock);
+		যাবত্ (z_try_abort_timeout(&work->timeout) == -EAGAIN) {
+			k_spin_unlock(&poll_lock, চাবি);
+			চাবি = k_spin_lock(&poll_lock);
 		}
 
 		/*
@@ -675,9 +675,9 @@ static int triggered_work_cancel(struct k_work_poll *work,
 		work->poller.mode = MODE_NONE;
 
 		/* Clear registrations and work ownership. */
-		clear_event_registrations(work->events, work->num_events, key);
-		work->workq = NULL;
-		return 0;
+		clear_event_registrations(work->events, work->অঙ্ক_events, চাবি);
+		work->workq = রিক্ত;
+		প্রত্যাগম 0;
 	}
 
 	/*
@@ -687,15 +687,15 @@ static int triggered_work_cancel(struct k_work_poll *work,
 	 * unfortunately there is no public API performing this task.
 	 */
 
-	return -EINVAL;
+	প্রত্যাগম -EINVAL;
 }
 
-void k_work_poll_init(struct k_work_poll *work,
+শূন্য k_work_poll_init(সংরচনা k_work_poll *work,
 		      k_work_handler_t handler)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_work_poll, init, work);
 
-	*work = (struct k_work_poll) {};
+	*work = (সংরচনা k_work_poll) {};
 	k_work_init(&work->work, triggered_work_handler);
 	work->real_handler = handler;
 	z_init_timeout(&work->timeout);
@@ -703,44 +703,44 @@ void k_work_poll_init(struct k_work_poll *work,
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_work_poll, init, work);
 }
 
-int k_work_poll_submit_to_queue(struct k_work_q *work_q,
-				struct k_work_poll *work,
-				struct k_poll_event *events,
-				int num_events,
+পূর্ণাঙ্ক k_work_poll_submit_to_queue(সংরচনা k_work_q *work_q,
+				সংরচনা k_work_poll *work,
+				সংরচনা k_poll_event *events,
+				পূর্ণাঙ্ক অঙ্ক_events,
 				k_timeout_t timeout)
 {
-	int events_registered;
-	k_spinlock_key_t key;
+	পূর্ণাঙ্ক events_registered;
+	k_spinlock_চাবি_t চাবি;
 
-	__ASSERT(work_q != NULL, "NULL work_q\n");
-	__ASSERT(work != NULL, "NULL work\n");
-	__ASSERT(events != NULL, "NULL events\n");
-	__ASSERT(num_events >= 0, "<0 events\n");
+	__ASSERT(work_q != রিক্ত, "NULL work_q\n");
+	__ASSERT(work != রিক্ত, "NULL work\n");
+	__ASSERT(events != রিক্ত, "NULL events\n");
+	__ASSERT(অঙ্ক_events >= 0, "<0 events\n");
 
 	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit_to_queue, work_q, work, timeout);
 
 	/* Take ownership of the work if it is possible. */
-	key = k_spin_lock(&poll_lock);
-	if (work->workq != NULL) {
-		if (work->workq == work_q) {
-			int retval;
+	চাবি = k_spin_lock(&poll_lock);
+	যদি (work->workq != রিক্ত) {
+		যদি (work->workq == work_q) {
+			পূর্ণাঙ্ক retval;
 
-			retval = triggered_work_cancel(work, key);
-			if (retval < 0) {
-				k_spin_unlock(&poll_lock, key);
+			retval = triggered_work_cancel(work, চাবি);
+			যদি (retval < 0) {
+				k_spin_unlock(&poll_lock, চাবি);
 
 				SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
 					work, timeout, retval);
 
-				return retval;
+				প্রত্যাগম retval;
 			}
-		} else {
-			k_spin_unlock(&poll_lock, key);
+		} অন্যথা {
+			k_spin_unlock(&poll_lock, চাবি);
 
 			SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q,
 				work, timeout, -EADDRINUSE);
 
-			return -EADDRINUSE;
+			প্রত্যাগম -EADDRINUSE;
 		}
 	}
 
@@ -748,26 +748,26 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 	work->poller.is_polling = true;
 	work->workq = work_q;
 	work->poller.mode = MODE_NONE;
-	k_spin_unlock(&poll_lock, key);
+	k_spin_unlock(&poll_lock, চাবি);
 
 	/* Save list of events. */
 	work->events = events;
-	work->num_events = num_events;
+	work->অঙ্ক_events = অঙ্ক_events;
 
 	/* Clear result */
 	work->poll_result = -EINPROGRESS;
 
 	/* Register events */
-	events_registered = register_events(events, num_events,
+	events_registered = register_events(events, অঙ্ক_events,
 					    &work->poller, false);
 
-	key = k_spin_lock(&poll_lock);
-	if (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	চাবি = k_spin_lock(&poll_lock);
+	যদি (work->poller.is_polling && !K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/*
 		 * Poller is still polling.
 		 * No event is ready and all are watched.
 		 */
-		__ASSERT(num_events == events_registered,
+		__ASSERT(অঙ্ক_events == events_registered,
 			 "Some events were not registered!\n");
 
 		/* Setup timeout if such action is requested */
@@ -775,11 +775,11 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 
 		/* From now, any event will result in submitted work. */
 		work->poller.mode = MODE_TRIGGERED;
-		k_spin_unlock(&poll_lock, key);
+		k_spin_unlock(&poll_lock, চাবি);
 
 		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
 
-		return 0;
+		প্রত্যাগম 0;
 	}
 
 	/*
@@ -793,59 +793,59 @@ int k_work_poll_submit_to_queue(struct k_work_q *work_q,
 	 * If poller is still polling, no watched event occurred. This means
 	 * we reached here due to K_NO_WAIT timeout "expiration".
 	 */
-	if (work->poller.is_polling) {
+	যদি (work->poller.is_polling) {
 		work->poller.is_polling = false;
 		work->poll_result = -EAGAIN;
-	} else {
+	} অন্যথা {
 		work->poll_result = 0;
 	}
 
 	/* Clear registrations. */
-	clear_event_registrations(events, events_registered, key);
-	k_spin_unlock(&poll_lock, key);
+	clear_event_registrations(events, events_registered, চাবি);
+	k_spin_unlock(&poll_lock, চাবি);
 
 	/* Submit work. */
 	k_work_submit_to_queue(work_q, &work->work);
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit_to_queue, work_q, work, timeout, 0);
 
-	return 0;
+	প্রত্যাগম 0;
 }
 
-int k_work_poll_submit(struct k_work_poll *work,
-				     struct k_poll_event *events,
-				     int num_events,
+পূর্ণাঙ্ক k_work_poll_submit(সংরচনা k_work_poll *work,
+				     সংরচনা k_poll_event *events,
+				     পূর্ণাঙ্ক অঙ্ক_events,
 				     k_timeout_t timeout)
 {
 	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, submit, work, timeout);
 
-	int ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
-								events, num_events, timeout);
+	পূর্ণাঙ্ক ret = k_work_poll_submit_to_queue(&k_sys_work_q, work,
+								events, অঙ্ক_events, timeout);
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, submit, work, timeout, ret);
 
-	return ret;
+	প্রত্যাগম ret;
 }
 
-int k_work_poll_cancel(struct k_work_poll *work)
+পূর্ণাঙ্ক k_work_poll_cancel(সংরচনা k_work_poll *work)
 {
-	k_spinlock_key_t key;
-	int retval;
+	k_spinlock_চাবি_t চাবি;
+	পূর্ণাঙ্ক retval;
 
 	SYS_PORT_TRACING_FUNC_ENTER(k_work_poll, cancel, work);
 
 	/* Check if the work was submitted. */
-	if (work == NULL || work->workq == NULL) {
+	যদি (work == রিক্ত || work->workq == রিক্ত) {
 		SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, -EINVAL);
 
-		return -EINVAL;
+		প্রত্যাগম -EINVAL;
 	}
 
-	key = k_spin_lock(&poll_lock);
-	retval = triggered_work_cancel(work, key);
-	k_spin_unlock(&poll_lock, key);
+	চাবি = k_spin_lock(&poll_lock);
+	retval = triggered_work_cancel(work, চাবি);
+	k_spin_unlock(&poll_lock, চাবি);
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_work_poll, cancel, work, retval);
 
-	return retval;
+	প্রত্যাগম retval;
 }

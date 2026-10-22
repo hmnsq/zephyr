@@ -14,7 +14,7 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 #define ZEPHYR_KERNEL_INCLUDE_KERNEL_TLS_H_
 
-#include <zephyr/linker/linker-defs.h>
+#অন্তর্ভাব <zephyr/linker/linker-defs.h>
 
 /**
  * @brief Return the total size of TLS data/bss areas
@@ -26,14 +26,14 @@
  *
  * @return Total size of TLS data/bss areas
  */
-static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
+স্থির অন্তঃস্থ FUNC_NO_স্তূপ_PROTECTOR size_t z_tls_data_size(শূন্য)
 {
 	size_t size = (size_t)(uintptr_t)__tdata_size + (size_t)(uintptr_t)__tbss_size;
 
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#যদি defined(CONFIG_স্তূপ_CANARIES_TLS_PREPEND)
 	size += (size_t)(uintptr_t)__stack_chk_size;
 #endif
-	return size;
+	প্রত্যাগম size;
 }
 
 /**
@@ -44,9 +44,9 @@ static inline FUNC_NO_STACK_PROTECTOR size_t z_tls_data_size(void)
  *
  * @param dest Pointer to destination
  */
-static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
+স্থির অন্তঃস্থ FUNC_NO_স্তূপ_PROTECTOR শূন্য z_tls_copy(বর্ণ *dest)
 {
-#if defined(CONFIG_STACK_CANARIES_TLS_PREPEND)
+#যদি defined(CONFIG_স্তূপ_CANARIES_TLS_PREPEND)
 	/* Copy .stack_chk.guard and .tdata separately since the linker may insert
 	 * padding between sections.
 	 */
@@ -55,7 +55,7 @@ static inline FUNC_NO_STACK_PROTECTOR void z_tls_copy(char *dest)
 
 	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
-#else
+#অন্যথা
 	/* Copy initialized data (tdata) */
 	memcpy(dest, __tdata_start, (size_t)(uintptr_t)__tdata_size);
 	dest += (size_t)(uintptr_t)__tdata_size;
