@@ -16,14 +16,14 @@
  * of the run-queue data structures.
  */
 
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <run_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/sys/minmax.h>
-#include <zephyr/logging/log.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/kernel.h>
+#ଅନ୍ତର୍ଭାଵ <kspinlock.h>
+#ଅନ୍ତର୍ଭାଵ <ksched.h>
+#ଅନ୍ତର୍ଭାଵ <run_q.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/internal/syscall_handler.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/sys/math_extras.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/sys/minmax.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/logging/log.h>
 
 /**
  * @brief Atomically update a thread's prio_deadline in the run queue.
@@ -36,22 +36,22 @@
  * @param thread   Thread whose deadline is being updated.
  * @param deadline New absolute deadline value (raw cycle counter).
  */
-void z_sched_prio_deadline_set(struct k_thread *thread, int deadline)
+ଶୂନ୍ୟ z_sched_prio_deadline_set(ସଂରଚନା k_thread *thread, ପୂର୍ଣ୍ଣସଂଖ୍ୟା deadline)
 {
 	Z_SCHED_SPINLOCK {
-		if (z_is_thread_queued(thread)) {
+		ଯଦି (z_is_thread_queued(thread)) {
 			dequeue_thread(thread);
 			thread->base.prio_deadline = deadline;
 			queue_thread(thread);
-		} else {
+		} ଅନ୍ୟଥା {
 			thread->base.prio_deadline = deadline;
 		}
 	}
 }
 
-void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+ଶୂନ୍ୟ z_impl_k_thread_absolute_deadline_set(k_tid_t tid, ପୂର୍ଣ୍ଣସଂଖ୍ୟା deadline)
 {
-	struct k_thread *thread = tid;
+	ସଂରଚନା k_thread *thread = tid;
 
 	/* The prio_deadline field changes the sorting order, so it must
 	 * not be altered while the thread is in the run queue.  Because
@@ -63,7 +63,7 @@ void z_impl_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
 	z_sched_prio_deadline_set(thread, deadline);
 }
 
-void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
+ଶୂନ୍ୟ z_impl_k_thread_deadline_set(k_tid_t tid, ପୂର୍ଣ୍ଣସଂଖ୍ୟା deadline)
 {
 	/*
 	 * Clamp the relative deadline to INT32_MAX / 2 (2^30 cycles) to
@@ -76,30 +76,30 @@ void z_impl_k_thread_deadline_set(k_tid_t tid, int deadline)
 	/* Use uint32_t arithmetic to avoid implementation-defined signed conversion. */
 	uint32_t newdl = k_cycle_get_32() + (uint32_t)deadline;
 
-	z_impl_k_thread_absolute_deadline_set(tid, (int)newdl);
+	z_impl_k_thread_absolute_deadline_set(tid, (ପୂର୍ଣ୍ଣସଂଖ୍ୟା)newdl);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, int deadline)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_thread_absolute_deadline_set(k_tid_t tid, ପୂର୍ଣ୍ଣସଂଖ୍ୟା deadline)
 {
-	struct k_thread *thread = tid;
+	ସଂରଚନା k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
 
 	z_impl_k_thread_absolute_deadline_set((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_thread_absolute_deadline_set_mrsh.c>
 
-static inline void z_vrfy_k_thread_deadline_set(k_tid_t tid, int deadline)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_thread_deadline_set(k_tid_t tid, ପୂର୍ଣ୍ଣସଂଖ୍ୟା deadline)
 {
-	struct k_thread *thread = tid;
+	ସଂରଚନା k_thread *thread = tid;
 
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_VERIFY_MSG(deadline > 0,
+	K_OOPS(K_SYSCALL_VERIFY_ସନ୍ଦେଶ(deadline > 0,
 				    "invalid thread deadline %d",
-				    (int)deadline));
+				    (ପୂର୍ଣ୍ଣସଂଖ୍ୟା)deadline));
 
 	z_impl_k_thread_deadline_set((k_tid_t)thread, deadline);
 }
-#include <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_thread_deadline_set_mrsh.c>
 #endif /* CONFIG_USERSPACE */

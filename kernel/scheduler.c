@@ -2,29 +2,29 @@
  * Copyright The Zephyr Project Contributors
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/sys/__assert.h>
-#include <zephyr/spinlock.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <run_q.h>
-#include <wait_q.h>
-#include <scheduler.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/kernel.h>
+#ଅନ୍ତର୍ଭାଵ <kspinlock.h>
+#ଅନ୍ତର୍ଭାଵ <ksched.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/sys/__assert.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/spinlock.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/internal/syscall_handler.h>
+#ଅନ୍ତର୍ଭାଵ <run_q.h>
+#ଅନ୍ତର୍ଭାଵ <wait_q.h>
+#ଅନ୍ତର୍ଭାଵ <scheduler.h>
 
 
-void z_sched_init(void)
+ଶୂନ୍ୟ z_sched_init(ଶୂନ୍ୟ)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
+	ପାଇଁ (ପୂର୍ଣ୍ଣସଂଖ୍ୟା i = 0; i < CONFIG_MP_MAX_ଅଙ୍କ_CPUS; i++) {
 		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
 	}
-#else
+#ଅନ୍ୟଥା
 	_priq_run_init(&_kernel.ready_q.runq);
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-void k_sched_lock(void)
+ଶୂନ୍ୟ k_sched_lock(ଶୂନ୍ୟ)
 {
 	Z_SCHED_SPINLOCK {
 		SYS_PORT_TRACING_FUNC(k_thread, sched_lock);
@@ -38,61 +38,61 @@ void k_sched_lock(void)
 	}
 }
 
-void k_sched_unlock(void)
+ଶୂନ୍ୟ k_sched_unlock(ଶୂନ୍ୟ)
 {
 	SYS_PORT_TRACING_FUNC(k_thread, sched_unlock);
 
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_ଚାବି_t ଚାବି = z_sched_spinlock_lock();
 
 	__ASSERT(_current->base.sched_locked != 0U, "");
 	__ASSERT(!arch_is_in_isr(), "");
 	++_current->base.sched_locked;
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(ଚାବି);
 }
 
-void z_impl_k_reschedule(void)
+ଶୂନ୍ୟ z_impl_k_reschedule(ଶୂନ୍ୟ)
 {
-	k_spinlock_key_t key;
+	k_spinlock_ଚାବି_t ଚାବି;
 
-	key = z_sched_spinlock_lock();
+	ଚାବି = z_sched_spinlock_lock();
 
-	z_sched_lock_reschedule(key);
+	z_sched_lock_reschedule(ଚାବି);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_reschedule(void)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_reschedule(ଶୂନ୍ୟ)
 {
 	z_impl_k_reschedule();
 }
-#include <zephyr/syscalls/k_reschedule_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_reschedule_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-k_tid_t z_impl_k_sched_current_thread_query(void)
+k_tid_t z_impl_k_sched_current_thread_query(ଶୂନ୍ୟ)
 {
-	return _current;
+	ଫେରନ୍ତୁ _current;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_tid_t z_vrfy_k_sched_current_thread_query(void)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ k_tid_t z_vrfy_k_sched_current_thread_query(ଶୂନ୍ୟ)
 {
-	return z_impl_k_sched_current_thread_query();
+	ଫେରନ୍ତୁ z_impl_k_sched_current_thread_query();
 }
-#include <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
-		       _waitq_post_walk_cb_t post_func, void *data)
+ପୂର୍ଣ୍ଣସଂଖ୍ୟା z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+		       _waitq_post_walk_cb_t post_func, ଶୂନ୍ୟ *data)
 {
-	struct k_thread *thread;
-	int  status = 0;
+	ସଂରଚନା k_thread *thread;
+	ପୂର୍ଣ୍ଣସଂଖ୍ୟା  status = 0;
 
 	Z_SCHED_SPINLOCK {
 #ifndef CONFIG_WAITQ_SCALABLE
-		struct k_thread *tmp;
+		ସଂରଚନା k_thread *tmp;
 
 		_WAIT_Q_FOR_EACH_SAFE(wait_q, thread, tmp)
-#else /* !CONFIG_WAITQ_SCALABLE */
+#ଅନ୍ୟଥା /* !CONFIG_WAITQ_SCALABLE */
 		_WAIT_Q_FOR_EACH(wait_q, thread)
 #endif /* !CONFIG_WAITQ_SCALABLE */
 		{
@@ -104,8 +104,8 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 			 */
 
 			status = walk_func(thread, data);
-			if (status != 0) {
-				break;
+			ଯଦି (status != 0) {
+				ଭାଙ୍ଗ;
 			}
 		}
 
@@ -114,12 +114,12 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		 * still holding the scheduler spinlock to enable atomic
 		 * operations (from the scheduler's point of view).
 		 */
-		if (post_func != NULL) {
+		ଯଦି (post_func != ଖାଲି) {
 			post_func(status, data);
 		}
 	}
 
-	return status;
+	ଫେରନ୍ତୁ status;
 }
 
 
@@ -127,13 +127,13 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
-		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
+ପୂର୍ଣ୍ଣସଂଖ୍ୟା z_sched_wait(ସଂରଚନା k_spinlock *lock, k_spinlock_ଚାବି_t ଚାବି,
+		 _wait_q_t *wait_q, k_timeout_t timeout, ଶୂନ୍ୟ **data)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	ପୂର୍ଣ୍ଣସଂଖ୍ୟା ret = z_pend_curr(lock, ଚାବି, wait_q, timeout);
 
-	if (data != NULL) {
+	ଯଦି (data != ଖାଲି) {
 		*data = _current->base.swap_data;
 	}
-	return ret;
+	ଫେରନ୍ତୁ ret;
 }

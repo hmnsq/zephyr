@@ -4,64 +4,64 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/kernel.h>
 
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/sys/check.h>
-#include <stdbool.h>
-#include <zephyr/spinlock.h>
-#include <ksched.h>
-#include <wait_q.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/init.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/internal/syscall_handler.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/sys/check.h>
+#ଅନ୍ତର୍ଭାଵ <stdbool.h>
+#ଅନ୍ତର୍ଭାଵ <zephyr/spinlock.h>
+#ଅନ୍ତର୍ଭାଵ <ksched.h>
+#ଅନ୍ତର୍ଭାଵ <wait_q.h>
 
-static struct k_spinlock timer_lock;
+ସ୍ଥିର ସଂରଚନା k_spinlock timer_lock;
 
 #ifdef CONFIG_OBJ_CORE_TIMER
-K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, ଖାଲି);
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
-#if defined(CONFIG_TIMER_OBSERVER)
-static inline void z_timer_observer_on_init(struct k_timer *timer)
+#ଯଦି defined(CONFIG_TIMER_OBSERVER)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_timer_observer_on_init(ସଂରଚନା k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_init != NULL) {
+		ଯଦି (obs->on_init != ଖାଲି) {
 			obs->on_init(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_start(struct k_timer *timer, k_timeout_t duration,
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_timer_observer_on_start(ସଂରଚନା k_timer *timer, k_timeout_t duration,
 					     k_timeout_t period)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_start != NULL) {
+		ଯଦି (obs->on_start != ଖାଲି) {
 			obs->on_start(timer, duration, period);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_stop(struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_timer_observer_on_stop(ସଂରଚନା k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_stop != NULL) {
+		ଯଦି (obs->on_stop != ଖାଲି) {
 			obs->on_stop(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_expiry(struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_timer_observer_on_expiry(ସଂରଚନା k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_expiry != NULL) {
+		ଯଦି (obs->on_expiry != ଖାଲି) {
 			obs->on_expiry(timer);
 		}
 	}
 }
-#else
-#define z_timer_observer_on_init(timer) (void)0
-#define z_timer_observer_on_start(timer, duration, period) (void)0
-#define z_timer_observer_on_stop(timer) (void)0
-#define z_timer_observer_on_expiry(timer) (void)0
+#ଅନ୍ୟଥା
+#define z_timer_observer_on_init(timer) (ଶୂନ୍ୟ)0
+#define z_timer_observer_on_start(timer, duration, period) (ଶୂନ୍ୟ)0
+#define z_timer_observer_on_stop(timer) (ଶୂନ୍ୟ)0
+#define z_timer_observer_on_expiry(timer) (ଶୂନ୍ୟ)0
 #endif /* CONFIG_TIMER_OBSERVER */
 
 /**
@@ -69,11 +69,11 @@ static inline void z_timer_observer_on_expiry(struct k_timer *timer)
  *
  * @param t  Timeout used by the timer.
  */
-void z_timer_expiration_handler(struct _timeout *t)
+ଶୂନ୍ୟ z_timer_expiration_handler(ସଂରଚନା _timeout *t)
 {
-	struct k_timer *timer = CONTAINER_OF(t, struct k_timer, timeout);
-	struct k_thread *thread;
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	ସଂରଚନା k_timer *timer = CONTAINER_OF(t, ସଂରଚନା k_timer, timeout);
+	ସଂରଚନା k_thread *thread;
+	k_spinlock_ଚାବି_t ଚାବି = k_spin_lock(&timer_lock);
 
 	/* A same-CPU IRQ may have raced with our dispatch between
 	 * sys_clock_announce() popping us off the queue and us taking
@@ -83,17 +83,17 @@ void z_timer_expiration_handler(struct _timeout *t)
 	 *  - The timer was stopped (z_try_abort_timeout marked the
 	 *    in-flight slot superseded): bail without firing expiry_fn.
 	 */
-	if (!z_is_inactive_timeout(t) ||
+	ଯଦି (!z_is_inactive_timeout(t) ||
 	    z_timeout_inflight_superseded(t)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+		k_spin_unlock(&timer_lock, ଚାବି);
+		ଫେରନ୍ତୁ;
 	}
 
 	/*
 	 * if the timer is periodic, start it again; don't add _TICK_ALIGN
 	 * since we're already aligned to a tick boundary
 	 */
-	if (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
+	ଯଦି (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
 	    !K_TIMEOUT_EQ(timer->period, K_FOREVER)) {
 		k_timeout_t next = timer->period;
 
@@ -118,11 +118,11 @@ void z_timer_expiration_handler(struct _timeout *t)
 	z_timer_observer_on_expiry(timer);
 
 	/* invoke timer expiry function */
-	if (timer->expiry_fn != NULL) {
+	ଯଦି (timer->expiry_fn != ଖାଲି) {
 		k_timer_expiry_t expiry_fn = timer->expiry_fn;
 
 		/* Unlock for user handler. */
-		k_spin_unlock(&timer_lock, key);
+		k_spin_unlock(&timer_lock, ଚାବି);
 
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, expiry, timer);
 
@@ -130,30 +130,30 @@ void z_timer_expiration_handler(struct _timeout *t)
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, expiry, timer);
 
-		key = k_spin_lock(&timer_lock);
+		ଚାବି = k_spin_lock(&timer_lock);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+	ଯଦି (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+		k_spin_unlock(&timer_lock, ଚାବି);
+		ଫେରନ୍ତୁ;
 	}
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_waitq_head_locked(&timer->wait_q);
 
-		if (thread != NULL) {
+		ଯଦି (thread != ଖାଲି) {
 			unpend_thread_no_timeout(thread);
-			arch_thread_return_value_set(thread, 0);
+			arch_thread_return_ମୂଲ୍ୟ_set(thread, 0);
 			z_sched_ready_locked(thread);
 		}
 	}
 
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_lock, ଚାବି);
 
 }
 
 
-int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
+ପୂର୍ଣ୍ଣସଂଖ୍ୟା z_timer_cleanup(ସଂରଚନା k_timer *timer, __maybe_unused bool locked)
 {
 	/* Not callable from an ISR: this is the one timer path that can
 	 * spin waiting for an in-flight handler, and an ISR spinning here
@@ -163,24 +163,24 @@ int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, cleanup, timer);
 
-	int ret = 0;
-	k_spinlock_key_t key;
+	ପୂର୍ଣ୍ଣସଂଖ୍ୟା ret = 0;
+	k_spinlock_ଚାବି_t ଚାବି;
 
 	/* Refuse if anyone is still pending on the timer's wait queue
 	 * (e.g. via k_timer_status_sync()): freeing the storage would
 	 * leave dangling pended_on pointers.
 	 */
 retry:
-	key = k_spin_lock(&timer_lock);
+	ଚାବି = k_spin_lock(&timer_lock);
 
-	CHECKIF(locked && (z_waitq_head_locked(&timer->wait_q) != NULL)) {
+	CHECKIF(locked && (z_waitq_head_locked(&timer->wait_q) != ଖାଲି)) {
 		ret = -EAGAIN;
-		goto out;
+		ଯାଅ out;
 	}
 
-	CHECKIF(!locked && (z_waitq_head(&timer->wait_q) != NULL)) {
+	CHECKIF(!locked && (z_waitq_head(&timer->wait_q) != ଖାଲି)) {
 		ret = -EAGAIN;
-		goto out;
+		ଯାଅ out;
 	}
 
 	/* Cancel the timeout AND wait for any in-flight expiration
@@ -196,32 +196,32 @@ retry:
 	 * whose handler does that is a caller bug; ordinary stop/start do
 	 * not wait and so cannot stall.
 	 */
-	if (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
-		k_spin_unlock(&timer_lock, key);
-		goto retry;
+	ଯଦି (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
+		k_spin_unlock(&timer_lock, ଚାବି);
+		ଯାଅ retry;
 	}
 
 out:
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_lock, ଚାବି);
 
 #ifdef CONFIG_OBJ_CORE_TIMER
-	if (ret == 0) {
+	ଯଦି (ret == 0) {
 		k_obj_core_unlink(K_OBJ_CORE(timer));
 	}
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, cleanup, timer, ret);
 
-	return ret;
+	ଫେରନ୍ତୁ ret;
 }
 
-int k_timer_cleanup(struct k_timer *timer)
+ପୂର୍ଣ୍ଣସଂଖ୍ୟା k_timer_cleanup(ସଂରଚନା k_timer *timer)
 {
-	return z_timer_cleanup(timer, false);
+	ଫେରନ୍ତୁ z_timer_cleanup(timer, false);
 }
 
 
-void k_timer_init(struct k_timer *timer,
+ଶୂନ୍ୟ k_timer_init(ସଂରଚନା k_timer *timer,
 			 k_timer_expiry_t expiry_fn,
 			 k_timer_stop_t stop_fn)
 {
@@ -229,7 +229,7 @@ void k_timer_init(struct k_timer *timer,
 	timer->stop_fn = stop_fn;
 	timer->status = 0U;
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ଯଦି (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		z_waitq_init(&timer->wait_q);
 	}
 
@@ -237,7 +237,7 @@ void k_timer_init(struct k_timer *timer,
 
 	SYS_PORT_TRACING_OBJ_INIT(k_timer, timer);
 
-	timer->user_data = NULL;
+	timer->user_data = ଖାଲି;
 
 	k_object_init(timer);
 
@@ -249,13 +249,13 @@ void k_timer_init(struct k_timer *timer,
 }
 
 
-void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
+ଶୂନ୍ୟ z_impl_k_timer_start(ସଂରଚନା k_timer *timer, k_timeout_t duration,
 			  k_timeout_t period)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_timer, start, timer, duration, period);
 
-	if (K_TIMEOUT_EQ(duration, K_FOREVER)) {
-		return;
+	ଯଦି (K_TIMEOUT_EQ(duration, K_FOREVER)) {
+		ଫେରନ୍ତୁ;
 	}
 
 	/* Hold the timer lock across abort + add to serialize against a
@@ -265,9 +265,9 @@ void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
 	 * makes a not-yet-committed handler bail too. Either way we do not
 	 * wait for it.
 	 */
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_ଚାବି_t ଚାବି = k_spin_lock(&timer_lock);
 
-	(void)z_try_abort_timeout(&timer->timeout);
+	(ଶୂନ୍ୟ)z_try_abort_timeout(&timer->timeout);
 
 	timer->period = period;
 	timer->status = 0U;
@@ -276,192 +276,192 @@ void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
 
 	z_timer_observer_on_start(timer, duration, period);
 
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_lock, ଚାବି);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_start(struct k_timer *timer,
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_timer_start(ସଂରଚନା k_timer *timer,
 					k_timeout_t duration,
 					k_timeout_t period)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
 	z_impl_k_timer_start(timer, duration, period);
 }
-#include <zephyr/syscalls/k_timer_start_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_start_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_timer_stop(struct k_timer *timer)
+ଶୂନ୍ୟ z_impl_k_timer_stop(ସଂରଚନା k_timer *timer)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_timer, stop, timer);
 
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_ଚାବି_t ଚାବି = k_spin_lock(&timer_lock);
 
-	if (z_try_abort_timeout(&timer->timeout) != 0) {
+	ଯଦି (z_try_abort_timeout(&timer->timeout) != 0) {
 		/* Not removed from the queue: either the timer was not
 		 * active, or its handler is in flight. In the latter case
 		 * z_try_abort_timeout() has flagged it superseded so the
 		 * handler bails; we do not wait for it. Nothing to stop here.
 		 */
-		k_spin_unlock(&timer_lock, key);
-		return;
+		k_spin_unlock(&timer_lock, ଚାବି);
+		ଫେରନ୍ତୁ;
 	}
 
 	z_timer_observer_on_stop(timer);
 
-	if (timer->stop_fn != NULL) {
+	ଯଦି (timer->stop_fn != ଖାଲି) {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, stop_fn_expiry, timer);
-		k_spin_unlock(&timer_lock, key);
+		k_spin_unlock(&timer_lock, ଚାବି);
 
 		timer->stop_fn(timer);
 
-		key = k_spin_lock(&timer_lock);
+		ଚାବି = k_spin_lock(&timer_lock);
 
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, stop_fn_expiry, timer);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
-		k_spin_unlock(&timer_lock, key);
-		return;
+	ଯଦି (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+		k_spin_unlock(&timer_lock, ଚାବି);
+		ଫେରନ୍ତୁ;
 
 	}
 
-	struct k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
+	ସଂରଚନା k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
 
-	if (pending_thread != NULL) {
+	ଯଦି (pending_thread != ଖାଲି) {
 		z_ready_thread(pending_thread);
-		z_reschedule(&timer_lock, key);
-	} else {
-		k_spin_unlock(&timer_lock, key);
+		z_reschedule(&timer_lock, ଚାବି);
+	} ଅନ୍ୟଥା {
+		k_spin_unlock(&timer_lock, ଚାବି);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_stop(struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_timer_stop(ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
 	z_impl_k_timer_stop(timer);
 }
-#include <zephyr/syscalls/k_timer_stop_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_stop_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_get(struct k_timer *timer)
+uint32_t z_impl_k_timer_status_get(ସଂରଚନା k_timer *timer)
 {
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_ଚାବି_t ଚାବି = k_spin_lock(&timer_lock);
 	uint32_t result = timer->status;
 
 	timer->status = 0U;
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_lock, ଚାବି);
 
-	return result;
+	ଫେରନ୍ତୁ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_get(struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ uint32_t z_vrfy_k_timer_status_get(ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_get(timer);
+	ଫେରନ୍ତୁ z_impl_k_timer_status_get(timer);
 }
-#include <zephyr/syscalls/k_timer_status_get_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_status_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
+uint32_t z_impl_k_timer_status_sync(ସଂରଚନା k_timer *timer)
 {
 	__ASSERT(!arch_is_in_isr(), "");
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, status_sync, timer);
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ଯଦି (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		uint32_t result;
 
-		do {
-			unsigned int key = irq_lock();
+		କର {
+			unsigned ପୂର୍ଣ୍ଣସଂଖ୍ୟା ଚାବି = irq_lock();
 
-			if (!z_is_inactive_timeout(&timer->timeout)) {
-				result = *(volatile uint32_t *)&timer->status;
+			ଯଦି (!z_is_inactive_timeout(&timer->timeout)) {
+				result = *(ଅସ୍ଥିର uint32_t *)&timer->status;
 				timer->status = 0U;
-				if (result > 0) {
-					irq_unlock(key);
-					break;
-				} else {
-					k_cpu_atomic_idle(key);
+				ଯଦି (result > 0) {
+					irq_unlock(ଚାବି);
+					ଭାଙ୍ଗ;
+				} ଅନ୍ୟଥା {
+					k_cpu_atomic_idle(ଚାବି);
 				}
-			} else {
+			} ଅନ୍ୟଥା {
 				result = timer->status;
-				irq_unlock(key);
-				break;
+				irq_unlock(ଚାବି);
+				ଭାଙ୍ଗ;
 			}
-		} while (true);
+		} ଯେତେବେଳେ (true);
 
-		return result;
+		ଫେରନ୍ତୁ result;
 	}
 
-	k_spinlock_key_t key = k_spin_lock(&timer_lock);
+	k_spinlock_ଚାବି_t ଚାବି = k_spin_lock(&timer_lock);
 	uint32_t result = timer->status;
 
-	if (result == 0U) {
-		if (!z_is_inactive_timeout(&timer->timeout)) {
+	ଯଦି (result == 0U) {
+		ଯଦି (!z_is_inactive_timeout(&timer->timeout)) {
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_timer, status_sync, timer, K_FOREVER);
 
 			/* wait for timer to expire or stop */
-			(void)z_pend_curr(&timer_lock, key, &timer->wait_q, K_FOREVER);
+			(ଶୂନ୍ୟ)z_pend_curr(&timer_lock, ଚାବି, &timer->wait_q, K_FOREVER);
 
 			/* get updated timer status */
-			key = k_spin_lock(&timer_lock);
+			ଚାବି = k_spin_lock(&timer_lock);
 			result = timer->status;
-		} else {
+		} ଅନ୍ୟଥା {
 			/* timer is already stopped */
 		}
-	} else {
+	} ଅନ୍ୟଥା {
 		/* timer has already expired at least once */
 	}
 
 	timer->status = 0U;
-	k_spin_unlock(&timer_lock, key);
+	k_spin_unlock(&timer_lock, ଚାବି);
 
 	/**
 	 * @note	New tracing hook
 	 */
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, status_sync, timer, result);
 
-	return result;
+	ଫେରନ୍ତୁ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_sync(struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ uint32_t z_vrfy_k_timer_status_sync(ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_sync(timer);
+	ଫେରନ୍ତୁ z_impl_k_timer_status_sync(timer);
 }
-#include <zephyr/syscalls/k_timer_status_sync_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_status_sync_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_remaining_ticks(
-						const struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ k_ticks_t z_vrfy_k_timer_remaining_ticks(
+						ଅଚଳ ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_remaining_ticks(timer);
+	ଫେରନ୍ତୁ z_impl_k_timer_remaining_ticks(timer);
 }
-#include <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_expires_ticks(
-						const struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ k_ticks_t z_vrfy_k_timer_expires_ticks(
+						ଅଚଳ ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_expires_ticks(timer);
+	ଫେରନ୍ତୁ z_impl_k_timer_expires_ticks(timer);
 }
-#include <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
 
-static inline void *z_vrfy_k_timer_user_data_get(const struct k_timer *timer)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ *z_vrfy_k_timer_user_data_get(ଅଚଳ ସଂରଚନା k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_user_data_get(timer);
+	ଫେରନ୍ତୁ z_impl_k_timer_user_data_get(timer);
 }
-#include <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
 
-static inline void z_vrfy_k_timer_user_data_set(struct k_timer *timer,
-						void *user_data)
+ସ୍ଥିର ଧାଡ଼ିଭିତରେ ଶୂନ୍ୟ z_vrfy_k_timer_user_data_set(ସଂରଚନା k_timer *timer,
+						ଶୂନ୍ୟ *user_data)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
 	z_impl_k_timer_user_data_set(timer, user_data);
 }
-#include <zephyr/syscalls/k_timer_user_data_set_mrsh.c>
+#ଅନ୍ତର୍ଭାଵ <zephyr/syscalls/k_timer_user_data_set_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */
