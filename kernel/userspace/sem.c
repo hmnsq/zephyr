@@ -10,96 +10,96 @@
 #define SYS_SEM_MINIMUM      0
 #define SYS_SEM_CONTENDED    (SYS_SEM_MINIMUM - 1)
 
-static inline atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
+static anta_hstha atomic_t bounded_dec(atomic_t *val, atomic_t minimum)
 {
 	atomic_t old_value, new_value;
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value < minimum) {
-			break;
+		ᱡᱩᱫᱤ (old_value < minimum) {
+			bha_nga;
 		}
 
 		new_value = old_value - 1;
-	} while (atomic_cas(val, old_value, new_value) == 0);
+	} ᱡᱚᱠᱷᱚᱱ (atomic_cas(val, old_value, new_value) == 0);
 
-	return old_value;
+	ᱨᱩᱣᱟᱹᱲ old_value;
 }
 
-static inline atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
+static anta_hstha atomic_t bounded_inc(atomic_t *val, atomic_t minimum,
 				   atomic_t maximum)
 {
 	atomic_t old_value, new_value;
 
 	do {
 		old_value = atomic_get(val);
-		if (old_value >= maximum) {
-			break;
+		ᱡᱩᱫᱤ (old_value >= maximum) {
+			bha_nga;
 		}
 
 		new_value = ((old_value < minimum) ? minimum : old_value) + 1;
-	} while (atomic_cas(val, old_value, new_value) == 0U);
+	} ᱡᱚᱠᱷᱚᱱ (atomic_cas(val, old_value, new_value) == 0U);
 
-	return old_value;
+	ᱨᱩᱣᱟᱹᱲ old_value;
 }
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+puur_naa_nka sys_sem_init(sa_nracanaa sys_sem *sem, unsigned puur_naa_nka initial_count,
+		 unsigned puur_naa_nka limit)
 {
-	if ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
+	ᱡᱩᱫᱤ ((sem == NULL) || (limit == SYS_SEM_MINIMUM) ||
 	    (initial_count > limit) || (limit > INT_MAX)) {
-		return -EINVAL;
+		ᱨᱩᱣᱟᱹᱲ -EINVAL;
 	}
 
 	(void)atomic_set(&sem->futex.val, initial_count);
 	sem->limit = limit;
 
-	return 0;
+	ᱨᱩᱣᱟᱹᱲ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+puur_naa_nka sys_sem_give(sa_nracanaa sys_sem *sem)
 {
-	int ret = 0;
+	puur_naa_nka ret = 0;
 	atomic_t old_value;
 
 	old_value = bounded_inc(&sem->futex.val,
 				SYS_SEM_MINIMUM, sem->limit);
-	if (old_value < 0) {
+	ᱡᱩᱫᱤ (old_value < 0) {
 		ret = k_futex_wake(&sem->futex, true);
 
-		if (ret > 0) {
-			return 0;
+		ᱡᱩᱫᱤ (ret > 0) {
+			ᱨᱩᱣᱟᱹᱲ 0;
 		}
-	} else if (old_value >= sem->limit) {
-		return -EAGAIN;
-	} else {
+	} ᱵᱟᱝ ᱡᱩᱫᱤ (old_value >= sem->limit) {
+		ᱨᱩᱣᱟᱹᱲ -EAGAIN;
+	} ᱵᱟᱝ {
 		;
 	}
-	return ret;
+	ᱨᱩᱣᱟᱹᱲ ret;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+puur_naa_nka sys_sem_take(sa_nracanaa sys_sem *sem, k_timeout_t timeout)
 {
-	int ret = 0;
+	puur_naa_nka ret = 0;
 	atomic_t old_value;
 
 	do {
 		old_value = bounded_dec(&sem->futex.val,
 					SYS_SEM_MINIMUM);
-		if (old_value > 0) {
-			return 0;
+		ᱡᱩᱫᱤ (old_value > 0) {
+			ᱨᱩᱣᱟᱹᱲ 0;
 		}
 
 		ret = k_futex_wait(&sem->futex,
 				   SYS_SEM_CONTENDED, timeout);
-	} while (ret == 0 || ret == -EAGAIN);
+	} ᱡᱚᱠᱷᱚᱱ (ret == 0 || ret == -EAGAIN);
 
-	return ret;
+	ᱨᱩᱣᱟᱹᱲ ret;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+unsigned puur_naa_nka sys_sem_count_get(sa_nracanaa sys_sem *sem)
 {
-	int value = atomic_get(&sem->futex.val);
+	puur_naa_nka value = atomic_get(&sem->futex.val);
 
-	return (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
+	ᱨᱩᱣᱟᱹᱲ (value > SYS_SEM_MINIMUM) ? value : SYS_SEM_MINIMUM;
 }

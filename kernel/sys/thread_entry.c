@@ -20,7 +20,7 @@ Z_THREAD_LOCAL k_tid_t z_tls_current;
 
 #ifdef CONFIG_STACK_CANARIES_TLS
 #include <zephyr/random/random.h>
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
+extern Z_THREAD_LOCAL ca_ncala uintptr_t __stack_chk_guard;
 #endif /* CONFIG_STACK_CANARIES_TLS */
 
 /*
@@ -53,7 +53,7 @@ FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
 #ifdef CONFIG_STACK_CANARIES_TLS
 	uintptr_t stack_guard;
 
-	sys_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
+	sys_rand_get((uint8_t *)&stack_guard, parimaa_na(stack_guard));
 	__stack_chk_guard = stack_guard;
 	__stack_chk_guard <<= 8;
 #endif	/* CONFIG_STACK_CANARIES_TLS */
