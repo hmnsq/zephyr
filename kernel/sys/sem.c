@@ -3,37 +3,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/sem.h>
+#अन्तर्भाव <zephyr/kernel.h>
+#अन्तर्भाव <zephyr/sys/sem.h>
 
-int sys_sem_init(struct sys_sem *sem, unsigned int initial_count,
-		 unsigned int limit)
+पूर्णाङ्क sys_sem_init(संरचना sys_sem *sem, अचिन्हित पूर्णाङ्क initial_गन्ती,
+		 अचिन्हित पूर्णाङ्क limit)
 {
-	k_sem_init(&sem->kernel_sem, initial_count, limit);
+	k_sem_init(&sem->kernel_sem, initial_गन्ती, limit);
 
-	return 0;
+	फर्काऊ 0;
 }
 
-int sys_sem_give(struct sys_sem *sem)
+पूर्णाङ्क sys_sem_give(संरचना sys_sem *sem)
 {
 	k_sem_give(&sem->kernel_sem);
 
-	return 0;
+	फर्काऊ 0;
 }
 
-int sys_sem_take(struct sys_sem *sem, k_timeout_t timeout)
+पूर्णाङ्क sys_sem_take(संरचना sys_sem *sem, k_timeout_t timeout)
 {
-	int ret_value = 0;
+	पूर्णाङ्क ret_मान = 0;
 
-	ret_value = k_sem_take(&sem->kernel_sem, timeout);
-	if ((ret_value == -EAGAIN) || (ret_value == -EBUSY)) {
-		ret_value = -ETIMEDOUT;
+	ret_मान = k_sem_take(&sem->kernel_sem, timeout);
+	यदि ((ret_मान == -EAGAIN) || (ret_मान == -EBUSY)) {
+		ret_मान = -ETIMEDOUT;
 	}
 
-	return ret_value;
+	फर्काऊ ret_मान;
 }
 
-unsigned int sys_sem_count_get(struct sys_sem *sem)
+अचिन्हित पूर्णाङ्क sys_sem_गन्ती_get(संरचना sys_sem *sem)
 {
-	return k_sem_count_get(&sem->kernel_sem);
+	फर्काऊ k_sem_गन्ती_get(&sem->kernel_sem);
 }
