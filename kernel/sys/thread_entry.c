@@ -11,17 +11,17 @@
  * This file provides the common thread entry function
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/arch/cfi.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/arch/cfi.h>
 
-#ifdef CONFIG_CURRENT_THREAD_USE_TLS
+#جيڪڏهن_وصف_ٿيل CONFIG_CURRENT_THREAD_USE_TLS
 Z_THREAD_LOCAL k_tid_t z_tls_current;
-#endif
+#جيڪڏهن_پورو
 
-#ifdef CONFIG_STACK_CANARIES_TLS
-#include <zephyr/random/random.h>
-extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#endif /* CONFIG_STACK_CANARIES_TLS */
+#جيڪڏهن_وصف_ٿيل CONFIG_ڍير_CANARIES_TLS
+#ضمن <zephyr/random/random.h>
+خارجي Z_THREAD_LOCAL متطاير uintptr_t __stack_chk_guard;
+#جيڪڏهن_پورو /* CONFIG_STACK_CANARIES_TLS */
 
 /*
  * Common thread entry point function (used by all threads)
@@ -33,8 +33,8 @@ extern Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
  * This routine does not return, and is marked as such so the compiler won't
  * generate preamble code that is only used by functions that actually return.
  */
-FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
-				 void *p1, void *p2, void *p3)
+FUNC_NORETURN فراغ z_thread_داخلا(k_thread_داخلا_t داخلا,
+				 فراغ *p1, فراغ *p2, فراغ *p3)
 {
 /*
  * Inform the unwinder that the current return address is undefined.
@@ -46,18 +46,18 @@ FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
  * otherwise lead to reading invalid memory and cause faults during
  * unwinding or debugging.
  */
-	ARCH_CFI_UNDEFINED_RETURN_ADDRESS();
-#ifdef CONFIG_CURRENT_THREAD_USE_TLS
+	ARCH_CFI_UNDEFINED_RETURN_پتو();
+#جيڪڏهن_وصف_ٿيل CONFIG_CURRENT_THREAD_USE_TLS
 	z_tls_current = k_sched_current_thread_query();
-#endif
-#ifdef CONFIG_STACK_CANARIES_TLS
-	uintptr_t stack_guard;
+#جيڪڏهن_پورو
+#جيڪڏهن_وصف_ٿيل CONFIG_ڍير_CANARIES_TLS
+	uintptr_t ڍير_guard;
 
-	sys_rand_get((uint8_t *)&stack_guard, sizeof(stack_guard));
-	__stack_chk_guard = stack_guard;
+	sys_rand_get((uint8_t *)&ڍير_guard, حجم(ڍير_guard));
+	__stack_chk_guard = ڍير_guard;
 	__stack_chk_guard <<= 8;
-#endif	/* CONFIG_STACK_CANARIES_TLS */
-	entry(p1, p2, p3);
+#جيڪڏهن_پورو	/* CONFIG_STACK_CANARIES_TLS */
+	داخلا(p1, p2, p3);
 
 	k_thread_abort(k_current_get());
 
@@ -66,5 +66,5 @@ FUNC_NORETURN void z_thread_entry(k_thread_entry_t entry,
 	 * warning unless we tell it that control never gets this far.
 	 */
 
-	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
+	ڪوڊ_UNREACHABLE; /* LCOV_EXCL_LINE */
 }

@@ -4,70 +4,70 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/sys/mutex.h>
-#include <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/sys/mutex.h>
+#ضمن <zephyr/internal/syscall_handler.h>
 
-static struct k_mutex *get_k_mutex(struct sys_mutex *mutex)
+ساكن بنية k_mutex *get_k_mutex(بنية sys_mutex *mutex)
 {
-	struct k_object *obj;
+	بنية k_object *obj;
 
-	obj = k_object_find(mutex);
-	if ((obj == NULL) || (obj->type != K_OBJ_SYS_MUTEX)) {
-		return NULL;
+	obj = k_object_ڳوليو(mutex);
+	إذا ((obj == عدم) || (obj->type != K_OBJ_SYS_MUTEX)) {
+		أرجع عدم;
 	}
 
-	return obj->data.mutex;
+	أرجع obj->معلومات.mutex;
 }
 
-static bool check_sys_mutex_addr(struct sys_mutex *addr)
+ساكن bool check_sys_mutex_addr(بنية sys_mutex *addr)
 {
 	/* sys_mutex memory is never touched, just used to lookup the
 	 * underlying k_mutex, but we don't want threads using mutexes
 	 * that are outside their memory domain
 	 */
-	return K_SYSCALL_MEMORY_WRITE(addr, sizeof(struct sys_mutex));
+	أرجع K_SYSCALL_يادگيري_WRITE(addr, حجم(بنية sys_mutex));
 }
 
-int z_impl_z_sys_mutex_kernel_lock(struct sys_mutex *mutex, k_timeout_t timeout)
+صحيح z_impl_z_sys_mutex_kernel_تالو(بنية sys_mutex *mutex, k_timeout_t timeout)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	بنية k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if (kernel_mutex == NULL) {
-		return -EINVAL;
+	إذا (kernel_mutex == عدم) {
+		أرجع -EINVAL;
 	}
 
-	return k_mutex_lock(kernel_mutex, timeout);
+	أرجع k_mutex_تالو(kernel_mutex, timeout);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_lock(struct sys_mutex *mutex,
+ساكن مضمن صحيح z_vrfy_z_sys_mutex_kernel_تالو(بنية sys_mutex *mutex,
 						 k_timeout_t timeout)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	إذا (check_sys_mutex_addr(mutex)) {
+		أرجع -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_lock(mutex, timeout);
+	أرجع z_impl_z_sys_mutex_kernel_تالو(mutex, timeout);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
+#ضمن <zephyr/syscalls/z_sys_mutex_kernel_lock_mrsh.c>
 
-int z_impl_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+صحيح z_impl_z_sys_mutex_kernel_unlock(بنية sys_mutex *mutex)
 {
-	struct k_mutex *kernel_mutex = get_k_mutex(mutex);
+	بنية k_mutex *kernel_mutex = get_k_mutex(mutex);
 
-	if ((kernel_mutex == NULL) || (kernel_mutex->lock_count == 0)) {
-		return -EINVAL;
+	إذا ((kernel_mutex == عدم) || (kernel_mutex->تالو_ڳڻپ == 0)) {
+		أرجع -EINVAL;
 	}
 
-	return k_mutex_unlock(kernel_mutex);
+	أرجع k_mutex_unlock(kernel_mutex);
 }
 
-static inline int z_vrfy_z_sys_mutex_kernel_unlock(struct sys_mutex *mutex)
+ساكن مضمن صحيح z_vrfy_z_sys_mutex_kernel_unlock(بنية sys_mutex *mutex)
 {
-	if (check_sys_mutex_addr(mutex)) {
-		return -EACCES;
+	إذا (check_sys_mutex_addr(mutex)) {
+		أرجع -EACCES;
 	}
 
-	return z_impl_z_sys_mutex_kernel_unlock(mutex);
+	أرجع z_impl_z_sys_mutex_kernel_unlock(mutex);
 }
-#include <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>
+#ضمن <zephyr/syscalls/z_sys_mutex_kernel_unlock_mrsh.c>

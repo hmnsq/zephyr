@@ -4,40 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/init.h>
-#include <zephyr/linker/linker-defs.h>
-#include <zephyr/sys/iterable_sections.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/linker/linker-defs.h>
+#ضمن <zephyr/sys/iterable_sections.h>
 /* private kernel APIs */
-#include <ksched.h>
-#include <wait_q.h>
+#ضمن <ksched.h>
+#ضمن <wait_q.h>
 
-int k_heap_array_get(struct k_heap **heap)
+صحيح k_ڍير_array_get(بنية k_ڍير **ڍير_2)
 {
-	int num;
+	صحيح انگ;
 
 	/* Pointer to the start of the heap array */
-	STRUCT_SECTION_GET(k_heap, 0, heap);
+	STRUCT_SECTION_GET(k_ڍير, 0, ڍير_2);
 	/* Number of statically defined heaps */
-	STRUCT_SECTION_COUNT(k_heap, &num);
-	return num;
+	STRUCT_SECTION_ڳڻپ(k_ڍير, &انگ);
+	أرجع انگ;
 }
 
-void k_heap_init(struct k_heap *heap, void *mem, size_t bytes)
+فراغ k_ڍير_init(بنية k_ڍير *ڍير_2, فراغ *mem, size_t بائيٽون)
 {
-	z_waitq_init(&heap->wait_q);
-	heap->lock = (struct k_spinlock) {};
-	sys_heap_init(&heap->heap, mem, bytes);
+	z_waitq_init(&ڍير_2->wait_q);
+	ڍير_2->تالو = (بنية k_spinlock) {};
+	sys_ڍير_init(&ڍير_2->ڍير_2, mem, بائيٽون);
 
-	SYS_PORT_TRACING_OBJ_INIT(k_heap, heap);
+	SYS_پورٽ_TRACING_OBJ_INIT(k_ڍير, ڍير_2);
 }
 
-static int statics_init(void)
+ساكن صحيح statics_init(فراغ)
 {
-	STRUCT_SECTION_FOREACH(k_heap, heap) {
-		k_heap_init(heap, heap->heap.init_mem, heap->heap.init_bytes);
+	STRUCT_SECTION_FOREACH(k_ڍير, ڍير_2) {
+		k_ڍير_init(ڍير_2, ڍير_2->ڍير_2.init_mem, ڍير_2->ڍير_2.init_بائيٽون);
 	}
-	return 0;
+	أرجع 0;
 }
 
 /*
@@ -46,73 +46,73 @@ static int statics_init(void)
  * sys_heap_init(). A K_KERNEL_INIT_PRE() hook would run ahead of that, leaving
  * the shadow unregistered and KASAN tracking disabled.
  */
-SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_PRIORITY_OBJECTS);
+SYS_INIT_NAMED(statics_init_pre, statics_init, PRE_KERNEL_1, CONFIG_KERNEL_INIT_ترجيح_OBJECTS);
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+تعريفنوع فراغ * (sys_ڍير_allocator_t)(بنية sys_ڍير *ڍير_2, size_t align, size_t بائيٽون);
 
-static void *z_heap_alloc_helper(struct k_heap *heap, size_t align, size_t bytes,
+ساكن فراغ *z_ڍير_alloc_helper(بنية k_ڍير *ڍير_2, size_t align, size_t بائيٽون,
 				 k_timeout_t timeout,
-				 sys_heap_allocator_t *sys_heap_allocator)
+				 sys_ڍير_allocator_t *sys_ڍير_allocator)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t پڇاڙي = sys_timepoint_calc(timeout);
+	فراغ *ret = عدم;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ڪنجي_t ڪنجي = k_spin_تالو(&ڍير_2->تالو);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_اندريون_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	bool blocked_alloc = false;
 
-	while (ret == NULL) {
-		ret = sys_heap_allocator(&heap->heap, align, bytes);
+	طالما (ret == عدم) {
+		ret = sys_ڍير_allocator(&ڍير_2->ڍير_2, align, بائيٽون);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		إذا (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != عدم) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			اكسر;
 		}
 
-		if (!blocked_alloc) {
+		إذا (!blocked_alloc) {
 			blocked_alloc = true;
 
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_heap, alloc_helper, heap, timeout);
-		} else {
+			SYS_پورٽ_TRACING_OBJ_FUNC_BLOCKING(k_ڍير, alloc_helper, ڍير_2, timeout);
+		} وإلا {
 			/**
 			 * @todo	Trace attempt to avoid empty trace segments
 			 */
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(پڇاڙي);
+		(فراغ) z_pend_curr(&ڍير_2->تالو, ڪنجي, &ڍير_2->wait_q, timeout);
+		ڪنجي = k_spin_تالو(&ڍير_2->تالو);
 	}
 
-	k_spin_unlock(&heap->lock, key);
-	return ret;
+	k_spin_unlock(&ڍير_2->تالو, ڪنجي);
+	أرجع ret;
 }
 
-void *k_heap_alloc(struct k_heap *heap, size_t bytes, k_timeout_t timeout)
+فراغ *k_ڍير_alloc(بنية k_ڍير *ڍير_2, size_t بائيٽون, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, alloc, heap, timeout);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_ڍير, alloc, ڍير_2, timeout);
 
-	void *ret = z_heap_alloc_helper(heap, 0, bytes, timeout,
-					sys_heap_noalign_alloc);
+	فراغ *ret = z_ڍير_alloc_helper(ڍير_2, 0, بائيٽون, timeout,
+					sys_ڍير_noalign_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, alloc, heap, timeout, ret);
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_ڍير, alloc, ڍير_2, timeout, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
+فراغ *k_ڍير_aligned_alloc(بنية k_ڍير *ڍير_2, size_t align, size_t بائيٽون,
 			k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, aligned_alloc, heap, timeout);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_ڍير, aligned_alloc, ڍير_2, timeout);
 
 	/* A power of 2 as well as 0 is OK */
 	__ASSERT((align & (align - 1)) == 0,
 		 "align must be a power of 2");
 
-	void *ret = z_heap_alloc_helper(heap, align, bytes, timeout,
-					sys_heap_aligned_alloc);
+	فراغ *ret = z_ڍير_alloc_helper(ڍير_2, align, بائيٽون, timeout,
+					sys_ڍير_aligned_alloc);
 
 	/*
 	 * modules/debug/percepio/TraceRecorder/kernelports/Zephyr/include/tracing_tracerecorder.h
@@ -121,73 +121,73 @@ void *k_heap_aligned_alloc(struct k_heap *heap, size_t align, size_t bytes,
 	 * that is no longer in scope. Provide a dummy stub for compilation
 	 * to still succeed until that module's layering violation is fixed.
 	 */
-	bool blocked_alloc = false; ARG_UNUSED(blocked_alloc);
+	bool blocked_alloc = false; ARG_اڻ_استعمال_ٿيل(blocked_alloc);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, aligned_alloc, heap, timeout, ret);
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_ڍير, aligned_alloc, ڍير_2, timeout, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_heap_calloc(struct k_heap *heap, size_t num, size_t size, k_timeout_t timeout)
+فراغ *k_ڍير_calloc(بنية k_ڍير *ڍير_2, size_t انگ, size_t سائيز, k_timeout_t timeout)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, calloc, heap, timeout);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_ڍير, صفر_يادگيري_ڏيو, ڍير_2, timeout);
 
-	void *ret = NULL;
+	فراغ *ret = عدم;
 	size_t bounds = 0U;
 
-	if (!size_mul_overflow(num, size, &bounds)) {
-		ret = k_heap_alloc(heap, bounds, timeout);
+	إذا (!سائيز_mul_حد_کان_مٿي(انگ, سائيز, &bounds)) {
+		ret = k_ڍير_alloc(ڍير_2, bounds, timeout);
 	}
-	if (ret != NULL) {
-		(void)memset(ret, 0, bounds);
+	إذا (ret != عدم) {
+		(فراغ)memset(ret, 0, bounds);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, calloc, heap, timeout, ret);
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_ڍير, صفر_يادگيري_ڏيو, ڍير_2, timeout, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void *k_heap_realloc(struct k_heap *heap, void *ptr, size_t bytes, k_timeout_t timeout)
+فراغ *k_ڍير_realloc(بنية k_ڍير *ڍير_2, فراغ *ptr, size_t بائيٽون, k_timeout_t timeout)
 {
-	k_timepoint_t end = sys_timepoint_calc(timeout);
-	void *ret = NULL;
+	k_timepoint_t پڇاڙي = sys_timepoint_calc(timeout);
+	فراغ *ret = عدم;
 
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ڪنجي_t ڪنجي = k_spin_تالو(&ڍير_2->تالو);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap, realloc, heap, ptr, bytes, timeout);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_ڍير, realloc, ڍير_2, ptr, بائيٽون, timeout);
 
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_اندريون_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	while (ret == NULL) {
-		ret = sys_heap_realloc(&heap->heap, ptr, bytes);
+	طالما (ret == عدم) {
+		ret = sys_ڍير_realloc(&ڍير_2->ڍير_2, ptr, بائيٽون);
 
-		if (!IS_ENABLED(CONFIG_MULTITHREADING) ||
-		    (ret != NULL) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-			break;
+		إذا (!IS_ENABLED(CONFIG_MULTITHREADING) ||
+		    (ret != عدم) || K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+			اكسر;
 		}
 
-		timeout = sys_timepoint_timeout(end);
-		(void) z_pend_curr(&heap->lock, key, &heap->wait_q, timeout);
-		key = k_spin_lock(&heap->lock);
+		timeout = sys_timepoint_timeout(پڇاڙي);
+		(فراغ) z_pend_curr(&ڍير_2->تالو, ڪنجي, &ڍير_2->wait_q, timeout);
+		ڪنجي = k_spin_تالو(&ڍير_2->تالو);
 	}
 
-	k_spin_unlock(&heap->lock, key);
+	k_spin_unlock(&ڍير_2->تالو, ڪنجي);
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap, realloc, heap, ptr, bytes, timeout, ret);
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_ڍير, realloc, ڍير_2, ptr, بائيٽون, timeout, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-void k_heap_free(struct k_heap *heap, void *mem)
+فراغ k_ڍير_free(بنية k_ڍير *ڍير_2, فراغ *mem)
 {
-	k_spinlock_key_t key = k_spin_lock(&heap->lock);
+	k_spinlock_ڪنجي_t ڪنجي = k_spin_تالو(&ڍير_2->تالو);
 
-	sys_heap_free(&heap->heap, mem);
+	sys_ڍير_free(&ڍير_2->ڍير_2, mem);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_heap, free, heap);
-	if (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&heap->wait_q) != 0)) {
-		z_reschedule(&heap->lock, key);
-	} else {
-		k_spin_unlock(&heap->lock, key);
+	SYS_پورٽ_TRACING_OBJ_FUNC(k_ڍير, حرر, ڍير_2);
+	إذا (IS_ENABLED(CONFIG_MULTITHREADING) && (z_unpend_all(&ڍير_2->wait_q) != 0)) {
+		z_reschedule(&ڍير_2->تالو, ڪنجي);
+	} وإلا {
+		k_spin_unlock(&ڍير_2->تالو, ڪنجي);
 	}
 }

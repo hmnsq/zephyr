@@ -10,538 +10,538 @@
  */
 
 
-#include <zephyr/kernel.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <zephyr/linker/sections.h>
-#include <string.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <zephyr/sys/check.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <zephyr/linker/sections.h>
+#ضمن <string.h>
+#ضمن <ksched.h>
+#ضمن <scheduler.h>
+#ضمن <wait_q.h>
+#ضمن <zephyr/sys/dlist.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/sys/check.h>
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
-K_OBJ_TYPE_DEFINE(obj_type_msgq, k_msgq, K_OBJ_TYPE_MSGQ_ID, NULL);
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#جيڪڏهن_وصف_ٿيل CONFIG_OBJ_CORE_MSGQ
+K_OBJ_TYPE_DEFINE(obj_type_msgq, k_msgq, K_OBJ_TYPE_MSGQ_ID, عدم);
+#جيڪڏهن_پورو /* CONFIG_OBJ_CORE_MSGQ */
 
-static inline bool msgq_handle_poll_events(struct k_msgq *msgq)
+ساكن مضمن bool msgq_handle_poll_events(بنية k_msgq *msgq)
 {
-#ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&msgq->poll_events,
-					K_POLL_STATE_MSGQ_DATA_AVAILABLE);
-#else
-	ARG_UNUSED(msgq);
-	return false;
-#endif /* CONFIG_POLL */
+#جيڪڏهن_وصف_ٿيل CONFIG_POLL
+	أرجع z_handle_obj_poll_events(&msgq->poll_events,
+					K_POLL_STATE_MSGQ_معلومات_موجود);
+#وإلا
+	ARG_اڻ_استعمال_ٿيل(msgq);
+	أرجع false;
+#جيڪڏهن_پورو /* CONFIG_POLL */
 }
 
-void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
+فراغ k_msgq_init(بنية k_msgq *msgq, حرف *بفر, size_t نياپو_سائيز,
 		 uint32_t max_msgs)
 {
-	__ASSERT_NO_MSG(!size_mul_overflow(max_msgs, msg_size, &(size_t){0}));
-	__ASSERT_NO_MSG(!size_add_overflow((size_t)(uintptr_t)buffer, max_msgs * msg_size,
+	__ASSERT_NO_MSG(!سائيز_mul_حد_کان_مٿي(max_msgs, نياپو_سائيز, &(size_t){0}));
+	__ASSERT_NO_MSG(!سائيز_جوڙيو_حد_کان_مٿي((size_t)(uintptr_t)بفر, max_msgs * نياپو_سائيز,
 					&(size_t){0}));
 
-	msgq->msg_size = msg_size;
+	msgq->نياپو_سائيز = نياپو_سائيز;
 	msgq->max_msgs = max_msgs;
-	msgq->buffer_start = buffer;
-	msgq->buffer_end = buffer + (max_msgs * msg_size);
-	msgq->read_ptr = buffer;
-	msgq->write_ptr = buffer;
-	msgq->used_msgs = 0;
+	msgq->بفر_شروعات = بفر;
+	msgq->بفر_پڇاڙي = بفر + (max_msgs * نياپو_سائيز);
+	msgq->read_ptr = بفر;
+	msgq->write_ptr = بفر;
+	msgq->استعمال_ٿيل_msgs = 0;
 	msgq->flags = 0;
 	z_waitq_init(&msgq->wait_q);
-	msgq->lock = (struct k_spinlock) {};
-#ifdef CONFIG_POLL
+	msgq->تالو = (بنية k_spinlock) {};
+#جيڪڏهن_وصف_ٿيل CONFIG_POLL
 	sys_dlist_init(&msgq->poll_events);
-#endif	/* CONFIG_POLL */
+#جيڪڏهن_پورو	/* CONFIG_POLL */
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
+#جيڪڏهن_وصف_ٿيل CONFIG_OBJ_CORE_MSGQ
 	k_obj_core_init_and_link(K_OBJ_CORE(msgq), &obj_type_msgq);
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#جيڪڏهن_پورو /* CONFIG_OBJ_CORE_MSGQ */
 
-	SYS_PORT_TRACING_OBJ_INIT(k_msgq, msgq);
+	SYS_پورٽ_TRACING_OBJ_INIT(k_msgq, msgq);
 
 	k_object_init(msgq);
 }
 
-int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+صحيح z_impl_k_msgq_alloc_init(بنية k_msgq *msgq, size_t نياپو_سائيز,
 			    uint32_t max_msgs)
 {
-	void *buffer;
-	int ret;
-	size_t total_size;
+	فراغ *بفر;
+	صحيح ret;
+	size_t ڪل_سائيز;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
 
-	if (size_mul_overflow(msg_size, max_msgs, &total_size)) {
+	إذا (سائيز_mul_حد_کان_مٿي(نياپو_سائيز, max_msgs, &ڪل_سائيز)) {
 		ret = -EINVAL;
-	} else {
-		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_msgq_init(msgq, buffer, msg_size, max_msgs);
+	} وإلا {
+		بفر = z_thread_malloc(ڪل_سائيز);
+		إذا (بفر != عدم) {
+			k_msgq_init(msgq, بفر, نياپو_سائيز, max_msgs);
 			msgq->flags = K_MSGQ_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} وإلا {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, alloc_init, msgq, ret);
-	return ret;
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, alloc_init, msgq, ret);
+	أرجع ret;
 }
 
-#ifdef CONFIG_USERSPACE
-int z_vrfy_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+صحيح z_vrfy_k_msgq_alloc_init(بنية k_msgq *msgq, size_t نياپو_سائيز,
 			    uint32_t max_msgs)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(msgq, K_OBJ_MSGQ));
 
-	return z_impl_k_msgq_alloc_init(msgq, msg_size, max_msgs);
+	أرجع z_impl_k_msgq_alloc_init(msgq, نياپو_سائيز, max_msgs);
 }
-#include <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
+صحيح z_msgq_cleanup(بنية k_msgq *msgq, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, cleanup, msgq);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_msgq, cleanup, msgq);
 
-	int ret = 0;
+	صحيح ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&msgq->lock);
+	k_spinlock_ڪنجي_t ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	CHECKIF(locked && (z_waitq_head_locked(&msgq->wait_q) != NULL)) {
+	CHECKIF(locked && (z_waitq_سر_locked(&msgq->wait_q) != عدم)) {
 		ret = -EBUSY;
-		goto out;
+		اذهب ٻاهريون;
 	}
 
-	CHECKIF(!locked && (z_waitq_head(&msgq->wait_q) != NULL)) {
+	CHECKIF(!locked && (z_waitq_سر(&msgq->wait_q) != عدم)) {
 		ret = -EBUSY;
-		goto out;
+		اذهب ٻاهريون;
 	}
 
-	if ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
-		k_free(msgq->buffer_start);
+	إذا ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
+		k_free(msgq->بفر_شروعات);
 		msgq->flags &= ~K_MSGQ_FLAG_ALLOC;
 		freed = true;
 	}
 
-out:
-	k_spin_unlock(&msgq->lock, key);
+ٻاهريون:
+	k_spin_unlock(&msgq->تالو, ڪنجي);
 
-#ifdef CONFIG_OBJ_CORE_MSGQ
-	if (freed) {
+#جيڪڏهن_وصف_ٿيل CONFIG_OBJ_CORE_MSGQ
+	إذا (freed) {
 		k_obj_core_unlink(K_OBJ_CORE(msgq));
 	}
-#endif /* CONFIG_OBJ_CORE_MSGQ */
+#جيڪڏهن_پورو /* CONFIG_OBJ_CORE_MSGQ */
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, cleanup, msgq, ret);
-	return ret;
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, cleanup, msgq, ret);
+	أرجع ret;
 }
 
-int k_msgq_cleanup(struct k_msgq *msgq)
+صحيح k_msgq_cleanup(بنية k_msgq *msgq)
 {
-	return z_msgq_cleanup(msgq, false);
+	أرجع z_msgq_cleanup(msgq, false);
 }
 
-static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
-			k_timeout_t timeout, bool put_at_back)
+ساكن مضمن صحيح put_نياپو_اندريون_قطار(بنية k_msgq *msgq, ثابت فراغ *معلومات,
+			k_timeout_t timeout, bool put_at_پٺ)
 {
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_اندريون_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	struct k_thread *pending_thread = NULL;
-	k_spinlock_key_t key;
-	int result;
+	بنية k_thread *pending_thread = عدم;
+	k_spinlock_ڪنجي_t ڪنجي;
+	صحيح نتيجو;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	if (put_at_back) {
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put_front, msgq, timeout);
+	إذا (put_at_پٺ) {
+		SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
+	} وإلا {
+		SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_msgq, put_front, msgq, timeout);
 	}
 
-	if (msgq->used_msgs < msgq->max_msgs) {
+	إذا (msgq->استعمال_ٿيل_msgs < msgq->max_msgs) {
 		/* message queue isn't full. Try to hand the message
 		 * directly to the longest-waiting receiver, atomically
 		 * under the scheduler's spinlock so a racing in-flight timeout
 		 * handler cannot wake the receiver before the message
 		 * has been copied into its buffer.
 		 */
-		LOCK_SCHED_SPINLOCK {
-			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
+		تالو_SCHED_SPINLOCK {
+			pending_thread = z_unpend_پهريون_thread_locked(&msgq->wait_q);
+			إذا (pending_thread != عدم) {
 				/* copy into the receiver's buffer */
-				(void)memcpy(pending_thread->base.swap_data, data,
-					     msgq->msg_size);
-				arch_thread_return_value_set(pending_thread, 0);
+				(فراغ)يادگيري_نقل(pending_thread->بنياد.مٽا_سٽا_معلومات, معلومات,
+					     msgq->نياپو_سائيز);
+				arch_thread_return_قدر_سيٽ(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
 		}
-		if (pending_thread == NULL) {
-			size_t msg_size = msgq->msg_size;
-			char *slot;
+		إذا (pending_thread == عدم) {
+			size_t نياپو_سائيز = msgq->نياپو_سائيز;
+			حرف *جڳهه;
 
-			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
-					(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
-					((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-						msgq->msg_size));
+			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->بفر_شروعات) &&
+					(msgq->write_ptr <= (msgq->بفر_پڇاڙي - 1)) &&
+					((size_t)(uintptr_t)(msgq->بفر_پڇاڙي - msgq->write_ptr) >=
+						msgq->نياپو_سائيز));
 			/*
 			 * Pick the slot and update the ring state from
 			 * registers first: the compiler cannot tell that the
 			 * copy leaves the queue fields alone, so copying last
 			 * saves it re-reading them afterwards.
 			 */
-			if (put_at_back) {
+			إذا (put_at_پٺ) {
 				/*
 				 * to write a message to the back of the queue,
 				 * take the slot write_ptr points at and
 				 * advance write_ptr past it
 				 */
-				char *next;
+				حرف *ايندڙ;
 
-				slot = msgq->write_ptr;
-				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
-					next = msgq->buffer_start;
+				جڳهه = msgq->write_ptr;
+				ايندڙ = جڳهه + نياپو_سائيز;
+				إذا (ايندڙ == msgq->بفر_پڇاڙي) {
+					ايندڙ = msgq->بفر_شروعات;
 				}
-				msgq->write_ptr = next;
-			} else {
+				msgq->write_ptr = ايندڙ;
+			} وإلا {
 				/*
 				 * to write a message to the head of the queue,
 				 * first decrement the read pointer (to open
 				 * space at the front of the queue) then copy
 				 * the message to the newly created space.
 				 */
-				slot = msgq->read_ptr;
-				if (slot == msgq->buffer_start) {
-					slot = msgq->buffer_end;
+				جڳهه = msgq->read_ptr;
+				إذا (جڳهه == msgq->بفر_شروعات) {
+					جڳهه = msgq->بفر_پڇاڙي;
 				}
-				slot -= msg_size;
-				msgq->read_ptr = slot;
+				جڳهه -= نياپو_سائيز;
+				msgq->read_ptr = جڳهه;
 			}
-			msgq->used_msgs++;
-			(void)memcpy(slot, data, msg_size);
+			msgq->استعمال_ٿيل_msgs++;
+			(فراغ)يادگيري_نقل(جڳهه, معلومات, نياپو_سائيز);
 			resched = msgq_handle_poll_events(msgq);
 		}
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		نتيجو = 0;
+	} وإلا إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for message space to become available */
-		result = -ENOMSG;
-	} else {
-		if (put_at_back) {
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put, msgq, timeout);
-		} else {
-			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put_front, msgq, timeout);
+		نتيجو = -ENOMSG;
+	} وإلا {
+		إذا (put_at_پٺ) {
+			SYS_پورٽ_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put, msgq, timeout);
+		} وإلا {
+			SYS_پورٽ_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put_front, msgq, timeout);
 		}
 
 		/* wait for put message success, failure, or timeout */
-		_current->base.swap_data = (void *) data;
+		_current->بنياد.مٽا_سٽا_معلومات = (فراغ *) معلومات;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
+		نتيجو = z_pend_curr(&msgq->تالو, ڪنجي, &msgq->wait_q, timeout);
 
-		if (put_at_back) {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-		} else {
-			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
+		إذا (put_at_پٺ) {
+			SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, نتيجو);
+		} وإلا {
+			SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, نتيجو);
 		}
 
-		return result;
+		أرجع نتيجو;
 	}
 
-	if (put_at_back) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
+	إذا (put_at_پٺ) {
+		SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, نتيجو);
+	} وإلا {
+		SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, نتيجو);
 	}
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	إذا (resched) {
+		z_reschedule(&msgq->تالو, ڪنجي);
+	} وإلا {
+		k_spin_unlock(&msgq->تالو, ڪنجي);
 	}
 
-	return result;
+	أرجع نتيجو;
 }
 
 
-int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout)
+صحيح z_impl_k_msgq_put(بنية k_msgq *msgq, ثابت فراغ *معلومات, k_timeout_t timeout)
 {
-	return put_msg_in_queue(msgq, data, timeout, true);
+	أرجع put_نياپو_اندريون_قطار(msgq, معلومات, timeout, true);
 }
 
-int z_impl_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+صحيح z_impl_k_msgq_put_front(بنية k_msgq *msgq, ثابت فراغ *معلومات)
 {
-	return put_msg_in_queue(msgq, data, K_NO_WAIT, false);
+	أرجع put_نياپو_اندريون_قطار(msgq, معلومات, K_NO_WAIT, false);
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_put(struct k_msgq *msgq, const void *data,
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_msgq_put(بنية k_msgq *msgq, ثابت فراغ *معلومات,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_يادگيري_READ(معلومات, msgq->نياپو_سائيز));
 
-	return z_impl_k_msgq_put(msgq, data, timeout);
+	أرجع z_impl_k_msgq_put(msgq, معلومات, timeout);
 }
-#include <zephyr/syscalls/k_msgq_put_mrsh.c>
+#ضمن <zephyr/syscalls/k_msgq_put_mrsh.c>
 
-static inline int z_vrfy_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+ساكن مضمن صحيح z_vrfy_k_msgq_put_front(بنية k_msgq *msgq, ثابت فراغ *معلومات)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_يادگيري_READ(معلومات, msgq->نياپو_سائيز));
 
-	return z_impl_k_msgq_put_front(msgq, data);
+	أرجع z_impl_k_msgq_put_front(msgq, معلومات);
 }
-#include <zephyr/syscalls/k_msgq_put_front_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_put_front_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_get_attrs(struct k_msgq *msgq, struct k_msgq_attrs *attrs)
+فراغ z_impl_k_msgq_get_attrs(بنية k_msgq *msgq, بنية k_msgq_attrs *attrs)
 {
-	attrs->msg_size = msgq->msg_size;
+	attrs->نياپو_سائيز = msgq->نياپو_سائيز;
 	attrs->max_msgs = msgq->max_msgs;
-	attrs->used_msgs = msgq->used_msgs;
+	attrs->استعمال_ٿيل_msgs = msgq->استعمال_ٿيل_msgs;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_get_attrs(struct k_msgq *msgq,
-					   struct k_msgq_attrs *attrs)
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن فراغ z_vrfy_k_msgq_get_attrs(بنية k_msgq *msgq,
+					   بنية k_msgq_attrs *attrs)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(attrs, sizeof(struct k_msgq_attrs)));
+	K_OOPS(K_SYSCALL_يادگيري_WRITE(attrs, حجم(بنية k_msgq_attrs)));
 	z_impl_k_msgq_get_attrs(msgq, attrs);
 }
-#include <zephyr/syscalls/k_msgq_get_attrs_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_get_attrs_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
+صحيح z_impl_k_msgq_get(بنية k_msgq *msgq, فراغ *معلومات, k_timeout_t timeout)
 {
-	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
+	__ASSERT(!arch_is_اندريون_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	k_spinlock_key_t key;
-	struct k_thread *pending_thread;
-	int result;
+	k_spinlock_ڪنجي_t ڪنجي;
+	بنية k_thread *pending_thread;
+	صحيح نتيجو;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
+	SYS_پورٽ_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
 
-	if (likely(msgq->used_msgs > 0U)) {
-		size_t msg_size = msgq->msg_size;
-		char *slot = msgq->read_ptr;
-		char *next = slot + msg_size;
+	إذا (likely(msgq->استعمال_ٿيل_msgs > 0U)) {
+		size_t نياپو_سائيز = msgq->نياپو_سائيز;
+		حرف *جڳهه = msgq->read_ptr;
+		حرف *ايندڙ = جڳهه + نياپو_سائيز;
 
 		/* drop the message from the queue, then copy it out */
-		if (next == msgq->buffer_end) {
-			next = msgq->buffer_start;
+		إذا (ايندڙ == msgq->بفر_پڇاڙي) {
+			ايندڙ = msgq->بفر_شروعات;
 		}
-		msgq->read_ptr = next;
-		msgq->used_msgs--;
+		msgq->read_ptr = ايندڙ;
+		msgq->استعمال_ٿيل_msgs--;
 
-		(void)memcpy(data, slot, msg_size);
+		(فراغ)يادگيري_نقل(معلومات, جڳهه, نياپو_سائيز);
 
 		/* sanity-check write_ptr in case we hand the slot to a sender */
-		__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
-				(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
-				((size_t)(uintptr_t)(msgq->buffer_end - msgq->write_ptr) >=
-					msgq->msg_size));
+		__ASSERT_NO_MSG((msgq->write_ptr >= msgq->بفر_شروعات) &&
+				(msgq->write_ptr <= (msgq->بفر_پڇاڙي - 1)) &&
+				((size_t)(uintptr_t)(msgq->بفر_پڇاڙي - msgq->write_ptr) >=
+					msgq->نياپو_سائيز));
 
 		/* handle first thread waiting to write (if any). Done
 		 * atomically under the scheduler's spinlock so we read the
 		 * sender's swap_data and complete the wake before any
 		 * racing in-flight timeout handler can wake the sender.
 		 */
-		LOCK_SCHED_SPINLOCK {
-			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
-				SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
+		تالو_SCHED_SPINLOCK {
+			pending_thread = z_unpend_پهريون_thread_locked(&msgq->wait_q);
+			إذا (pending_thread != عدم) {
+				SYS_پورٽ_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 				/* add the sender's pending message to the queue */
-				slot = msgq->write_ptr;
-				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
-					next = msgq->buffer_start;
+				جڳهه = msgq->write_ptr;
+				ايندڙ = جڳهه + نياپو_سائيز;
+				إذا (ايندڙ == msgq->بفر_پڇاڙي) {
+					ايندڙ = msgq->بفر_شروعات;
 				}
-				msgq->write_ptr = next;
-				msgq->used_msgs++;
+				msgq->write_ptr = ايندڙ;
+				msgq->استعمال_ٿيل_msgs++;
 
-				(void)memcpy(slot, pending_thread->base.swap_data, msg_size);
+				(فراغ)يادگيري_نقل(جڳهه, pending_thread->بنياد.مٽا_سٽا_معلومات, نياپو_سائيز);
 
-				arch_thread_return_value_set(pending_thread, 0);
+				arch_thread_return_قدر_سيٽ(pending_thread, 0);
 				z_sched_ready_locked(pending_thread);
 				resched = true;
 			}
 		}
-		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		نتيجو = 0;
+	} وإلا إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
-	} else {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
+		نتيجو = -ENOMSG;
+	} وإلا {
+		SYS_پورٽ_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 		/* wait for get message success or timeout */
-		_current->base.swap_data = data;
+		_current->بنياد.مٽا_سٽا_معلومات = معلومات;
 
-		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
-		return result;
+		نتيجو = z_pend_curr(&msgq->تالو, ڪنجي, &msgq->wait_q, timeout);
+		SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, نتيجو);
+		أرجع نتيجو;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
+	SYS_پورٽ_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, نتيجو);
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	إذا (resched) {
+		z_reschedule(&msgq->تالو, ڪنجي);
+	} وإلا {
+		k_spin_unlock(&msgq->تالو, ڪنجي);
 	}
 
-	return result;
+	أرجع نتيجو;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_get(struct k_msgq *msgq, void *data,
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_msgq_get(بنية k_msgq *msgq, فراغ *معلومات,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_يادگيري_WRITE(معلومات, msgq->نياپو_سائيز));
 
-	return z_impl_k_msgq_get(msgq, data, timeout);
+	أرجع z_impl_k_msgq_get(msgq, معلومات, timeout);
 }
-#include <zephyr/syscalls/k_msgq_get_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_get_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
+صحيح z_impl_k_msgq_peek(بنية k_msgq *msgq, فراغ *معلومات)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_ڪنجي_t ڪنجي;
+	صحيح نتيجو;
 
-	key = k_spin_lock(&msgq->lock);
+	ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	if (msgq->used_msgs > 0U) {
+	إذا (msgq->استعمال_ٿيل_msgs > 0U) {
 		/* take first available message from queue */
-		(void)memcpy(data, msgq->read_ptr, msgq->msg_size);
-		result = 0;
-	} else {
+		(فراغ)يادگيري_نقل(معلومات, msgq->read_ptr, msgq->نياپو_سائيز);
+		نتيجو = 0;
+	} وإلا {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
+		نتيجو = -ENOMSG;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
+	SYS_پورٽ_TRACING_OBJ_FUNC(k_msgq, peek, msgq, نتيجو);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->تالو, ڪنجي);
 
-	return result;
+	أرجع نتيجو;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek(struct k_msgq *msgq, void *data)
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_msgq_peek(بنية k_msgq *msgq, فراغ *معلومات)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_يادگيري_WRITE(معلومات, msgq->نياپو_سائيز));
 
-	return z_impl_k_msgq_peek(msgq, data);
+	أرجع z_impl_k_msgq_peek(msgq, معلومات);
 }
-#include <zephyr/syscalls/k_msgq_peek_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_peek_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+صحيح z_impl_k_msgq_peek_at(بنية k_msgq *msgq, فراغ *معلومات, uint32_t idx)
 {
-	k_spinlock_key_t key;
-	int result;
-	uint32_t bytes_to_end;
-	uint32_t byte_offset;
-	char *start_addr;
+	k_spinlock_ڪنجي_t ڪنجي;
+	صحيح نتيجو;
+	uint32_t بائيٽون_منزل_پڇاڙي;
+	uint32_t byte_وٿي;
+	حرف *شروعات_addr;
 
-	key = k_spin_lock(&msgq->lock);
+	ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	if (msgq->used_msgs > idx) {
-		bytes_to_end = (msgq->buffer_end - msgq->read_ptr);
-		byte_offset = idx * msgq->msg_size;
-		start_addr = msgq->read_ptr;
+	إذا (msgq->استعمال_ٿيل_msgs > idx) {
+		بائيٽون_منزل_پڇاڙي = (msgq->بفر_پڇاڙي - msgq->read_ptr);
+		byte_وٿي = idx * msgq->نياپو_سائيز;
+		شروعات_addr = msgq->read_ptr;
 		/* check item available in start/end of ring buffer */
-		if (bytes_to_end <= byte_offset) {
+		إذا (بائيٽون_منزل_پڇاڙي <= byte_وٿي) {
 			/* Tweak the values in case */
-			byte_offset -= bytes_to_end;
+			byte_وٿي -= بائيٽون_منزل_پڇاڙي;
 			/* wrap-around is required */
-			start_addr = msgq->buffer_start;
+			شروعات_addr = msgq->بفر_شروعات;
 		}
-		(void)memcpy(data, start_addr + byte_offset, msgq->msg_size);
-		result = 0;
-	} else {
+		(فراغ)يادگيري_نقل(معلومات, شروعات_addr + byte_وٿي, msgq->نياپو_سائيز);
+		نتيجو = 0;
+	} وإلا {
 		/* don't wait for a message to become available */
-		result = -ENOMSG;
+		نتيجو = -ENOMSG;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, peek, msgq, result);
+	SYS_پورٽ_TRACING_OBJ_FUNC(k_msgq, peek, msgq, نتيجو);
 
-	k_spin_unlock(&msgq->lock, key);
+	k_spin_unlock(&msgq->تالو, ڪنجي);
 
-	return result;
+	أرجع نتيجو;
 }
 
-#ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن صحيح z_vrfy_k_msgq_peek_at(بنية k_msgq *msgq, فراغ *معلومات, uint32_t idx)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
+	K_OOPS(K_SYSCALL_يادگيري_WRITE(معلومات, msgq->نياپو_سائيز));
 
-	return z_impl_k_msgq_peek_at(msgq, data, idx);
+	أرجع z_impl_k_msgq_peek_at(msgq, معلومات, idx);
 }
-#include <zephyr/syscalls/k_msgq_peek_at_mrsh.c>
-#endif /* CONFIG_USERSPACE */
+#ضمن <zephyr/syscalls/k_msgq_peek_at_mrsh.c>
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_purge(struct k_msgq *msgq)
+فراغ z_impl_k_msgq_purge(بنية k_msgq *msgq)
 {
-	k_spinlock_key_t key;
+	k_spinlock_ڪنجي_t ڪنجي;
 	bool resched = false;
 
-	key = k_spin_lock(&msgq->lock);
+	ڪنجي = k_spin_تالو(&msgq->تالو);
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
+	SYS_پورٽ_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&msgq->wait_q, -ENOMSG, NULL)) {
+	طالما (z_sched_wake(&msgq->wait_q, -ENOMSG, عدم)) {
 		resched = true;
 	}
 
-	msgq->used_msgs = 0;
+	msgq->استعمال_ٿيل_msgs = 0;
 	msgq->read_ptr = msgq->write_ptr;
 
-	if (resched) {
-		z_reschedule(&msgq->lock, key);
-	} else {
-		k_spin_unlock(&msgq->lock, key);
+	إذا (resched) {
+		z_reschedule(&msgq->تالو, ڪنجي);
+	} وإلا {
+		k_spin_unlock(&msgq->تالو, ڪنجي);
 	}
 }
 
-#ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_purge(struct k_msgq *msgq)
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
+ساكن مضمن فراغ z_vrfy_k_msgq_purge(بنية k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	z_impl_k_msgq_purge(msgq);
 }
-#include <zephyr/syscalls/k_msgq_purge_mrsh.c>
+#ضمن <zephyr/syscalls/k_msgq_purge_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_free_get(struct k_msgq *msgq)
+ساكن مضمن uint32_t z_vrfy_k_msgq_انگ_free_get(بنية k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_free_get(msgq);
+	أرجع z_impl_k_msgq_انگ_free_get(msgq);
 }
-#include <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_used_get(struct k_msgq *msgq)
+ساكن مضمن uint32_t z_vrfy_k_msgq_انگ_استعمال_ٿيل_get(بنية k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_used_get(msgq);
+	أرجع z_impl_k_msgq_انگ_استعمال_ٿيل_get(msgq);
 }
-#include <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
+#ضمن <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
 
-#endif /* CONFIG_USERSPACE */
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */

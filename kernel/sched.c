@@ -3,87 +3,87 @@
  *
  * SPDX-License-Identifier: Apache-2.0
  */
-#include <zephyr/kernel.h>
-#include <kspinlock.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <wait_q.h>
-#include <kthread.h>
-#include <priority_q.h>
-#include <kswap.h>
-#include <ipi.h>
-#include <kernel_arch_func.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/drivers/timer/system_timer.h>
-#include <stdbool.h>
-#include <kernel_internal.h>
-#include <zephyr/logging/log.h>
-#include <zephyr/sys/atomic.h>
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/timing/timing.h>
-#include <zephyr/sys/util.h>
-#include <metairq.h>
-#include <run_q.h>
-#include <timeslicing.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kspinlock.h>
+#ضمن <ksched.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <wait_q.h>
+#ضمن <kthread.h>
+#ضمن <priority_q.h>
+#ضمن <kswap.h>
+#ضمن <ipi.h>
+#ضمن <kernel_arch_func.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <zephyr/drivers/timer/system_timer.h>
+#ضمن <stdbool.h>
+#ضمن <kernel_internal.h>
+#ضمن <zephyr/logging/log.h>
+#ضمن <zephyr/sys/atomic.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/timing/timing.h>
+#ضمن <zephyr/sys/util.h>
+#ضمن <metairq.h>
+#ضمن <run_q.h>
+#ضمن <timeslicing.h>
 
 LOG_MODULE_DECLARE(os, CONFIG_KERNEL_LOG_LEVEL);
 
 /* pending_current is owned by timeslicing.c; sleep.c also accesses it */
-#if defined(CONFIG_SWAP_NONATOMIC) && defined(CONFIG_TIMESLICING)
-extern struct k_thread *pending_current;
-#endif
+#إذا defined(CONFIG_مٽا_سٽا_NONATOMIC) && defined(CONFIG_TIMESLICING)
+خارجي بنية k_thread *pending_current;
+#جيڪڏهن_پورو
 
-struct k_spinlock _sched_spinlock;  /* The scheduler's spinlock */
+بنية k_spinlock _sched_spinlock;  /* The scheduler's spinlock */
 
 /* Storage to "complete" the context switch from an invalid/incomplete thread
  * context (ex: exiting an ISR that aborted _current)
  */
-__incoherent struct k_thread _thread_dummy;
+__incoherent بنية k_thread _thread_dummy;
 
-static ALWAYS_INLINE void update_cache(int preempt_ok);
-static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state,
-				      k_spinlock_key_t *key);
-static void add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q);
+ساكن ALWAYS_INLINE فراغ update_cache(صحيح preempt_ok);
+ساكن ALWAYS_INLINE فراغ halt_thread(بنية k_thread *thread, uint8_t new_state,
+				      k_spinlock_ڪنجي_t *ڪنجي);
+ساكن فراغ جوڙيو_منزل_waitq_locked(بنية k_thread *thread, _wait_q_t *wait_q);
 
 /* Clear the halting bits (_THREAD_ABORTING and _THREAD_SUSPENDING) */
-static inline void clear_halting(struct k_thread *thread)
+ساكن مضمن فراغ clear_halting(بنية k_thread *thread)
 {
-	if (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_NUM_CPUS > 1)) {
-		barrier_dmem_fence_full(); /* Other cpus spin on this locklessly! */
-		thread->base.thread_state &= ~(_THREAD_ABORTING | _THREAD_SUSPENDING);
+	إذا (IS_ENABLED(CONFIG_SMP) && (CONFIG_MP_MAX_انگ_CPUS > 1)) {
+		barrier_dmem_fence_ڀريل(); /* Other cpus spin on this locklessly! */
+		thread->بنياد.thread_state &= ~(_THREAD_ABORTING | _THREAD_SUSPENDING);
 	}
 }
 
-static ALWAYS_INLINE struct k_thread *next_up(void)
+ساكن ALWAYS_INLINE بنية k_thread *ايندڙ_مٿي(فراغ)
 {
-#ifdef CONFIG_SMP
-	bool ipi_idle_target_rebound = false;
-	struct k_thread *ipi_idle_target = ipi_idle_reserved_take();
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	bool ipi_idle_هدف_rebound = false;
+	بنية k_thread *ipi_idle_هدف = ipi_idle_reserved_take();
 
-	if (z_is_thread_halting(_current)) {
+	إذا (z_is_thread_halting(_current)) {
 		/* NULL key: scheduler context, no retry possible. _current
 		 * cannot have an in-flight timeout (a running thread's
 		 * timeout already fired and its handler returned), so the
 		 * abort inside halt_thread won't see -EAGAIN.
 		 */
 		halt_thread(_current, z_is_thread_aborting(_current) ?
-				      _THREAD_DEAD : _THREAD_SUSPENDED, NULL);
+				      _THREAD_DEAD : _THREAD_SUSPENDED, عدم);
 	}
-#endif /* CONFIG_SMP */
+#جيڪڏهن_پورو /* CONFIG_SMP */
 
-	struct k_thread *thread = runq_best();
+	بنية k_thread *thread = runq_بهترين();
 
 	thread = metairq_preempt_recover(thread);
 
-#ifndef CONFIG_SMP
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_SMP
 	/* In uniprocessor mode, we can leave the current thread in
 	 * the queue (actually we have to, otherwise the assembly
 	 * context switch code for all architectures would be
 	 * responsible for putting it back in z_swap and ISR return!),
 	 * which makes this choice simple.
 	 */
-	return (thread != NULL) ? thread : _current_cpu->idle_thread;
-#else
+	أرجع (thread != عدم) ? thread : _current_cpu->idle_thread;
+#وإلا
 	/* Under SMP, the "cache" mechanism for selecting the next
 	 * thread doesn't work, so we have more work to do to test
 	 * _current against the best choice from the queue.  Here, the
@@ -96,26 +96,26 @@ static ALWAYS_INLINE struct k_thread *next_up(void)
 	 * added back to the queue such that we don't want to re-add it".
 	 */
 	bool queued = z_is_thread_queued(_current);
-	bool active = z_is_thread_ready(_current);
+	bool سرگرم = z_is_thread_ready(_current);
 
-	if (thread == NULL) {
+	إذا (thread == عدم) {
 		thread = _current_cpu->idle_thread;
 	}
 
-	if (active) {
+	إذا (سرگرم) {
 		int32_t cmp = z_sched_prio_cmp(_current, thread);
 
 		/* Ties only switch if state says we yielded */
-		if ((cmp > 0) || ((cmp == 0) && !_current_cpu->swap_ok)) {
+		إذا ((cmp > 0) || ((cmp == 0) && !_current_cpu->مٽا_سٽا_ok)) {
 			thread = _current;
 		}
 
-		if (!should_preempt(thread, _current_cpu->swap_ok)) {
+		إذا (!should_preempt(thread, _current_cpu->مٽا_سٽا_ok)) {
 			thread = _current;
 		}
 	}
 
-	if (thread != _current) {
+	إذا (thread != _current) {
 		update_metairq_preempt(thread);
 		/*
 		 * Put _current back into the queue unless it is ..
@@ -124,133 +124,133 @@ static ALWAYS_INLINE struct k_thread *next_up(void)
 		 * 3. the idle thread, or
 		 * 4. preempted by a MetaIRQ thread
 		 */
-		if (active && !queued && !z_is_idle_thread_object(_current)
+		إذا (سرگرم && !queued && !z_is_idle_thread_object(_current)
 		    && metairq_current_requeue_allowed()) {
-			queue_thread(_current);
+			قطار_thread(_current);
 		}
 	}
 
 	/* Take the new _current out of the queue */
-	if (z_is_thread_queued(thread)) {
+	إذا (z_is_thread_queued(thread)) {
 		/* Remove or transfer the selected thread's idle CPU coverage. */
-		if (ipi_idle_target != NULL &&
-		    thread != ipi_idle_target &&
-		    z_is_thread_queued(ipi_idle_target)) {
-			ipi_idle_target_rebound =
-				ipi_idle_thread_rebind(thread, ipi_idle_target);
-		} else {
+		إذا (ipi_idle_هدف != عدم &&
+		    thread != ipi_idle_هدف &&
+		    z_is_thread_queued(ipi_idle_هدف)) {
+			ipi_idle_هدف_rebound =
+				ipi_idle_thread_rebind(thread, ipi_idle_هدف);
+		} وإلا {
 			ipi_idle_thread_unreserve(thread);
 		}
-		dequeue_thread(thread);
+		قطار_مان_ڪڍو_thread(thread);
 	}
 
-	_current_cpu->swap_ok = false;
+	_current_cpu->مٽا_سٽا_ok = false;
 
 	/* If this CPU consumed a different thread, preserve coverage for the
 	 * runnable thread covered by this CPU's reservation.
 	 */
-	if (!ipi_idle_target_rebound &&
-	    ipi_idle_target != NULL && z_is_thread_queued(ipi_idle_target)) {
-		flag_ipi(ipi_mask_create(ipi_idle_target));
+	إذا (!ipi_idle_هدف_rebound &&
+	    ipi_idle_هدف != عدم && z_is_thread_queued(ipi_idle_هدف)) {
+		flag_ipi(ipi_نقاب_create(ipi_idle_هدف));
 	}
-	return thread;
-#endif /* CONFIG_SMP */
+	أرجع thread;
+#جيڪڏهن_پورو /* CONFIG_SMP */
 }
 
-void move_current_to_end_of_prio_q(void)
+فراغ move_current_منزل_پڇاڙي_جو_prio_q(فراغ)
 {
 	runq_yield();
 
 	update_cache(1);
 }
 
-static ALWAYS_INLINE void update_cache(int preempt_ok)
+ساكن ALWAYS_INLINE فراغ update_cache(صحيح preempt_ok)
 {
-#ifndef CONFIG_SMP
-	struct k_thread *thread = next_up();
+#جيڪڏهن_وصف_نه_ٿيل CONFIG_SMP
+	بنية k_thread *thread = ايندڙ_مٿي();
 
-	if (should_preempt(thread, preempt_ok)) {
-#ifdef CONFIG_TIMESLICING
-		if (thread != _current) {
-			z_time_slice_reset(thread);
+	إذا (should_preempt(thread, preempt_ok)) {
+#جيڪڏهن_وصف_ٿيل CONFIG_TIMESLICING
+		إذا (thread != _current) {
+			z_وقت_ٽڪرو_reset(thread);
 		}
-#endif /* CONFIG_TIMESLICING */
+#جيڪڏهن_پورو /* CONFIG_TIMESLICING */
 		update_metairq_preempt(thread);
 		_kernel.ready_q.cache = thread;
-	} else {
+	} وإلا {
 		_kernel.ready_q.cache = _current;
 	}
 
-#else
+#وإلا
 	/* The way this works is that the CPU record keeps its
 	 * "cooperative swapping is OK" flag until the next reschedule
 	 * call or context switch.  It doesn't need to be tracked per
 	 * thread because if the thread gets preempted for whatever
 	 * reason the scheduler will make the same decision anyway.
 	 */
-	_current_cpu->swap_ok = preempt_ok;
-#endif /* CONFIG_SMP */
+	_current_cpu->مٽا_سٽا_ok = preempt_ok;
+#جيڪڏهن_پورو /* CONFIG_SMP */
 }
 
 /**
  * Returns pointer to _cpu if the thread is currently running on
  * another CPU.
  */
-static struct _cpu *thread_active_elsewhere(struct k_thread *thread)
+ساكن بنية _cpu *thread_سرگرم_elsewhere(بنية k_thread *thread)
 {
-#ifdef CONFIG_SMP
-	int thread_cpu_id = thread->base.cpu;
-	struct _cpu *thread_cpu;
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	صحيح thread_cpu_id = thread->بنياد.cpu;
+	بنية _cpu *thread_cpu;
 
 	__ASSERT_NO_MSG((thread_cpu_id >= 0) &&
-			(thread_cpu_id < arch_num_cpus()));
+			(thread_cpu_id < arch_انگ_cpus()));
 
 	thread_cpu = &_kernel.cpus[thread_cpu_id];
-	if ((thread_cpu->current == thread) && (thread_cpu != _current_cpu)) {
-		return thread_cpu;
+	إذا ((thread_cpu->current == thread) && (thread_cpu != _current_cpu)) {
+		أرجع thread_cpu;
 	}
 
-#endif /* CONFIG_SMP */
-	ARG_UNUSED(thread);
-	return NULL;
+#جيڪڏهن_پورو /* CONFIG_SMP */
+	ARG_اڻ_استعمال_ٿيل(thread);
+	أرجع عدم;
 }
 
-static inline void ready_thread(struct k_thread *thread)
+ساكن مضمن فراغ ready_thread(بنية k_thread *thread)
 {
-#ifdef CONFIG_KERNEL_COHERENCE
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_COHERENCE
 	__ASSERT_NO_MSG(sys_cache_is_mem_coherent(thread));
-#endif /* CONFIG_KERNEL_COHERENCE */
+#جيڪڏهن_پورو /* CONFIG_KERNEL_COHERENCE */
 
 	/* If thread is queued already, do not try and added it to the
 	 * run queue again
 	 */
-	if (!z_is_thread_queued(thread) && z_is_thread_ready(thread)) {
-		SYS_PORT_TRACING_OBJ_FUNC(k_thread, sched_ready, thread);
+	إذا (!z_is_thread_queued(thread) && z_is_thread_ready(thread)) {
+		SYS_پورٽ_TRACING_OBJ_FUNC(k_thread, sched_ready, thread);
 
-		queue_thread(thread);
+		قطار_thread(thread);
 		update_cache(0);
 
-		flag_ipi(ipi_mask_create(thread));
+		flag_ipi(ipi_نقاب_create(thread));
 	}
 }
 
-void z_ready_thread(struct k_thread *thread)
+فراغ z_ready_thread(بنية k_thread *thread)
 {
 	Z_SCHED_SPINLOCK {
-		if (thread_active_elsewhere(thread) == NULL) {
+		إذا (thread_سرگرم_elsewhere(thread) == عدم) {
 			ready_thread(thread);
 		}
 	}
 }
 
-void z_sched_ready_locked(struct k_thread *thread) ALIAS_OF(ready_thread);
+فراغ z_sched_ready_locked(بنية k_thread *thread) ALIAS_جو(ready_thread);
 
-static void unready_thread(struct k_thread *thread)
+ساكن فراغ unready_thread(بنية k_thread *thread)
 {
-	if (z_is_thread_queued(thread)) {
+	إذا (z_is_thread_queued(thread)) {
 		/* Clear idle CPU coverage before removing the thread from the run queue. */
 		ipi_idle_thread_unreserve(thread);
-		dequeue_thread(thread);
+		قطار_مان_ڪڍو_thread(thread);
 	}
 	update_cache(thread == _current);
 }
@@ -258,7 +258,7 @@ static void unready_thread(struct k_thread *thread)
 /* This routine exists for benchmarking purposes. It is not used in
  * general production code.
  */
-void z_unready_thread(struct k_thread *thread)
+فراغ z_unready_thread(بنية k_thread *thread)
 {
 	Z_SCHED_SPINLOCK {
 		unready_thread(thread);
@@ -266,13 +266,13 @@ void z_unready_thread(struct k_thread *thread)
 }
 
 
-void z_sched_unready_locked(struct k_thread *thread) ALIAS_OF(unready_thread);
+فراغ z_sched_unready_locked(بنية k_thread *thread) ALIAS_جو(unready_thread);
 
 /* This routine only used for testing purposes */
-void z_yield_testing_only(void)
+فراغ z_yield_testing_only(فراغ)
 {
 	Z_SCHED_SPINLOCK {
-		move_current_to_end_of_prio_q();
+		move_current_منزل_پڇاڙي_جو_prio_q();
 	}
 }
 
@@ -282,16 +282,16 @@ void z_yield_testing_only(void)
  * deadlocks (but not complex ones involving cycles of 3+ threads!).
  * Acts to release the provided lock before returning.
  */
-static void thread_halt_spin(struct k_thread *thread, k_spinlock_key_t key)
+ساكن فراغ thread_halt_spin(بنية k_thread *thread, k_spinlock_ڪنجي_t ڪنجي)
 {
-	if (z_is_thread_halting(_current)) {
+	إذا (z_is_thread_halting(_current)) {
 		halt_thread(_current,
 			    z_is_thread_aborting(_current) ? _THREAD_DEAD : _THREAD_SUSPENDED,
-			    &key);
+			    &ڪنجي);
 	}
-	z_sched_spinlock_unlock(key);
-	while (z_is_thread_halting(thread)) {
-		unsigned int k = arch_irq_lock();
+	z_sched_spinlock_unlock(ڪنجي);
+	طالما (z_is_thread_halting(thread)) {
+		بنانشان صحيح k = arch_irq_تالو();
 
 		arch_spin_relax(); /* Requires interrupts be masked */
 		arch_irq_unlock(k);
@@ -304,13 +304,13 @@ static void thread_halt_spin(struct k_thread *thread, k_spinlock_key_t key)
  * (aborting _current will not return, obviously), which may be after
  * a context switch.
  */
-void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
+فراغ z_thread_halt(بنية k_thread *thread, k_spinlock_ڪنجي_t ڪنجي,
 					bool terminate)
 {
-	_wait_q_t *wq = &thread->join_queue;
-#ifdef CONFIG_SMP
-	wq = terminate ? wq : &thread->halt_queue;
-#endif
+	_wait_q_t *wq = &thread->join_قطار;
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	wq = terminate ? wq : &thread->halt_قطار;
+#جيڪڏهن_پورو
 
 	z_metairq_preempted_clear(thread);
 
@@ -321,23 +321,23 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 	 * can clean it up directly.
 	 */
 
-	struct _cpu *cpu = thread_active_elsewhere(thread);
+	بنية _cpu *cpu = thread_سرگرم_elsewhere(thread);
 
-	if (cpu != NULL) {
-		thread->base.thread_state |= (terminate ? _THREAD_ABORTING
+	إذا (cpu != عدم) {
+		thread->بنياد.thread_state |= (terminate ? _THREAD_ABORTING
 					      : _THREAD_SUSPENDING);
-#if defined(CONFIG_SMP) && defined(CONFIG_SCHED_IPI_SUPPORTED)
-#ifdef CONFIG_ARCH_HAS_DIRECTED_IPIS
-		arch_sched_directed_ipi(IPI_CPU_MASK(cpu->id));
-#else
-		arch_sched_broadcast_ipi();
-#endif /* CONFIG_ARCH_HAS_DIRECTED_IPIS */
-#endif /* CONFIG_SMP && CONFIG_SCHED_IPI_SUPPORTED */
-		if (arch_is_in_isr()) {
-			thread_halt_spin(thread, key);
-		} else  {
-			add_to_waitq_locked(_current, wq);
-			z_swap_locked(key);
+#إذا defined(CONFIG_SMP) && defined(CONFIG_SCHED_IPI_SUPPORTED)
+#جيڪڏهن_وصف_ٿيل CONFIG_ARCH_HAS_DIRECTED_IPIS
+		arch_sched_directed_ipi(IPI_CPU_نقاب(cpu->id));
+#وإلا
+		arch_sched_نشر_ipi();
+#جيڪڏهن_پورو /* CONFIG_ARCH_HAS_DIRECTED_IPIS */
+#جيڪڏهن_پورو /* CONFIG_SMP && CONFIG_SCHED_IPI_SUPPORTED */
+		إذا (arch_is_اندريون_isr()) {
+			thread_halt_spin(thread, ڪنجي);
+		} وإلا  {
+			جوڙيو_منزل_waitq_locked(_current, wq);
+			z_مٽا_سٽا_locked(ڪنجي);
 		}
 		/* The target's next_up self-halt path passed NULL to
 		 * halt_thread() and could not retry on -EAGAIN; an
@@ -351,20 +351,20 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 		 * suspended threads). After this loop returns, no further
 		 * dereference of thread->base will occur.
 		 */
-		while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
+		طالما (z_try_abort_thread_timeout(thread) == -EAGAIN) {
 		}
-	} else {
-		halt_thread(thread, terminate ? _THREAD_DEAD : _THREAD_SUSPENDED, &key);
-		if ((thread == _current) && !arch_is_in_isr()) {
-			if (z_is_thread_essential(thread)) {
-				z_sched_spinlock_unlock(key);
+	} وإلا {
+		halt_thread(thread, terminate ? _THREAD_DEAD : _THREAD_SUSPENDED, &ڪنجي);
+		إذا ((thread == _current) && !arch_is_اندريون_isr()) {
+			إذا (z_is_thread_essential(thread)) {
+				z_sched_spinlock_unlock(ڪنجي);
 				k_panic();
-				key = z_sched_spinlock_lock();
+				ڪنجي = z_sched_spinlock_تالو();
 			}
-			z_swap_locked(key);
+			z_مٽا_سٽا_locked(ڪنجي);
 			__ASSERT(!terminate, "aborted _current back from dead");
-		} else {
-			z_sched_spinlock_unlock(key);
+		} وإلا {
+			z_sched_spinlock_unlock(ڪنجي);
 		}
 	}
 	/* NOTE: the scheduler lock has been released.  Don't put
@@ -373,97 +373,97 @@ void z_thread_halt(struct k_thread *thread, k_spinlock_key_t key,
 	 */
 }
 
-static inline bool resched(uint32_t key)
+ساكن مضمن bool resched(uint32_t ڪنجي)
 {
-#ifdef CONFIG_SMP
-	_current_cpu->swap_ok = 0;
-#endif /* CONFIG_SMP */
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	_current_cpu->مٽا_سٽا_ok = 0;
+#جيڪڏهن_پورو /* CONFIG_SMP */
 
-	return arch_irq_unlocked(key) && !arch_is_in_isr();
+	أرجع arch_irq_unlocked(ڪنجي) && !arch_is_اندريون_isr();
 }
 
 /*
  * Check if the next ready thread is the same as the current thread
  * and save the trip if true.
  */
-static inline bool need_swap(void)
+ساكن مضمن bool need_مٽا_سٽا(فراغ)
 {
 	/* the SMP case will be handled in C based z_swap() */
-#ifdef CONFIG_SMP
-	return true;
-#else
-	struct k_thread *new_thread;
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	أرجع true;
+#وإلا
+	بنية k_thread *new_thread;
 
 	/* Check if the next ready thread is the same as the current thread */
 	new_thread = _kernel.ready_q.cache;
-	return new_thread != _current;
-#endif /* CONFIG_SMP */
+	أرجع new_thread != _current;
+#جيڪڏهن_پورو /* CONFIG_SMP */
 }
 
-static void reschedule(struct k_spinlock *lock, k_spinlock_key_t key)
+ساكن فراغ reschedule(بنية k_spinlock *تالو, k_spinlock_ڪنجي_t ڪنجي)
 {
-	if (resched(key.key) && need_swap()) {
-		z_swap(lock, key);
-	} else {
+	إذا (resched(ڪنجي.ڪنجي) && need_مٽا_سٽا()) {
+		z_مٽا_سٽا(تالو, ڪنجي);
+	} وإلا {
 		signal_pending_ipi();
-		k_spin_unlock(lock, key);
+		k_spin_unlock(تالو, ڪنجي);
 	}
 }
 
 /**
  * Like reschedule(), but the scheduler's spinlock is known to be the lock.
  */
-static void reschedule_locked(k_spinlock_key_t key)
+ساكن فراغ reschedule_locked(k_spinlock_ڪنجي_t ڪنجي)
 {
-	return reschedule(&_sched_spinlock, key);
+	أرجع reschedule(&_sched_spinlock, ڪنجي);
 }
 
-void z_sched_lock_reschedule(k_spinlock_key_t key)
+فراغ z_sched_تالو_reschedule(k_spinlock_ڪنجي_t ڪنجي)
 {
 	update_cache(0);
-	reschedule_locked(key);
+	reschedule_locked(ڪنجي);
 }
 
-void z_sched_yield(void)
+فراغ z_sched_yield(فراغ)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_ڪنجي_t ڪنجي = z_sched_spinlock_تالو();
 
 	runq_yield();
 	update_cache(1);
-	z_swap_locked(key);
+	z_مٽا_سٽا_locked(ڪنجي);
 }
 
 /* The scheduler's spinlock must be held */
-static void add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q)
+ساكن فراغ جوڙيو_منزل_waitq_locked(بنية k_thread *thread, _wait_q_t *wait_q)
 {
 	/* A thread must not already be on a wait queue when added to a new one. */
-	__ASSERT_NO_MSG(thread->base.pended_on == NULL);
+	__ASSERT_NO_MSG(thread->بنياد.pended_on == عدم);
 
 	unready_thread(thread);
 	z_mark_thread_as_pending(thread);
 
-	SYS_PORT_TRACING_FUNC(k_thread, sched_pend, thread);
+	SYS_پورٽ_TRACING_FUNC(k_thread, sched_pend, thread);
 
-	if (wait_q != NULL) {
-		thread->base.pended_on = wait_q;
-		_priq_wait_add(&wait_q->waitq, thread);
+	إذا (wait_q != عدم) {
+		thread->بنياد.pended_on = wait_q;
+		priq_wait_جوڙيو(&wait_q->waitq, thread);
 	}
 }
 
-void z_sched_add_to_waitq_locked(struct k_thread *thread, _wait_q_t *wait_q)
-	ALIAS_OF(add_to_waitq_locked);
+فراغ z_sched_جوڙيو_منزل_waitq_locked(بنية k_thread *thread, _wait_q_t *wait_q)
+	ALIAS_جو(جوڙيو_منزل_waitq_locked);
 
-static void pend_locked(struct k_thread *thread, _wait_q_t *wait_q,
+ساكن فراغ pend_locked(بنية k_thread *thread, _wait_q_t *wait_q,
 			k_timeout_t timeout)
 {
-#ifdef CONFIG_KERNEL_COHERENCE
-	__ASSERT_NO_MSG(wait_q == NULL || sys_cache_is_mem_coherent(wait_q));
-#endif /* CONFIG_KERNEL_COHERENCE */
-	add_to_waitq_locked(thread, wait_q);
-	z_add_thread_timeout(thread, timeout);
+#جيڪڏهن_وصف_ٿيل CONFIG_KERNEL_COHERENCE
+	__ASSERT_NO_MSG(wait_q == عدم || sys_cache_is_mem_coherent(wait_q));
+#جيڪڏهن_پورو /* CONFIG_KERNEL_COHERENCE */
+	جوڙيو_منزل_waitq_locked(thread, wait_q);
+	z_جوڙيو_thread_timeout(thread, timeout);
 }
 
-void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
+فراغ z_pend_thread(بنية k_thread *thread, _wait_q_t *wait_q,
 		   k_timeout_t timeout)
 {
 	__ASSERT_NO_MSG(thread == _current || is_thread_dummy(thread));
@@ -472,24 +472,24 @@ void z_pend_thread(struct k_thread *thread, _wait_q_t *wait_q,
 	}
 }
 
-void z_unpend_thread_no_timeout(struct k_thread *thread)
+فراغ z_unpend_thread_no_timeout(بنية k_thread *thread)
 {
 	Z_SCHED_SPINLOCK {
-		if (thread->base.pended_on != NULL) {
+		إذا (thread->بنياد.pended_on != عدم) {
 			unpend_thread_no_timeout(thread);
 		}
 	}
 }
 
-void z_sched_wake_thread_locked(struct k_thread *thread)
+فراغ z_sched_wake_thread_locked(بنية k_thread *thread)
 {
 	/* No K_SPINLOCK: caller must hold the scheduler's spinlock when calling */
-	bool killed = (thread->base.thread_state &
+	bool killed = (thread->بنياد.thread_state &
 			(_THREAD_DEAD | _THREAD_ABORTING));
 
-	if (!killed) {
+	إذا (!killed) {
 		/* The thread is not being killed */
-		if (thread->base.pended_on != NULL) {
+		إذا (thread->بنياد.pended_on != عدم) {
 			unpend_thread_no_timeout(thread);
 		}
 		z_mark_thread_as_not_sleeping(thread);
@@ -497,12 +497,12 @@ void z_sched_wake_thread_locked(struct k_thread *thread)
 	}
 }
 
-#ifdef CONFIG_SYS_CLOCK_EXISTS
+#جيڪڏهن_وصف_ٿيل CONFIG_SYS_CLOCK_EXISTS
 /* Timeout handler for *_thread_timeout() APIs */
-void z_thread_timeout(struct _timeout *timeout)
+فراغ z_thread_timeout(بنية _timeout *timeout)
 {
-	struct k_thread *thread = CONTAINER_OF(timeout,
-					       struct k_thread, base.timeout);
+	بنية k_thread *thread = CONTAINER_جو(timeout,
+					       بنية k_thread, بنياد.timeout);
 
 	Z_SCHED_SPINLOCK {
 		/* A concurrent waker (e.g. a sem give on another CPU) may
@@ -512,14 +512,14 @@ void z_thread_timeout(struct _timeout *timeout)
 		 * superseded; bail so we don't wake the thread from its new
 		 * wait.
 		 */
-		if (!z_timeout_inflight_superseded(timeout)) {
+		إذا (!z_timeout_inflight_superseded(timeout)) {
 			z_sched_wake_thread_locked(thread);
 		}
 	}
 }
-#endif /* CONFIG_SYS_CLOCK_EXISTS */
+#جيڪڏهن_پورو /* CONFIG_SYS_CLOCK_EXISTS */
 
-int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
+صحيح z_pend_curr(بنية k_spinlock *تالو, k_spinlock_ڪنجي_t ڪنجي,
 	       _wait_q_t *wait_q, k_timeout_t timeout)
 {
 	/* A blocking pend from ISR context is a programming error with no
@@ -528,15 +528,15 @@ int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 	 * in every build rather than degrading into the corruption traced in
 	 * #111518. Placed first so the refusal performs no side effect.
 	 */
-	if (arch_is_in_isr()) {
+	إذا (arch_is_اندريون_isr()) {
 		__ASSERT(false, "blocking pend from ISR context");
 		k_panic();
 	}
 
-#if defined(CONFIG_TIMESLICING) && defined(CONFIG_SWAP_NONATOMIC)
+#إذا defined(CONFIG_TIMESLICING) && defined(CONFIG_مٽا_سٽا_NONATOMIC)
 	pending_current = _current;
-#endif /* CONFIG_TIMESLICING && CONFIG_SWAP_NONATOMIC */
-	__ASSERT_NO_MSG((sizeof(struct k_spinlock) == 0) || !z_is_sched_spinlock(lock));
+#جيڪڏهن_پورو /* CONFIG_TIMESLICING && CONFIG_SWAP_NONATOMIC */
+	__ASSERT_NO_MSG((حجم(بنية k_spinlock) == 0) || !z_is_sched_spinlock(تالو));
 
 	/* We do a "lock swap" prior to calling z_swap(), such that
 	 * the caller's lock gets released as desired.  But we ensure
@@ -546,62 +546,62 @@ int z_pend_curr(struct k_spinlock *lock, k_spinlock_key_t key,
 	 * API that doesn't expect to be called with scheduler lock
 	 * held.
 	 */
-	(void) z_sched_spinlock_lock();
+	(فراغ) z_sched_spinlock_تالو();
 	pend_locked(_current, wait_q, timeout);
-	k_spin_release(lock);
-	return z_swap_locked(key);
+	k_spin_release(تالو);
+	أرجع z_مٽا_سٽا_locked(ڪنجي);
 }
 
-struct k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q)
+بنية k_thread *z_unpend1_no_timeout(_wait_q_t *wait_q)
 {
-	struct k_thread *thread = NULL;
+	بنية k_thread *thread = عدم;
 
 	Z_SCHED_SPINLOCK {
-		thread = _priq_wait_best(&wait_q->waitq);
+		thread = priq_wait_بهترين(&wait_q->waitq);
 
-		if (thread != NULL) {
+		إذا (thread != عدم) {
 			unpend_thread_no_timeout(thread);
 		}
 	}
 
-	return thread;
+	أرجع thread;
 }
 
-void z_unpend_thread(struct k_thread *thread)
+فراغ z_unpend_thread(بنية k_thread *thread)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_ڪنجي_t ڪنجي = z_sched_spinlock_تالو();
 
-	if (thread->base.pended_on != NULL) {
+	إذا (thread->بنياد.pended_on != عدم) {
 		unpend_thread_no_timeout(thread);
 	}
-	while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
-		z_sched_spinlock_unlock(key);
-		key = z_sched_spinlock_lock();
+	طالما (z_try_abort_thread_timeout(thread) == -EAGAIN) {
+		z_sched_spinlock_unlock(ڪنجي);
+		ڪنجي = z_sched_spinlock_تالو();
 	}
-	z_sched_spinlock_unlock(key);
+	z_sched_spinlock_unlock(ڪنجي);
 }
 
 /* Priority set utility that does no rescheduling, it just changes the
  * run queue state, returning true if a reschedule is needed later.
  */
-bool z_thread_prio_set(struct k_thread *thread, int prio)
+bool z_thread_prio_سيٽ(بنية k_thread *thread, صحيح prio)
 {
 	bool need_sched = false;
-	int old_prio = thread->base.prio;
+	صحيح old_prio = thread->بنياد.prio;
 
 	Z_SCHED_SPINLOCK {
 		need_sched = z_is_thread_ready(thread);
 
-		if (need_sched) {
-			if (!IS_ENABLED(CONFIG_SMP) || z_is_thread_queued(thread)) {
-				dequeue_thread(thread);
-				thread->base.prio = prio;
-				queue_thread(thread);
+		إذا (need_sched) {
+			إذا (!IS_ENABLED(CONFIG_SMP) || z_is_thread_queued(thread)) {
+				قطار_مان_ڪڍو_thread(thread);
+				thread->بنياد.prio = prio;
+				قطار_thread(thread);
 
-				if (old_prio > prio) {
-					flag_ipi(ipi_mask_create(thread));
+				إذا (old_prio > prio) {
+					flag_ipi(ipi_نقاب_create(thread));
 				}
-			} else {
+			} وإلا {
 				/*
 				 * This is a running thread on SMP. Update its
 				 * priority, but do not requeue it. An IPI is
@@ -609,18 +609,18 @@ bool z_thread_prio_set(struct k_thread *thread, int prio)
 				 * and it is running on another CPU.
 				 */
 
-				thread->base.prio = prio;
+				thread->بنياد.prio = prio;
 
-				struct _cpu *cpu;
+				بنية _cpu *cpu;
 
-				cpu = thread_active_elsewhere(thread);
-				if ((cpu != NULL) && (old_prio < prio)) {
-					flag_ipi(IPI_CPU_MASK(cpu->id));
+				cpu = thread_سرگرم_elsewhere(thread);
+				إذا ((cpu != عدم) && (old_prio < prio)) {
+					flag_ipi(IPI_CPU_نقاب(cpu->id));
 				}
 			}
 
 			update_cache(1);
-		} else if (z_is_thread_pending(thread)) {
+		} وإلا إذا (z_is_thread_pending(thread)) {
 			/* Thread is pending, remove it from the waitq
 			 * and reinsert it with the new priority to avoid
 			 * violating waitq ordering and rb assumptions.
@@ -628,67 +628,67 @@ bool z_thread_prio_set(struct k_thread *thread, int prio)
 			_wait_q_t *wait_q = pended_on_thread(thread);
 
 			_priq_wait_remove(&wait_q->waitq, thread);
-			thread->base.prio = prio;
-			_priq_wait_add(&wait_q->waitq, thread);
-		} else {
-			thread->base.prio = prio;
+			thread->بنياد.prio = prio;
+			priq_wait_جوڙيو(&wait_q->waitq, thread);
+		} وإلا {
+			thread->بنياد.prio = prio;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC(k_thread, sched_priority_set, thread, prio);
+	SYS_پورٽ_TRACING_OBJ_FUNC(k_thread, sched_ترجيح_سيٽ, thread, prio);
 
-	return need_sched;
+	أرجع need_sched;
 }
 
-void z_reschedule(struct k_spinlock *lock, k_spinlock_key_t key) ALIAS_OF(reschedule);
+فراغ z_reschedule(بنية k_spinlock *تالو, k_spinlock_ڪنجي_t ڪنجي) ALIAS_جو(reschedule);
 
-void z_reschedule_locked(k_spinlock_key_t key) ALIAS_OF(reschedule_locked);
+فراغ z_reschedule_locked(k_spinlock_ڪنجي_t ڪنجي) ALIAS_جو(reschedule_locked);
 
-void z_reschedule_irqlock(uint32_t key)
+فراغ z_reschedule_irqlock(uint32_t ڪنجي)
 {
-	if (resched(key) && need_swap()) {
-		z_swap_irqlock(key);
-	} else {
+	إذا (resched(ڪنجي) && need_مٽا_سٽا()) {
+		z_مٽا_سٽا_irqlock(ڪنجي);
+	} وإلا {
 		/* TODO: We only hold the IRQ lock here, not the scheduler's
 		 * spinlock, violating the locking requirement documented in
 		 * signal_pending_ipi(). This can result in added delayed
 		 * rescheduling.
 		 */
 		signal_pending_ipi();
-		irq_unlock(key);
+		irq_unlock(ڪنجي);
 	}
 }
 
-struct k_thread *z_swap_next_thread(void)
+بنية k_thread *z_مٽا_سٽا_ايندڙ_thread(فراغ)
 {
-	struct k_thread *ret = next_up();
+	بنية k_thread *ret = ايندڙ_مٿي();
 
-	if (ret == _current) {
+	إذا (ret == _current) {
 		/* When not swapping, have to signal IPIs here.  In
 		 * the context switch case it must happen later, after
 		 * _current gets requeued.
 		 */
 		signal_pending_ipi();
 	}
-	return ret;
+	أرجع ret;
 }
 
-#ifdef CONFIG_USE_SWITCH
+#جيڪڏهن_وصف_ٿيل CONFIG_USE_SWITCH
 /* Just a wrapper around z_current_thread_set(xxx) with tracing.
  *
  * _current is not guaranteed to report @a new_thread until the switch to it
  * has happened: see z_current_thread_set(). Code between this call and the
  * switch must use @a new_thread directly.
  */
-static inline void set_current(struct k_thread *new_thread)
+ساكن مضمن فراغ سيٽ_current(بنية k_thread *new_thread)
 {
 	/* If the new thread is the same as the current thread, we
 	 * don't need to do anything.
 	 */
-	if (IS_ENABLED(CONFIG_INSTRUMENT_THREAD_SWITCHING) && new_thread != _current) {
-		z_thread_mark_switched_out();
+	إذا (IS_ENABLED(CONFIG_INSTRUMENT_THREAD_SWITCHING) && new_thread != _current) {
+		z_thread_mark_switched_ٻاهريون();
 	}
-	z_current_thread_set(new_thread);
+	z_current_thread_سيٽ(new_thread);
 }
 
 /**
@@ -722,37 +722,37 @@ static inline void set_current(struct k_thread *new_thread)
  * @return Handle for the next thread to execute, or @p interrupted when
  *         no new thread is to be scheduled.
  */
-void *z_get_next_switch_handle(void *interrupted)
+فراغ *z_get_ايندڙ_switch_handle(فراغ *interrupted)
 {
-	z_check_stack_sentinel();
+	z_check_ڍير_sentinel();
 
-#ifdef CONFIG_SMP
-	void *ret = NULL;
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+	فراغ *ret = عدم;
 
 	Z_SCHED_SPINLOCK {
-		struct k_thread *old_thread = _current, *new_thread;
+		بنية k_thread *old_thread = _current, *new_thread;
 
-		__ASSERT(old_thread->switch_handle == NULL || is_thread_dummy(old_thread),
+		__ASSERT(old_thread->switch_handle == عدم || is_thread_dummy(old_thread),
 			"old thread handle should be null.");
 
-		new_thread = next_up();
+		new_thread = ايندڙ_مٿي();
 
 		z_sched_usage_switch(new_thread);
 
-		if (old_thread != new_thread) {
+		إذا (old_thread != new_thread) {
 			uint8_t  cpu_id;
 
 			z_sched_switch_spin(new_thread);
 			arch_cohere_stacks(old_thread, interrupted, new_thread);
 
-			_current_cpu->swap_ok = 0;
+			_current_cpu->مٽا_سٽا_ok = 0;
 			cpu_id = arch_curr_cpu()->id;
-			new_thread->base.cpu = cpu_id;
-			set_current(new_thread);
+			new_thread->بنياد.cpu = cpu_id;
+			سيٽ_current(new_thread);
 
-#ifdef CONFIG_TIMESLICING
-			z_time_slice_reset(new_thread);
-#endif /* CONFIG_TIMESLICING */
+#جيڪڏهن_وصف_ٿيل CONFIG_TIMESLICING
+			z_وقت_ٽڪرو_reset(new_thread);
+#جيڪڏهن_پورو /* CONFIG_TIMESLICING */
 
 			/* Changed _current!  Update the scheduler's spinlock
 			 * bookkeeping so the validation doesn't get
@@ -767,82 +767,82 @@ void *z_get_next_switch_handle(void *interrupted)
 			 * being set below.  This is safe now, as we
 			 * will not return into it.
 			 */
-			if (z_is_thread_queued(old_thread)) {
-#ifdef CONFIG_SCHED_IPI_CASCADE
-				if ((new_thread->base.cpu_mask != -1) &&
-				    (old_thread->base.cpu_mask != BIT(cpu_id))) {
-					flag_ipi(ipi_mask_create(old_thread));
+			إذا (z_is_thread_queued(old_thread)) {
+#جيڪڏهن_وصف_ٿيل CONFIG_SCHED_IPI_CASCADE
+				إذا ((new_thread->بنياد.cpu_نقاب != -1) &&
+				    (old_thread->بنياد.cpu_نقاب != ٻٽو_انگ(cpu_id))) {
+					flag_ipi(ipi_نقاب_create(old_thread));
 				}
-#endif
-				runq_add(old_thread);
+#جيڪڏهن_پورو
+				runq_جوڙيو(old_thread);
 			}
 		}
 		old_thread->switch_handle = interrupted;
 		ret = new_thread->switch_handle;
 		/* Active threads MUST have a null here */
-		new_thread->switch_handle = NULL;
+		new_thread->switch_handle = عدم;
 
 		/* Check for IPIs under the lock to avoid silently consuming a
 		 * rescheduling IPI flagged by another CPU for ourselves.
 		 */
 		signal_pending_ipi();
 	}
-	return ret;
-#else
-	struct k_thread *next = _kernel.ready_q.cache;
+	أرجع ret;
+#وإلا
+	بنية k_thread *ايندڙ = _kernel.ready_q.cache;
 
-	z_sched_usage_switch(next);
+	z_sched_usage_switch(ايندڙ);
 	_current->switch_handle = interrupted;
-	set_current(next);
-	return next->switch_handle;
-#endif /* CONFIG_SMP */
+	سيٽ_current(ايندڙ);
+	أرجع ايندڙ->switch_handle;
+#جيڪڏهن_پورو /* CONFIG_SMP */
 }
-#endif /* CONFIG_USE_SWITCH */
+#جيڪڏهن_پورو /* CONFIG_USE_SWITCH */
 
-int z_unpend_all(_wait_q_t *wait_q)
+صحيح z_unpend_all(_wait_q_t *wait_q)
 {
-	int need_sched = 0;
-	struct k_thread *thread;
+	صحيح need_sched = 0;
+	بنية k_thread *thread;
 
 	Z_SCHED_SPINLOCK {
-		for (thread = z_waitq_head_locked(wait_q);
-		     thread != NULL;
-		     thread = z_waitq_head_locked(wait_q)) {
+		لكل (thread = z_waitq_سر_locked(wait_q);
+		     thread != عدم;
+		     thread = z_waitq_سر_locked(wait_q)) {
 			unpend_thread_no_timeout(thread);
 			/* Abort the timeout and ready the thread unconditionally. If
 			 * the timeout handler is in flight on another CPU, the abort
 			 * flags it superseded and z_thread_timeout() bails when it
 			 * runs -- so it will NOT ready the thread, we must.
 			 */
-			(void)z_try_abort_thread_timeout(thread);
+			(فراغ)z_try_abort_thread_timeout(thread);
 			ready_thread(thread);
 			need_sched = 1;
 		}
 	}
 
-	return need_sched;
+	أرجع need_sched;
 }
 
-static inline void unpend_all(_wait_q_t *wait_q)
+ساكن مضمن فراغ unpend_all(_wait_q_t *wait_q)
 {
-	struct k_thread *thread;
+	بنية k_thread *thread;
 
-	for (thread = z_waitq_head_locked(wait_q);
-	     thread != NULL;
-	     thread = z_waitq_head_locked(wait_q)) {
+	لكل (thread = z_waitq_سر_locked(wait_q);
+	     thread != عدم;
+	     thread = z_waitq_سر_locked(wait_q)) {
 		unpend_thread_no_timeout(thread);
-		arch_thread_return_value_set(thread, 0);
+		arch_thread_return_قدر_سيٽ(thread, 0);
 		/* See z_unpend_all(): the in-flight handler bails on the
 		 * superseded mark, so we ready the thread unconditionally.
 		 */
-		(void)z_try_abort_thread_timeout(thread);
+		(فراغ)z_try_abort_thread_timeout(thread);
 		ready_thread(thread);
 	}
 }
 
-#ifdef CONFIG_THREAD_ABORT_HOOK
-extern void thread_abort_hook(struct k_thread *thread);
-#endif /* CONFIG_THREAD_ABORT_HOOK */
+#جيڪڏهن_وصف_ٿيل CONFIG_THREAD_ABORT_HOOK
+خارجي فراغ thread_abort_hook(بنية k_thread *thread);
+#جيڪڏهن_پورو /* CONFIG_THREAD_ABORT_HOOK */
 
 /**
  * @brief Dequeues the specified thread
@@ -853,24 +853,24 @@ extern void thread_abort_hook(struct k_thread *thread);
  * @param new_state New thread state (_THREAD_DEAD or _THREAD_SUSPENDED)
  * @param key Pointer to the scheduler spinlock key held by the caller
  */
-static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state,
-				      k_spinlock_key_t *key)
+ساكن ALWAYS_INLINE فراغ halt_thread(بنية k_thread *thread, uint8_t new_state,
+				      k_spinlock_ڪنجي_t *ڪنجي)
 {
 	bool dummify = false;
 
 	/* We hold the lock, and the thread is known not to be running
 	 * anywhere.
 	 */
-	if ((thread->base.thread_state & new_state) == 0U) {
-		thread->base.thread_state |= new_state;
-		if (z_is_thread_queued(thread)) {
+	إذا ((thread->بنياد.thread_state & new_state) == 0U) {
+		thread->بنياد.thread_state |= new_state;
+		إذا (z_is_thread_queued(thread)) {
 			/* Clear idle CPU coverage before removing the thread from the run queue. */
 			ipi_idle_thread_unreserve(thread);
-			dequeue_thread(thread);
+			قطار_مان_ڪڍو_thread(thread);
 		}
 
-		if (new_state == _THREAD_DEAD) {
-			if (thread->base.pended_on != NULL) {
+		إذا (new_state == _THREAD_DEAD) {
+			إذا (thread->بنياد.pended_on != عدم) {
 				unpend_thread_no_timeout(thread);
 			}
 			/* Wait for any in-flight handler to complete before
@@ -890,13 +890,13 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 			 * remaining in-flight window before the caller of
 			 * z_thread_halt() returns.
 			 */
-			if (key != NULL) {
-				while (z_try_abort_thread_timeout(thread) == -EAGAIN) {
-					z_sched_spinlock_unlock(*key);
-					*key = z_sched_spinlock_lock();
+			إذا (ڪنجي != عدم) {
+				طالما (z_try_abort_thread_timeout(thread) == -EAGAIN) {
+					z_sched_spinlock_unlock(*ڪنجي);
+					*ڪنجي = z_sched_spinlock_تالو();
 				}
 			}
-			unpend_all(&thread->join_queue);
+			unpend_all(&thread->join_قطار);
 
 			/* Edge case: aborting _current from within an
 			 * ISR that preempted it requires clearing the
@@ -904,46 +904,46 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 			 * switch doesn't clobber the now-freed
 			 * memory
 			 */
-			if (thread == _current && arch_is_in_isr()) {
+			إذا (thread == _current && arch_is_اندريون_isr()) {
 				dummify = true;
 			}
 		}
-#ifdef CONFIG_SMP
-		unpend_all(&thread->halt_queue);
-#endif /* CONFIG_SMP */
+#جيڪڏهن_وصف_ٿيل CONFIG_SMP
+		unpend_all(&thread->halt_قطار);
+#جيڪڏهن_پورو /* CONFIG_SMP */
 		update_cache(1);
 
-		if (new_state == _THREAD_SUSPENDED) {
+		إذا (new_state == _THREAD_SUSPENDED) {
 			clear_halting(thread);
-			return;
+			أرجع;
 		}
 
 		arch_coprocessors_disable(thread);
 
-		SYS_PORT_TRACING_FUNC(k_thread, sched_abort, thread);
+		SYS_پورٽ_TRACING_FUNC(k_thread, sched_abort, thread);
 
 		z_thread_monitor_exit(thread);
-#ifdef CONFIG_THREAD_ABORT_HOOK
+#جيڪڏهن_وصف_ٿيل CONFIG_THREAD_ABORT_HOOK
 		thread_abort_hook(thread);
-#endif /* CONFIG_THREAD_ABORT_HOOK */
+#جيڪڏهن_پورو /* CONFIG_THREAD_ABORT_HOOK */
 
-#ifdef CONFIG_OBJ_CORE_THREAD
-#ifdef CONFIG_OBJ_CORE_STATS_THREAD
+#جيڪڏهن_وصف_ٿيل CONFIG_OBJ_CORE_THREAD
+#جيڪڏهن_وصف_ٿيل CONFIG_OBJ_CORE_STATS_THREAD
 		k_obj_core_stats_deregister(K_OBJ_CORE(thread));
-#endif /* CONFIG_OBJ_CORE_STATS_THREAD */
+#جيڪڏهن_پورو /* CONFIG_OBJ_CORE_STATS_THREAD */
 		k_obj_core_unlink(K_OBJ_CORE(thread));
-#endif /* CONFIG_OBJ_CORE_THREAD */
+#جيڪڏهن_پورو /* CONFIG_OBJ_CORE_THREAD */
 
-#ifdef CONFIG_USERSPACE
+#جيڪڏهن_وصف_ٿيل CONFIG_USERSPACE
 		z_mem_domain_exit_thread(thread);
 		k_thread_perms_all_clear(thread);
-		k_object_uninit(thread->stack_obj);
+		k_object_uninit(thread->ڍير_obj);
 		k_object_uninit(thread);
-#endif /* CONFIG_USERSPACE */
+#جيڪڏهن_پورو /* CONFIG_USERSPACE */
 
-#ifdef CONFIG_THREAD_ABORT_NEED_CLEANUP
+#جيڪڏهن_وصف_ٿيل CONFIG_THREAD_ABORT_NEED_CLEANUP
 		k_thread_abort_cleanup(thread);
-#endif /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
+#جيڪڏهن_پورو /* CONFIG_THREAD_ABORT_NEED_CLEANUP */
 
 		/* Do this "set _current to dummy" step last so that
 		 * subsystems above can rely on _current being
@@ -955,21 +955,21 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 		 * it must not be NULL otherwise join can deadlock).
 		 * Use 1 as a clearly invalid but non-NULL value.
 		 */
-		if (dummify && !IS_ENABLED(CONFIG_ARCH_POSIX)) {
-#ifdef CONFIG_USE_SWITCH
-			_current->switch_handle = (void *)1;
-#endif
-#ifdef CONFIG_SPIN_VALIDATE
+		إذا (dummify && !IS_ENABLED(CONFIG_ARCH_POSIX)) {
+#جيڪڏهن_وصف_ٿيل CONFIG_USE_SWITCH
+			_current->switch_handle = (فراغ *)1;
+#جيڪڏهن_پورو
+#جيڪڏهن_وصف_ٿيل CONFIG_SPIN_VALIDATE
 			/* On arches where exceptions run as ISRs (e.g. Xtensa),
 			 * the dying thread's lock tracking is never cleared via the
 			 * normal abort path.  Reset it here before _thread_dummy
 			 * takes over.  Sentinel-gated so genuine bugs still assert.
 			 */
-			if (thread->base.swap_data ==
-			    (void *)&z_spinlock_abort_sentinel) {
+			إذا (thread->بنياد.مٽا_سٽا_معلومات ==
+			    (فراغ *)&z_spinlock_abort_sentinel) {
 				z_spin_validate_reset(true);
 			}
-#endif
+#جيڪڏهن_پورو
 			z_dummy_thread_init(&_thread_dummy);
 
 		}
@@ -982,13 +982,13 @@ static ALWAYS_INLINE void halt_thread(struct k_thread *thread, uint8_t new_state
 	}
 }
 
-void z_thread_suspend_current(struct k_thread *thread)
+فراغ z_thread_suspend_current(بنية k_thread *thread)
 {
-	k_spinlock_key_t key = z_sched_spinlock_lock();
+	k_spinlock_ڪنجي_t ڪنجي = z_sched_spinlock_تالو();
 
 	z_mark_thread_as_suspended(thread);
 	z_metairq_preempted_clear(thread);
-	dequeue_thread(thread);
+	قطار_مان_ڪڍو_thread(thread);
 	update_cache(1);
-	z_swap_locked(key);
+	z_مٽا_سٽا_locked(ڪنجي);
 }

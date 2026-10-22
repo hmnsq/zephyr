@@ -3,13 +3,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#ifndef ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
-#define ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
+#جيڪڏهن_وصف_نه_ٿيل ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
+#وصف_ڪريو ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
 
-#include <zephyr/spinlock.h>
-#include <stdbool.h>
+#ضمن <zephyr/spinlock.h>
+#ضمن <stdbool.h>
 
-extern struct k_spinlock _sched_spinlock;
+خارجي بنية k_spinlock _sched_spinlock;
 
 /**
  * The intent of LOCK_SCHED_SPINLOCK is to lock the scheduler's spinlock for
@@ -19,11 +19,11 @@ extern struct k_spinlock _sched_spinlock;
  * would degenerate into an IRQ lock). For that degenerate case, this macro
  * will expand to nothing.
  */
-#if (CONFIG_MP_MAX_NUM_CPUS == 1)
-#define LOCK_SCHED_SPINLOCK
-#else
-#define LOCK_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
-#endif
+#إذا (CONFIG_MP_MAX_انگ_CPUS == 1)
+#وصف_ڪريو تالو_SCHED_SPINLOCK
+#وإلا
+#وصف_ڪريو تالو_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
+#جيڪڏهن_پورو
 
 /**
  * @brief Always lock the scheduler's spinlock for the scope that follows
@@ -31,7 +31,7 @@ extern struct k_spinlock _sched_spinlock;
  * Unlike LOCK_SCHED_SPINLOCK, this macro will always lock the scheduler's
  * spinlock--even on single core systems.
  */
-#define Z_SCHED_SPINLOCK K_SPINLOCK(&_sched_spinlock)
+#وصف_ڪريو Z_SCHED_SPINLOCK K_SPINLOCK(&_sched_spinlock)
 
 
 /**
@@ -39,28 +39,28 @@ extern struct k_spinlock _sched_spinlock;
  *
  * @retval true if is, false otherwise
  */
-static ALWAYS_INLINE bool z_is_sched_spinlock(struct k_spinlock *lock)
+ساكن ALWAYS_INLINE bool z_is_sched_spinlock(بنية k_spinlock *تالو)
 {
-	return (lock == &_sched_spinlock);
+	أرجع (تالو == &_sched_spinlock);
 }
 
 /**
  * @brief Transfer ownership of the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_transfer_owner(struct k_thread *thread)
+ساكن ALWAYS_INLINE فراغ z_sched_spinlock_transfer_owner(بنية k_thread *thread)
 {
-#ifdef CONFIG_SPIN_VALIDATE
-	z_spin_lock_transfer_owner(&_sched_spinlock, thread);
-#else
-	ARG_UNUSED(thread);
-#endif
+#جيڪڏهن_وصف_ٿيل CONFIG_SPIN_VALIDATE
+	z_spin_تالو_transfer_owner(&_sched_spinlock, thread);
+#وإلا
+	ARG_اڻ_استعمال_ٿيل(thread);
+#جيڪڏهن_پورو
 }
 
 
 /**
  * @brief Release the scheduler's spinlock without restoring interrupts
  */
-static ALWAYS_INLINE void z_sched_spinlock_release(void)
+ساكن ALWAYS_INLINE فراغ z_sched_spinlock_release(فراغ)
 {
 	k_spin_release(&_sched_spinlock);
 }
@@ -68,17 +68,17 @@ static ALWAYS_INLINE void z_sched_spinlock_release(void)
 /**
  * @brief Lock the scheduler's spinlock
  */
-static ALWAYS_INLINE k_spinlock_key_t z_sched_spinlock_lock(void)
+ساكن ALWAYS_INLINE k_spinlock_ڪنجي_t z_sched_spinlock_تالو(فراغ)
 {
-	return k_spin_lock(&_sched_spinlock);
+	أرجع k_spin_تالو(&_sched_spinlock);
 }
 
 /**
  * @brief Unlock the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_unlock(k_spinlock_key_t key)
+ساكن ALWAYS_INLINE فراغ z_sched_spinlock_unlock(k_spinlock_ڪنجي_t ڪنجي)
 {
-	k_spin_unlock(&_sched_spinlock, key);
+	k_spin_unlock(&_sched_spinlock, ڪنجي);
 }
 
-#endif /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */
+#جيڪڏهن_پورو /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */

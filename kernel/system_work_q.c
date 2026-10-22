@@ -11,27 +11,27 @@
  * System workqueue.
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
+#ضمن <zephyr/kernel.h>
+#ضمن <kernel_internal.h>
 
-static K_KERNEL_STACK_DEFINE(sys_work_q_stack,
-			     CONFIG_SYSTEM_WORKQUEUE_STACK_SIZE);
+ساكن K_KERNEL_ڍير_DEFINE(sys_work_q_ڍير,
+			     CONFIG_SYSTEM_WORKQUEUE_ڍير_سائيز);
 
-struct k_work_q k_sys_work_q;
+بنية k_work_q k_sys_work_q;
 
-static void sys_work_q_init(void)
+ساكن فراغ sys_work_q_init(فراغ)
 {
-	static const struct k_work_queue_config cfg = {
+	ساكن ثابت بنية k_work_قطار_config cfg = {
 		.name = "sysworkq",
 		.no_yield = IS_ENABLED(CONFIG_SYSTEM_WORKQUEUE_NO_YIELD),
 		.essential = true,
 		.work_timeout_ms = CONFIG_SYSTEM_WORKQUEUE_WORK_TIMEOUT_MS,
 	};
 
-	k_work_queue_start(&k_sys_work_q,
-			    sys_work_q_stack,
-			    K_KERNEL_STACK_SIZEOF(sys_work_q_stack),
-			    CONFIG_SYSTEM_WORKQUEUE_PRIORITY, &cfg);
+	k_work_قطار_شروعات(&k_sys_work_q,
+			    sys_work_q_ڍير,
+			    K_KERNEL_ڍير_SIZEOF(sys_work_q_ڍير),
+			    CONFIG_SYSTEM_WORKQUEUE_ترجيح, &cfg);
 }
 
 /* Registered into the kernel post-init section. The entry lives in this TU,
