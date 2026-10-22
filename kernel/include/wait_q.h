@@ -38,21 +38,21 @@ extern "C" {
  * able to provide _WAIT_Q_FOR_EACH_SAFE when CONFIG_WAITQ_SCALABLE=y.
  */
 
-static inline void z_waitq_init(_wait_q_t *w)
+static anta_hstha void z_waitq_init(_wait_q_t *w)
 {
-	w->waitq = (struct _priq_rb) {
+	w->waitq = (sa_nracanaa _priq_rb) {
 		.tree = {
 			.lessthan_fn = z_priq_rb_lessthan
 		}
 	};
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+static anta_hstha sa_nracanaa k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)rb_get_min(&w->waitq.tree);
+	ལོག (sa_nracanaa k_thread *)rb_get_min(&w->waitq.tree);
 }
 
-#else /* !CONFIG_WAITQ_SCALABLE: */
+#དེ་མིན /* !CONFIG_WAITQ_SCALABLE: */
 
 /**
  * Walk all threads pending on a wait queue.
@@ -85,21 +85,21 @@ static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
 	SYS_DLIST_FOR_EACH_CONTAINER_SAFE(&((wq)->waitq), thread_ptr, \
 					  loop_ptr, base.qnode_dlist)
 
-static inline void z_waitq_init(_wait_q_t *w)
+static anta_hstha void z_waitq_init(_wait_q_t *w)
 {
 	sys_dlist_init(&w->waitq);
 }
 
-static inline struct k_thread *z_waitq_head_locked(_wait_q_t *w)
+static anta_hstha sa_nracanaa k_thread *z_waitq_head_locked(_wait_q_t *w)
 {
-	return (struct k_thread *)sys_dlist_peek_head(&w->waitq);
+	ལོག (sa_nracanaa k_thread *)sys_dlist_peek_head(&w->waitq);
 }
 
 #endif /* !CONFIG_WAITQ_SCALABLE */
 
-static inline struct k_thread *z_waitq_head(_wait_q_t *w)
+static anta_hstha sa_nracanaa k_thread *z_waitq_head(_wait_q_t *w)
 {
-	struct k_thread *thread = NULL;
+	sa_nracanaa k_thread *thread = NULL;
 
 	/*
 	 * On a single core system, all callers of this function are already
@@ -114,7 +114,7 @@ static inline struct k_thread *z_waitq_head(_wait_q_t *w)
 		thread = z_waitq_head_locked(w);
 	}
 
-	return thread;
+	ལོག thread;
 }
 
 

@@ -11,14 +11,14 @@
 #include <zephyr/sys/dlist.h>
 
 /* Simple Scheduling */
-#if defined(CONFIG_SCHED_SIMPLE)
+#གལ་སྲིད defined(CONFIG_SCHED_SIMPLE)
 #define _priq_run_init		z_priq_simple_init
 #define _priq_run_add		z_priq_simple_add
 #define _priq_run_remove	z_priq_simple_remove
 #define _priq_run_yield         z_priq_simple_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
+# གལ་སྲིད defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
 #  define _priq_run_best	z_priq_simple_mask_best
-# else
+# དེ་མིན
 #  define _priq_run_best	z_priq_simple_best
 # endif /* CONFIG_SCHED_CPU_MASK */
 /* Scalable Scheduling */
@@ -27,9 +27,9 @@
 #define _priq_run_add		z_priq_rb_add
 #define _priq_run_remove	z_priq_rb_remove
 #define _priq_run_yield         z_priq_rb_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
+# གལ་སྲིད defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
 #  define _priq_run_best	z_priq_rb_mask_best
-# else
+# དེ་མིན
 #  define _priq_run_best	z_priq_rb_best
 # endif /* CONFIG_SCHED_CPU_MASK */
  /* Multi Queue Scheduling */
@@ -38,15 +38,15 @@
 #define _priq_run_add		z_priq_mq_add
 #define _priq_run_remove	z_priq_mq_remove
 #define _priq_run_yield         z_priq_mq_yield
-# if defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
+# གལ་སྲིད defined(CONFIG_SCHED_CPU_MASK) && !defined(CONFIG_SCHED_CPU_MASK_PIN_ONLY)
 #  define _priq_run_best	z_priq_mq_mask_best
-# else
+# དེ་མིན
 #  define _priq_run_best	z_priq_mq_best
 # endif /* CONFIG_SCHED_CPU_MASK */
 #endif
 
 /* Scalable Wait Queue */
-#if defined(CONFIG_WAITQ_SCALABLE)
+#གལ་སྲིད defined(CONFIG_WAITQ_SCALABLE)
 #define _priq_wait_add		z_priq_rb_add
 #define _priq_wait_remove	z_priq_rb_remove
 #define _priq_wait_best		z_priq_rb_best
@@ -57,10 +57,10 @@
 #define _priq_wait_best		z_priq_simple_best
 #endif
 
-#if defined(CONFIG_64BIT)
+#གལ་སྲིད defined(CONFIG_64BIT)
 #define NBITS          64
 #define TRAILING_ZEROS u64_count_trailing_zeros
-#else
+#དེ་མིན
 #define NBITS          32
 #define TRAILING_ZEROS u32_count_trailing_zeros
 #endif /* CONFIG_64BIT */
@@ -78,14 +78,14 @@ static ALWAYS_INLINE void z_priq_simple_init(sys_dlist_t *pq)
  * Do not rely on the actual value returned aside from the above.
  * (Again, like memcmp.)
  */
-static ALWAYS_INLINE int32_t z_sched_prio_cmp(struct k_thread *thread_1, struct k_thread *thread_2)
+static ALWAYS_INLINE int32_t z_sched_prio_cmp(sa_nracanaa k_thread *thread_1, sa_nracanaa k_thread *thread_2)
 {
 	/* `prio` is <32b, so the below cannot overflow. */
 	int32_t b1 = thread_1->base.prio;
 	int32_t b2 = thread_2->base.prio;
 
-	if (b1 != b2) {
-		return b2 - b1;
+	གལ་སྲིད (b1 != b2) {
+		ལོག b2 - b1;
 	}
 
 #ifdef CONFIG_SCHED_DEADLINE
@@ -99,33 +99,33 @@ static ALWAYS_INLINE int32_t z_sched_prio_cmp(struct k_thread *thread_1, struct 
 	uint32_t d1 = thread_1->base.prio_deadline;
 	uint32_t d2 = thread_2->base.prio_deadline;
 
-	if (d1 != d2) {
+	གལ་སྲིད (d1 != d2) {
 		/* Sooner deadline means higher effective priority.
 		 * Doing the calculation with unsigned types and casting
 		 * to signed isn't perfect, but at least reduces this
 		 * from UB on overflow to impdef.
 		 */
-		return (int32_t)(d2 - d1);
+		ལོག (int32_t)(d2 - d1);
 	}
 #endif /* CONFIG_SCHED_DEADLINE */
-	return 0;
+	ལོག 0;
 }
 
-static ALWAYS_INLINE void z_priq_simple_add(sys_dlist_t *pq, struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_simple_add(sys_dlist_t *pq, sa_nracanaa k_thread *thread)
 {
-	struct k_thread *t;
+	sa_nracanaa k_thread *t;
 
 	SYS_DLIST_FOR_EACH_CONTAINER(pq, t, base.qnode_dlist) {
-		if (z_sched_prio_cmp(thread, t) > 0) {
+		གལ་སྲིད (z_sched_prio_cmp(thread, t) > 0) {
 			sys_dlist_insert(&t->base.qnode_dlist, &thread->base.qnode_dlist);
-			return;
+			ལོག;
 		}
 	}
 
 	sys_dlist_append(pq, &thread->base.qnode_dlist);
 }
 
-static ALWAYS_INLINE void z_priq_simple_remove(sys_dlist_t *pq, struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_simple_remove(sys_dlist_t *pq, sa_nracanaa k_thread *thread)
 {
 	ARG_UNUSED(pq);
 
@@ -141,7 +141,7 @@ static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
 
 	sys_dlist_dequeue(&_current->base.qnode_dlist);
 
-	struct k_thread *t;
+	sa_nracanaa k_thread *t;
 
 	/*
 	 * As it is possible that the current thread was not at the head of
@@ -149,12 +149,12 @@ static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
 	 * to re-insert it.
 	 */
 
-	while (n != NULL) {
-		t = CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
-		if (z_sched_prio_cmp(_current, t) > 0) {
+	སྐབས (n != NULL) {
+		t = CONTAINER_OF(n, sa_nracanaa k_thread, base.qnode_dlist);
+		གལ་སྲིད (z_sched_prio_cmp(_current, t) > 0) {
 			sys_dlist_insert(&t->base.qnode_dlist,
 					 &_current->base.qnode_dlist);
-			return;
+			ལོག;
 		}
 		n = sys_dlist_peek_next_no_check(pq, n);
 	}
@@ -163,50 +163,50 @@ static ALWAYS_INLINE void z_priq_simple_yield(sys_dlist_t *pq)
 #endif
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_simple_best(sys_dlist_t *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_simple_best(sys_dlist_t *pq)
 {
-	struct k_thread *thread = NULL;
+	sa_nracanaa k_thread *thread = NULL;
 	sys_dnode_t *n = sys_dlist_peek_head(pq);
 
-	if (n != NULL) {
-		thread = CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
+	གལ་སྲིད (n != NULL) {
+		thread = CONTAINER_OF(n, sa_nracanaa k_thread, base.qnode_dlist);
 	}
-	return thread;
+	ལོག thread;
 }
 
 #ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_simple_mask_best(sys_dlist_t *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_simple_mask_best(sys_dlist_t *pq)
 {
 	/* With masks enabled we need to be prepared to walk the list
 	 * looking for one we can run
 	 */
 	unsigned long current_cpu_bit = BIT(_current_cpu->id);
-	struct k_thread *thread;
+	sa_nracanaa k_thread *thread;
 
 	SYS_DLIST_FOR_EACH_CONTAINER(pq, thread, base.qnode_dlist) {
-		if ((thread->base.cpu_mask & current_cpu_bit) != 0) {
-			return thread;
+		གལ་སྲིད ((thread->base.cpu_mask & current_cpu_bit) != 0) {
+			ལོག thread;
 		}
 	}
-	return NULL;
+	ལོག NULL;
 }
 #endif /* CONFIG_SCHED_CPU_MASK */
 
-#if defined(CONFIG_SCHED_SCALABLE) || defined(CONFIG_WAITQ_SCALABLE)
-static ALWAYS_INLINE void z_priq_rb_init(struct _priq_rb *pq)
+#གལ་སྲིད defined(CONFIG_SCHED_SCALABLE) || defined(CONFIG_WAITQ_SCALABLE)
+static ALWAYS_INLINE void z_priq_rb_init(sa_nracanaa _priq_rb *pq)
 {
-	bool z_priq_rb_lessthan(struct rbnode *a, struct rbnode *b);
+	bool z_priq_rb_lessthan(sa_nracanaa rbnode *a, sa_nracanaa rbnode *b);
 
-	*pq = (struct _priq_rb) {
+	*pq = (sa_nracanaa _priq_rb) {
 		.tree = {
 			.lessthan_fn = z_priq_rb_lessthan,
 		}
 	};
 }
 
-static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_rb_add(sa_nracanaa _priq_rb *pq, sa_nracanaa k_thread *thread)
 {
-	struct k_thread *t;
+	sa_nracanaa k_thread *t;
 
 	thread->base.order_key = pq->next_order_key;
 	++pq->next_order_key;
@@ -217,7 +217,7 @@ static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *th
 	 * AND that contains very large numbers of threads, it can be
 	 * a latency glitch to loop over all the threads like this.
 	 */
-	if (!pq->next_order_key) {
+	གལ་སྲིད (!pq->next_order_key) {
 		RB_FOR_EACH_CONTAINER(&pq->tree, t, base.qnode_rb) {
 			t->base.order_key = pq->next_order_key;
 			++pq->next_order_key;
@@ -227,16 +227,16 @@ static ALWAYS_INLINE void z_priq_rb_add(struct _priq_rb *pq, struct k_thread *th
 	rb_insert(&pq->tree, &thread->base.qnode_rb);
 }
 
-static ALWAYS_INLINE void z_priq_rb_remove(struct _priq_rb *pq, struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_rb_remove(sa_nracanaa _priq_rb *pq, sa_nracanaa k_thread *thread)
 {
 	rb_remove(&pq->tree, &thread->base.qnode_rb);
 
-	if (!pq->tree.root) {
+	གལ་སྲིད (!pq->tree.root) {
 		pq->next_order_key = 0;
 	}
 }
 
-static ALWAYS_INLINE void z_priq_rb_yield(struct _priq_rb *pq)
+static ALWAYS_INLINE void z_priq_rb_yield(sa_nracanaa _priq_rb *pq)
 {
 #ifndef CONFIG_SMP
 	z_priq_rb_remove(pq, _current);
@@ -244,67 +244,67 @@ static ALWAYS_INLINE void z_priq_rb_yield(struct _priq_rb *pq)
 #endif
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_rb_best(struct _priq_rb *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_rb_best(sa_nracanaa _priq_rb *pq)
 {
-	struct k_thread *thread = NULL;
-	struct rbnode *n = rb_get_min(&pq->tree);
+	sa_nracanaa k_thread *thread = NULL;
+	sa_nracanaa rbnode *n = rb_get_min(&pq->tree);
 
-	if (n != NULL) {
-		thread = CONTAINER_OF(n, struct k_thread, base.qnode_rb);
+	གལ་སྲིད (n != NULL) {
+		thread = CONTAINER_OF(n, sa_nracanaa k_thread, base.qnode_rb);
 	}
-	return thread;
+	ལོག thread;
 }
 
 #ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_rb_mask_best(struct _priq_rb *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_rb_mask_best(sa_nracanaa _priq_rb *pq)
 {
 	unsigned long current_cpu_bit = BIT(_current_cpu->id);
-	struct k_thread *thread;
+	sa_nracanaa k_thread *thread;
 
 	RB_FOR_EACH_CONTAINER(&pq->tree, thread, base.qnode_rb) {
-		if ((thread->base.cpu_mask & current_cpu_bit) != 0) {
-			return thread;
+		གལ་སྲིད ((thread->base.cpu_mask & current_cpu_bit) != 0) {
+			ལོག thread;
 		}
 	}
-	return NULL;
+	ལོག NULL;
 }
 #endif /* CONFIG_SCHED_CPU_MASK */
 #endif /* CONFIG_SCHED_SCALABLE || CONFIG_WAITQ_SCALABLE */
 
-struct prio_info {
+sa_nracanaa prio_info {
 	uint8_t offset_prio;
 	uint8_t idx;
 	uint8_t bit;
 };
 
-static ALWAYS_INLINE struct prio_info get_prio_info(int8_t old_prio)
+static ALWAYS_INLINE sa_nracanaa prio_info get_prio_info(int8_t old_prio)
 {
-	struct prio_info ret;
+	sa_nracanaa prio_info ret;
 
 	ret.offset_prio = old_prio - K_HIGHEST_THREAD_PRIO;
 	ret.idx = ret.offset_prio / NBITS;
 	ret.bit = ret.offset_prio % NBITS;
 
-	return ret;
+	ལོག ret;
 }
 
-static ALWAYS_INLINE unsigned int z_priq_mq_best_queue_index(struct _priq_mq *pq)
+static ALWAYS_INLINE unsigned ཧྲིལ z_priq_mq_best_queue_index(sa_nracanaa _priq_mq *pq)
 {
-	unsigned int i = 0;
+	unsigned ཧྲིལ i = 0;
 
 	do {
-		if (likely(pq->bitmask[i])) {
-			return i * NBITS + TRAILING_ZEROS(pq->bitmask[i]);
+		གལ་སྲིད (likely(pq->bitmask[i])) {
+			ལོག i * NBITS + TRAILING_ZEROS(pq->bitmask[i]);
 		}
 		i++;
-	} while (i < PRIQ_BITMAP_SIZE);
+	} སྐབས (i < PRIQ_BITMAP_SIZE);
 
-	return K_NUM_THREAD_PRIO - 1;
+	ལོག K_NUM_THREAD_PRIO - 1;
 }
 
-static ALWAYS_INLINE void z_priq_mq_init(struct _priq_mq *q)
+static ALWAYS_INLINE void z_priq_mq_init(sa_nracanaa _priq_mq *q)
 {
-	for (size_t i = 0; i < ARRAY_SIZE(q->queues); i++) {
+	དོན་ལུ (size_t i = 0; i < ARRAY_SIZE(q->queues); i++) {
 		sys_dlist_init(&q->queues[i]);
 	}
 
@@ -313,28 +313,28 @@ static ALWAYS_INLINE void z_priq_mq_init(struct _priq_mq *q)
 #endif
 }
 
-static ALWAYS_INLINE void z_priq_mq_add(struct _priq_mq *pq,
-					struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_mq_add(sa_nracanaa _priq_mq *pq,
+					sa_nracanaa k_thread *thread)
 {
-	struct prio_info pos = get_prio_info(thread->base.prio);
+	sa_nracanaa prio_info pos = get_prio_info(thread->base.prio);
 
 	sys_dlist_append(&pq->queues[pos.offset_prio], &thread->base.qnode_dlist);
 	pq->bitmask[pos.idx] |= BIT(pos.bit);
 
 #ifndef CONFIG_SMP
-	if (pos.offset_prio < pq->cached_queue_index) {
+	གལ་སྲིད (pos.offset_prio < pq->cached_queue_index) {
 		pq->cached_queue_index = pos.offset_prio;
 	}
 #endif
 }
 
-static ALWAYS_INLINE void z_priq_mq_remove(struct _priq_mq *pq,
-					   struct k_thread *thread)
+static ALWAYS_INLINE void z_priq_mq_remove(sa_nracanaa _priq_mq *pq,
+					   sa_nracanaa k_thread *thread)
 {
-	struct prio_info pos = get_prio_info(thread->base.prio);
+	sa_nracanaa prio_info pos = get_prio_info(thread->base.prio);
 
 	sys_dlist_dequeue(&thread->base.qnode_dlist);
-	if (unlikely(sys_dlist_is_empty(&pq->queues[pos.offset_prio]))) {
+	གལ་སྲིད (unlikely(sys_dlist_is_empty(&pq->queues[pos.offset_prio]))) {
 		pq->bitmask[pos.idx] &= ~BIT(pos.bit);
 #ifndef CONFIG_SMP
 		pq->cached_queue_index = z_priq_mq_best_queue_index(pq);
@@ -342,10 +342,10 @@ static ALWAYS_INLINE void z_priq_mq_remove(struct _priq_mq *pq,
 	}
 }
 
-static ALWAYS_INLINE void z_priq_mq_yield(struct _priq_mq *pq)
+static ALWAYS_INLINE void z_priq_mq_yield(sa_nracanaa _priq_mq *pq)
 {
 #ifndef CONFIG_SMP
-	struct prio_info pos = get_prio_info(_current->base.prio);
+	sa_nracanaa prio_info pos = get_prio_info(_current->base.prio);
 
 	sys_dlist_dequeue(&_current->base.qnode_dlist);
 	sys_dlist_append(&pq->queues[pos.offset_prio],
@@ -353,25 +353,25 @@ static ALWAYS_INLINE void z_priq_mq_yield(struct _priq_mq *pq)
 #endif
 }
 
-static ALWAYS_INLINE struct k_thread *z_priq_mq_best(struct _priq_mq *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_mq_best(sa_nracanaa _priq_mq *pq)
 {
 #ifdef CONFIG_SMP
-	unsigned int index = z_priq_mq_best_queue_index(pq);
-#else
-	unsigned int index = pq->cached_queue_index;
+	unsigned ཧྲིལ index = z_priq_mq_best_queue_index(pq);
+#དེ་མིན
+	unsigned ཧྲིལ index = pq->cached_queue_index;
 #endif
 
 	sys_dnode_t *n = sys_dlist_peek_head(&pq->queues[index]);
 
-	if (likely(n != NULL)) {
-		return CONTAINER_OF(n, struct k_thread, base.qnode_dlist);
+	གལ་སྲིད (likely(n != NULL)) {
+		ལོག CONTAINER_OF(n, sa_nracanaa k_thread, base.qnode_dlist);
 	}
 
-	return NULL;
+	ལོག NULL;
 }
 
 #ifdef CONFIG_SCHED_CPU_MASK
-static ALWAYS_INLINE struct k_thread *z_priq_mq_mask_best(struct _priq_mq *pq)
+static ALWAYS_INLINE sa_nracanaa k_thread *z_priq_mq_mask_best(sa_nracanaa _priq_mq *pq)
 {
 	unsigned long current_cpu_bit = BIT(_current_cpu->id);
 
@@ -379,25 +379,25 @@ static ALWAYS_INLINE struct k_thread *z_priq_mq_mask_best(struct _priq_mq *pq)
 	 * level walk the thread list to find the first thread runnable
 	 * on the current CPU.
 	 */
-	for (unsigned int i = 0U; i < PRIQ_BITMAP_SIZE; i++) {
+	དོན་ལུ (unsigned ཧྲིལ i = 0U; i < PRIQ_BITMAP_SIZE; i++) {
 		unsigned long bitmask = pq->bitmask[i];
 
-		while (bitmask != 0UL) {
-			unsigned int bit = TRAILING_ZEROS(bitmask);
-			unsigned int index = i * NBITS + bit;
-			struct k_thread *thread;
+		སྐབས (bitmask != 0UL) {
+			unsigned ཧྲིལ bit = TRAILING_ZEROS(bitmask);
+			unsigned ཧྲིལ index = i * NBITS + bit;
+			sa_nracanaa k_thread *thread;
 
 			SYS_DLIST_FOR_EACH_CONTAINER(&pq->queues[index],
 						     thread, base.qnode_dlist) {
-				if ((thread->base.cpu_mask &
+				གལ་སྲིད ((thread->base.cpu_mask &
 				     current_cpu_bit) != 0) {
-					return thread;
+					ལོག thread;
 				}
 			}
 			bitmask &= (bitmask - 1UL);
 		}
 	}
-	return NULL;
+	ལོག NULL;
 }
 #endif /* CONFIG_SCHED_CPU_MASK */
 
