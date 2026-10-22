@@ -21,10 +21,10 @@
 
 #include <kernel_internal.h>
 
-int __weak main(void)
+පූර්ණ_සංඛ්‍යා __weak main(void)
 {
 	/* NOP default main() if the application does not provide one. */
 	arch_nop();
 
-	return 0;
+	ආපසු 0;
 }
