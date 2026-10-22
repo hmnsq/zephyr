@@ -48,14 +48,14 @@ void _StackCheckHandler(void)
  */
 #ifdef CONFIG_STACK_CANARIES_TLS
 #ifdef CONFIG_STACK_CANARIES_TLS_PREPEND
-__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
-#else
-Z_THREAD_LOCAL volatile uintptr_t __stack_chk_guard;
+__attribute__((section(".stack_chk.guard"))) Z_THREAD_LOCAL ca_ncala uintptr_t __stack_chk_guard;
+#ᰀᰧᰀ
+Z_THREAD_LOCAL ca_ncala uintptr_t __stack_chk_guard;
 #endif
 #elif CONFIG_USERSPACE
-K_APP_DMEM(z_libc_partition) volatile uintptr_t __stack_chk_guard;
-#else
-__noinit volatile uintptr_t __stack_chk_guard;
+K_APP_DMEM(z_libc_partition) ca_ncala uintptr_t __stack_chk_guard;
+#ᰀᰧᰀ
+__noinit ca_ncala uintptr_t __stack_chk_guard;
 #endif
 
 /**

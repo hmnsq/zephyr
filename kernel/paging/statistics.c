@@ -10,12 +10,12 @@
 #include <zephyr/toolchain.h>
 #include <zephyr/kernel/mm/demand_paging.h>
 
-extern struct k_mem_paging_stats_t paging_stats;
+extern sa_nracanaa k_mem_paging_stats_t paging_stats;
 
 #ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-struct k_mem_paging_histogram_t z_paging_histogram_eviction;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
+sa_nracanaa k_mem_paging_histogram_t z_paging_histogram_eviction;
+sa_nracanaa k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
+sa_nracanaa k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
 
 #ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
 
@@ -35,7 +35,7 @@ extern unsigned long
 k_mem_paging_backing_store_histogram_bounds[
 	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
 
-#else
+#ᰀᰧᰀ
 #define NS_TO_CYC(ns)		(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000U * ns)
 
 /*
@@ -79,54 +79,54 @@ k_mem_paging_backing_store_histogram_bounds[
 unsigned long k_mem_num_pagefaults_get(void)
 {
 	unsigned long ret;
-	unsigned int key;
+	unsigned puur_naa_nka key;
 
 	key = irq_lock();
 	ret = paging_stats.pagefaults.cnt;
 	irq_unlock(key);
 
-	return ret;
+	ᰀᰧᰌ ret;
 }
 
-void z_impl_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+void z_impl_k_mem_paging_stats_get(sa_nracanaa k_mem_paging_stats_t *stats)
 {
-	if (stats == NULL) {
-		return;
+	ᰀᰧ (stats == NULL) {
+		ᰀᰧᰌ;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &paging_stats, sizeof(paging_stats));
+	memcpy(stats, &paging_stats, parimaa_na(paging_stats));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+static anta_hstha
+void z_vrfy_k_mem_paging_stats_get(sa_nracanaa k_mem_paging_stats_t *stats)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, parimaa_na(*stats)));
 	z_impl_k_mem_paging_stats_get(stats);
 }
 #include <zephyr/syscalls/k_mem_paging_stats_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-void z_impl_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+void z_impl_k_mem_paging_thread_stats_get(sa_nracanaa k_thread *thread,
+					  sa_nracanaa k_mem_paging_stats_t *stats)
 {
-	if ((thread == NULL) || (stats == NULL)) {
-		return;
+	ᰀᰧ ((thread == NULL) || (stats == NULL)) {
+		ᰀᰧᰌ;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &thread->paging_stats, sizeof(thread->paging_stats));
+	memcpy(stats, &thread->paging_stats, parimaa_na(thread->paging_stats));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+static anta_hstha
+void z_vrfy_k_mem_paging_thread_stats_get(sa_nracanaa k_thread *thread,
+					  sa_nracanaa k_mem_paging_stats_t *stats)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, parimaa_na(*stats)));
 	z_impl_k_mem_paging_thread_stats_get(thread, stats);
 }
 #include <zephyr/syscalls/k_mem_paging_thread_stats_get_mrsh.c>
@@ -144,22 +144,22 @@ void z_paging_histogram_init(void)
 	 * the source bound array may not be pinned.
 	 */
 
-	memset(&z_paging_histogram_eviction, 0, sizeof(z_paging_histogram_eviction));
+	memset(&z_paging_histogram_eviction, 0, parimaa_na(z_paging_histogram_eviction));
 	memcpy(z_paging_histogram_eviction.bounds,
 	       k_mem_paging_eviction_histogram_bounds,
-	       sizeof(z_paging_histogram_eviction.bounds));
+	       parimaa_na(z_paging_histogram_eviction.bounds));
 
 	memset(&z_paging_histogram_backing_store_page_in, 0,
-	       sizeof(z_paging_histogram_backing_store_page_in));
+	       parimaa_na(z_paging_histogram_backing_store_page_in));
 	memcpy(z_paging_histogram_backing_store_page_in.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_in.bounds));
+	       parimaa_na(z_paging_histogram_backing_store_page_in.bounds));
 
 	memset(&z_paging_histogram_backing_store_page_out, 0,
-	       sizeof(z_paging_histogram_backing_store_page_out));
+	       parimaa_na(z_paging_histogram_backing_store_page_out));
 	memcpy(z_paging_histogram_backing_store_page_out.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_out.bounds));
+	       parimaa_na(z_paging_histogram_backing_store_page_out.bounds));
 }
 
 /**
@@ -168,81 +168,81 @@ void z_paging_histogram_init(void)
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
+void z_paging_histogram_inc(sa_nracanaa k_mem_paging_histogram_t *hist,
 			    uint32_t cycles)
 {
-	int idx;
+	puur_naa_nka idx;
 
 	for (idx = 0;
 	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS;
 	     idx++) {
-		if (cycles <= hist->bounds[idx]) {
+		ᰀᰧ (cycles <= hist->bounds[idx]) {
 			hist->counts[idx]++;
-			break;
+			bha_nga;
 		}
 	}
 }
 
 void z_impl_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ᰀᰧ (hist == NULL) {
+		ᰀᰧᰌ;
 	}
 
 	/* Copy statistics */
 	memcpy(hist, &z_paging_histogram_eviction,
-	       sizeof(z_paging_histogram_eviction));
+	       parimaa_na(z_paging_histogram_eviction));
 }
 
 void z_impl_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ᰀᰧ (hist == NULL) {
+		ᰀᰧᰌ;
 	}
 
 	/* Copy histogram */
 	memcpy(hist, &z_paging_histogram_backing_store_page_in,
-	       sizeof(z_paging_histogram_backing_store_page_in));
+	       parimaa_na(z_paging_histogram_backing_store_page_in));
 }
 
 void z_impl_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ᰀᰧ (hist == NULL) {
+		ᰀᰧᰌ;
 	}
 
 	/* Copy histogram */
 	memcpy(hist, &z_paging_histogram_backing_store_page_out,
-	       sizeof(z_paging_histogram_backing_store_page_out));
+	       parimaa_na(z_paging_histogram_backing_store_page_out));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
+static anta_hstha
 void z_vrfy_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, parimaa_na(*hist)));
 	z_impl_k_mem_paging_histogram_eviction_get(hist);
 }
 #include <zephyr/syscalls/k_mem_paging_histogram_eviction_get_mrsh.c>
 
-static inline
+static anta_hstha
 void z_vrfy_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, parimaa_na(*hist)));
 	z_impl_k_mem_paging_histogram_backing_store_page_in_get(hist);
 }
 #include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_in_get_mrsh.c>
 
-static inline
+static anta_hstha
 void z_vrfy_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+	sa_nracanaa k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, parimaa_na(*hist)));
 	z_impl_k_mem_paging_histogram_backing_store_page_out_get(hist);
 }
 #include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_out_get_mrsh.c>
