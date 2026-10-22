@@ -8,216 +8,216 @@
  * @brief fixed-size stack object
  */
 
-#include <zephyr/sys/math_extras.h>
-#include <zephyr/kernel.h>
+#ضمن <zephyr/sys/math_extras.h>
+#ضمن <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <kernel_internal.h>
-#include <stdbool.h>
+#ضمن <zephyr/toolchain.h>
+#ضمن <ksched.h>
+#ضمن <scheduler.h>
+#ضمن <wait_q.h>
+#ضمن <zephyr/init.h>
+#ضمن <zephyr/internal/syscall_handler.h>
+#ضمن <kernel_internal.h>
+#ضمن <stdbool.h>
 
-#ifdef CONFIG_OBJ_CORE_STACK
-K_OBJ_TYPE_DEFINE(obj_type_stack, k_stack, K_OBJ_TYPE_STACK_ID, NULL);
+#ifdef CONFIG_OBJ_CORE_مكدس
+K_OBJ_TYPE_DEFINE(obj_type_مكدس, k_مكدس, K_OBJ_TYPE_مكدس_ID, عدم);
 #endif /* CONFIG_OBJ_CORE_STACK */
 
-void k_stack_init(struct k_stack *stack, stack_data_t *buffer,
-		  uint32_t num_entries)
+فراغ k_مكدس_init(بنية k_مكدس *مكدس, مكدس_data_t *buffer,
+		  uint32_t رقم_entries)
 {
-	z_waitq_init(&stack->wait_q);
-	stack->lock = (struct k_spinlock) {};
-	stack->next = buffer;
-	stack->base = buffer;
-	stack->top = stack->base + num_entries;
-	stack->flags = 0;
+	z_waitq_init(&مكدس->wait_q);
+	مكدس->lock = (بنية k_spinlock) {};
+	مكدس->next = buffer;
+	مكدس->base = buffer;
+	مكدس->قمة = مكدس->base + رقم_entries;
+	مكدس->flags = 0;
 
-	SYS_PORT_TRACING_OBJ_INIT(k_stack, stack);
-	k_object_init(stack);
+	SYS_PORT_TRACING_OBJ_INIT(k_مكدس, مكدس);
+	k_object_init(مكدس);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	k_obj_core_init_and_link(K_OBJ_CORE(stack), &obj_type_stack);
+#ifdef CONFIG_OBJ_CORE_مكدس
+	k_obj_core_init_and_link(K_OBJ_CORE(مكدس), &obj_type_مكدس);
 #endif /* CONFIG_OBJ_CORE_STACK */
 }
 
-int32_t z_impl_k_stack_alloc_init(struct k_stack *stack, uint32_t num_entries)
+int32_t z_impl_k_مكدس_alloc_init(بنية k_مكدس *مكدس, uint32_t رقم_entries)
 {
-	void *buffer;
+	فراغ *buffer;
 	size_t total_size;
 	int32_t ret;
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, alloc_init, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_مكدس, alloc_init, مكدس);
 
 	/* Reject allocation sizes that cannot be represented. */
-	if (size_mul_overflow(num_entries, sizeof(stack_data_t), &total_size)) {
+	إذا (size_mul_overflow(رقم_entries, حجم(مكدس_data_t), &total_size)) {
 		ret = -ENOMEM;
-	} else {
+	} وإلا {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
-			k_stack_init(stack, buffer, num_entries);
-			stack->flags = K_STACK_FLAG_ALLOC;
+		إذا (buffer != عدم) {
+			k_مكدس_init(مكدس, buffer, رقم_entries);
+			مكدس->flags = K_مكدس_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} وإلا {
 			ret = -ENOMEM;
 		}
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, alloc_init, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, alloc_init, مكدس, ret);
 
-	return ret;
+	أرجع ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int32_t z_vrfy_k_stack_alloc_init(struct k_stack *stack,
-					      uint32_t num_entries)
+ساكن مضمن int32_t z_vrfy_k_مكدس_alloc_init(بنية k_مكدس *مكدس,
+					      uint32_t رقم_entries)
 {
 	size_t total_size;
 
-	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_VERIFY(num_entries > 0));
-	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(num_entries, sizeof(stack_data_t),
+	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(مكدس, K_OBJ_مكدس));
+	K_OOPS(K_SYSCALL_VERIFY(رقم_entries > 0));
+	K_OOPS(K_SYSCALL_VERIFY(!size_mul_overflow(رقم_entries, حجم(مكدس_data_t),
 					&total_size)));
-	return z_impl_k_stack_alloc_init(stack, num_entries);
+	أرجع z_impl_k_مكدس_alloc_init(مكدس, رقم_entries);
 }
-#include <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
+#ضمن <zephyr/syscalls/k_stack_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_stack_cleanup(struct k_stack *stack, __maybe_unused bool locked)
+صحيح z_مكدس_cleanup(بنية k_مكدس *مكدس, __maybe_unused bool locked)
 {
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, cleanup, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_مكدس, cleanup, مكدس);
 
-	int ret = 0;
+	صحيح ret = 0;
 	bool freed = false;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&مكدس->lock);
 
-	if (locked && (z_waitq_head_locked(&stack->wait_q) != NULL)) {
+	إذا (locked && (z_waitq_head_locked(&مكدس->wait_q) != عدم)) {
 		ret = -EAGAIN;
-		goto out;
+		اذهب out;
 	}
 
-	if (!locked && (z_waitq_head(&stack->wait_q) != NULL)) {
+	إذا (!locked && (z_waitq_head(&مكدس->wait_q) != عدم)) {
 		ret = -EAGAIN;
-		goto out;
+		اذهب out;
 	}
 
-	if ((stack->flags & K_STACK_FLAG_ALLOC) != (uint8_t)0) {
-		k_free(stack->base);
-		stack->base = NULL;
-		stack->flags &= ~K_STACK_FLAG_ALLOC;
+	إذا ((مكدس->flags & K_مكدس_FLAG_ALLOC) != (uint8_t)0) {
+		k_free(مكدس->base);
+		مكدس->base = عدم;
+		مكدس->flags &= ~K_مكدس_FLAG_ALLOC;
 		freed = true;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&مكدس->lock, مفتاح);
 
-#ifdef CONFIG_OBJ_CORE_STACK
-	if (freed) {
-		k_obj_core_unlink(K_OBJ_CORE(stack));
+#ifdef CONFIG_OBJ_CORE_مكدس
+	إذا (freed) {
+		k_obj_core_unlink(K_OBJ_CORE(مكدس));
 	}
 #endif /* CONFIG_OBJ_CORE_STACK */
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, cleanup, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, cleanup, مكدس, ret);
 
-	return ret;
+	أرجع ret;
 }
 
-int k_stack_cleanup(struct k_stack *stack)
+صحيح k_مكدس_cleanup(بنية k_مكدس *مكدس)
 {
-	return z_stack_cleanup(stack, false);
+	أرجع z_مكدس_cleanup(مكدس, false);
 }
 
-int z_impl_k_stack_push(struct k_stack *stack, stack_data_t data)
+صحيح z_impl_k_مكدس_ادفع(بنية k_مكدس *مكدس, مكدس_data_t data)
 {
-	int ret = 0;
-	k_spinlock_key_t key = k_spin_lock(&stack->lock);
+	صحيح ret = 0;
+	k_spinlock_مفتاح_t مفتاح = k_spin_lock(&مكدس->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, push, stack);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_مكدس, ادفع, مكدس);
 
-	if (stack->next == stack->top) {
+	إذا (مكدس->next == مكدس->قمة) {
 		ret = -ENOMEM;
-		goto out;
+		اذهب out;
 	}
 
-	if (z_sched_wake(&stack->wait_q, 0, (void *)data)) {
-		z_reschedule(&stack->lock, key);
-		goto end;
-	} else {
-		*(stack->next) = data;
-		stack->next++;
-		goto out;
+	إذا (z_sched_wake(&مكدس->wait_q, 0, (فراغ *)data)) {
+		z_reschedule(&مكدس->lock, مفتاح);
+		اذهب end;
+	} وإلا {
+		*(مكدس->next) = data;
+		مكدس->next++;
+		اذهب out;
 	}
 
 out:
-	k_spin_unlock(&stack->lock, key);
+	k_spin_unlock(&مكدس->lock, مفتاح);
 
 end:
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, push, stack, ret);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, ادفع, مكدس, ret);
 
-	return ret;
+	أرجع ret;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_push(struct k_stack *stack, stack_data_t data)
+ساكن مضمن صحيح z_vrfy_k_مكدس_ادفع(بنية k_مكدس *مكدس, مكدس_data_t data)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
+	K_OOPS(K_SYSCALL_OBJ(مكدس, K_OBJ_مكدس));
 
-	return z_impl_k_stack_push(stack, data);
+	أرجع z_impl_k_مكدس_ادفع(مكدس, data);
 }
-#include <zephyr/syscalls/k_stack_push_mrsh.c>
+#ضمن <zephyr/syscalls/k_stack_push_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_stack_pop(struct k_stack *stack, stack_data_t *data,
+صحيح z_impl_k_مكدس_اسحب(بنية k_مكدس *مكدس, مكدس_data_t *data,
 		       k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int result;
+	k_spinlock_مفتاح_t مفتاح;
+	صحيح result;
 
-	key = k_spin_lock(&stack->lock);
+	مفتاح = k_spin_lock(&مكدس->lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_مكدس, اسحب, مكدس, timeout);
 
-	if (likely(stack->next > stack->base)) {
-		stack->next--;
-		*data = *(stack->next);
-		k_spin_unlock(&stack->lock, key);
+	إذا (likely(مكدس->next > مكدس->base)) {
+		مكدس->next--;
+		*data = *(مكدس->next);
+		k_spin_unlock(&مكدس->lock, مفتاح);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, اسحب, مكدس, timeout, 0);
 
-		return 0;
+		أرجع 0;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(&stack->lock, key);
+	إذا (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(&مكدس->lock, مفتاح);
 
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, -EBUSY);
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, اسحب, مكدس, timeout, -EBUSY);
 
-		return -EBUSY;
+		أرجع -EBUSY;
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_stack, pop, stack, timeout);
+	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_مكدس, اسحب, مكدس, timeout);
 
-	result = z_pend_curr(&stack->lock, key, &stack->wait_q, timeout);
-	if (result != 0) {
-		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, result);
+	result = z_pend_curr(&مكدس->lock, مفتاح, &مكدس->wait_q, timeout);
+	إذا (result != 0) {
+		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, اسحب, مكدس, timeout, result);
 
-		return result;
+		أرجع result;
 	}
 
-	*data = (stack_data_t)_current->base.swap_data;
+	*data = (مكدس_data_t)_current->base.swap_data;
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_stack, pop, stack, timeout, 0);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_مكدس, اسحب, مكدس, timeout, 0);
 
-	return 0;
+	أرجع 0;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_stack_pop(struct k_stack *stack,
-				     stack_data_t *data, k_timeout_t timeout)
+ساكن مضمن صحيح z_vrfy_k_مكدس_اسحب(بنية k_مكدس *مكدس,
+				     مكدس_data_t *data, k_timeout_t timeout)
 {
-	K_OOPS(K_SYSCALL_OBJ(stack, K_OBJ_STACK));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, sizeof(stack_data_t)));
-	return z_impl_k_stack_pop(stack, data, timeout);
+	K_OOPS(K_SYSCALL_OBJ(مكدس, K_OBJ_مكدس));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, حجم(مكدس_data_t)));
+	أرجع z_impl_k_مكدس_اسحب(مكدس, data, timeout);
 }
-#include <zephyr/syscalls/k_stack_pop_mrsh.c>
+#ضمن <zephyr/syscalls/k_stack_pop_mrsh.c>
 #endif /* CONFIG_USERSPACE */
