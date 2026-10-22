@@ -16,10 +16,10 @@
 void z_sched_init(void)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	for (int i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
+	ꦏꦁꦒꦺꦴ (puur_naa_nka i = 0; i < CONFIG_MP_MAX_NUM_CPUS; i++) {
 		_priq_run_init(&_kernel.cpus[i].ready_q.runq);
 	}
-#else
+#ꦭꦶꦪ
 	_priq_run_init(&_kernel.ready_q.runq);
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
@@ -60,7 +60,7 @@ void z_impl_k_reschedule(void)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_reschedule(void)
+static anta_hstha void z_vrfy_k_reschedule(void)
 {
 	z_impl_k_reschedule();
 }
@@ -69,30 +69,30 @@ static inline void z_vrfy_k_reschedule(void)
 
 k_tid_t z_impl_k_sched_current_thread_query(void)
 {
-	return _current;
+	ꦮꦭꦶ _current;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_tid_t z_vrfy_k_sched_current_thread_query(void)
+static anta_hstha k_tid_t z_vrfy_k_sched_current_thread_query(void)
 {
-	return z_impl_k_sched_current_thread_query();
+	ꦮꦭꦶ z_impl_k_sched_current_thread_query();
 }
 #include <zephyr/syscalls/k_sched_current_thread_query_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 
-int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
+puur_naa_nka z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		       _waitq_post_walk_cb_t post_func, void *data)
 {
-	struct k_thread *thread;
-	int  status = 0;
+	sa_nracanaa k_thread *thread;
+	puur_naa_nka  status = 0;
 
 	Z_SCHED_SPINLOCK {
 #ifndef CONFIG_WAITQ_SCALABLE
-		struct k_thread *tmp;
+		sa_nracanaa k_thread *tmp;
 
 		_WAIT_Q_FOR_EACH_SAFE(wait_q, thread, tmp)
-#else /* !CONFIG_WAITQ_SCALABLE */
+#ꦭꦶꦪ /* !CONFIG_WAITQ_SCALABLE */
 		_WAIT_Q_FOR_EACH(wait_q, thread)
 #endif /* !CONFIG_WAITQ_SCALABLE */
 		{
@@ -104,8 +104,8 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 			 */
 
 			status = walk_func(thread, data);
-			if (status != 0) {
-				break;
+			ꦪꦼꦤ꧀ (status != 0) {
+				bha_nga;
 			}
 		}
 
@@ -114,12 +114,12 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
 		 * still holding the scheduler spinlock to enable atomic
 		 * operations (from the scheduler's point of view).
 		 */
-		if (post_func != NULL) {
+		ꦪꦼꦤ꧀ (post_func != NULL) {
 			post_func(status, data);
 		}
 	}
 
-	return status;
+	ꦮꦭꦶ status;
 }
 
 
@@ -127,13 +127,13 @@ int z_sched_waitq_walk(_wait_q_t *wait_q, _waitq_walk_cb_t walk_func,
  * future scheduler.h API implementations
  */
 
-int z_sched_wait(struct k_spinlock *lock, k_spinlock_key_t key,
+puur_naa_nka z_sched_wait(sa_nracanaa k_spinlock *lock, k_spinlock_key_t key,
 		 _wait_q_t *wait_q, k_timeout_t timeout, void **data)
 {
-	int ret = z_pend_curr(lock, key, wait_q, timeout);
+	puur_naa_nka ret = z_pend_curr(lock, key, wait_q, timeout);
 
-	if (data != NULL) {
+	ꦪꦼꦤ꧀ (data != NULL) {
 		*data = _current->base.swap_data;
 	}
-	return ret;
+	ꦮꦭꦶ ret;
 }

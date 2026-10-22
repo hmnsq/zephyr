@@ -31,8 +31,8 @@
  * a spurious timeslice when the thread that is going to sleep gets picked as
  * the next thread to run while z_swap() is in progress.
  */
-#if defined(CONFIG_SWAP_NONATOMIC) && defined(CONFIG_TIMESLICING)
-extern struct k_thread *pending_current;
+#ꦪꦼꦤ꧀ defined(CONFIG_SWAP_NONATOMIC) && defined(CONFIG_TIMESLICING)
+extern sa_nracanaa k_thread *pending_current;
 #endif
 
 /**
@@ -56,15 +56,15 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	SYS_PORT_TRACING_FUNC_ENTER(k_thread, sleep_ticks, timeout);
 
 	/* K_NO_WAIT is treated as a 'yield' */
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	ꦪꦼꦤ꧀ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		k_yield();
 		SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, 0);
-		return 0;
+		ꦮꦭꦶ 0;
 	}
 
 	k_spinlock_key_t key = z_sched_spinlock_lock();
 
-#if defined(CONFIG_TIMESLICING) && defined(CONFIG_SWAP_NONATOMIC)
+#ꦪꦼꦤ꧀ defined(CONFIG_TIMESLICING) && defined(CONFIG_SWAP_NONATOMIC)
 	pending_current = _current;
 #endif /* CONFIG_TIMESLICING && CONFIG_SWAP_NONATOMIC */
 	z_sched_unready_locked(_current);
@@ -76,9 +76,9 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	/* There is no meaningful remainder to report for K_FOREVER: reaching
 	 * this point at all means a k_wakeup() cut the sleep short.
 	 */
-	if (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
+	ꦪꦼꦤ꧀ (K_TIMEOUT_EQ(timeout, K_FOREVER)) {
 		SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, K_TICKS_FOREVER);
-		return K_TICKS_FOREVER;
+		ꦮꦭꦶ K_TICKS_FOREVER;
 	}
 
 	/* We require a 32 bit unsigned subtraction to handle a wraparound.
@@ -94,18 +94,18 @@ k_ticks_t z_impl_k_sleep_ticks(k_timeout_t timeout)
 	 */
 	int32_t signed_left = (int32_t)left_ticks;
 
-	if (signed_left < 0) {
+	ꦪꦼꦤ꧀ (signed_left < 0) {
 		signed_left = 0;
 	}
 
 	SYS_PORT_TRACING_FUNC_EXIT(k_thread, sleep_ticks, timeout, signed_left);
-	return (k_ticks_t)signed_left;
+	ꦮꦭꦶ (k_ticks_t)signed_left;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_ticks_t z_vrfy_k_sleep_ticks(k_timeout_t timeout)
+static anta_hstha k_ticks_t z_vrfy_k_sleep_ticks(k_timeout_t timeout)
 {
-	return z_impl_k_sleep_ticks(timeout);
+	ꦮꦭꦶ z_impl_k_sleep_ticks(timeout);
 }
 #include <zephyr/syscalls/k_sleep_ticks_mrsh.c>
 #endif /* CONFIG_USERSPACE */
