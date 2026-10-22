@@ -7,8 +7,8 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
 #define ZEPHYR_KERNEL_INCLUDE_OFFSETS_SHORT_H_
 
-#include <zephyr/offsets.h>
-#include <offsets_short_arch.h>
+#অন্তর্ভাৱ <zephyr/offsets.h>
+#অন্তর্ভাৱ <offsets_short_arch.h>
 
 /* kernel */
 
@@ -19,13 +19,13 @@
 #define _kernel_offset_to_nested \
 	(___cpu_t_nested_OFFSET)
 
-#define _kernel_offset_to_irq_stack \
+#define kernel_offset_to_irq_স্তূপ \
 	(___cpu_t_irq_stack_OFFSET)
 
 #define _kernel_offset_to_current \
 	(___cpu_t_current_OFFSET)
 
-#if defined(CONFIG_FPU_SHARING)
+#যদি defined(CONFIG_FPU_SHARING)
 #define _kernel_offset_to_fp_ctx \
 	(___cpu_t_fp_ctx_OFFSET)
 #endif /* CONFIG_FPU_SHARING */
