@@ -5,23 +5,23 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
 #define ZEPHYR_KERNEL_INCLUDE_RUN_Q_H_
 
-#include <zephyr/kernel.h>
-#include <ksched.h>
-#include <zephyr/spinlock.h>
-#include <wait_q.h>
-#include <kthread.h>
-#include <priority_q.h>
-#include <ipi.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/spinlock.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <kthread.h>
+#ಅನ್ತರ್ಭಾವ <priority_q.h>
+#ಅನ್ತರ್ಭಾವ <ipi.h>
 
 
-static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ *thread_runq(ಸಂರಚನಾ k_thread *thread)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
 	uint32_t cpu_mask = thread->base.cpu_mask;
 
 	__ASSERT(cpu_mask != 0U, "thread queued with empty CPU mask");
 
-	unsigned int cpu = (unsigned int)u32_count_trailing_zeros(cpu_mask);
+	unsigned ಪೂರ್ಣಾಙ್ಕ cpu = (unsigned ಪೂರ್ಣಾಙ್ಕ)u32_ಎಣಿಕೆ_trailing_zeros(cpu_mask);
 
 	__ASSERT(cpu < ARRAY_SIZE(_kernel.cpus),
 		 "cpu_mask bit %u exceeds cpu count %zu",
@@ -30,25 +30,25 @@ static ALWAYS_INLINE void *thread_runq(struct k_thread *thread)
 	/* Clamp so static-analysis tools that cannot see the assert
 	 * above do not flag the array access as out-of-bounds.
 	 */
-	cpu = MIN(cpu, (unsigned int)(ARRAY_SIZE(_kernel.cpus) - 1U));
+	cpu = MIN(cpu, (unsigned ಪೂರ್ಣಾಙ್ಕ)(ARRAY_SIZE(_kernel.cpus) - 1U));
 
-	return &_kernel.cpus[cpu].ready_q.runq;
-#else
+	ಪ್ರತ್ಯಾಗಮ &_kernel.cpus[cpu].ready_q.runq;
+#ಅನ್ಯಥಾ
 	ARG_UNUSED(thread);
-	return &_kernel.ready_q.runq;
+	ಪ್ರತ್ಯಾಗಮ &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void *curr_cpu_runq(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ *curr_cpu_runq(ಶೂನ್ಯ)
 {
 #ifdef CONFIG_SCHED_CPU_MASK_PIN_ONLY
-	return &arch_curr_cpu()->ready_q.runq;
-#else
-	return &_kernel.ready_q.runq;
+	ಪ್ರತ್ಯಾಗಮ &arch_curr_cpu()->ready_q.runq;
+#ಅನ್ಯಥಾ
+	ಪ್ರತ್ಯಾಗಮ &_kernel.ready_q.runq;
 #endif /* CONFIG_SCHED_CPU_MASK_PIN_ONLY */
 }
 
-static ALWAYS_INLINE void runq_add(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_add(ಸಂರಚನಾ k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
@@ -56,7 +56,7 @@ static ALWAYS_INLINE void runq_add(struct k_thread *thread)
 	_priq_run_add(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_remove(ಸಂರಚನಾ k_thread *thread)
 {
 	__ASSERT_NO_MSG(!z_is_idle_thread_object(thread));
 	__ASSERT_NO_MSG(!is_thread_dummy(thread));
@@ -64,43 +64,43 @@ static ALWAYS_INLINE void runq_remove(struct k_thread *thread)
 	_priq_run_remove(thread_runq(thread), thread);
 }
 
-static ALWAYS_INLINE void runq_yield(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ runq_yield(ಶೂನ್ಯ)
 {
 	_priq_run_yield(curr_cpu_runq());
 }
 
-static ALWAYS_INLINE struct k_thread *runq_best(void)
+ಸ್ಥಿರ ALWAYS_INLINE ಸಂರಚನಾ k_thread *runq_best(ಶೂನ್ಯ)
 {
-	return _priq_run_best(curr_cpu_runq());
+	ಪ್ರತ್ಯಾಗಮ _priq_run_best(curr_cpu_runq());
 }
 
 /*
  * _current is never in the run queue until context switch on
  * SMP configurations.
  */
-static inline bool should_queue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ bool should_queue_thread(ಸಂರಚನಾ k_thread *thread)
 {
-	return !IS_ENABLED(CONFIG_SMP) || (thread != _current);
+	ಪ್ರತ್ಯಾಗಮ !IS_ENABLED(CONFIG_SMP) || (thread != _current);
 }
 
-static ALWAYS_INLINE void queue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ queue_thread(ಸಂರಚನಾ k_thread *thread)
 {
 	z_mark_thread_as_queued(thread);
-	if (should_queue_thread(thread)) {
+	ಯದಿ (should_queue_thread(thread)) {
 		runq_add(thread);
 	}
 #ifdef CONFIG_SMP
-	if (thread == _current) {
+	ಯದಿ (thread == _current) {
 		/* add current to end of queue means "yield" */
 		_current_cpu->swap_ok = true;
 	}
 #endif /* CONFIG_SMP */
 }
 
-static ALWAYS_INLINE void dequeue_thread(struct k_thread *thread)
+ಸ್ಥಿರ ALWAYS_INLINE ಶೂನ್ಯ dequeue_thread(ಸಂರಚನಾ k_thread *thread)
 {
 	z_mark_thread_as_not_queued(thread);
-	if (should_queue_thread(thread)) {
+	ಯದಿ (should_queue_thread(thread)) {
 		runq_remove(thread);
 	}
 }

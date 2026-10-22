@@ -6,10 +6,10 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_USAGE_H_
 #define ZEPHYR_KERNEL_INCLUDE_USAGE_H_
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
 #ifdef __cplusplus
-extern "C" {
+ಬಾಹ್ಯ "C" {
 #endif
 
 
@@ -30,22 +30,22 @@ extern "C" {
  * requires no other synchronization.  Architecture layers don't need
  * to do anything more.
  */
-void z_sched_usage_stop(void);
+ಶೂನ್ಯ z_sched_usage_stop(ಶೂನ್ಯ);
 
-void z_sched_usage_start(struct k_thread *thread);
+ಶೂನ್ಯ z_sched_usage_start(ಸಂರಚನಾ k_thread *thread);
 
 /**
  * @brief Retrieves CPU cycle usage data for specified core
  */
-void z_sched_cpu_usage(uint8_t core_id, struct k_thread_runtime_stats *stats);
+ಶೂನ್ಯ z_sched_cpu_usage(uint8_t core_id, ಸಂರಚನಾ k_thread_runtime_stats *stats);
 
 /**
  * @brief Retrieves thread cycle usage data for specified thread
  */
-void z_sched_thread_usage(struct k_thread *thread,
-			  struct k_thread_runtime_stats *stats);
+ಶೂನ್ಯ z_sched_thread_usage(ಸಂರಚನಾ k_thread *thread,
+			  ಸಂರಚನಾ k_thread_runtime_stats *stats);
 
-static inline void z_sched_usage_switch(struct k_thread *thread)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ z_sched_usage_switch(ಸಂರಚನಾ k_thread *thread)
 {
 	ARG_UNUSED(thread);
 #ifdef CONFIG_SCHED_THREAD_USAGE

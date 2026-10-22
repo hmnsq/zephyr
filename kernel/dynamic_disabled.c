@@ -4,41 +4,41 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <errno.h>
+#ಅನ್ತರ್ಭಾವ <errno.h>
 
-#include <zephyr/kernel.h>
-#include <zephyr/kernel/thread_stack.h>
-#include <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel/thread_stack.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
 
-k_thread_stack_t *z_impl_k_thread_stack_alloc(size_t size, int flags)
+k_thread_ರಾಶಿ_t *z_impl_k_thread_ರಾಶಿ_alloc(size_t size, ಪೂರ್ಣಾಙ್ಕ flags)
 {
 	ARG_UNUSED(size);
 	ARG_UNUSED(flags);
 
-	return NULL;
+	ಪ್ರತ್ಯಾಗಮ ರಿಕ್ತ;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline k_thread_stack_t *z_vrfy_k_thread_stack_alloc(size_t size, int flags)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ k_thread_ರಾಶಿ_t *z_vrfy_k_thread_ರಾಶಿ_alloc(size_t size, ಪೂರ್ಣಾಙ್ಕ flags)
 {
 	/* No check needed: neither argument is dereferenced, allocation always fails. */
-	return z_impl_k_thread_stack_alloc(size, flags);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_thread_ರಾಶಿ_alloc(size, flags);
 }
-#include <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_thread_stack_alloc_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_thread_stack_free(k_thread_stack_t *stack)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_thread_ರಾಶಿ_free(k_thread_ರಾಶಿ_t *ರಾಶಿ)
 {
-	ARG_UNUSED(stack);
+	ARG_UNUSED(ರಾಶಿ);
 
-	return -ENOSYS;
+	ಪ್ರತ್ಯಾಗಮ -ENOSYS;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_thread_stack_free(k_thread_stack_t *stack)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_thread_ರಾಶಿ_free(k_thread_ರಾಶಿ_t *ರಾಶಿ)
 {
 	/* No check needed: stack is not dereferenced, -ENOSYS is always returned. */
-	return z_impl_k_thread_stack_free(stack);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_thread_ರಾಶಿ_free(ರಾಶಿ);
 }
-#include <zephyr/syscalls/k_thread_stack_free_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_thread_stack_free_mrsh.c>
 #endif /* CONFIG_USERSPACE */

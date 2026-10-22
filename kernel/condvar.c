@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <zephyr/toolchain.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <wait_q.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
 
 #ifdef CONFIG_OBJ_CORE_CONDVAR
-K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_condvar, k_condvar, K_OBJ_TYPE_CONDVAR_ID, ರಿಕ್ತ);
 #endif /* CONFIG_OBJ_CORE_CONDVAR */
 
-static struct k_spinlock condvar_lock;
+ಸ್ಥಿರ ಸಂರಚನಾ k_spinlock condvar_lock;
 
-int z_impl_k_condvar_init(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_condvar_init(ಸಂರಚನಾ k_condvar *condvar)
 {
 	z_waitq_init(&condvar->wait_q);
 	k_object_init(condvar);
@@ -29,101 +29,101 @@ int z_impl_k_condvar_init(struct k_condvar *condvar)
 
 	SYS_PORT_TRACING_OBJ_INIT(k_condvar, condvar, 0);
 
-	return 0;
+	ಪ್ರತ್ಯಾಗಮ 0;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_init(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_condvar_init(ಸಂರಚನಾ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_init(condvar);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_condvar_init(condvar);
 }
-#include <zephyr/syscalls/k_condvar_init_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_signal(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_condvar_signal(ಸಂರಚನಾ k_condvar *condvar)
 {
-	k_spinlock_key_t key = k_spin_lock(&condvar_lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_lock(&condvar_lock);
 
-	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, signal, condvar);
+	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, ಸಙ್ಕೇತ, condvar);
 
-	if (z_sched_wake(&condvar->wait_q, 0, NULL)) {
-		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_condvar, signal, condvar, K_FOREVER);
-		z_reschedule(&condvar_lock, key);
-	} else {
-		k_spin_unlock(&condvar_lock, key);
+	ಯದಿ (z_sched_wake(&condvar->wait_q, 0, ರಿಕ್ತ)) {
+		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_condvar, ಸಙ್ಕೇತ, condvar, K_FOREVER);
+		z_reschedule(&condvar_lock, ಕೀಲಿ);
+	} ಅನ್ಯಥಾ {
+		k_spin_unlock(&condvar_lock, ಕೀಲಿ);
 	}
 
-	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, signal, condvar, 0);
+	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, ಸಙ್ಕೇತ, condvar, 0);
 
-	return 0;
+	ಪ್ರತ್ಯಾಗಮ 0;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_signal(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_condvar_signal(ಸಂರಚನಾ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_signal(condvar);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_condvar_signal(condvar);
 }
-#include <zephyr/syscalls/k_condvar_signal_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_signal_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_broadcast(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_condvar_broadcast(ಸಂರಚನಾ k_condvar *condvar)
 {
-	k_spinlock_key_t key;
-	int woken = 0;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಙ್ಕ woken = 0;
 
-	key = k_spin_lock(&condvar_lock);
+	ಕೀಲಿ = k_spin_lock(&condvar_lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, broadcast, condvar);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&condvar->wait_q, 0, NULL)) {
+	ಯಾವತ್ (z_sched_wake(&condvar->wait_q, 0, ರಿಕ್ತ)) {
 		woken++;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, broadcast, condvar, woken);
 
 
-	if (woken == 0) {
-		k_spin_unlock(&condvar_lock, key);
-	} else {
-		z_reschedule(&condvar_lock, key);
+	ಯದಿ (woken == 0) {
+		k_spin_unlock(&condvar_lock, ಕೀಲಿ);
+	} ಅನ್ಯಥಾ {
+		z_reschedule(&condvar_lock, ಕೀಲಿ);
 	}
 
-	return woken;
+	ಪ್ರತ್ಯಾಗಮ woken;
 }
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_broadcast(struct k_condvar *condvar)
+ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_condvar_broadcast(ಸಂರಚನಾ k_condvar *condvar)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
-	return z_impl_k_condvar_broadcast(condvar);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_condvar_broadcast(condvar);
 }
-#include <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_broadcast_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_condvar_wait(ಸಂರಚನಾ k_condvar *condvar, ಸಂರಚನಾ k_mutex *mutex,
 			  k_timeout_t timeout)
 {
-	k_spinlock_key_t key;
-	int ret = -EAGAIN;
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ;
+	ಪೂರ್ಣಾಙ್ಕ ret = -EAGAIN;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_condvar, wait, condvar, timeout);
 
-	if (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
+	ಯದಿ (unlikely(K_TIMEOUT_EQ(timeout, K_NO_WAIT))) {
 		/* No wait: per POSIX semantics, the mutex must remain locked when
 		 * k_condvar_wait() returns. Returning -EAGAIN immediately without
 		 * touching the mutex preserves the calling-thread-holds-mutex
 		 * invariant.
 		 */
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
-		return ret;
+		ಪ್ರತ್ಯಾಗಮ ret;
 	}
 
-	key = k_spin_lock(&condvar_lock);
+	ಕೀಲಿ = k_spin_lock(&condvar_lock);
 	k_mutex_unlock(mutex);
 
-	ret = z_pend_curr(&condvar_lock, key, &condvar->wait_q, timeout);
+	ret = z_pend_curr(&condvar_lock, ಕೀಲಿ, &condvar->wait_q, timeout);
 
 	/* Always re-acquire the mutex before returning, even on timeout.
 	 * This matches POSIX semantics: the mutex must be locked by the
@@ -134,15 +134,15 @@ int z_impl_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_condvar, wait, condvar, timeout, ret);
 
-	return ret;
+	ಪ್ರತ್ಯಾಗಮ ret;
 }
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_condvar_wait(struct k_condvar *condvar, struct k_mutex *mutex,
+ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_condvar_wait(ಸಂರಚನಾ k_condvar *condvar, ಸಂರಚನಾ k_mutex *mutex,
 			  k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(condvar, K_OBJ_CONDVAR));
 	K_OOPS(K_SYSCALL_OBJ(mutex, K_OBJ_MUTEX));
-	return z_impl_k_condvar_wait(condvar, mutex, timeout);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_condvar_wait(condvar, mutex, timeout);
 }
-#include <zephyr/syscalls/k_condvar_wait_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_condvar_wait_mrsh.c>
 #endif /* CONFIG_USERSPACE */

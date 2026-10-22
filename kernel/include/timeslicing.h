@@ -7,7 +7,7 @@
 #ifndef ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
 #define ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H
 
-void z_time_slice(void);
-void z_time_slice_reset(struct k_thread *curr);
+ಶೂನ್ಯ z_time_slice(ಶೂನ್ಯ);
+ಶೂನ್ಯ z_time_slice_reset(ಸಂರಚನಾ k_thread *curr);
 
 #endif /* ZEPHYR_INCLUDE_KERNEL_TIMESLICING_H */

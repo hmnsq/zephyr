@@ -17,17 +17,17 @@
  * having to poll.
  */
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-#include <zephyr/toolchain.h>
-#include <wait_q.h>
-#include <zephyr/sys/dlist.h>
-#include <ksched.h>
-#include <scheduler.h>
-#include <zephyr/init.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/tracing/tracing.h>
-#include <zephyr/sys/check.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <wait_q.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/dlist.h>
+#ಅನ್ತರ್ಭಾವ <ksched.h>
+#ಅನ್ತರ್ಭಾವ <scheduler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/init.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/tracing/tracing.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/sys/check.h>
 
 /* Optional striped locks reduce the performance impact of a system-wide
  * semaphore lock without the significant extra RAM required by per-object
@@ -38,50 +38,50 @@
 /* A k_spinlock can be zero-sized on uniprocessor configurations. Keep the
  * default lock scalar because arrays of empty structures are not portable.
  */
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
-static struct k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
-#else
-static struct k_spinlock sem_lock;
+#ಯದಿ defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
+ಸ್ಥಿರ ಸಂರಚನಾ k_spinlock sem_locks[CONFIG_SEM_LOCK_STRIPES];
+#ಅನ್ಯಥಾ
+ಸ್ಥಿರ ಸಂರಚನಾ k_spinlock sem_lock;
 #endif
 
-static inline struct k_spinlock *sem_spinlock_get(struct k_sem *sem)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಸಂರಚನಾ k_spinlock *sem_spinlock_get(ಸಂರಚನಾ k_sem *sem)
 {
-#if defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
+#ಯದಿ defined(CONFIG_SMP) && (CONFIG_SEM_LOCK_STRIPES > 1)
 	BUILD_ASSERT(IS_POWER_OF_TWO(CONFIG_SEM_LOCK_STRIPES),
 		     "CONFIG_SEM_LOCK_STRIPES must be a power of two");
 
 	/* Hash the naturally aligned semaphore address into a lock stripe. */
-	return &sem_locks[((uintptr_t)sem / __alignof(struct k_sem)) %
+	ಪ್ರತ್ಯಾಗಮ &sem_locks[((uintptr_t)sem / __alignof(ಸಂರಚನಾ k_sem)) %
 			  CONFIG_SEM_LOCK_STRIPES];
-#else
+#ಅನ್ಯಥಾ
 	ARG_UNUSED(sem);
-	return &sem_lock;
+	ಪ್ರತ್ಯಾಗಮ &sem_lock;
 #endif
 }
 
 #ifdef CONFIG_OBJ_CORE_SEM
-K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, NULL);
+K_OBJ_TYPE_DEFINE(obj_type_sem, k_sem, K_OBJ_TYPE_SEM_ID, ರಿಕ್ತ);
 #endif /* CONFIG_OBJ_CORE_SEM */
 
-int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_sem_init(ಸಂರಚನಾ k_sem *sem, unsigned ಪೂರ್ಣಾಙ್ಕ initial_ಎಣಿಕೆ,
+		      unsigned ಪೂರ್ಣಾಙ್ಕ limit)
 {
 	/*
 	 * Limit cannot be zero and count cannot be greater than limit
 	 */
-	CHECKIF(limit == 0U || initial_count > limit) {
+	CHECKIF(limit == 0U || initial_ಎಣಿಕೆ > limit) {
 		SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, -EINVAL);
 
-		return -EINVAL;
+		ಪ್ರತ್ಯಾಗಮ -EINVAL;
 	}
 
-	sem->count = initial_count;
+	sem->ಎಣಿಕೆ = initial_ಎಣಿಕೆ;
 	sem->limit = limit;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, init, sem, 0);
 
 	z_waitq_init(&sem->wait_q);
-#if defined(CONFIG_POLL)
+#ಯದಿ defined(CONFIG_POLL)
 	sys_dlist_init(&sem->poll_events);
 #endif /* CONFIG_POLL */
 	k_object_init(sem);
@@ -90,137 +90,137 @@ int z_impl_k_sem_init(struct k_sem *sem, unsigned int initial_count,
 	k_obj_core_init_and_link(K_OBJ_CORE(sem), &obj_type_sem);
 #endif /* CONFIG_OBJ_CORE_SEM */
 
-	return 0;
+	ಪ್ರತ್ಯಾಗಮ 0;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_sem_init(struct k_sem *sem, unsigned int initial_count,
-		      unsigned int limit)
+ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_sem_init(ಸಂರಚನಾ k_sem *sem, unsigned ಪೂರ್ಣಾಙ್ಕ initial_ಎಣಿಕೆ,
+		      unsigned ಪೂರ್ಣಾಙ್ಕ limit)
 {
 	K_OOPS(K_SYSCALL_OBJ_INIT(sem, K_OBJ_SEM));
-	return z_impl_k_sem_init(sem, initial_count, limit);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_sem_init(sem, initial_ಎಣಿಕೆ, limit);
 }
-#include <zephyr/syscalls/k_sem_init_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_sem_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-static inline bool sem_handle_poll_events(struct k_sem *sem)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ bool sem_handle_poll_events(ಸಂರಚನಾ k_sem *sem)
 {
 #ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
-#else
+	ಪ್ರತ್ಯಾಗಮ z_handle_obj_poll_events(&sem->poll_events, K_POLL_STATE_SEM_AVAILABLE);
+#ಅನ್ಯಥಾ
 	ARG_UNUSED(sem);
-	return false;
+	ಪ್ರತ್ಯಾಗಮ false;
 #endif /* CONFIG_POLL */
 }
 
-void z_impl_k_sem_give(struct k_sem *sem)
+ಶೂನ್ಯ z_impl_k_sem_give(ಸಂರಚನಾ k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	ಸಂರಚನಾ k_spinlock *lock = sem_spinlock_get(sem);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_lock(lock);
 	bool resched;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, give, sem);
 
-	if (z_sched_wake(&sem->wait_q, 0, NULL)) {
+	ಯದಿ (z_sched_wake(&sem->wait_q, 0, ರಿಕ್ತ)) {
 		resched = true;
-	} else {
-		sem->count += (sem->count != sem->limit) ? 1U : 0U;
+	} ಅನ್ಯಥಾ {
+		sem->ಎಣಿಕೆ += (sem->ಎಣಿಕೆ != sem->limit) ? 1U : 0U;
 		resched = sem_handle_poll_events(sem);
 	}
 
-	if (unlikely(resched)) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	ಯದಿ (unlikely(resched)) {
+		z_reschedule(lock, ಕೀಲಿ);
+	} ಅನ್ಯಥಾ {
+		k_spin_unlock(lock, ಕೀಲಿ);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, give, sem);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_sem_give(struct k_sem *sem)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ z_vrfy_k_sem_give(ಸಂರಚನಾ k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_give(sem);
 }
-#include <zephyr/syscalls/k_sem_give_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_sem_give_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+ಪೂರ್ಣಾಙ್ಕ z_impl_k_sem_take(ಸಂರಚನಾ k_sem *sem, k_timeout_t timeout)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	int ret;
+	ಸಂರಚನಾ k_spinlock *lock = sem_spinlock_get(sem);
+	ಪೂರ್ಣಾಙ್ಕ ret;
 
 	__ASSERT(((arch_is_in_isr() == false) ||
 		  K_TIMEOUT_EQ(timeout, K_NO_WAIT)), "");
 
-	k_spinlock_key_t key = k_spin_lock(lock);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_lock(lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_sem, take, sem, timeout);
 
-	if (likely(sem->count > 0U)) {
-		sem->count--;
-		k_spin_unlock(lock, key);
+	ಯದಿ (likely(sem->ಎಣಿಕೆ > 0U)) {
+		sem->ಎಣಿಕೆ--;
+		k_spin_unlock(lock, ಕೀಲಿ);
 		ret = 0;
-		goto out;
+		ಗಚ್ಛ out;
 	}
 
-	if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
-		k_spin_unlock(lock, key);
+	ಯದಿ (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+		k_spin_unlock(lock, ಕೀಲಿ);
 		ret = -EBUSY;
-		goto out;
+		ಗಚ್ಛ out;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_sem, take, sem, timeout);
 
-	ret = z_pend_curr(lock, key, &sem->wait_q, timeout);
+	ret = z_pend_curr(lock, ಕೀಲಿ, &sem->wait_q, timeout);
 
 out:
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_sem, take, sem, timeout, ret);
 
-	return ret;
+	ಪ್ರತ್ಯಾಗಮ ret;
 }
 
-void z_impl_k_sem_reset(struct k_sem *sem)
+ಶೂನ್ಯ z_impl_k_sem_reset(ಸಂರಚನಾ k_sem *sem)
 {
-	struct k_spinlock *lock = sem_spinlock_get(sem);
-	k_spinlock_key_t key = k_spin_lock(lock);
+	ಸಂರಚನಾ k_spinlock *lock = sem_spinlock_get(sem);
+	k_spinlock_ಕೀಲಿ_t ಕೀಲಿ = k_spin_lock(lock);
 	bool resched = false;
 
-	while (z_sched_wake(&sem->wait_q, -EAGAIN, NULL)) {
+	ಯಾವತ್ (z_sched_wake(&sem->wait_q, -EAGAIN, ರಿಕ್ತ)) {
 		resched = true;
 	}
-	sem->count = 0;
+	sem->ಎಣಿಕೆ = 0;
 
 	SYS_PORT_TRACING_OBJ_FUNC(k_sem, reset, sem);
 
-	if (resched) {
-		z_reschedule(lock, key);
-	} else {
-		k_spin_unlock(lock, key);
+	ಯದಿ (resched) {
+		z_reschedule(lock, ಕೀಲಿ);
+	} ಅನ್ಯಥಾ {
+		k_spin_unlock(lock, ಕೀಲಿ);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_sem_take(struct k_sem *sem, k_timeout_t timeout)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_sem_take(ಸಂರಚನಾ k_sem *sem, k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_take(sem, timeout);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_sem_take(sem, timeout);
 }
-#include <zephyr/syscalls/k_sem_take_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_sem_take_mrsh.c>
 
-static inline void z_vrfy_k_sem_reset(struct k_sem *sem)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ ಶೂನ್ಯ z_vrfy_k_sem_reset(ಸಂರಚನಾ k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
 	z_impl_k_sem_reset(sem);
 }
-#include <zephyr/syscalls/k_sem_reset_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_sem_reset_mrsh.c>
 
-static inline unsigned int z_vrfy_k_sem_count_get(struct k_sem *sem)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ unsigned ಪೂರ್ಣಾಙ್ಕ z_vrfy_k_sem_ಎಣಿಕೆ_get(ಸಂರಚನಾ k_sem *sem)
 {
 	K_OOPS(K_SYSCALL_OBJ(sem, K_OBJ_SEM));
-	return z_impl_k_sem_count_get(sem);
+	ಪ್ರತ್ಯಾಗಮ z_impl_k_sem_ಎಣಿಕೆ_get(sem);
 }
-#include <zephyr/syscalls/k_sem_count_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_sem_count_get_mrsh.c>
 
 #endif /* CONFIG_USERSPACE */

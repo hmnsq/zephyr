@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
-#include <kernel_internal.h>
-#include <zephyr/internal/syscall_handler.h>
-#include <zephyr/toolchain.h>
-#include <zephyr/kernel/mm/demand_paging.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <kernel_internal.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/internal/syscall_handler.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/toolchain.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel/mm/demand_paging.h>
 
-extern struct k_mem_paging_stats_t paging_stats;
+ಬಾಹ್ಯ ಸಂರಚನಾ k_mem_paging_stats_t paging_stats;
 
 #ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-struct k_mem_paging_histogram_t z_paging_histogram_eviction;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
-struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
+ಸಂರಚನಾ k_mem_paging_histogram_t z_paging_histogram_eviction;
+ಸಂರಚನಾ k_mem_paging_histogram_t z_paging_histogram_backing_store_page_in;
+ಸಂರಚನಾ k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
 
 #ifdef CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS
 
@@ -27,22 +27,22 @@ struct k_mem_paging_histogram_t z_paging_histogram_backing_store_page_out;
  * being used.
  */
 
-extern unsigned long
+ಬಾಹ್ಯ unsigned long
 k_mem_paging_eviction_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_ಅಂಕೆ_BINS];
 
-extern unsigned long
+ಬಾಹ್ಯ unsigned long
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS];
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_ಅಂಕೆ_BINS];
 
-#else
+#ಅನ್ಯಥಾ
 #define NS_TO_CYC(ns)		(CONFIG_SYS_CLOCK_HW_CYCLES_PER_SEC / 1000000U * ns)
 
 /*
  * This provides the upper bounds of the bins in eviction timing histogram.
  */
 __weak unsigned long
-k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
+k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_ಅಂಕೆ_BINS] = {
 	NS_TO_CYC(1),
 	NS_TO_CYC(5),
 	NS_TO_CYC(10),
@@ -61,7 +61,7 @@ k_mem_paging_eviction_histogram_bounds[CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM
  */
 __weak unsigned long
 k_mem_paging_backing_store_histogram_bounds[
-	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS] = {
+	CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_ಅಂಕೆ_BINS] = {
 	NS_TO_CYC(10),
 	NS_TO_CYC(100),
 	NS_TO_CYC(125),
@@ -76,66 +76,66 @@ k_mem_paging_backing_store_histogram_bounds[
 #endif /* CONFIG_DEMAND_PAGING_STATS_USING_TIMING_FUNCTIONS */
 #endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */
 
-unsigned long k_mem_num_pagefaults_get(void)
+unsigned long k_mem_ಅಂಕೆ_pagefaults_get(ಶೂನ್ಯ)
 {
 	unsigned long ret;
-	unsigned int key;
+	unsigned ಪೂರ್ಣಾಙ್ಕ ಕೀಲಿ;
 
-	key = irq_lock();
+	ಕೀಲಿ = irq_lock();
 	ret = paging_stats.pagefaults.cnt;
-	irq_unlock(key);
+	irq_unlock(ಕೀಲಿ);
 
-	return ret;
+	ಪ್ರತ್ಯಾಗಮ ret;
 }
 
-void z_impl_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+ಶೂನ್ಯ z_impl_k_mem_paging_stats_get(ಸಂರಚನಾ k_mem_paging_stats_t *stats)
 {
-	if (stats == NULL) {
-		return;
+	ಯದಿ (stats == ರಿಕ್ತ) {
+		ಪ್ರತ್ಯಾಗಮ;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &paging_stats, sizeof(paging_stats));
+	memcpy(stats, &paging_stats, ಪರಿಮಾಣ(paging_stats));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_stats_get(struct k_mem_paging_stats_t *stats)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ
+ಶೂನ್ಯ z_vrfy_k_mem_paging_stats_get(ಸಂರಚನಾ k_mem_paging_stats_t *stats)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, ಪರಿಮಾಣ(*stats)));
 	z_impl_k_mem_paging_stats_get(stats);
 }
-#include <zephyr/syscalls/k_mem_paging_stats_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_mem_paging_stats_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #ifdef CONFIG_DEMAND_PAGING_THREAD_STATS
-void z_impl_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+ಶೂನ್ಯ z_impl_k_mem_paging_thread_stats_get(ಸಂರಚನಾ k_thread *thread,
+					  ಸಂರಚನಾ k_mem_paging_stats_t *stats)
 {
-	if ((thread == NULL) || (stats == NULL)) {
-		return;
+	ಯದಿ ((thread == ರಿಕ್ತ) || (stats == ರಿಕ್ತ)) {
+		ಪ್ರತ್ಯಾಗಮ;
 	}
 
 	/* Copy statistics */
-	memcpy(stats, &thread->paging_stats, sizeof(thread->paging_stats));
+	memcpy(stats, &thread->paging_stats, ಪರಿಮಾಣ(thread->paging_stats));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_thread_stats_get(struct k_thread *thread,
-					  struct k_mem_paging_stats_t *stats)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ
+ಶೂನ್ಯ z_vrfy_k_mem_paging_thread_stats_get(ಸಂರಚನಾ k_thread *thread,
+					  ಸಂರಚನಾ k_mem_paging_stats_t *stats)
 {
 	K_OOPS(K_SYSCALL_OBJ(thread, K_OBJ_THREAD));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, sizeof(*stats)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(stats, ಪರಿಮಾಣ(*stats)));
 	z_impl_k_mem_paging_thread_stats_get(thread, stats);
 }
-#include <zephyr/syscalls/k_mem_paging_thread_stats_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_mem_paging_thread_stats_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #endif /* CONFIG_DEMAND_PAGING_THREAD_STATS */
 
 #ifdef CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM
-void z_paging_histogram_init(void)
+ಶೂನ್ಯ z_paging_histogram_init(ಶೂನ್ಯ)
 {
 	/*
 	 * Zero out the histogram structs and copy the bounds.
@@ -144,22 +144,22 @@ void z_paging_histogram_init(void)
 	 * the source bound array may not be pinned.
 	 */
 
-	memset(&z_paging_histogram_eviction, 0, sizeof(z_paging_histogram_eviction));
+	memset(&z_paging_histogram_eviction, 0, ಪರಿಮಾಣ(z_paging_histogram_eviction));
 	memcpy(z_paging_histogram_eviction.bounds,
 	       k_mem_paging_eviction_histogram_bounds,
-	       sizeof(z_paging_histogram_eviction.bounds));
+	       ಪರಿಮಾಣ(z_paging_histogram_eviction.bounds));
 
 	memset(&z_paging_histogram_backing_store_page_in, 0,
-	       sizeof(z_paging_histogram_backing_store_page_in));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_in));
 	memcpy(z_paging_histogram_backing_store_page_in.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_in.bounds));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_in.bounds));
 
 	memset(&z_paging_histogram_backing_store_page_out, 0,
-	       sizeof(z_paging_histogram_backing_store_page_out));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_out));
 	memcpy(z_paging_histogram_backing_store_page_out.bounds,
 	       k_mem_paging_backing_store_histogram_bounds,
-	       sizeof(z_paging_histogram_backing_store_page_out.bounds));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_out.bounds));
 }
 
 /**
@@ -168,84 +168,84 @@ void z_paging_histogram_init(void)
  * @param hist The timing histogram to be updated.
  * @param cycles Time spent in measured operation.
  */
-void z_paging_histogram_inc(struct k_mem_paging_histogram_t *hist,
+ಶೂನ್ಯ z_paging_histogram_inc(ಸಂರಚನಾ k_mem_paging_histogram_t *hist,
 			    uint32_t cycles)
 {
-	int idx;
+	ಪೂರ್ಣಾಙ್ಕ idx;
 
-	for (idx = 0;
-	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_NUM_BINS;
+	ಪ್ರತಿ (idx = 0;
+	     idx < CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM_ಅಂಕೆ_BINS;
 	     idx++) {
-		if (cycles <= hist->bounds[idx]) {
+		ಯದಿ (cycles <= hist->bounds[idx]) {
 			hist->counts[idx]++;
-			break;
+			ಭಙ್ಗ;
 		}
 	}
 }
 
-void z_impl_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+ಶೂನ್ಯ z_impl_k_mem_paging_histogram_eviction_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ಯದಿ (hist == ರಿಕ್ತ) {
+		ಪ್ರತ್ಯಾಗಮ;
 	}
 
 	/* Copy statistics */
 	memcpy(hist, &z_paging_histogram_eviction,
-	       sizeof(z_paging_histogram_eviction));
+	       ಪರಿಮಾಣ(z_paging_histogram_eviction));
 }
 
-void z_impl_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+ಶೂನ್ಯ z_impl_k_mem_paging_histogram_backing_store_page_in_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ಯದಿ (hist == ರಿಕ್ತ) {
+		ಪ್ರತ್ಯಾಗಮ;
 	}
 
 	/* Copy histogram */
 	memcpy(hist, &z_paging_histogram_backing_store_page_in,
-	       sizeof(z_paging_histogram_backing_store_page_in));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_in));
 }
 
-void z_impl_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+ಶೂನ್ಯ z_impl_k_mem_paging_histogram_backing_store_page_out_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	if (hist == NULL) {
-		return;
+	ಯದಿ (hist == ರಿಕ್ತ) {
+		ಪ್ರತ್ಯಾಗಮ;
 	}
 
 	/* Copy histogram */
 	memcpy(hist, &z_paging_histogram_backing_store_page_out,
-	       sizeof(z_paging_histogram_backing_store_page_out));
+	       ಪರಿಮಾಣ(z_paging_histogram_backing_store_page_out));
 }
 
 #ifdef CONFIG_USERSPACE
-static inline
-void z_vrfy_k_mem_paging_histogram_eviction_get(
-	struct k_mem_paging_histogram_t *hist)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ
+ಶೂನ್ಯ z_vrfy_k_mem_paging_histogram_eviction_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, ಪರಿಮಾಣ(*hist)));
 	z_impl_k_mem_paging_histogram_eviction_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_eviction_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_mem_paging_histogram_eviction_get_mrsh.c>
 
-static inline
-void z_vrfy_k_mem_paging_histogram_backing_store_page_in_get(
-	struct k_mem_paging_histogram_t *hist)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ
+ಶೂನ್ಯ z_vrfy_k_mem_paging_histogram_backing_store_page_in_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, ಪರಿಮಾಣ(*hist)));
 	z_impl_k_mem_paging_histogram_backing_store_page_in_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_in_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_in_get_mrsh.c>
 
-static inline
-void z_vrfy_k_mem_paging_histogram_backing_store_page_out_get(
-	struct k_mem_paging_histogram_t *hist)
+ಸ್ಥಿರ ಅನ್ತಃಸ್ಥ
+ಶೂನ್ಯ z_vrfy_k_mem_paging_histogram_backing_store_page_out_get(
+	ಸಂರಚನಾ k_mem_paging_histogram_t *hist)
 {
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, sizeof(*hist)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(hist, ಪರಿಮಾಣ(*hist)));
 	z_impl_k_mem_paging_histogram_backing_store_page_out_get(hist);
 }
-#include <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_out_get_mrsh.c>
+#ಅನ್ತರ್ಭಾವ <zephyr/syscalls/k_mem_paging_histogram_backing_store_page_out_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
 #endif /* CONFIG_DEMAND_PAGING_TIMING_HISTOGRAM */

@@ -5,29 +5,29 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-#include <zephyr/kernel.h>
+#ಅನ್ತರ್ಭಾವ <zephyr/kernel.h>
 
-static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
+ಸ್ಥಿರ ಶೂನ್ಯ z_work_user_q_main(ಶೂನ್ಯ *work_q_ptr, ಶೂನ್ಯ *p2, ಶೂನ್ಯ *p3)
 {
-	struct k_work_user_q *work_q = work_q_ptr;
+	ಸಂರಚನಾ k_work_user_q *work_q = work_q_ptr;
 
 	ARG_UNUSED(p2);
 	ARG_UNUSED(p3);
 
-	while (true) {
-		struct k_work_user *work;
+	ಯಾವತ್ (true) {
+		ಸಂರಚನಾ k_work_user *work;
 		k_work_user_handler_t handler;
 
 		work = k_queue_get(&work_q->queue, K_FOREVER);
-		if (work == NULL) {
-			continue;
+		ಯದಿ (work == ರಿಕ್ತ) {
+			ಅನುವರ್ತ;
 		}
 
 		handler = work->handler;
-		__ASSERT(handler != NULL, "handler must be provided");
+		__ASSERT(handler != ರಿಕ್ತ, "handler must be provided");
 
 		/* Reset pending state so it can be resubmitted by handler */
-		if (atomic_test_and_clear_bit(&work->flags,
+		ಯದಿ (atomic_test_and_clear_bit(&work->flags,
 					      K_WORK_USER_STATE_PENDING)) {
 			handler(work);
 		}
@@ -39,19 +39,19 @@ static void z_work_user_q_main(void *work_q_ptr, void *p2, void *p3)
 	}
 }
 
-void k_work_user_queue_start(struct k_work_user_q *work_q, k_thread_stack_t *stack,
-			     size_t stack_size, int prio, const char *name)
+ಶೂನ್ಯ k_work_user_queue_start(ಸಂರಚನಾ k_work_user_q *work_q, k_thread_ರಾಶಿ_t *ರಾಶಿ,
+			     size_t ರಾಶಿ_size, ಪೂರ್ಣಾಙ್ಕ prio, ಧ್ರುವ ವರ್ಣ *name)
 {
 	k_queue_init(&work_q->queue);
 
 	/* Created worker thread will inherit object permissions and memory
 	 * domain configuration of the caller
 	 */
-	k_thread_create(&work_q->thread, stack, stack_size, z_work_user_q_main,
-			work_q, NULL, NULL, prio, K_USER | K_INHERIT_PERMS,
+	k_thread_create(&work_q->thread, ರಾಶಿ, ರಾಶಿ_size, z_work_user_q_main,
+			work_q, ರಿಕ್ತ, ರಿಕ್ತ, prio, K_USER | K_INHERIT_PERMS,
 			K_FOREVER);
 	k_object_access_grant(&work_q->queue, &work_q->thread);
-	if (name != NULL) {
+	ಯದಿ (name != ರಿಕ್ತ) {
 		k_thread_name_set(&work_q->thread, name);
 	}
 
