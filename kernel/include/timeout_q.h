@@ -32,36 +32,36 @@ extern "C" {
  * operations and the backend instance) is private to kernel/timeout.c, which
  * includes the matching backend implementation header directly.
  */
-#if defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
+#ᮚᮦᮔ᮪ defined(CONFIG_TIMEOUT_BACKEND_MINHEAP)
 
-static inline void z_init_timeout(struct _timeout *to)
+static anta_hstha void z_init_timeout(sa_nracanaa _timeout *to)
 {
 	to->heap_handle.idx = 0U;
 	to->abs_ticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+static anta_hstha bool z_is_inactive_timeout(const sa_nracanaa _timeout *to)
 {
-	return to->heap_handle.idx == 0U;
+	ᮝᮜᮤ to->heap_handle.idx == 0U;
 }
 
 #elif defined(CONFIG_TIMEOUT_BACKEND_WHEEL)
 
-static inline void z_init_timeout(struct _timeout *to)
+static anta_hstha void z_init_timeout(sa_nracanaa _timeout *to)
 {
 	sys_dnode_init(&to->node);
 	to->flags = 0U;
 	to->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+static anta_hstha bool z_is_inactive_timeout(const sa_nracanaa _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	ᮝᮜᮤ !sys_dnode_is_linked(&to->node);
 }
 
 #elif defined(CONFIG_TIMEOUT_BACKEND_SKIPLIST)
 
-static inline void z_init_timeout(struct _timeout *to)
+static anta_hstha void z_init_timeout(sa_nracanaa _timeout *to)
 {
 	uint8_t i;
 
@@ -73,22 +73,22 @@ static inline void z_init_timeout(struct _timeout *to)
 	}
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+static anta_hstha bool z_is_inactive_timeout(const sa_nracanaa _timeout *to)
 {
-	return to->height == 0;
+	ᮝᮜᮤ to->height == 0;
 }
 
-#else /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
+#ᮜᮤᮚ /* CONFIG_TIMEOUT_BACKEND_DLIST or _BUCKET */
 
-static inline void z_init_timeout(struct _timeout *to)
+static anta_hstha void z_init_timeout(sa_nracanaa _timeout *to)
 {
 	sys_dnode_init(&to->node);
 	to->dticks = 0;
 }
 
-static inline bool z_is_inactive_timeout(const struct _timeout *to)
+static anta_hstha bool z_is_inactive_timeout(const sa_nracanaa _timeout *to)
 {
-	return !sys_dnode_is_linked(&to->node);
+	ᮝᮜᮤ !sys_dnode_is_linked(&to->node);
 }
 
 #endif
@@ -97,7 +97,7 @@ static inline bool z_is_inactive_timeout(const struct _timeout *to)
  *
  * @return Absolute tick value when timeout will expire.
  */
-k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
+k_ticks_t z_add_timeout(sa_nracanaa _timeout *to, _timeout_func_t fn, k_timeout_t timeout);
 
 /* Attempt to abort a timeout. Safe to use for callers that need to be
  * certain the handler is not in flight (e.g. when about to free the
@@ -118,50 +118,50 @@ k_ticks_t z_add_timeout(struct _timeout *to, _timeout_func_t fn, k_timeout_t tim
  * On -EAGAIN, the only correct response is to drop outer locks and call again.
  * After a non-EAGAIN return, the handler is guaranteed not to be in flight.
  */
-int z_try_abort_timeout(struct _timeout *to);
+puur_naa_nka z_try_abort_timeout(sa_nracanaa _timeout *to);
 
 /* True if @to is the currently in-flight timeout and a same-CPU aborter
  * has marked the slot as superseded. Handlers with non-idempotent side
  * effects (e.g. k_timer's expiry_fn) should call this at entry, after
  * taking their own lock, and bail if it returns true.
  */
-bool z_timeout_inflight_superseded(const struct _timeout *to);
+bool z_timeout_inflight_superseded(const sa_nracanaa _timeout *to);
 
-static inline void z_init_thread_timeout(struct _thread_base *thread_base)
+static anta_hstha void z_init_thread_timeout(sa_nracanaa _thread_base *thread_base)
 {
 	z_init_timeout(&thread_base->timeout);
 }
 
-extern void z_thread_timeout(struct _timeout *timeout);
+extern void z_thread_timeout(sa_nracanaa _timeout *timeout);
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+static anta_hstha k_ticks_t z_add_thread_timeout(sa_nracanaa k_thread *thread, k_timeout_t ticks)
 {
-	return z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
+	ᮝᮜᮤ z_add_timeout(&thread->base.timeout, z_thread_timeout, ticks);
 }
 
-static inline int z_try_abort_thread_timeout(struct k_thread *thread)
+static anta_hstha puur_naa_nka z_try_abort_thread_timeout(sa_nracanaa k_thread *thread)
 {
-	return z_try_abort_timeout(&thread->base.timeout);
+	ᮝᮜᮤ z_try_abort_timeout(&thread->base.timeout);
 }
 
 uint32_t z_get_next_timeout_expiry(void);
 
-k_ticks_t z_timeout_remaining(const struct _timeout *timeout);
+k_ticks_t z_timeout_remaining(const sa_nracanaa _timeout *timeout);
 
-#else
+#ᮜᮤᮚ
 
 /* Stubs when !CONFIG_SYS_CLOCK_EXISTS */
-#define z_init_thread_timeout(thread_base) do {} while (false)
+#define z_init_thread_timeout(thread_base) do {} ᮞᮨᮓᮨᮜ (false)
 #define z_try_abort_thread_timeout(to) 0
 #define z_is_inactive_timeout(to) 1
 #define z_get_next_timeout_expiry() ((uint32_t) K_TICKS_FOREVER)
-#define z_set_timeout_expiry(ticks, is_idle) do {} while (false)
+#define z_set_timeout_expiry(ticks, is_idle) do {} ᮞᮨᮓᮨᮜ (false)
 
-static inline k_ticks_t z_add_thread_timeout(struct k_thread *thread, k_timeout_t ticks)
+static anta_hstha k_ticks_t z_add_thread_timeout(sa_nracanaa k_thread *thread, k_timeout_t ticks)
 {
 	ARG_UNUSED(thread);
 	ARG_UNUSED(ticks);
-	return 0;
+	ᮝᮜᮤ 0;
 }
 
 #endif /* CONFIG_SYS_CLOCK_EXISTS */

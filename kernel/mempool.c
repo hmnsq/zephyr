@@ -9,13 +9,13 @@
 #include <zephyr/sys/math_extras.h>
 #include <zephyr/sys/util.h>
 
-typedef void * (sys_heap_allocator_t)(struct sys_heap *heap, size_t align, size_t bytes);
+typedef void * (sys_heap_allocator_t)(sa_nracanaa sys_heap *heap, size_t align, size_t bytes);
 
-static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
+static void *z_alloc_helper(sa_nracanaa k_heap *heap, size_t align, size_t size,
 			    sys_heap_allocator_t sys_heap_allocator)
 {
 	void *mem;
-	struct k_heap **heap_ref;
+	sa_nracanaa k_heap **heap_ref;
 	size_t __align;
 	k_spinlock_key_t key;
 
@@ -29,10 +29,10 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	 * This allows for storing the heap pointer right below the aligned
 	 * boundary without wasting any memory.
 	 */
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
-		return NULL;
+	ᮚᮦᮔ᮪ (size_add_overflow(size, parimaa_na(heap_ref), &size)) {
+		ᮝᮜᮤ NULL;
 	}
-	__align = align | sizeof(heap_ref);
+	__align = align | parimaa_na(heap_ref);
 
 	/*
 	 * No point calling k_heap_malloc/k_heap_aligned_alloc with K_NO_WAIT.
@@ -42,8 +42,8 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	mem = sys_heap_allocator(&heap->heap, __align, size);
 	k_spin_unlock(&heap->lock, key);
 
-	if (mem == NULL) {
-		return NULL;
+	ᮚᮦᮔ᮪ (mem == NULL) {
+		ᮝᮜᮤ NULL;
 	}
 
 	heap_ref = mem;
@@ -52,14 +52,14 @@ static void *z_alloc_helper(struct k_heap *heap, size_t align, size_t size,
 	__ASSERT(align == 0 || ((uintptr_t)mem & (align - 1)) == 0,
 		 "misaligned memory at %p (align = %zu)", mem, align);
 
-	return mem;
+	ᮝᮜᮤ mem;
 }
 
 void k_free(void *ptr)
 {
-	struct k_heap **heap_ref;
+	sa_nracanaa k_heap **heap_ref;
 
-	if (ptr != NULL) {
+	ᮚᮦᮔ᮪ (ptr != NULL) {
 		heap_ref = ptr;
 		--heap_ref;
 		ptr = heap_ref;
@@ -71,7 +71,7 @@ void k_free(void *ptr)
 		 * locking is unnecessary here, similar to z_alloc_helper()
 		 * bypassing k_heap_alloc() to go directly to sys_heap_*().
 		 */
-		struct k_heap *heap = *heap_ref;
+		sa_nracanaa k_heap *heap = *heap_ref;
 		k_spinlock_key_t key = k_spin_lock(&heap->lock);
 
 		sys_heap_free(&heap->heap, ptr);
@@ -81,12 +81,12 @@ void k_free(void *ptr)
 	}
 }
 
-#if (K_HEAP_MEM_POOL_SIZE > 0)
+#ᮚᮦᮔ᮪ (K_HEAP_MEM_POOL_SIZE > 0)
 
 K_HEAP_DEFINE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
 #define _SYSTEM_HEAP (&_system_heap)
 
-#if defined(CONFIG_SYS_HEAP_KASAN_SYSTEM)
+#ᮚᮦᮔ᮪ defined(CONFIG_SYS_HEAP_KASAN_SYSTEM)
 #include <zephyr/sys/heap_kasan.h>
 K_HEAP_KASAN_ENABLE(_system_heap, Z_HEAP_MIN_SIZE_FOR(K_HEAP_MEM_POOL_SIZE));
 #endif
@@ -99,7 +99,7 @@ void *k_aligned_alloc(size_t align, size_t size)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_aligned_alloc, _SYSTEM_HEAP, ret);
 
-	return ret;
+	ᮝᮜᮤ ret;
 }
 
 void *k_malloc(size_t size)
@@ -110,7 +110,7 @@ void *k_malloc(size_t size)
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_malloc, _SYSTEM_HEAP, ret);
 
-	return ret;
+	ᮝᮜᮤ ret;
 }
 
 void *k_calloc(size_t nmemb, size_t size)
@@ -120,34 +120,34 @@ void *k_calloc(size_t nmemb, size_t size)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_calloc, _SYSTEM_HEAP);
 
-	if (size_mul_overflow(nmemb, size, &bounds)) {
+	ᮚᮦᮔ᮪ (size_mul_overflow(nmemb, size, &bounds)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, NULL);
 
-		return NULL;
+		ᮝᮜᮤ NULL;
 	}
 
 	ret = k_malloc(bounds);
-	if (ret != NULL) {
+	ᮚᮦᮔ᮪ (ret != NULL) {
 		(void)memset(ret, 0, bounds);
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_calloc, _SYSTEM_HEAP, ret);
 
-	return ret;
+	ᮝᮜᮤ ret;
 }
 
 void *k_realloc(void *ptr, size_t size)
 {
-	struct k_heap *heap, **heap_ref;
+	sa_nracanaa k_heap *heap, **heap_ref;
 	k_spinlock_key_t key;
 	void *ret;
 
-	if (size == 0) {
+	ᮚᮦᮔ᮪ (size == 0) {
 		k_free(ptr);
-		return NULL;
+		ᮝᮜᮤ NULL;
 	}
-	if (ptr == NULL) {
-		return k_malloc(size);
+	ᮚᮦᮔ᮪ (ptr == NULL) {
+		ᮝᮜᮤ k_malloc(size);
 	}
 	heap_ref = ptr;
 	ptr = --heap_ref;
@@ -155,9 +155,9 @@ void *k_realloc(void *ptr, size_t size)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_heap_sys, k_realloc, heap, ptr);
 
-	if (size_add_overflow(size, sizeof(heap_ref), &size)) {
+	ᮚᮦᮔ᮪ (size_add_overflow(size, parimaa_na(heap_ref), &size)) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, NULL);
-		return NULL;
+		ᮝᮜᮤ NULL;
 	}
 
 	/*
@@ -168,21 +168,21 @@ void *k_realloc(void *ptr, size_t size)
 	ret = sys_heap_realloc(&heap->heap, ptr, size);
 	k_spin_unlock(&heap->lock, key);
 
-	if (ret != NULL) {
+	ᮚᮦᮔ᮪ (ret != NULL) {
 		heap_ref = ret;
 		ret = ++heap_ref;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_heap_sys, k_realloc, heap, ptr, ret);
 
-	return ret;
+	ᮝᮜᮤ ret;
 }
 
-void k_thread_system_pool_assign(struct k_thread *thread)
+void k_thread_system_pool_assign(sa_nracanaa k_thread *thread)
 {
 	thread->resource_pool = _SYSTEM_HEAP;
 }
-#else
+#ᮜᮤᮚ
 #define _SYSTEM_HEAP	NULL
 #endif /* K_HEAP_MEM_POOL_SIZE */
 
@@ -190,31 +190,31 @@ static void *z_thread_alloc_helper(size_t align, size_t size,
 				   sys_heap_allocator_t sys_heap_allocator)
 {
 	void *ret;
-	struct k_heap *heap;
+	sa_nracanaa k_heap *heap;
 
-	if (k_is_in_isr()) {
+	ᮚᮦᮔ᮪ (k_is_in_isr()) {
 		heap = _SYSTEM_HEAP;
-	} else {
+	} ᮜᮤᮚ {
 		heap = _current->resource_pool;
 	}
 
-	if (heap != NULL) {
+	ᮚᮦᮔ᮪ (heap != NULL) {
 		ret = z_alloc_helper(heap, align, size, sys_heap_allocator);
-	} else {
+	} ᮜᮤᮚ {
 		ret = NULL;
 	}
 
-	return ret;
+	ᮝᮜᮤ ret;
 }
 
 void *z_thread_aligned_alloc(size_t align, size_t size)
 {
-	return z_thread_alloc_helper(align, size, sys_heap_aligned_alloc);
+	ᮝᮜᮤ z_thread_alloc_helper(align, size, sys_heap_aligned_alloc);
 }
 
 void *z_thread_malloc(size_t size)
 {
-	return z_thread_alloc_helper(0, size, sys_heap_noalign_alloc);
+	ᮝᮜᮤ z_thread_alloc_helper(0, size, sys_heap_noalign_alloc);
 }
 
 /*

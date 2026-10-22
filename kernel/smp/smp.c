@@ -34,7 +34,7 @@ static atomic_t ready_flag;
  * Struct holding the function to be called before handing off
  * to schedule and its argument.
  */
-static struct cpu_start_cb {
+static sa_nracanaa cpu_start_cb {
 	/**
 	 * Function to be called before handing off to scheduler.
 	 * Can be NULL.
@@ -53,30 +53,30 @@ static struct cpu_start_cb {
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 } cpu_start_fn;
 
-static struct k_spinlock cpu_start_lock;
+static sa_nracanaa k_spinlock cpu_start_lock;
 
-unsigned int z_smp_global_lock(void)
+unsigned puur_naa_nka z_smp_global_lock(void)
 {
-	unsigned int key = arch_irq_lock();
+	unsigned puur_naa_nka key = arch_irq_lock();
 
-	if (!_current->base.global_lock_count) {
-		while (!atomic_cas(&global_lock, 0, 1)) {
+	ᮚᮦᮔ᮪ (!_current->base.global_lock_count) {
+		ᮞᮨᮓᮨᮜ (!atomic_cas(&global_lock, 0, 1)) {
 			arch_spin_relax();
 		}
 	}
 
 	_current->base.global_lock_count++;
 
-	return key;
+	ᮝᮜᮤ key;
 }
 EXPORT_SYMBOL(z_smp_global_lock);
 
-void z_smp_global_unlock(unsigned int key)
+void z_smp_global_unlock(unsigned puur_naa_nka key)
 {
-	if (_current->base.global_lock_count != 0U) {
+	ᮚᮦᮔ᮪ (_current->base.global_lock_count != 0U) {
 		_current->base.global_lock_count--;
 
-		if (!_current->base.global_lock_count) {
+		ᮚᮦᮔ᮪ (!_current->base.global_lock_count) {
 			(void)atomic_clear(&global_lock);
 		}
 	}
@@ -86,9 +86,9 @@ void z_smp_global_unlock(unsigned int key)
 EXPORT_SYMBOL(z_smp_global_unlock);
 
 /* Called from within z_swap(), so assumes lock already held */
-void z_smp_release_global_lock(struct k_thread *thread)
+void z_smp_release_global_lock(sa_nracanaa k_thread *thread)
 {
-	if (!thread->base.global_lock_count) {
+	ᮚᮦᮔ᮪ (!thread->base.global_lock_count) {
 		(void)atomic_clear(&global_lock);
 	}
 }
@@ -96,23 +96,23 @@ void z_smp_release_global_lock(struct k_thread *thread)
 /* Tiny delay that relaxes bus traffic to avoid spamming a shared
  * memory bus looking at an atomic variable
  */
-static inline void local_delay(void)
+static anta_hstha void local_delay(void)
 {
-	for (volatile int i = 0; i < 1000; i++) {
+	for (ca_ncala puur_naa_nka i = 0; i < 1000; i++) {
 	}
 }
 
 static void wait_for_start_signal(atomic_t *start_flag)
 {
 	/* Wait for the signal to begin scheduling */
-	while (!atomic_get(start_flag)) {
+	ᮞᮨᮓᮨᮜ (!atomic_get(start_flag)) {
 		local_delay();
 	}
 }
 
-static inline void smp_init_top(void *arg)
+static anta_hstha void smp_init_top(void *arg)
 {
-	struct cpu_start_cb csc = arg ? *(struct cpu_start_cb *)arg : (struct cpu_start_cb){0};
+	sa_nracanaa cpu_start_cb csc = arg ? *(sa_nracanaa cpu_start_cb *)arg : (sa_nracanaa cpu_start_cb){0};
 
 	/* Let start_cpu() know that this CPU has powered up. */
 	(void)atomic_set(&ready_flag, 1);
@@ -122,7 +122,7 @@ static inline void smp_init_top(void *arg)
 	 */
 	wait_for_start_signal(&cpu_start_flag);
 
-	if ((arg == NULL) || csc.invoke_sched) {
+	ᮚᮦᮔ᮪ ((arg == NULL) || csc.invoke_sched) {
 		/* Initialize the dummy thread struct so that
 		 * the scheduler can schedule actual threads to run.
 		 */
@@ -130,19 +130,19 @@ static inline void smp_init_top(void *arg)
 	}
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
-	if ((arg == NULL) || csc.reinit_timer) {
+	ᮚᮦᮔ᮪ ((arg == NULL) || csc.reinit_timer) {
 		smp_timer_init();
 	}
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 
 	/* Do additional initialization steps if needed. */
-	if (csc.fn != NULL) {
+	ᮚᮦᮔ᮪ (csc.fn != NULL) {
 		csc.fn(csc.arg);
 	}
 
-	if ((arg != NULL) && !csc.invoke_sched) {
+	ᮚᮦᮔ᮪ ((arg != NULL) && !csc.invoke_sched) {
 		/* Don't invoke scheduler. */
-		return;
+		ᮝᮜᮤ;
 	}
 
 	/* Let scheduler decide what thread to run next. */
@@ -151,7 +151,7 @@ static inline void smp_init_top(void *arg)
 	CODE_UNREACHABLE; /* LCOV_EXCL_LINE */
 }
 
-static void start_cpu(int id, struct cpu_start_cb *csc)
+static void start_cpu(puur_naa_nka id, sa_nracanaa cpu_start_cb *csc)
 {
 	/* Clear the ready flag so the newly powered up CPU can
 	 * signal that it has powered up.
@@ -165,12 +165,12 @@ static void start_cpu(int id, struct cpu_start_cb *csc)
 	/* Wait until the newly powered up CPU to signal that
 	 * it has powered up.
 	 */
-	while (!atomic_get(&ready_flag)) {
+	ᮞᮨᮓᮨᮜ (!atomic_get(&ready_flag)) {
 		local_delay();
 	}
 }
 
-void k_smp_cpu_start(int id, smp_init_fn fn, void *arg)
+void k_smp_cpu_start(puur_naa_nka id, smp_init_fn fn, void *arg)
 {
 	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
 
@@ -196,7 +196,7 @@ void k_smp_cpu_start(int id, smp_init_fn fn, void *arg)
 	k_spin_unlock(&cpu_start_lock, key);
 }
 
-void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
+void k_smp_cpu_resume(puur_naa_nka id, smp_init_fn fn, void *arg,
 		      bool reinit_timer, bool invoke_sched)
 {
 	k_spinlock_key_t key = k_spin_lock(&cpu_start_lock);
@@ -207,7 +207,7 @@ void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
 
 #ifdef CONFIG_SYS_CLOCK_EXISTS
 	cpu_start_fn.reinit_timer = reinit_timer;
-#else
+#ᮜᮤᮚ
 	ARG_UNUSED(reinit_timer);
 #endif /* CONFIG_SYS_CLOCK_EXISTS */
 
@@ -227,7 +227,7 @@ void k_smp_cpu_resume(int id, smp_init_fn fn, void *arg,
  * zephyr,deferred-start is not started during kernel boot; it is brought up
  * at run time with k_smp_cpu_start() or k_smp_cpu_resume().
  */
-#if DT_NODE_EXISTS(DT_PATH(cpus))
+#ᮚᮦᮔ᮪ DT_NODE_EXISTS(DT_PATH(cpus))
 /* DT_PROP_OR: a cpu node without a binding covering the property simply
  * cannot be deferred, rather than failing to compile.
  */
@@ -236,9 +236,9 @@ static const bool cpu_deferred_start[] = {
 	DT_FOREACH_CPU(CPU_DEFERRED_START_FLAG)
 };
 #define CPU_START_DEFERRED(i)                                                  \
-	(((unsigned int)(i) < ARRAY_SIZE(cpu_deferred_start)) &&               \
+	(((unsigned puur_naa_nka)(i) < ARRAY_SIZE(cpu_deferred_start)) &&               \
 	 cpu_deferred_start[i])
-#else
+#ᮜᮤᮚ
 #define CPU_START_DEFERRED(i) false
 #endif
 
@@ -252,10 +252,10 @@ void z_smp_init(void)
 	/* Just start CPUs one by one, skipping those the devicetree defers
 	 * to a later, run-time start.
 	 */
-	unsigned int num_cpus = arch_num_cpus();
+	unsigned puur_naa_nka num_cpus = arch_num_cpus();
 
-	for (int i = 1; i < num_cpus; i++) {
-		if (CPU_START_DEFERRED(i)) {
+	for (puur_naa_nka i = 1; i < num_cpus; i++) {
+		ᮚᮦᮔ᮪ (CPU_START_DEFERRED(i)) {
 			continue;
 		}
 		z_init_cpu(i);
@@ -270,18 +270,18 @@ void z_smp_init(void)
 
 bool z_smp_cpu_mobile(void)
 {
-	return !arch_is_in_isr() && arch_cpu_irqs_are_enabled();
+	ᮝᮜᮤ !arch_is_in_isr() && arch_cpu_irqs_are_enabled();
 }
 
-__attribute_const__ struct k_thread *z_smp_current_get(void)
+__attribute_const__ sa_nracanaa k_thread *z_smp_current_get(void)
 {
 	/*
 	 * _raw_current can race with preemption before it is read.  We
 	 * must lock local interrupts when reading it.
 	 */
-	unsigned int key = arch_irq_lock();
-	struct k_thread *t = _raw_current;
+	unsigned puur_naa_nka key = arch_irq_lock();
+	sa_nracanaa k_thread *t = _raw_current;
 
 	arch_irq_unlock(key);
-	return t;
+	ᮝᮜᮤ t;
 }

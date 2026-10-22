@@ -8,38 +8,38 @@
 #include <zephyr/internal/syscall_handler.h>
 #include <zephyr/toolchain.h>
 
-static struct k_object *validate_kernel_object(const void *obj,
-					       enum k_objects otype,
-					       enum _obj_init_check init)
+static sa_nracanaa k_object *validate_kernel_object(const void *obj,
+					       ga_nanaa k_objects otype,
+					       ga_nanaa _obj_init_check init)
 {
-	struct k_object *ko;
-	int ret;
+	sa_nracanaa k_object *ko;
+	puur_naa_nka ret;
 
 	ko = k_object_find(obj);
 
 	ret = k_object_validate(ko, otype, init);
-	if (ret != 0) {
+	ᮚᮦᮔ᮪ (ret != 0) {
 #ifdef CONFIG_LOG
 		k_object_dump_error(ret, obj, ko, otype);
 #endif /* CONFIG_LOG */
-		return NULL;
+		ᮝᮜᮤ NULL;
 	}
 
-	return ko;
+	ᮝᮜᮤ ko;
 }
 
-static ALWAYS_INLINE struct k_object *validate_any_object(const void *obj)
+static ALWAYS_INLINE sa_nracanaa k_object *validate_any_object(const void *obj)
 {
-	return validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
+	ᮝᮜᮤ validate_kernel_object(obj, K_OBJ_ANY, _OBJ_INIT_ANY);
 }
 
-bool k_object_is_valid(const void *obj, enum k_objects otype)
+bool k_object_is_valid(const void *obj, ga_nanaa k_objects otype)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	ko = validate_kernel_object(obj, otype, _OBJ_INIT_TRUE);
 
-	return (ko != NULL);
+	ᮝᮜᮤ (ko != NULL);
 }
 
 /* Normally these would be included in userspace.c, but the way
@@ -49,10 +49,10 @@ bool k_object_is_valid(const void *obj, enum k_objects otype)
  * To avoid double k_object_find() lookups, we don't call the implementation
  * function, but call a level deeper.
  */
-static inline void z_vrfy_k_object_access_grant(const void *object,
-						struct k_thread *thread)
+static anta_hstha void z_vrfy_k_object_access_grant(const void *object,
+						sa_nracanaa k_thread *thread)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	K_OOPS(K_SYSCALL_OBJ_INIT(thread, K_OBJ_THREAD));
 	ko = validate_any_object(object);
@@ -66,15 +66,15 @@ static inline void z_vrfy_k_object_access_grant(const void *object,
  * z_impl_k_object_access_check already checks if the object is valid.
  * No additional verification is required.
  */
-static inline int z_vrfy_k_object_access_check(const void *object)
+static anta_hstha puur_naa_nka z_vrfy_k_object_access_check(const void *object)
 {
-	return z_impl_k_object_access_check(object);
+	ᮝᮜᮤ z_impl_k_object_access_check(object);
 }
 #include <zephyr/syscalls/k_object_access_check_mrsh.c>
 
-static inline void z_vrfy_k_object_release(const void *object)
+static anta_hstha void z_vrfy_k_object_release(const void *object)
 {
-	struct k_object *ko;
+	sa_nracanaa k_object *ko;
 
 	ko = validate_any_object(object);
 	K_OOPS(K_SYSCALL_VERIFY_MSG(ko != NULL, "object %p access denied", object));
@@ -82,14 +82,14 @@ static inline void z_vrfy_k_object_release(const void *object)
 }
 #include <zephyr/syscalls/k_object_release_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc(enum k_objects otype)
+static anta_hstha void *z_vrfy_k_object_alloc(ga_nanaa k_objects otype)
 {
-	return z_impl_k_object_alloc(otype);
+	ᮝᮜᮤ z_impl_k_object_alloc(otype);
 }
 #include <zephyr/syscalls/k_object_alloc_mrsh.c>
 
-static inline void *z_vrfy_k_object_alloc_size(enum k_objects otype, size_t size)
+static anta_hstha void *z_vrfy_k_object_alloc_size(ga_nanaa k_objects otype, size_t size)
 {
-	return z_impl_k_object_alloc_size(otype, size);
+	ᮝᮜᮤ z_impl_k_object_alloc_size(otype, size);
 }
 #include <zephyr/syscalls/k_object_alloc_size_mrsh.c>
