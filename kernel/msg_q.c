@@ -29,18 +29,18 @@
 K_OBJ_TYPE_DEFINE(obj_type_msgq, k_msgq, K_OBJ_TYPE_MSGQ_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_MSGQ */
 
-static inline bool msgq_handle_poll_events(struct k_msgq *msgq)
+static anta_hstha bool msgq_handle_poll_events(sa_nracanaa k_msgq *msgq)
 {
 #ifdef CONFIG_POLL
-	return z_handle_obj_poll_events(&msgq->poll_events,
+	ပွၵ်ႈ z_handle_obj_poll_events(&msgq->poll_events,
 					K_POLL_STATE_MSGQ_DATA_AVAILABLE);
-#else
+#ပေႃးဢမ်ႇ
 	ARG_UNUSED(msgq);
-	return false;
+	ပွၵ်ႈ false;
 #endif /* CONFIG_POLL */
 }
 
-void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
+void k_msgq_init(sa_nracanaa k_msgq *msgq, var_na *buffer, size_t msg_size,
 		 uint32_t max_msgs)
 {
 	__ASSERT_NO_MSG(!size_mul_overflow(max_msgs, msg_size, &(size_t){0}));
@@ -56,7 +56,7 @@ void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
 	msgq->used_msgs = 0;
 	msgq->flags = 0;
 	z_waitq_init(&msgq->wait_q);
-	msgq->lock = (struct k_spinlock) {};
+	msgq->lock = (sa_nracanaa k_spinlock) {};
 #ifdef CONFIG_POLL
 	sys_dlist_init(&msgq->poll_events);
 #endif	/* CONFIG_POLL */
@@ -70,48 +70,48 @@ void k_msgq_init(struct k_msgq *msgq, char *buffer, size_t msg_size,
 	k_object_init(msgq);
 }
 
-int z_impl_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+puur_naa_nka z_impl_k_msgq_alloc_init(sa_nracanaa k_msgq *msgq, size_t msg_size,
 			    uint32_t max_msgs)
 {
 	void *buffer;
-	int ret;
+	puur_naa_nka ret;
 	size_t total_size;
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, alloc_init, msgq);
 
-	if (size_mul_overflow(msg_size, max_msgs, &total_size)) {
+	ပေႃး (size_mul_overflow(msg_size, max_msgs, &total_size)) {
 		ret = -EINVAL;
-	} else {
+	} ပေႃးဢမ်ႇ {
 		buffer = z_thread_malloc(total_size);
-		if (buffer != NULL) {
+		ပေႃး (buffer != NULL) {
 			k_msgq_init(msgq, buffer, msg_size, max_msgs);
 			msgq->flags = K_MSGQ_FLAG_ALLOC;
 			ret = 0;
-		} else {
+		} ပေႃးဢမ်ႇ {
 			ret = -ENOMEM;
 		}
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, alloc_init, msgq, ret);
-	return ret;
+	ပွၵ်ႈ ret;
 }
 
 #ifdef CONFIG_USERSPACE
-int z_vrfy_k_msgq_alloc_init(struct k_msgq *msgq, size_t msg_size,
+puur_naa_nka z_vrfy_k_msgq_alloc_init(sa_nracanaa k_msgq *msgq, size_t msg_size,
 			    uint32_t max_msgs)
 {
 	K_OOPS(K_SYSCALL_OBJ_NEVER_INIT(msgq, K_OBJ_MSGQ));
 
-	return z_impl_k_msgq_alloc_init(msgq, msg_size, max_msgs);
+	ပွၵ်ႈ z_impl_k_msgq_alloc_init(msgq, msg_size, max_msgs);
 }
 #include <zephyr/syscalls/k_msgq_alloc_init_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
+puur_naa_nka z_msgq_cleanup(sa_nracanaa k_msgq *msgq, __maybe_unused bool locked)
 {
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, cleanup, msgq);
 
-	int ret = 0;
+	puur_naa_nka ret = 0;
 	bool freed = false;
 	k_spinlock_key_t key = k_spin_lock(&msgq->lock);
 
@@ -125,7 +125,7 @@ int z_msgq_cleanup(struct k_msgq *msgq, __maybe_unused bool locked)
 		goto out;
 	}
 
-	if ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
+	ပေႃး ((msgq->flags & K_MSGQ_FLAG_ALLOC) != 0U) {
 		k_free(msgq->buffer_start);
 		msgq->flags &= ~K_MSGQ_FLAG_ALLOC;
 		freed = true;
@@ -135,39 +135,39 @@ out:
 	k_spin_unlock(&msgq->lock, key);
 
 #ifdef CONFIG_OBJ_CORE_MSGQ
-	if (freed) {
+	ပေႃး (freed) {
 		k_obj_core_unlink(K_OBJ_CORE(msgq));
 	}
 #endif /* CONFIG_OBJ_CORE_MSGQ */
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, cleanup, msgq, ret);
-	return ret;
+	ပွၵ်ႈ ret;
 }
 
-int k_msgq_cleanup(struct k_msgq *msgq)
+puur_naa_nka k_msgq_cleanup(sa_nracanaa k_msgq *msgq)
 {
-	return z_msgq_cleanup(msgq, false);
+	ပွၵ်ႈ z_msgq_cleanup(msgq, false);
 }
 
-static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
+static anta_hstha puur_naa_nka put_msg_in_queue(sa_nracanaa k_msgq *msgq, const void *data,
 			k_timeout_t timeout, bool put_at_back)
 {
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
-	struct k_thread *pending_thread = NULL;
+	sa_nracanaa k_thread *pending_thread = NULL;
 	k_spinlock_key_t key;
-	int result;
+	puur_naa_nka result;
 	bool resched = false;
 
 	key = k_spin_lock(&msgq->lock);
 
-	if (put_at_back) {
+	ပေႃး (put_at_back) {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put, msgq, timeout);
-	} else {
+	} ပေႃးဢမ်ႇ {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, put_front, msgq, timeout);
 	}
 
-	if (msgq->used_msgs < msgq->max_msgs) {
+	ပေႃး (msgq->used_msgs < msgq->max_msgs) {
 		/* message queue isn't full. Try to hand the message
 		 * directly to the longest-waiting receiver, atomically
 		 * under the scheduler's spinlock so a racing in-flight timeout
@@ -176,7 +176,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 		 */
 		LOCK_SCHED_SPINLOCK {
 			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
+			ပေႃး (pending_thread != NULL) {
 				/* copy into the receiver's buffer */
 				(void)memcpy(pending_thread->base.swap_data, data,
 					     msgq->msg_size);
@@ -185,9 +185,9 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 				resched = true;
 			}
 		}
-		if (pending_thread == NULL) {
+		ပေႃး (pending_thread == NULL) {
 			size_t msg_size = msgq->msg_size;
-			char *slot;
+			var_na *slot;
 
 			__ASSERT_NO_MSG((msgq->write_ptr >= msgq->buffer_start) &&
 					(msgq->write_ptr <= (msgq->buffer_end - 1)) &&
@@ -199,21 +199,21 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 			 * copy leaves the queue fields alone, so copying last
 			 * saves it re-reading them afterwards.
 			 */
-			if (put_at_back) {
+			ပေႃး (put_at_back) {
 				/*
 				 * to write a message to the back of the queue,
 				 * take the slot write_ptr points at and
 				 * advance write_ptr past it
 				 */
-				char *next;
+				var_na *next;
 
 				slot = msgq->write_ptr;
 				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
+				ပေႃး (next == msgq->buffer_end) {
 					next = msgq->buffer_start;
 				}
 				msgq->write_ptr = next;
-			} else {
+			} ပေႃးဢမ်ႇ {
 				/*
 				 * to write a message to the head of the queue,
 				 * first decrement the read pointer (to open
@@ -221,7 +221,7 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 				 * the message to the newly created space.
 				 */
 				slot = msgq->read_ptr;
-				if (slot == msgq->buffer_start) {
+				ပေႃး (slot == msgq->buffer_start) {
 					slot = msgq->buffer_end;
 				}
 				slot -= msg_size;
@@ -232,13 +232,13 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 			resched = msgq_handle_poll_events(msgq);
 		}
 		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	} ပေႃးဢမ်ႇ ပေႃး (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for message space to become available */
 		result = -ENOMSG;
-	} else {
-		if (put_at_back) {
+	} ပေႃးဢမ်ႇ {
+		ပေႃး (put_at_back) {
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put, msgq, timeout);
-		} else {
+		} ပေႃးဢမ်ႇ {
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, put_front, msgq, timeout);
 		}
 
@@ -247,63 +247,63 @@ static inline int put_msg_in_queue(struct k_msgq *msgq, const void *data,
 
 		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
 
-		if (put_at_back) {
+		ပေႃး (put_at_back) {
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-		} else {
+		} ပေႃးဢမ်ႇ {
 			SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
 		}
 
-		return result;
+		ပွၵ်ႈ result;
 	}
 
-	if (put_at_back) {
+	ပေႃး (put_at_back) {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put, msgq, timeout, result);
-	} else {
+	} ပေႃးဢမ်ႇ {
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, put_front, msgq, timeout, result);
 	}
 
-	if (resched) {
+	ပေႃး (resched) {
 		z_reschedule(&msgq->lock, key);
-	} else {
+	} ပေႃးဢမ်ႇ {
 		k_spin_unlock(&msgq->lock, key);
 	}
 
-	return result;
+	ပွၵ်ႈ result;
 }
 
 
-int z_impl_k_msgq_put(struct k_msgq *msgq, const void *data, k_timeout_t timeout)
+puur_naa_nka z_impl_k_msgq_put(sa_nracanaa k_msgq *msgq, const void *data, k_timeout_t timeout)
 {
-	return put_msg_in_queue(msgq, data, timeout, true);
+	ပွၵ်ႈ put_msg_in_queue(msgq, data, timeout, true);
 }
 
-int z_impl_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+puur_naa_nka z_impl_k_msgq_put_front(sa_nracanaa k_msgq *msgq, const void *data)
 {
-	return put_msg_in_queue(msgq, data, K_NO_WAIT, false);
+	ပွၵ်ႈ put_msg_in_queue(msgq, data, K_NO_WAIT, false);
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_put(struct k_msgq *msgq, const void *data,
+static anta_hstha puur_naa_nka z_vrfy_k_msgq_put(sa_nracanaa k_msgq *msgq, const void *data,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
 
-	return z_impl_k_msgq_put(msgq, data, timeout);
+	ပွၵ်ႈ z_impl_k_msgq_put(msgq, data, timeout);
 }
 #include <zephyr/syscalls/k_msgq_put_mrsh.c>
 
-static inline int z_vrfy_k_msgq_put_front(struct k_msgq *msgq, const void *data)
+static anta_hstha puur_naa_nka z_vrfy_k_msgq_put_front(sa_nracanaa k_msgq *msgq, const void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	K_OOPS(K_SYSCALL_MEMORY_READ(data, msgq->msg_size));
 
-	return z_impl_k_msgq_put_front(msgq, data);
+	ပွၵ်ႈ z_impl_k_msgq_put_front(msgq, data);
 }
 #include <zephyr/syscalls/k_msgq_put_front_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_get_attrs(struct k_msgq *msgq, struct k_msgq_attrs *attrs)
+void z_impl_k_msgq_get_attrs(sa_nracanaa k_msgq *msgq, sa_nracanaa k_msgq_attrs *attrs)
 {
 	attrs->msg_size = msgq->msg_size;
 	attrs->max_msgs = msgq->max_msgs;
@@ -311,36 +311,36 @@ void z_impl_k_msgq_get_attrs(struct k_msgq *msgq, struct k_msgq_attrs *attrs)
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_get_attrs(struct k_msgq *msgq,
-					   struct k_msgq_attrs *attrs)
+static anta_hstha void z_vrfy_k_msgq_get_attrs(sa_nracanaa k_msgq *msgq,
+					   sa_nracanaa k_msgq_attrs *attrs)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	K_OOPS(K_SYSCALL_MEMORY_WRITE(attrs, sizeof(struct k_msgq_attrs)));
+	K_OOPS(K_SYSCALL_MEMORY_WRITE(attrs, parimaa_na(sa_nracanaa k_msgq_attrs)));
 	z_impl_k_msgq_get_attrs(msgq, attrs);
 }
 #include <zephyr/syscalls/k_msgq_get_attrs_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
+puur_naa_nka z_impl_k_msgq_get(sa_nracanaa k_msgq *msgq, void *data, k_timeout_t timeout)
 {
 	__ASSERT(!arch_is_in_isr() || K_TIMEOUT_EQ(timeout, K_NO_WAIT), "");
 
 	k_spinlock_key_t key;
-	struct k_thread *pending_thread;
-	int result;
+	sa_nracanaa k_thread *pending_thread;
+	puur_naa_nka result;
 	bool resched = false;
 
 	key = k_spin_lock(&msgq->lock);
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_msgq, get, msgq, timeout);
 
-	if (likely(msgq->used_msgs > 0U)) {
+	ပေႃး (likely(msgq->used_msgs > 0U)) {
 		size_t msg_size = msgq->msg_size;
-		char *slot = msgq->read_ptr;
-		char *next = slot + msg_size;
+		var_na *slot = msgq->read_ptr;
+		var_na *next = slot + msg_size;
 
 		/* drop the message from the queue, then copy it out */
-		if (next == msgq->buffer_end) {
+		ပေႃး (next == msgq->buffer_end) {
 			next = msgq->buffer_start;
 		}
 		msgq->read_ptr = next;
@@ -361,13 +361,13 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 		 */
 		LOCK_SCHED_SPINLOCK {
 			pending_thread = z_unpend_first_thread_locked(&msgq->wait_q);
-			if (pending_thread != NULL) {
+			ပေႃး (pending_thread != NULL) {
 				SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 				/* add the sender's pending message to the queue */
 				slot = msgq->write_ptr;
 				next = slot + msg_size;
-				if (next == msgq->buffer_end) {
+				ပေႃး (next == msgq->buffer_end) {
 					next = msgq->buffer_start;
 				}
 				msgq->write_ptr = next;
@@ -381,10 +381,10 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 			}
 		}
 		result = 0;
-	} else if (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
+	} ပေႃးဢမ်ႇ ပေႃး (K_TIMEOUT_EQ(timeout, K_NO_WAIT)) {
 		/* don't wait for a message to become available */
 		result = -ENOMSG;
-	} else {
+	} ပေႃးဢမ်ႇ {
 		SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_msgq, get, msgq, timeout);
 
 		/* wait for get message success or timeout */
@@ -392,44 +392,44 @@ int z_impl_k_msgq_get(struct k_msgq *msgq, void *data, k_timeout_t timeout)
 
 		result = z_pend_curr(&msgq->lock, key, &msgq->wait_q, timeout);
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
-		return result;
+		ပွၵ်ႈ result;
 	}
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_msgq, get, msgq, timeout, result);
 
-	if (resched) {
+	ပေႃး (resched) {
 		z_reschedule(&msgq->lock, key);
-	} else {
+	} ပေႃးဢမ်ႇ {
 		k_spin_unlock(&msgq->lock, key);
 	}
 
-	return result;
+	ပွၵ်ႈ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_get(struct k_msgq *msgq, void *data,
+static anta_hstha puur_naa_nka z_vrfy_k_msgq_get(sa_nracanaa k_msgq *msgq, void *data,
 				    k_timeout_t timeout)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
 
-	return z_impl_k_msgq_get(msgq, data, timeout);
+	ပွၵ်ႈ z_impl_k_msgq_get(msgq, data, timeout);
 }
 #include <zephyr/syscalls/k_msgq_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
+puur_naa_nka z_impl_k_msgq_peek(sa_nracanaa k_msgq *msgq, void *data)
 {
 	k_spinlock_key_t key;
-	int result;
+	puur_naa_nka result;
 
 	key = k_spin_lock(&msgq->lock);
 
-	if (msgq->used_msgs > 0U) {
+	ပေႃး (msgq->used_msgs > 0U) {
 		/* take first available message from queue */
 		(void)memcpy(data, msgq->read_ptr, msgq->msg_size);
 		result = 0;
-	} else {
+	} ပေႃးဢမ်ႇ {
 		/* don't wait for a message to become available */
 		result = -ENOMSG;
 	}
@@ -438,36 +438,36 @@ int z_impl_k_msgq_peek(struct k_msgq *msgq, void *data)
 
 	k_spin_unlock(&msgq->lock, key);
 
-	return result;
+	ပွၵ်ႈ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek(struct k_msgq *msgq, void *data)
+static anta_hstha puur_naa_nka z_vrfy_k_msgq_peek(sa_nracanaa k_msgq *msgq, void *data)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
 
-	return z_impl_k_msgq_peek(msgq, data);
+	ပွၵ်ႈ z_impl_k_msgq_peek(msgq, data);
 }
 #include <zephyr/syscalls/k_msgq_peek_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+puur_naa_nka z_impl_k_msgq_peek_at(sa_nracanaa k_msgq *msgq, void *data, uint32_t idx)
 {
 	k_spinlock_key_t key;
-	int result;
+	puur_naa_nka result;
 	uint32_t bytes_to_end;
 	uint32_t byte_offset;
-	char *start_addr;
+	var_na *start_addr;
 
 	key = k_spin_lock(&msgq->lock);
 
-	if (msgq->used_msgs > idx) {
+	ပေႃး (msgq->used_msgs > idx) {
 		bytes_to_end = (msgq->buffer_end - msgq->read_ptr);
 		byte_offset = idx * msgq->msg_size;
 		start_addr = msgq->read_ptr;
 		/* check item available in start/end of ring buffer */
-		if (bytes_to_end <= byte_offset) {
+		ပေႃး (bytes_to_end <= byte_offset) {
 			/* Tweak the values in case */
 			byte_offset -= bytes_to_end;
 			/* wrap-around is required */
@@ -475,7 +475,7 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 		}
 		(void)memcpy(data, start_addr + byte_offset, msgq->msg_size);
 		result = 0;
-	} else {
+	} ပေႃးဢမ်ႇ {
 		/* don't wait for a message to become available */
 		result = -ENOMSG;
 	}
@@ -484,21 +484,21 @@ int z_impl_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
 
 	k_spin_unlock(&msgq->lock, key);
 
-	return result;
+	ပွၵ်ႈ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline int z_vrfy_k_msgq_peek_at(struct k_msgq *msgq, void *data, uint32_t idx)
+static anta_hstha puur_naa_nka z_vrfy_k_msgq_peek_at(sa_nracanaa k_msgq *msgq, void *data, uint32_t idx)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	K_OOPS(K_SYSCALL_MEMORY_WRITE(data, msgq->msg_size));
 
-	return z_impl_k_msgq_peek_at(msgq, data, idx);
+	ပွၵ်ႈ z_impl_k_msgq_peek_at(msgq, data, idx);
 }
 #include <zephyr/syscalls/k_msgq_peek_at_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_msgq_purge(struct k_msgq *msgq)
+void z_impl_k_msgq_purge(sa_nracanaa k_msgq *msgq)
 {
 	k_spinlock_key_t key;
 	bool resched = false;
@@ -508,39 +508,39 @@ void z_impl_k_msgq_purge(struct k_msgq *msgq)
 	SYS_PORT_TRACING_OBJ_FUNC(k_msgq, purge, msgq);
 
 	/* wake up any threads that are waiting to write */
-	while (z_sched_wake(&msgq->wait_q, -ENOMSG, NULL)) {
+	ၶၢဝ်း (z_sched_wake(&msgq->wait_q, -ENOMSG, NULL)) {
 		resched = true;
 	}
 
 	msgq->used_msgs = 0;
 	msgq->read_ptr = msgq->write_ptr;
 
-	if (resched) {
+	ပေႃး (resched) {
 		z_reschedule(&msgq->lock, key);
-	} else {
+	} ပေႃးဢမ်ႇ {
 		k_spin_unlock(&msgq->lock, key);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_msgq_purge(struct k_msgq *msgq)
+static anta_hstha void z_vrfy_k_msgq_purge(sa_nracanaa k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
 	z_impl_k_msgq_purge(msgq);
 }
 #include <zephyr/syscalls/k_msgq_purge_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_free_get(struct k_msgq *msgq)
+static anta_hstha uint32_t z_vrfy_k_msgq_num_free_get(sa_nracanaa k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_free_get(msgq);
+	ပွၵ်ႈ z_impl_k_msgq_num_free_get(msgq);
 }
 #include <zephyr/syscalls/k_msgq_num_free_get_mrsh.c>
 
-static inline uint32_t z_vrfy_k_msgq_num_used_get(struct k_msgq *msgq)
+static anta_hstha uint32_t z_vrfy_k_msgq_num_used_get(sa_nracanaa k_msgq *msgq)
 {
 	K_OOPS(K_SYSCALL_OBJ(msgq, K_OBJ_MSGQ));
-	return z_impl_k_msgq_num_used_get(msgq);
+	ပွၵ်ႈ z_impl_k_msgq_num_used_get(msgq);
 }
 #include <zephyr/syscalls/k_msgq_num_used_get_mrsh.c>
 

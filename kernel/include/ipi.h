@@ -23,10 +23,10 @@ void z_sched_ipi(void);
 #ifdef CONFIG_SMP
 void flag_ipi(uint32_t ipi_mask);
 void signal_pending_ipi(void);
-atomic_val_t ipi_mask_create(struct k_thread *thread);
-#else
-#define flag_ipi(ipi_mask) do { } while (false)
-#define signal_pending_ipi() do { } while (false)
+atomic_val_t ipi_mask_create(sa_nracanaa k_thread *thread);
+#ပေႃးဢမ်ႇ
+#define flag_ipi(ipi_mask) do { } ၶၢဝ်း (false)
+#define signal_pending_ipi() do { } ၶၢဝ်း (false)
 #endif /* CONFIG_SMP */
 
 #ifdef CONFIG_IPI_OPTIMIZE_IDLE
@@ -34,7 +34,7 @@ atomic_val_t ipi_mask_create(struct k_thread *thread);
  * Consume and return the thread covered by the current CPU's reservation.
  * Returns NULL if no reservation exists. Caller must hold _sched_spinlock.
  */
-struct k_thread *ipi_idle_reserved_take(void);
+sa_nracanaa k_thread *ipi_idle_reserved_take(void);
 
 /*
  * Remove a thread's reservation before it leaves the run queue or changes
@@ -44,7 +44,7 @@ struct k_thread *ipi_idle_reserved_take(void);
  * Caller must hold _sched_spinlock. Safe if no reservation exists; does not
  * cancel a pending IPI.
  */
-void ipi_idle_thread_unreserve(struct k_thread *thread);
+void ipi_idle_thread_unreserve(sa_nracanaa k_thread *thread);
 
 /*
  * Transfer coverage from old_thread to new_thread using an outstanding idle
@@ -53,13 +53,13 @@ void ipi_idle_thread_unreserve(struct k_thread *thread);
  *
  * Caller must hold _sched_spinlock.
  */
-bool ipi_idle_thread_rebind(struct k_thread *old_thread,
-			    struct k_thread *new_thread);
-#else
+bool ipi_idle_thread_rebind(sa_nracanaa k_thread *old_thread,
+			    sa_nracanaa k_thread *new_thread);
+#ပေႃးဢမ်ႇ
 #define ipi_idle_reserved_take() NULL
 #define ipi_idle_thread_unreserve(thread) do { \
 	ARG_UNUSED(thread); \
-} while (false)
+} ၶၢဝ်း (false)
 #define ipi_idle_thread_rebind(old_thread, new_thread) false
 #endif /* CONFIG_IPI_OPTIMIZE_IDLE */
 
