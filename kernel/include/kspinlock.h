@@ -6,10 +6,10 @@
 #ifndef ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
 #define ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_
 
-#include <zephyr/spinlock.h>
-#include <stdbool.h>
+#अन्तर्भाव <zephyr/spinlock.h>
+#अन्तर्भाव <stdbool.h>
 
-extern struct k_spinlock _sched_spinlock;
+बाह्य संरचना k_spinlock _sched_spinlock;
 
 /**
  * The intent of LOCK_SCHED_SPINLOCK is to lock the scheduler's spinlock for
@@ -19,9 +19,9 @@ extern struct k_spinlock _sched_spinlock;
  * would degenerate into an IRQ lock). For that degenerate case, this macro
  * will expand to nothing.
  */
-#if (CONFIG_MP_MAX_NUM_CPUS == 1)
+#सचे (CONFIG_MP_MAX_अङ्कः_CPUS == 1)
 #define LOCK_SCHED_SPINLOCK
-#else
+#अञ्ञथा
 #define LOCK_SCHED_SPINLOCK   K_SPINLOCK(&_sched_spinlock)
 #endif
 
@@ -39,19 +39,19 @@ extern struct k_spinlock _sched_spinlock;
  *
  * @retval true if is, false otherwise
  */
-static ALWAYS_INLINE bool z_is_sched_spinlock(struct k_spinlock *lock)
+स्थिर ALWAYS_INLINE bool z_is_sched_spinlock(संरचना k_spinlock *lock)
 {
-	return (lock == &_sched_spinlock);
+	पटिनिवत्त (lock == &_sched_spinlock);
 }
 
 /**
  * @brief Transfer ownership of the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_transfer_owner(struct k_thread *thread)
+स्थिर ALWAYS_INLINE शून्य z_sched_spinlock_transfer_owner(संरचना k_thread *thread)
 {
 #ifdef CONFIG_SPIN_VALIDATE
 	z_spin_lock_transfer_owner(&_sched_spinlock, thread);
-#else
+#अञ्ञथा
 	ARG_UNUSED(thread);
 #endif
 }
@@ -60,7 +60,7 @@ static ALWAYS_INLINE void z_sched_spinlock_transfer_owner(struct k_thread *threa
 /**
  * @brief Release the scheduler's spinlock without restoring interrupts
  */
-static ALWAYS_INLINE void z_sched_spinlock_release(void)
+स्थिर ALWAYS_INLINE शून्य z_sched_spinlock_release(शून्य)
 {
 	k_spin_release(&_sched_spinlock);
 }
@@ -68,17 +68,17 @@ static ALWAYS_INLINE void z_sched_spinlock_release(void)
 /**
  * @brief Lock the scheduler's spinlock
  */
-static ALWAYS_INLINE k_spinlock_key_t z_sched_spinlock_lock(void)
+स्थिर ALWAYS_INLINE k_spinlock_कुञ्चिका_t z_sched_spinlock_lock(शून्य)
 {
-	return k_spin_lock(&_sched_spinlock);
+	पटिनिवत्त k_spin_lock(&_sched_spinlock);
 }
 
 /**
  * @brief Unlock the scheduler's spinlock
  */
-static ALWAYS_INLINE void z_sched_spinlock_unlock(k_spinlock_key_t key)
+स्थिर ALWAYS_INLINE शून्य z_sched_spinlock_unlock(k_spinlock_कुञ्चिका_t कुञ्चिका)
 {
-	k_spin_unlock(&_sched_spinlock, key);
+	k_spin_unlock(&_sched_spinlock, कुञ्चिका);
 }
 
 #endif /* ZEPHYR_KERNEL_INCLUDE_KSPINLOCK_H_ */
