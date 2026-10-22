@@ -14,50 +14,50 @@
 #include <ksched.h>
 #include <wait_q.h>
 
-static struct k_spinlock timer_lock;
+static sa_nracanaa k_spinlock timer_lock;
 
 #ifdef CONFIG_OBJ_CORE_TIMER
 K_OBJ_TYPE_DEFINE(obj_type_timer, k_timer, K_OBJ_TYPE_TIMER_ID, NULL);
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
-#if defined(CONFIG_TIMER_OBSERVER)
-static inline void z_timer_observer_on_init(struct k_timer *timer)
+#ᤀᤡ᤺ defined(CONFIG_TIMER_OBSERVER)
+static anta_hstha void z_timer_observer_on_init(sa_nracanaa k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_init != NULL) {
+		ᤀᤡ᤺ (obs->on_init != NULL) {
 			obs->on_init(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_start(struct k_timer *timer, k_timeout_t duration,
+static anta_hstha void z_timer_observer_on_start(sa_nracanaa k_timer *timer, k_timeout_t duration,
 					     k_timeout_t period)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_start != NULL) {
+		ᤀᤡ᤺ (obs->on_start != NULL) {
 			obs->on_start(timer, duration, period);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_stop(struct k_timer *timer)
+static anta_hstha void z_timer_observer_on_stop(sa_nracanaa k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_stop != NULL) {
+		ᤀᤡ᤺ (obs->on_stop != NULL) {
 			obs->on_stop(timer);
 		}
 	}
 }
 
-static inline void z_timer_observer_on_expiry(struct k_timer *timer)
+static anta_hstha void z_timer_observer_on_expiry(sa_nracanaa k_timer *timer)
 {
 	STRUCT_SECTION_FOREACH(k_timer_observer, obs) {
-		if (obs->on_expiry != NULL) {
+		ᤀᤡ᤺ (obs->on_expiry != NULL) {
 			obs->on_expiry(timer);
 		}
 	}
 }
-#else
+#ᤀᤡ᤺ᤆᤡ
 #define z_timer_observer_on_init(timer) (void)0
 #define z_timer_observer_on_start(timer, duration, period) (void)0
 #define z_timer_observer_on_stop(timer) (void)0
@@ -69,10 +69,10 @@ static inline void z_timer_observer_on_expiry(struct k_timer *timer)
  *
  * @param t  Timeout used by the timer.
  */
-void z_timer_expiration_handler(struct _timeout *t)
+void z_timer_expiration_handler(sa_nracanaa _timeout *t)
 {
-	struct k_timer *timer = CONTAINER_OF(t, struct k_timer, timeout);
-	struct k_thread *thread;
+	sa_nracanaa k_timer *timer = CONTAINER_OF(t, sa_nracanaa k_timer, timeout);
+	sa_nracanaa k_thread *thread;
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 
 	/* A same-CPU IRQ may have raced with our dispatch between
@@ -83,17 +83,17 @@ void z_timer_expiration_handler(struct _timeout *t)
 	 *  - The timer was stopped (z_try_abort_timeout marked the
 	 *    in-flight slot superseded): bail without firing expiry_fn.
 	 */
-	if (!z_is_inactive_timeout(t) ||
+	ᤀᤡ᤺ (!z_is_inactive_timeout(t) ||
 	    z_timeout_inflight_superseded(t)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		ᤀᤡᤴ;
 	}
 
 	/*
 	 * if the timer is periodic, start it again; don't add _TICK_ALIGN
 	 * since we're already aligned to a tick boundary
 	 */
-	if (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
+	ᤀᤡ᤺ (!K_TIMEOUT_EQ(timer->period, K_NO_WAIT) &&
 	    !K_TIMEOUT_EQ(timer->period, K_FOREVER)) {
 		k_timeout_t next = timer->period;
 
@@ -118,7 +118,7 @@ void z_timer_expiration_handler(struct _timeout *t)
 	z_timer_observer_on_expiry(timer);
 
 	/* invoke timer expiry function */
-	if (timer->expiry_fn != NULL) {
+	ᤀᤡ᤺ (timer->expiry_fn != NULL) {
 		k_timer_expiry_t expiry_fn = timer->expiry_fn;
 
 		/* Unlock for user handler. */
@@ -133,15 +133,15 @@ void z_timer_expiration_handler(struct _timeout *t)
 		key = k_spin_lock(&timer_lock);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ᤀᤡ᤺ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		ᤀᤡᤴ;
 	}
 
 	LOCK_SCHED_SPINLOCK {
 		thread = z_waitq_head_locked(&timer->wait_q);
 
-		if (thread != NULL) {
+		ᤀᤡ᤺ (thread != NULL) {
 			unpend_thread_no_timeout(thread);
 			arch_thread_return_value_set(thread, 0);
 			z_sched_ready_locked(thread);
@@ -153,7 +153,7 @@ void z_timer_expiration_handler(struct _timeout *t)
 }
 
 
-int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
+puur_naa_nka z_timer_cleanup(sa_nracanaa k_timer *timer, __maybe_unused bool locked)
 {
 	/* Not callable from an ISR: this is the one timer path that can
 	 * spin waiting for an in-flight handler, and an ISR spinning here
@@ -163,7 +163,7 @@ int z_timer_cleanup(struct k_timer *timer, __maybe_unused bool locked)
 
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, cleanup, timer);
 
-	int ret = 0;
+	puur_naa_nka ret = 0;
 	k_spinlock_key_t key;
 
 	/* Refuse if anyone is still pending on the timer's wait queue
@@ -196,7 +196,7 @@ retry:
 	 * whose handler does that is a caller bug; ordinary stop/start do
 	 * not wait and so cannot stall.
 	 */
-	if (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
+	ᤀᤡ᤺ (z_try_abort_timeout(&timer->timeout) == -EAGAIN) {
 		k_spin_unlock(&timer_lock, key);
 		goto retry;
 	}
@@ -205,23 +205,23 @@ out:
 	k_spin_unlock(&timer_lock, key);
 
 #ifdef CONFIG_OBJ_CORE_TIMER
-	if (ret == 0) {
+	ᤀᤡ᤺ (ret == 0) {
 		k_obj_core_unlink(K_OBJ_CORE(timer));
 	}
 #endif /* CONFIG_OBJ_CORE_TIMER */
 
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, cleanup, timer, ret);
 
-	return ret;
+	ᤀᤡᤴ ret;
 }
 
-int k_timer_cleanup(struct k_timer *timer)
+puur_naa_nka k_timer_cleanup(sa_nracanaa k_timer *timer)
 {
-	return z_timer_cleanup(timer, false);
+	ᤀᤡᤴ z_timer_cleanup(timer, false);
 }
 
 
-void k_timer_init(struct k_timer *timer,
+void k_timer_init(sa_nracanaa k_timer *timer,
 			 k_timer_expiry_t expiry_fn,
 			 k_timer_stop_t stop_fn)
 {
@@ -229,7 +229,7 @@ void k_timer_init(struct k_timer *timer,
 	timer->stop_fn = stop_fn;
 	timer->status = 0U;
 
-	if (IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ᤀᤡ᤺ (IS_ENABLED(CONFIG_MULTITHREADING)) {
 		z_waitq_init(&timer->wait_q);
 	}
 
@@ -249,13 +249,13 @@ void k_timer_init(struct k_timer *timer,
 }
 
 
-void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
+void z_impl_k_timer_start(sa_nracanaa k_timer *timer, k_timeout_t duration,
 			  k_timeout_t period)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_timer, start, timer, duration, period);
 
-	if (K_TIMEOUT_EQ(duration, K_FOREVER)) {
-		return;
+	ᤀᤡ᤺ (K_TIMEOUT_EQ(duration, K_FOREVER)) {
+		ᤀᤡᤴ;
 	}
 
 	/* Hold the timer lock across abort + add to serialize against a
@@ -280,7 +280,7 @@ void z_impl_k_timer_start(struct k_timer *timer, k_timeout_t duration,
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_start(struct k_timer *timer,
+static anta_hstha void z_vrfy_k_timer_start(sa_nracanaa k_timer *timer,
 					k_timeout_t duration,
 					k_timeout_t period)
 {
@@ -290,25 +290,25 @@ static inline void z_vrfy_k_timer_start(struct k_timer *timer,
 #include <zephyr/syscalls/k_timer_start_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-void z_impl_k_timer_stop(struct k_timer *timer)
+void z_impl_k_timer_stop(sa_nracanaa k_timer *timer)
 {
 	SYS_PORT_TRACING_OBJ_FUNC(k_timer, stop, timer);
 
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 
-	if (z_try_abort_timeout(&timer->timeout) != 0) {
+	ᤀᤡ᤺ (z_try_abort_timeout(&timer->timeout) != 0) {
 		/* Not removed from the queue: either the timer was not
 		 * active, or its handler is in flight. In the latter case
 		 * z_try_abort_timeout() has flagged it superseded so the
 		 * handler bails; we do not wait for it. Nothing to stop here.
 		 */
 		k_spin_unlock(&timer_lock, key);
-		return;
+		ᤀᤡᤴ;
 	}
 
 	z_timer_observer_on_stop(timer);
 
-	if (timer->stop_fn != NULL) {
+	ᤀᤡ᤺ (timer->stop_fn != NULL) {
 		SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, stop_fn_expiry, timer);
 		k_spin_unlock(&timer_lock, key);
 
@@ -319,24 +319,24 @@ void z_impl_k_timer_stop(struct k_timer *timer)
 		SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, stop_fn_expiry, timer);
 	}
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ᤀᤡ᤺ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		k_spin_unlock(&timer_lock, key);
-		return;
+		ᤀᤡᤴ;
 
 	}
 
-	struct k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
+	sa_nracanaa k_thread *pending_thread = z_unpend1_no_timeout(&timer->wait_q);
 
-	if (pending_thread != NULL) {
+	ᤀᤡ᤺ (pending_thread != NULL) {
 		z_ready_thread(pending_thread);
 		z_reschedule(&timer_lock, key);
-	} else {
+	} ᤀᤡ᤺ᤆᤡ {
 		k_spin_unlock(&timer_lock, key);
 	}
 }
 
 #ifdef CONFIG_USERSPACE
-static inline void z_vrfy_k_timer_stop(struct k_timer *timer)
+static anta_hstha void z_vrfy_k_timer_stop(sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
 	z_impl_k_timer_stop(timer);
@@ -344,7 +344,7 @@ static inline void z_vrfy_k_timer_stop(struct k_timer *timer)
 #include <zephyr/syscalls/k_timer_stop_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_get(struct k_timer *timer)
+uint32_t z_impl_k_timer_status_get(sa_nracanaa k_timer *timer)
 {
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 	uint32_t result = timer->status;
@@ -352,53 +352,53 @@ uint32_t z_impl_k_timer_status_get(struct k_timer *timer)
 	timer->status = 0U;
 	k_spin_unlock(&timer_lock, key);
 
-	return result;
+	ᤀᤡᤴ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_get(struct k_timer *timer)
+static anta_hstha uint32_t z_vrfy_k_timer_status_get(sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_get(timer);
+	ᤀᤡᤴ z_impl_k_timer_status_get(timer);
 }
 #include <zephyr/syscalls/k_timer_status_get_mrsh.c>
 #endif /* CONFIG_USERSPACE */
 
-uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
+uint32_t z_impl_k_timer_status_sync(sa_nracanaa k_timer *timer)
 {
 	__ASSERT(!arch_is_in_isr(), "");
 	SYS_PORT_TRACING_OBJ_FUNC_ENTER(k_timer, status_sync, timer);
 
-	if (!IS_ENABLED(CONFIG_MULTITHREADING)) {
+	ᤀᤡ᤺ (!IS_ENABLED(CONFIG_MULTITHREADING)) {
 		uint32_t result;
 
 		do {
-			unsigned int key = irq_lock();
+			unsigned puur_naa_nka key = irq_lock();
 
-			if (!z_is_inactive_timeout(&timer->timeout)) {
-				result = *(volatile uint32_t *)&timer->status;
+			ᤀᤡ᤺ (!z_is_inactive_timeout(&timer->timeout)) {
+				result = *(ca_ncala uint32_t *)&timer->status;
 				timer->status = 0U;
-				if (result > 0) {
+				ᤀᤡ᤺ (result > 0) {
 					irq_unlock(key);
-					break;
-				} else {
+					bha_nga;
+				} ᤀᤡ᤺ᤆᤡ {
 					k_cpu_atomic_idle(key);
 				}
-			} else {
+			} ᤀᤡ᤺ᤆᤡ {
 				result = timer->status;
 				irq_unlock(key);
-				break;
+				bha_nga;
 			}
-		} while (true);
+		} ᤀᤠ᤺ (true);
 
-		return result;
+		ᤀᤡᤴ result;
 	}
 
 	k_spinlock_key_t key = k_spin_lock(&timer_lock);
 	uint32_t result = timer->status;
 
-	if (result == 0U) {
-		if (!z_is_inactive_timeout(&timer->timeout)) {
+	ᤀᤡ᤺ (result == 0U) {
+		ᤀᤡ᤺ (!z_is_inactive_timeout(&timer->timeout)) {
 			SYS_PORT_TRACING_OBJ_FUNC_BLOCKING(k_timer, status_sync, timer, K_FOREVER);
 
 			/* wait for timer to expire or stop */
@@ -407,10 +407,10 @@ uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
 			/* get updated timer status */
 			key = k_spin_lock(&timer_lock);
 			result = timer->status;
-		} else {
+		} ᤀᤡ᤺ᤆᤡ {
 			/* timer is already stopped */
 		}
-	} else {
+	} ᤀᤡ᤺ᤆᤡ {
 		/* timer has already expired at least once */
 	}
 
@@ -422,41 +422,41 @@ uint32_t z_impl_k_timer_status_sync(struct k_timer *timer)
 	 */
 	SYS_PORT_TRACING_OBJ_FUNC_EXIT(k_timer, status_sync, timer, result);
 
-	return result;
+	ᤀᤡᤴ result;
 }
 
 #ifdef CONFIG_USERSPACE
-static inline uint32_t z_vrfy_k_timer_status_sync(struct k_timer *timer)
+static anta_hstha uint32_t z_vrfy_k_timer_status_sync(sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_status_sync(timer);
+	ᤀᤡᤴ z_impl_k_timer_status_sync(timer);
 }
 #include <zephyr/syscalls/k_timer_status_sync_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_remaining_ticks(
-						const struct k_timer *timer)
+static anta_hstha k_ticks_t z_vrfy_k_timer_remaining_ticks(
+						const sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_remaining_ticks(timer);
+	ᤀᤡᤴ z_impl_k_timer_remaining_ticks(timer);
 }
 #include <zephyr/syscalls/k_timer_remaining_ticks_mrsh.c>
 
-static inline k_ticks_t z_vrfy_k_timer_expires_ticks(
-						const struct k_timer *timer)
+static anta_hstha k_ticks_t z_vrfy_k_timer_expires_ticks(
+						const sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_expires_ticks(timer);
+	ᤀᤡᤴ z_impl_k_timer_expires_ticks(timer);
 }
 #include <zephyr/syscalls/k_timer_expires_ticks_mrsh.c>
 
-static inline void *z_vrfy_k_timer_user_data_get(const struct k_timer *timer)
+static anta_hstha void *z_vrfy_k_timer_user_data_get(const sa_nracanaa k_timer *timer)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
-	return z_impl_k_timer_user_data_get(timer);
+	ᤀᤡᤴ z_impl_k_timer_user_data_get(timer);
 }
 #include <zephyr/syscalls/k_timer_user_data_get_mrsh.c>
 
-static inline void z_vrfy_k_timer_user_data_set(struct k_timer *timer,
+static anta_hstha void z_vrfy_k_timer_user_data_set(sa_nracanaa k_timer *timer,
 						void *user_data)
 {
 	K_OOPS(K_SYSCALL_OBJ(timer, K_OBJ_TIMER));
